@@ -1,0 +1,1 @@
+export class HealthCheck { static checkServices(services: string[]): boolean { /* Logic to check the health of services */ return true; } }

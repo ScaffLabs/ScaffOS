@@ -1,0 +1,1 @@
+export interface AlertMessage { id: string; type: string; threshold: number; currentValue: number; createdAt: Date; }
