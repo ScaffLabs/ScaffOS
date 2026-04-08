@@ -41,12 +41,3 @@ export async function checkReadiness() {
   const allHealthy = servicesHealth.every(result => result.healthy);
   return { healthy: allHealthy };
 }
-
-export async function memoryUsageCheck() {
-  const memoryUsage = process.memoryUsage();
-  const totalHeap = memoryUsage.heapTotal;
-  const usedHeap = memoryUsage.heapUsed;
-  const isMemoryHealthy = usedHeap < totalHeap * 0.9; // Threshold at 90%
-  logger.info(`Memory usage: ${usedHeap / 1024 / 1024} MB / ${totalHeap / 1024 / 1024} MB`);
-  return { healthy: isMemoryHealthy, memoryUsage };
-}
