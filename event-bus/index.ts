@@ -8,6 +8,8 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import csurf from 'csurf';
 import cors from 'cors';
+import { checkHealthEndpoint } from './healthCheck';
+import { setInterval } from 'timers';
 
 const app = express();
 
@@ -28,9 +30,16 @@ const main = async () => {
     logger.info(`Configuration: ${JSON.stringify(config)}`);
     app.use('/events', eventRoutes());
     app.use(errorHandler);
+    app.get('/health', checkHealthEndpoint);
     const server = app.listen(config.port, () => {
         logger.info(`Server is running on port ${config.port}`);
     });
+
+    setInterval(() => {
+        const memoryUsage = process.memoryUsage();
+        logger.info(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
+    }, 60000);
+
     process.on('SIGTERM', async () => {
         logger.info('Shutting down gracefully...');
         await new Promise(resolve => server.close(resolve));
