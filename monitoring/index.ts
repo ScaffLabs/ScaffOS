@@ -10,15 +10,22 @@ import { limiter } from './rateLimiter';
 import { sanitize } from './sanitize';
 import helmet from 'helmet';
 import cors from 'cors';
-import { monitorMemoryUsage, healthCheckServices } from './serviceHealth';
+import config from './config';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
 
+// CORS Configuration
+app.use(cors({
+    origin: ['http://example.com', 'http://another-domain.com'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 // Middleware setup
 app.use(helmet()); // Set secure HTTP headers
-app.use(express.json());
+app.use(express.json({ limit: '1mb' })); // Limit request size
 app.use(auditLogger);
 app.use(logRequest);
 app.use(latencyTracker);
