@@ -10,7 +10,7 @@ import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
 import { MemoryMonitor } from './memoryMonitor';
 import { createConnectionPool } from './dbConnection';
-import { validatePriceData, handleValidationErrors, validatePriceUpdate } from './middleware/validationMiddleware';
+import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
 import { ValidationError, ServiceError } from './errors';
 
 const app = express();

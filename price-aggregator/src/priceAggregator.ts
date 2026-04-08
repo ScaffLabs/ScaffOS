@@ -13,12 +13,12 @@ export class PriceAggregator {
 
     constructor() {
         this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
-        this.fetchPricesFromExchanges(); // Start fetching prices on initialization
+        this.fetchPricesFromExchanges();
     }
 
     private async fetchPricesFromExchanges() {
         try {
-            const exchanges = ['exchange1', 'exchange2']; // Replace with actual exchange names
+            const exchanges = ['exchange1', 'exchange2'];
             const promises = exchanges.map(async (exchange) => {
                 const priceData = await httpClient(`/prices/${exchange}`);
                 return this.addPrice(priceData);
@@ -73,5 +73,21 @@ export class PriceAggregator {
                 client.send(JSON.stringify(event.data));
             }
         });
+    }
+
+    public async checkDependencies(): Promise<Record<string, string>> {
+        try {
+            const healthChecks = await Promise.all([
+                httpClient('/health/exchange1'),
+                httpClient('/health/exchange2')
+            ]);
+            return {
+                exchange1: healthChecks[0].status,
+                exchange2: healthChecks[1].status,
+            };
+        } catch (error) {
+            logError(error, 'Health check failed');
+            throw new ServiceError('Dependencies are unhealthy.');
+        }
     }
 }
