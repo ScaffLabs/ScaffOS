@@ -1,5 +1,5 @@
 import express from 'express';
-import { createUser, findUserById, findUserByEmail, updateUser, deleteUser, getAllUsers } from './storage';
+import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from './storage';
 import { authMiddleware } from './middleware';
 import { body, validationResult } from 'express-validator';
 import helmet from 'helmet';
@@ -40,7 +40,7 @@ router.post('/users', authMiddleware, body('username').isString().trim().escape(
     }
 
     const { username, email } = req.body;
-    const existingUser = findUserByEmail(email);
+    const existingUser = findUserById(email);
     if (existingUser) {
         return res.status(409).json({ error: 'Email already in use' });
     }
@@ -58,9 +58,10 @@ router.put('/users/:id', authMiddleware, body('username').optional().isString().
     }
 
     const { username, email } = req.body;
-    if (username) user.username = username;
-    if (email) user.email = email;
-    updateUser(id, user);
+    const updatedUser = updateUser(id, { username, email });
+    if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found' });
+    }
     res.status(204).send();
 });
 
