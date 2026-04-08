@@ -1,13 +1,10 @@
 import express from 'express';
 import { createServer } from 'http';
-import { healthCheck, readyCheck, memoryHealthCheck } from './healthCheck';
+import { healthCheck, readyCheck } from './healthCheck';
 import errorMiddleware from './errorMiddleware';
 import { createConnectionPool } from './connectionPool';
 import { auditLogger } from './auditLogger';
-import { logRequest } from './logger';
-import { latencyTracker } from './latencyTracker';
-import { limiter } from './rateLimiter';
-import { sanitize } from './sanitize';
+import logger, { logRequest, logStartup } from './logger';
 import helmet from 'helmet';
 import cors from 'cors';
 import config from './config';
@@ -15,6 +12,9 @@ import config from './config';
 const app = express();
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
+
+// Startup logging
+logStartup();
 
 // CORS Configuration
 app.use(cors({
@@ -28,14 +28,10 @@ app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
 app.use(auditLogger);
 app.use(logRequest);
-app.use(latencyTracker);
-app.use(limiter);
-app.use(sanitize);
 
 // Health Check Endpoints
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
-app.get('/memory-health', memoryHealthCheck);
 
 // Error handling middleware
 app.use(errorMiddleware);
@@ -43,9 +39,9 @@ app.use(errorMiddleware);
 const server = createServer(app);
 
 const gracefulShutdown = () => {
-    console.log('Shutting down gracefully...');
+    logger.info('Shutting down gracefully...');
     server.close(() => {
-        console.log('HTTP server closed.');
+        logger.info('HTTP server closed.');
         process.exit(0);
     });
 };
@@ -54,11 +50,5 @@ process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 server.listen(PORT, () => {
-    console.log(`Monitoring service running on port ${PORT}`);
-    setInterval(() => {
-        const memoryUsage = process.memoryUsage();
-        const totalMemory = memoryUsage.rss / (1024 * 1024);
-        const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
-        console.log(`Memory Usage: Total - ${totalMemory.toFixed(2)} MB, Used - ${usedMemory.toFixed(2)} MB`);
-    }, 60000);
+    logger.info(`Monitoring service running on port ${PORT}`);
 });
