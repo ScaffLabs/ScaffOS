@@ -9,16 +9,20 @@ import logger, { requestLogger } from './services/logger';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { healthCheck } from './services/healthService';
+import { auditLog } from './services/auditService';
+import { csrfProtection } from './middleware/csrfProtection';
 
 const app = express();
 app.use(json({ limit: '1mb' }));
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: ['https://yourdomain.com'], credentials: true }));
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100
+    max: 100,
+    keyGenerator: (req) => req.headers['x-api-key'] || req.ip,
 }));
 app.use(requestLogger);
+app.use(csrfProtection);
 
 connectToEventBus();
 app.use('/api/portfolios', portfolioRoutes);
