@@ -10,7 +10,8 @@ interface Store<T> {
     read(id: string): Promise<Record<T> | null>;
     update(id: string, record: T): Promise<Record<T> | null>;
     delete(id: string): Promise<boolean>;
-    find(query: Partial<T>): Promise<Record<T>[]>;
+    find(query: Partial<T>): Promise<Record<T>[]>
+    transaction(operations: Array<() => Promise<any>>): Promise<void>;
 }
 
 export class InMemoryStore<T> implements Store<T> {
@@ -43,4 +44,12 @@ export class InMemoryStore<T> implements Store<T> {
     async find(query: Partial<T>): Promise<Record<T>[]> {
         return this.records.filter(record => Object.keys(query).every(key => record.data[key] === query[key]));
     }
-} 
+
+    async transaction(operations: Array<() => Promise<any>>): Promise<void> {
+        const results = [];
+        for (const operation of operations) {
+            results.push(await operation());
+        }
+        return results;
+    }
+}

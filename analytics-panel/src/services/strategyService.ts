@@ -26,3 +26,7 @@ export const deleteStrategy = async (id: string) => {
 export const findStrategies = async (query: Partial<Strategy>) => {
     return await strategyStore.find(query);
 };
+
+export const performTransaction = async (operations: Array<() => Promise<any>>) => {
+    return await strategyStore.transaction(operations);
+};

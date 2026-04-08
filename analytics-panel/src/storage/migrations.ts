@@ -1,10 +1,9 @@
 import { InMemoryStore } from './inMemoryStore';
 
-// Example migration utility for seeding initial data
 export const migrateData = async (store: InMemoryStore<any>) => {
     const seedData = [
-        { name: 'Strategy A', parameters: { /* parameters */ } },
-        { name: 'Strategy B', parameters: { /* parameters */ } },
+        { name: 'Strategy A', parameters: { param1: 'value1' } },
+        { name: 'Strategy B', parameters: { param1: 'value2' } },
     ];
 
     for (const data of seedData) {
@@ -13,5 +12,10 @@ export const migrateData = async (store: InMemoryStore<any>) => {
 };
 
 export const runMigrations = async (store: InMemoryStore<any>) => {
-    await migrateData(store);
+    try {
+        await migrateData(store);
+        console.log('Migration completed successfully.');
+    } catch (error) {
+        console.error('Migration failed:', error);
+    }
 };
