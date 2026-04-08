@@ -9,11 +9,11 @@ import logger, { requestLogger } from './services/logger';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { healthCheck } from './services/healthService';
-import { createClient } from 'redis';
 import { Pool } from 'pg';
+import { setTimeout } from 'timers/promises';
+import CircuitBreaker from 'opossum';
 
 const app = express();
-const redisClient = createClient();
 const dbPool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 app.use(json({ limit: '1mb' }));
@@ -24,6 +24,14 @@ app.use(requestLogger);
 connectToEventBus();
 app.use('/api/portfolios', portfolioRoutes);
 app.get('/health', healthCheck);
+app.get('/ready', async (req, res) => {
+    try {
+        await dbPool.query('SELECT 1');
+        res.status(200).json({ status: 'READY' });
+    } catch (err) {
+        res.status(503).json({ status: 'NOT READY', error: err.message });
+    }
+});
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
@@ -33,28 +41,35 @@ server.listen(PORT, () => {
     logger.info(`Portfolio Tracker service running on port ${PORT}`);
 });
 
-const shutdown = (signal) => {
+const shutdown = async (signal) => {
     logger.info(`Received ${signal}, shutting down gracefully...`);
-    server.close(() => {
-        logger.info('Closed HTTP server.');
-        redisClient.quit();
-        dbPool.end();
-        process.exit(0);
-    });
+    await new Promise((resolve) => server.close(resolve));
+    await dbPool.end();
+    logger.info('Closed HTTP server and database connections.');
+    process.exit(0);
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('uncaughtException', (error) => {
-    logger.error('Uncaught Exception:', error);
-    shutdown('Uncaught Exception');
-});
-process.on('unhandledRejection', (reason) => {
-    logger.error('Unhandled Rejection:', reason);
-    shutdown('Unhandled Rejection');
-});
 
 setInterval(async () => {
     const memoryUsage = process.memoryUsage();
     logger.info('Memory Usage', memoryUsage);
 }, 60000);
+
+const retryOperation = async (operation, retries = 5, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await operation();
+        } catch (error) {
+            if (i < retries - 1) {
+                await setTimeout(delay);
+                delay *= 2; // Exponential backoff
+            } else {
+                throw error;
+            }
+        }
+    }
+};
+
+export { retryOperation };
