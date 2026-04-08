@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from './storage';
 import { authMiddleware } from './middleware';
 import { ValidationError, NotFoundError } from './errors';
+import { emitUserCreated } from './interServiceClient'; // Importing emit function
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.post('/users', authMiddleware,
         const { username, email } = req.body;
         try {
             const user = createUser(username, email);
+            emitUserCreated(user); // Emit user created event
             res.status(201).json(user);
         } catch (error) {
             if (error.message === 'Email already in use') {

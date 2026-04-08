@@ -51,3 +51,13 @@ export const healthCheckService = async (serviceUrl: string) => {
         return { status: 'unhealthy' };
     }
 };
+
+export const subscribeToUserCreated = (listener: (user: any) => void) => {
+    const eventBus = require('./eventBus').default;
+    eventBus.on('userCreated', listener);
+};
+
+export const emitUserCreated = (user: any) => {
+    const eventBus = require('./eventBus').default;
+    eventBus.emit('userCreated', user);
+};
