@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { InMemoryStore } from '../storage/InMemoryStore';
-import { Position, PositionSchema, validatePosition } from '../types';
+import { Position, PositionSchema } from '../types';
 import { ServiceError, NotFoundError } from '../utils/errors';
 import validator from 'validator';
 
@@ -26,7 +26,7 @@ export const fetchPositions = async (req: Request, res: Response) => {
 export const createPosition = async (req: Request, res: Response) => {
     const positionData = req.body;
     try {
-        const validatedPosition = validatePosition(positionData);
+        const validatedPosition = PositionSchema.parse(positionData);
         const createdPosition = positionStore.create(validatedPosition);
         res.status(201).json({ message: 'Position created successfully', position: createdPosition });
     } catch (error) {
