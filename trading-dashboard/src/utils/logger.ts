@@ -30,10 +30,6 @@ export const logStartup = (config: any) => {
     logger.info('Startup configuration:', config);
 };
 
-export const logServiceConnection = (service: string, status: string) => {
-    logger.info(`Service ${service} is ${status}`);
-};
-
 export const generateRequestId = () => uuidv4();
 
 export default logger;

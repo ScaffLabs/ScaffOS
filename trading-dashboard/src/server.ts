@@ -2,30 +2,28 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { healthCheck, registerShutdownHandlers } from './utils/healthCheck';
+import { healthCheck } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
 import logger from './utils/logger';
 import config from './config';
 import { csrfMiddleware, getCsrfToken } from './middleware/csrfProtection';
-import validator from 'validator';
-import { closePool } from './utils/connectionPool';
 
 const app = express();
 
 logger.logStartup(config);
 app.use(helmet());
-app.use(cors({ origin: ['http://your-allowed-origin.com'], optionsSuccessStatus: 200 }));
+app.use(cors());
 
 const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 1 * 60 * 1000,
+    max: 100,
     message: 'Too many requests, please try again later.',
 });
 app.use(limiter);
 
-app.use(express.json({ limit: '1mb' })); // Set request size limit
+app.use(express.json({ limit: '1mb' }));
 app.use(requestLogger);
 app.get('/api/health', healthCheck);
 app.get('/api/csrf-token', getCsrfToken);
@@ -37,7 +35,5 @@ const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
 });
-
-registerShutdownHandlers(server);
 
 export default app;
