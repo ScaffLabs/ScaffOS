@@ -34,3 +34,7 @@
 ## [1.6.0] - 2023-11-05
 - Incorporated detailed API error handling and responses.
 - Updated README.md to include error handling strategies.
+
+## [1.7.0] - 2023-11-10
+- Added detailed API error handling strategies in the documentation.
+- Updated README.md to include environment variable descriptions and usage.

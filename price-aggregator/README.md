@@ -92,3 +92,6 @@ Error handling is implemented through a centralized middleware that captures and
 ## Additional Notes
 - Ensure to maintain the security of sensitive information like database credentials in your environment variable configurations.
 - Regularly update dependencies to keep the service running smoothly and securely.
+
+## License
+This project is licensed under the MIT License.
