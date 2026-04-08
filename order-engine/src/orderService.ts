@@ -1,9 +1,8 @@
 import { Order, OrderSchema } from './types';
 import { emitWithRetry } from './eventBus';
-import { ServiceError, ValidationError, NotFoundError, DatabaseError } from './errors';
+import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { storage } from './storage';
 import logger from './logger';
-import axios from 'axios';
 
 export const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -18,9 +17,6 @@ export const createOrderService = async (orderData: unknown) => {
         return createdOrder;
     } catch (error) {
         logger.error('Error creating order:', error);
-        if (error instanceof DatabaseError) {
-            throw new ServiceError('Could not create order due to database error.');
-        }
         throw new ServiceError('Could not create order. Please try again later.');
     }
 };
@@ -36,17 +32,11 @@ export const updateOrderService = async (id: string, updates: unknown) => {
     }
     try {
         const updatedOrder = await storage.update(id, parsedUpdates.data);
-        if (!updatedOrder) {
-            throw new DatabaseError('Failed to update order.');
-        }
         await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
         logger.info('Order updated successfully', { order: updatedOrder });
         return updatedOrder;
     } catch (error) {
         logger.error('Error updating order:', error);
-        if (error instanceof DatabaseError) {
-            throw new ServiceError('Could not update order due to database error.');
-        }
         throw new ServiceError('Could not update order. Please try again later.');
     }
 };
@@ -61,9 +51,6 @@ export const deleteOrderService = async (id: string) => {
         logger.info('Order deleted successfully', { id });
     } catch (error) {
         logger.error('Error deleting order:', error);
-        if (error instanceof DatabaseError) {
-            throw new ServiceError('Could not delete order due to database error.');
-        }
         throw new ServiceError('Could not delete order. Please try again later.');
     }
 };
@@ -72,16 +59,12 @@ export const getOrdersService = async () => {
     try {
         const orders = await storage.findAll();
         if (orders.length === 0) {
-            logger.warn('No orders found.');
             throw new NotFoundError('No orders found.');
         }
         logger.info('Orders retrieved successfully', { count: orders.length });
         return orders;
     } catch (error) {
         logger.error('Error retrieving orders:', error);
-        if (error instanceof DatabaseError) {
-            throw new ServiceError('Could not retrieve orders due to database error.');
-        }
         throw new ServiceError('Could not retrieve orders. Please try again later.');
     }
 };

@@ -1,7 +1,6 @@
-// eventBus.ts
 import { EventEmitter } from 'events';
 
-export const eventBus = new EventEmitter();
+const eventBus = new EventEmitter();
 
 export const emitOrderEvent = (event: any) => {
     eventBus.emit(event.type, event);
@@ -11,7 +10,6 @@ export const subscribeToOrderEvents = (eventType: string, listener: (event: any)
     eventBus.on(eventType, listener);
 };
 
-// Retry Logic for Event Emission
 export const emitWithRetry = async (event: any, retries: number = 3) => {
     let lastError;
     for (let i = 0; i < retries; i++) {
@@ -36,4 +34,12 @@ export const onOrderUpdated = (listener: (order: any) => void) => {
 
 export const onOrderDeleted = (listener: (id: string) => void) => {
     eventBus.on('ORDER_DELETED', listener);
+};
+
+export const clearEventListeners = (eventType: string) => {
+    eventBus.removeAllListeners(eventType);
+};
+
+export const getEventListenersCount = (eventType: string) => {
+    return eventBus.listenerCount(eventType);
 };
