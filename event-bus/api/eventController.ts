@@ -22,19 +22,54 @@ export const createEvent = async (req: Request, res: Response) => {
     }
 };
 
-export const bulkCreateEvents = async (req: Request, res: Response) => {
-    const operations = req.body.map(async (eventData: any) => {
-        const parsed = createEventSchema.safeParse(eventData);
+export const getEvents = async (req: Request, res: Response) => {
+    try {
+        const events = await storage.findAll();
+        res.status(200).json(events);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to retrieve events' });
+    }
+};
+
+export const getEventById = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const event = await storage.read(id);
+        if (!event) {
+            throw new NotFoundError('Event not found');
+        }
+        res.status(200).json(event);
+    } catch (error) {
+        res.status(error instanceof NotFoundError ? 404 : 500).json({ message: error.message });
+    }
+};
+
+export const updateEvent = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const parsed = updateEventSchema.safeParse(req.body);
         if (!parsed.success) {
             throw new ValidationError(parsed.error.errors.map(err => err.message).join(', '));
         }
-        const newEvent: Event = { id: uuidv4() as OrderId, ...parsed.data };
-        return await storage.create(newEvent);
-    });
-    try {
-        await storage.transaction(operations);
-        res.status(201).json({ message: 'All events created successfully' });
+        const updatedEvent = await storage.update(id, parsed.data);
+        if (!updatedEvent) {
+            throw new NotFoundError('Event not found');
+        }
+        res.status(200).json(updatedEvent);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error instanceof NotFoundError ? 404 : 400).json({ message: error.message });
+    }
+};
+
+export const deleteEvent = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const deleted = await storage.delete(id);
+        if (!deleted) {
+            throw new NotFoundError('Event not found');
+        }
+        res.status(204).send();
+    } catch (error) {
+        res.status(error instanceof NotFoundError ? 404 : 500).json({ message: error.message });
     }
 };
