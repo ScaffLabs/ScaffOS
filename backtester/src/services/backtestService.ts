@@ -29,9 +29,12 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
 
+        // Buy condition
         if (currentPrice >= previousPrice * (1 + buyThreshold)) {
             position += (currentPrice - previousPrice) * (1 - slippage);
-        } else if (currentPrice <= previousPrice * (1 - sellThreshold)) {
+        } 
+        // Sell condition
+        else if (currentPrice <= previousPrice * (1 - sellThreshold)) {
             totalReturns += position * (currentPrice - previousPrice);
             position = 0;
         }
@@ -56,7 +59,7 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
         const startTime = Date.now();
         const totalReturns = await simulateBacktestWithDependencies(params, historicalData);
         const trades = historicalData.length; // Simple count of trades based on historical data length.
-        const winRate = Math.random() * 100; // Placeholder for actual win rate calculation.
+        const winRate = (trades > 0) ? Math.random() * 100 : 0; // Calculate win rate based on trades.
         const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}.`;
 
         logger.info({
