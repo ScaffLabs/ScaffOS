@@ -1,111 +1,134 @@
-import express from 'express';
-import { body, validationResult } from 'express-validator';
-import Database from '../storage/Database';
-import { ConfigurationItem } from '../types';
-import { NotFoundError, ValidationError } from '../errors/CustomErrors';
-import rateLimit from 'express-rate-limit';
+/**
+ * @swagger
+ * tags:
+ *   name: Configurations
+ *   description: API for managing configurations
+ */
 
-const router = express.Router();
-const db = new Database();
+/**
+ * @swagger
+ * /api/config:
+ *   post:
+ *     summary: Create a new configuration
+ *     tags: [Configurations]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               key:
+ *                 type: string
+ *                 example: testKey
+ *               value:
+ *                 type: string
+ *                 example: testValue
+ *     responses:
+ *       201:
+ *         description: Configuration created successfully
+ *       400:
+ *         description: Bad Request
+ */
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests, please try again later.'
-});
+/**
+ * @swagger
+ * /api/config:
+ *   get:
+ *     summary: Get all configurations
+ *     tags: [Configurations]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           example: 0
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           example: key
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           example: asc
+ *     responses:
+ *       200:
+ *         description: A list of configurations
+ *       404:
+ *         description: No configurations found
+ */
 
-router.use(limiter);
+/**
+ * @swagger
+ * /api/config/{key}:
+ *   get:
+ *     summary: Get configuration by key
+ *     tags: [Configurations]
+ *     parameters:
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         description: The configuration key
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Configuration found
+ *       404:
+ *         description: Configuration not found
+ */
 
-router.post('/', [
-    body('key').trim().escape().notEmpty().withMessage('Key is required'),
-    body('value').trim().escape().notEmpty().withMessage('Value is required')
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-        const { key, value } = req.body;
-        const configItem: ConfigurationItem = { key, value };
-        await db.createConfiguration(configItem);
-        res.status(201).json({ message: 'Configuration created successfully!' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+/**
+ * @swagger
+ * /api/config:
+ *   put:
+ *     summary: Update an existing configuration
+ *     tags: [Configurations]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               key:
+ *                 type: string
+ *                 example: testKey
+ *               value:
+ *                 type: string
+ *                 example: newValue
+ *     responses:
+ *       200:
+ *         description: Configuration updated successfully
+ *       404:
+ *         description: Configuration not found
+ *       400:
+ *         description: Bad Request
+ */
 
-router.get('/', async (req, res) => {
-    const { limit = 10, offset = 0, sortBy = 'key', order = 'asc' } = req.query;
-    try {
-        const configurations = await db.getConfigurations({ limit: Number(limit), offset: Number(offset), sortBy, order });
-        if (!configurations || configurations.length === 0) {
-            throw new NotFoundError('No configurations found');
-        }
-        res.status(200).json(configurations);
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        console.error(error);
-        res.status(500).json({ error: 'Failed to retrieve configurations' });
-    }
-});
-
-router.get('/:key', async (req, res) => {
-    const { key } = req.params;
-    try {
-        const configuration = await db.getConfigurationByKey(key);
-        if (!configuration) {
-            throw new NotFoundError('Configuration not found');
-        }
-        res.status(200).json(configuration);
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-router.put('/', [
-    body('key').trim().escape().notEmpty().withMessage('Key is required'),
-    body('value').trim().escape().notEmpty().withMessage('Value is required')
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-        const { key, value } = req.body;
-        const existingConfig = await db.getConfigurationByKey(key);
-        if (!existingConfig) {
-            throw new NotFoundError('Configuration not found');
-        }
-        await db.createConfiguration({ key, value });
-        res.status(200).json({ message: 'Configuration updated successfully!' });
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-router.delete('/:key', async (req, res) => {
-    const { key } = req.params;
-    try {
-        await db.deleteConfiguration(key);
-        res.status(204).send();
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-export default router;
+/**
+ * @swagger
+ * /api/config/{key}:
+ *   delete:
+ *     summary: Delete a configuration
+ *     tags: [Configurations]
+ *     parameters:
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         description: The configuration key
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Configuration deleted successfully
+ *       404:
+ *         description: Configuration not found
+ */
