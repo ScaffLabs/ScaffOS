@@ -15,7 +15,6 @@ describe('Order Service', () => {
     });
 
     beforeEach(() => {
-        // Clear the storage before each test
         storage.items = [];
     });
 
@@ -65,13 +64,13 @@ describe('Order Service', () => {
         const newOrder: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
         await storage.create(newOrder);
 
-        const updatedOrder = { type: 'limit', price: 110, quantity: 5, status: 'open' };
+        const updatedOrder = { price: 110, quantity: 5 };
         const response = await request(app)
             .put('/orders/1')
             .send(updatedOrder)
             .expect(200);
 
-        expect(response.body).toMatchObject(updatedOrder);
+        expect(response.body).toMatchObject({ ...newOrder, ...updatedOrder });
     });
 
     test('DELETE /orders/:id - delete existing order', async () => {

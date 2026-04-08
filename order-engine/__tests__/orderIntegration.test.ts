@@ -15,7 +15,6 @@ describe('Order API Integration Tests', () => {
     });
 
     beforeEach(async () => {
-        // Reset the storage before each test
         storage.items = [];
     });
 
@@ -37,7 +36,7 @@ describe('Order API Integration Tests', () => {
     });
 
     test('POST /orders - reject invalid order data', async () => {
-        const invalidOrder = { price: 100 }; // Missing required fields
+        const invalidOrder = { price: 100 };
 
         const response = await request(app)
             .post('/orders')
@@ -65,7 +64,7 @@ describe('Order API Integration Tests', () => {
         const newOrder: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
         await storage.create(newOrder);
 
-        const updatedOrder = { price: 110, quantity: 5 }; // Updating price and quantity
+        const updatedOrder = { price: 110, quantity: 5 };
         const response = await request(app)
             .put('/orders/1')
             .send(updatedOrder)
