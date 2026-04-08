@@ -20,3 +20,11 @@ export const validateInputBody = (req: Request, res: Response, next: NextFunctio
     }
     next();
 };
+
+export const validateRequestSize = (req: Request, res: Response, next: NextFunction) => {
+    const contentLength = req.headers['content-length'];
+    if (contentLength && parseInt(contentLength) > 1048576) { // Limit to 1MB
+        return res.status(413).json({ error: 'Payload too large. Maximum limit is 1MB.' });
+    }
+    next();
+};

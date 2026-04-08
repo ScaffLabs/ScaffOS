@@ -15,3 +15,12 @@ export const auditLogger = (req: Request, res: Response, next: NextFunction) => 
     });
     next();
 };
+
+export const sensitiveOperationLogger = (req: Request, res: Response, next: NextFunction) => {
+    const { method, url } = req;
+    if (method === 'POST' && url.includes('/api/strategies')) {
+        // Avoid logging sensitive data
+        logger.info(`POST request to ${url}`);
+    }
+    next();
+};

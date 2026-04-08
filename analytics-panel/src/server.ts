@@ -9,6 +9,8 @@ import rateLimit from 'express-rate-limit';
 import bodyParser from 'body-parser';
 import { healthCheckHandler, readyCheckHandler } from './handlers/healthCheck';
 import logger, { logWithRequestId } from './logger';
+import { validateQueryParams, validateInputBody } from './middleware/inputValidator';
+import { auditLogger } from './middleware/auditLogger';
 
 const app = express();
 const server = createServer(app);
@@ -20,7 +22,6 @@ app.use(cors({
     origin: ['http://localhost:3000'], // Allowed origins
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
-
 app.use(helmet());
 
 const apiLimiter = rateLimit({
@@ -29,8 +30,9 @@ const apiLimiter = rateLimit({
     message: 'Too many requests, please try again later.',
 });
 app.use(apiLimiter);
-
 app.use(bodyParser.json({ limit: '1mb' }));
+app.use(validateInputBody);
+app.use(auditLogger);
 
 app.get('/api/health', healthCheckHandler);
 app.get('/api/ready', readyCheckHandler);
