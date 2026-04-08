@@ -28,18 +28,9 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
 });
 
 router.get('/users', authMiddleware, async (req, res) => {
-    const { limit = 10, offset = 0, sort = 'username', order = 'asc' } = req.query;
     try {
         const users = await getAllUsers();
-        const sortedUsers = users.sort((a, b) => {
-            if (order === 'asc') {
-                return a[sort] > b[sort] ? 1 : -1;
-            } else {
-                return a[sort] < b[sort] ? 1 : -1;
-            }
-        });
-        const paginatedUsers = sortedUsers.slice(Number(offset), Number(offset) + Number(limit));
-        res.status(200).json(paginatedUsers);
+        res.status(200).json(users);
     } catch (error) {
         logger.error('Error fetching users', { error: error.message });
         res.status(500).json({ error: 'Internal Server Error' });
