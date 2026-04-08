@@ -23,11 +23,13 @@ class NotFoundError extends Error {
 }
 
 const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
-    logger.error({
-        message: err instanceof Error ? err.message : 'Unknown error',
-        stack: err instanceof Error ? err.stack : 'No stack trace',
-        requestId: req.headers['x-request-id'] || 'N/A',
-    });
+    if (err instanceof ServiceError) {
+        logger.error({ message: 'Service error occurred', error: err.message, requestId: req.headers['x-request-id'] });
+    } else if (err instanceof ValidationError) {
+        logger.warn({ message: 'Validation error occurred', error: err.message, requestId: req.headers['x-request-id'] });
+    } else {
+        logger.error({ message: 'Internal server error', error: err instanceof Error ? err.message : 'Unknown error', requestId: req.headers['x-request-id'] });
+    }
 
     if (err instanceof ValidationError) {
         return res.status(400).json({ error: err.message });

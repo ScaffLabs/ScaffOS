@@ -27,9 +27,9 @@ app.use(logRequestDuration);
 
 // Rate limiting middleware
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests, please try again later.',
+    windowMs: 1 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests, please try again later.',
 });
 app.use(limiter);
 
@@ -38,25 +38,25 @@ app.use('/health', healthCheckRouter);
 app.use(errorHandler);
 
 const server = app.listen(PORT, () => {
-  logger.info(`Backtester service running on port ${PORT}`);
+    logger.info(`Backtester service running on port ${PORT}`);
 });
 
 const shutdown = async () => {
-  logger.info('Shutting down gracefully...');
-  await new Promise(resolve => server.close(resolve));
-  logger.info('Server closed');
-  process.exit(0);
+    logger.info('Shutting down gracefully...');
+    await new Promise(resolve => server.close(resolve));
+    logger.info('Server closed');
+    process.exit(0);
 };
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
 process.on('unhandledRejection', (reason) => {
-  logger.error('Unhandled Rejection:', reason);
-  shutdown();
+    logger.error('Unhandled Rejection:', reason);
+    shutdown();
 });
 
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception:', error);
-  shutdown();
+    logger.error('Uncaught Exception:', error);
+    shutdown();
 });
