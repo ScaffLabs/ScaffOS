@@ -4,14 +4,18 @@ import { BacktestResultSchema } from '../types';
 import { logger } from '../utils/logger';
 import axios from 'axios';
 import { withRetry, circuitBreaker } from './resilience';
+import { eventEmitter } from './healthCheckService';
 
 const simulateBacktestWithDependencies = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]) => {
     const orderServiceUrl = process.env.ORDER_SERVICE_URL;
     const dataServiceUrl = process.env.DATA_SERVICE_URL;
-    
+
     // Fetch some data from external services as part of the backtest
     const orderData = await withRetry(() => axios.get(`${orderServiceUrl}/orders`));
     const historicalDataResponse = await withRetry(() => axios.get(`${dataServiceUrl}/historical-data`));
+
+    // Emit events for order and historical data fetched
+    eventEmitter.emit('dataFetched', { orderData: orderData.data, historicalData: historicalDataResponse.data });
 
     // Here you would integrate that data into your logic
     logger.info('Fetched order data:', orderData.data);
