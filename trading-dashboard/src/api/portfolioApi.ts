@@ -6,6 +6,13 @@ import validator from 'validator';
 
 const positionStore = new InMemoryStore<Position>();
 
+/**
+ * Fetches positions from the in-memory store.
+ * @param req - The request object.
+ * @param res - The response object.
+ * @returns A JSON array of positions.
+ * @throws Will throw a ServiceError if fetching fails.
+ */
 export const fetchPositions = async (req: Request, res: Response) => {
     try {
         const { limit = 10, offset = 0 } = req.query;
@@ -19,6 +26,13 @@ export const fetchPositions = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Creates a new position in the store.
+ * @param req - The request object containing position data.
+ * @param res - The response object.
+ * @returns A JSON object confirming creation.
+ * @throws Will throw a ValidationError if provided data is invalid.
+ */
 export const createPosition = async (req: Request, res: Response) => {
     const position = req.body;
     const validationResult = PositionSchema.safeParse(position);
@@ -33,6 +47,13 @@ export const createPosition = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Updates an existing position.
+ * @param req - The request object containing the position ID and update data.
+ * @param res - The response object.
+ * @returns A JSON response with status 204 on success.
+ * @throws Will throw a NotFoundError if the position is not found.
+ */
 export const updatePosition = async (req: Request, res: Response) => {
     const positionId = req.params.id;
     const { quantity } = req.body;
@@ -53,6 +74,13 @@ export const updatePosition = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Deletes a position from the store.
+ * @param req - The request object containing the position ID.
+ * @param res - The response object.
+ * @returns A JSON response with status 204 on success.
+ * @throws Will throw a NotFoundError if the position is not found.
+ */
 export const deletePosition = async (req: Request, res: Response) => {
     const positionId = req.params.id;
     try {
@@ -69,6 +97,10 @@ export const deletePosition = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Registers the API routes with the Express application.
+ * @param app - The Express application instance.
+ */
 export const registerRoutes = (app) => {
     app.get('/api/positions', fetchPositions);
     app.post('/api/positions', createPosition);
