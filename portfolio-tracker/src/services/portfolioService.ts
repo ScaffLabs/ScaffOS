@@ -4,8 +4,9 @@ import { Portfolio, PortfolioUpdate, PortfolioSchema } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import logger from './logger';
 import { ValidationError, NotFoundError } from '../errors';
-import { CircuitBreaker } from 'opossum';
 import axios from 'axios';
+import CircuitBreaker from 'opossum';
+import env from '../config';
 
 const circuitBreakerOptions = {
     timeout: 3000,
@@ -63,6 +64,19 @@ export const fetchPortfolios = async (): Promise<Portfolio[]> => {
     return storage.getAll();
 };
 
-export const clearPortfolios = () => {
-    storage.clear();
+export const checkExternalServiceAvailability = async (url: string): Promise<boolean> => {
+    try {
+        await axios.get(url);
+        return true;
+    } catch (error) {
+        logger.error('External service not reachable', { url, error: error.message });
+        return false;
+    }
+};
+
+export const healthCheck = async () => {
+    const portfolioServiceStatus = await checkExternalServiceAvailability(env.PORTFOLIO_SERVICE_URL);
+    return {
+        portfolioService: portfolioServiceStatus,
+    };
 };
