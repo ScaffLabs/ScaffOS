@@ -1,40 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { postConfiguration } from '../services/ServiceClient';
-import { ConfigurationItem } from '../types';
+import { ConfigurationItem, validateEvent, ConfigurationItemSchema } from '../types';
 
 const Configuration: React.FC = () => {
-    const [key, setKey] = useState<string>(''); // State for configuration key
-    const [value, setValue] = useState<string>(''); // State for configuration value
-    const [error, setError] = useState<string | null>(null); // Error message state
-    const [successMessage, setSuccessMessage] = useState<string | null>(null); // Success message state
+    const [key, setKey] = useState<string>('');
+    const [value, setValue] = useState<string>('');
+    const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // Prevent default form submission behavior
-        setError(null); // Reset error message
-        setSuccessMessage(null); // Reset success message
-
+        e.preventDefault();
+        setError(null);
+        setSuccessMessage(null);
+        
         try {
-            const configItem: ConfigurationItem = { key, value }; // Create configuration item object
-            await postConfiguration(configItem.key, configItem.value); // Post configuration to the server
-            setSuccessMessage('Configuration created successfully!'); // Set success message on successful post
-            setKey(''); // Reset key input
-            setValue(''); // Reset value input
+            const configItem: ConfigurationItem = { key, value };
+            // Validate the item before posting
+            ConfigurationItemSchema.parse(configItem);
+            await postConfiguration(configItem.key, configItem.value);
+            setSuccessMessage('Configuration created successfully!');
+            setKey('');
+            setValue('');
         } catch (err) {
-            setError('Failed to create configuration. Please try again.'); // Set error message if post fails
+            setError('Failed to create configuration. Please try again.');
         }
     };
 
     return (
         <div>
             <h1>Configuration Management</h1>
-            <form onSubmit={handleSubmit}> // Form for configuration input
+            <form onSubmit={handleSubmit}>
                 <div>
                     <label htmlFor="key">Key:</label>
                     <input
                         type="text"
                         id="key"
                         value={key}
-                        onChange={(e) => setKey(e.target.value)} // Update key state on input change
+                        onChange={(e) => setKey(e.target.value)}
                         required
                     />
                 </div>
@@ -44,14 +46,14 @@ const Configuration: React.FC = () => {
                         type="text"
                         id="value"
                         value={value}
-                        onChange={(e) => setValue(e.target.value)} // Update value state on input change
+                        onChange={(e) => setValue(e.target.value)}
                         required
                     />
                 </div>
                 <button type="submit">Create Configuration</button>
             </form>
-            {error && <div style={{ color: 'red' }}>{error}</div>} // Display error message if exists
-            {successMessage && <div style={{ color: 'green' }}>{successMessage}</div>} // Display success message if exists
+            {error && <div style={{ color: 'red' }}>{error}</div>}
+            {successMessage && <div style={{ color: 'green' }}>{successMessage}</div>}
         </div>
     );
 };
