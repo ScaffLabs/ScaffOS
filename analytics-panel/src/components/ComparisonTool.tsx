@@ -56,7 +56,7 @@ export const ComparisonTool: React.FC = () => {
             <button onClick={handleCompare} disabled={loading}>Compare</button>
             {loading && <div>Loading...</div>}
             {error && <div>{error}</div>}
-            {comparisonResult && <div>{JSON.stringify(comparisonResult)}</div>}
+            {comparisonResult && <div>Better Strategy: {comparisonResult.betterStrategy}</div>}
         </div>
     );
 };
