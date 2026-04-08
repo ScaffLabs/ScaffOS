@@ -1,11 +1,15 @@
 import { Pool } from 'pg';
+import { config } from './config';
 
 const pool = new Pool({
-  user: 'your_user',
-  host: 'localhost',
-  database: 'your_database',
-  password: 'your_password',
+  user: config.DB_USER,
+  host: config.DB_HOST,
+  database: config.DB_NAME,
+  password: config.DB_PASSWORD,
   port: 5432,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
 const retry = async (fn: Function, retries: number = 3, delay: number = 1000) => {

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { fetchData } from './axiosClient';
 import { ServiceError } from './errors';
+import { pool } from './db';
 
 const checkDependentService = async (url: string) => {
     try {
