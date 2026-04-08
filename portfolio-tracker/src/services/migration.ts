@@ -12,3 +12,11 @@ export const seedData = async (): Promise<void> => {
     ];
     storage.migrate(seedPortfolios);
 };
+
+export const clearAllData = async (): Promise<void> => {
+    storage.clear();
+};
+
+export const fetchAllData = async (): Promise<Portfolio[]> => {
+    return storage.getAll();
+};
