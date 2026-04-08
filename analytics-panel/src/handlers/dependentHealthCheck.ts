@@ -1,25 +1,12 @@
 import { Request, Response } from 'express';
-import axios from 'axios';
-
-const SERVICE_URLS = {
-    strategyService: process.env.STRATEGY_SERVICE_URL,
-};
-
-const checkServiceHealth = async (url: string) => {
-    try {
-        const response = await axios.get(url);
-        return response.status === 200;
-    } catch (error) {
-        return false;
-    }
-};
+import { dependentHealthCheck } from '../api/analytics';
 
 export const dependentHealthCheckHandler = async (req: Request, res: Response) => {
-    const healthResults = await Promise.all(
-        Object.entries(SERVICE_URLS).map(async ([serviceName, url]) => {
-            const isHealthy = await checkServiceHealth(url);
-            return { serviceName, healthy: isHealthy };
-        })
-    );
-    res.status(200).json({ dependencies: healthResults });
+    try {
+        const healthResults = await dependentHealthCheck();
+        res.status(200).json({ dependencies: healthResults });
+    } catch (error) {
+        console.error('Dependent health check failed:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 };

@@ -1,7 +1,20 @@
-// Import the new handler at the top
-import { getStrategiesHandler } from './handlers/strategyHandler';
+import express from 'express';
+import { healthCheckHandler } from './handlers/healthCheck';
+import { dependentHealthCheckHandler } from './handlers/dependentHealthCheck';
+import { auditLogger } from './middleware/auditLogger';
+import { validateQueryParams } from './middleware/inputValidator';
 
-// ... other imports and middleware
+const app = express();
+app.use(express.json());
+app.use(auditLogger);
 
-// Register the new endpoint
-app.get('/api/strategies', getStrategiesHandler);
+// Health check endpoints
+app.get('/api/health', healthCheckHandler);
+app.get('/api/dependent-health', dependentHealthCheckHandler);
+
+// ... other routes and middleware registrations
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

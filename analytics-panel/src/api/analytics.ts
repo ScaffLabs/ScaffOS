@@ -35,3 +35,18 @@ export const healthCheck = async () => {
 export const getStrategies = async () => {
     return await fetchWithRetry('/api/strategies');
 };
+
+export const dependentHealthCheck = async () => {
+    const services = {
+        strategyService: process.env.STRATEGY_SERVICE_URL,
+    };
+    const healthResults = await Promise.all(Object.entries(services).map(async ([name, url]) => {
+        try {
+            const response = await axios.get(url);
+            return { serviceName: name, healthy: response.status === 200 };
+        } catch {
+            return { serviceName: name, healthy: false };
+        }
+    }));
+    return healthResults;
+};
