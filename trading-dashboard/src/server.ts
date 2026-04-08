@@ -2,7 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { healthCheck } from './utils/healthCheck';
+import { healthCheck, registerShutdownHandlers } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
@@ -10,6 +10,7 @@ import logger from './utils/logger';
 import config from './config';
 import { csrfMiddleware, getCsrfToken } from './middleware/csrfProtection';
 import validator from 'validator';
+import { closePool } from './utils/connectionPool';
 
 const app = express();
 
@@ -31,9 +32,12 @@ app.get('/api/csrf-token', getCsrfToken);
 
 registerRoutes(app);
 app.use(errorHandler);
+
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    logger.info(`Server is running on port ${PORT}`);
 });
+
+registerShutdownHandlers(server);
 
 export default app;
