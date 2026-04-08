@@ -39,3 +39,5 @@ export default logger;
 
 // Initialization logging
 logger.info('Starting Portfolio Tracker service', { environment: process.env.NODE_ENV, port: process.env.PORT, database: process.env.DATABASE_URL });
+logger.info('Connected to database', { database: process.env.DATABASE_URL });
+logger.info('Logger initialized', { logLevel: process.env.LOG_LEVEL });
