@@ -1,9 +1,9 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices } from './types';
+import { PriceData, CurrentPrices, PriceDataSchema, PriceEvent } from './types';
 import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
-import { ServiceError, ValidationError, OverflowError, DivisionByZeroError } from './errors';
+import { ServiceError, ValidationError, OverflowError } from './errors';
 import { EventEmitter } from 'events';
 import { EventBus } from './eventBus';
 
@@ -16,18 +16,13 @@ export class PriceAggregator extends EventEmitter {
         super();
         this.eventBus = eventBus;
         this.startPriceFetch();
-        this.eventBus.on('PRICE_ADDED', (priceData) => this.handlePriceAdded(priceData));
+        this.eventBus.on('PRICE_ADDED', (priceData: PriceData) => this.handlePriceAdded(priceData));
     }
 
     private validatePriceData(priceData: PriceData): void {
-        if (typeof priceData.price !== 'number' || priceData.price <= 0) {
-            throw new ValidationError('Price must be a positive number.');
-        }
-        if (typeof priceData.volume !== 'number' || priceData.volume <= 0) {
-            throw new ValidationError('Volume must be a positive number.');
-        }
-        if (priceData.price > Number.MAX_SAFE_INTEGER) {
-            throw new OverflowError('Price exceeds maximum limit.');
+        const validation = PriceDataSchema.safeParse(priceData);
+        if (!validation.success) {
+            throw new ValidationError(JSON.stringify(validation.error.errors));
         }
     }
 
@@ -44,5 +39,12 @@ export class PriceAggregator extends EventEmitter {
         }
     }
 
-    // Additional methods remain unchanged...
+    private async updateCurrentPrices(): Promise<void> {
+        // Logic to update current prices based on storage data.
+        this.currentPrices = await storage.findAll();
+    }
+
+    private handlePriceAdded(priceData: PriceData): void {
+        // Logic for handling price added event
+    }
 }
