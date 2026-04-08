@@ -29,7 +29,6 @@ app.use('/api/strategies', strategyRoutes);
 app.get('/api/health', healthCheckHandler);
 
 const startServer = async () => {
-    // Connect to the database and start the server...
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
