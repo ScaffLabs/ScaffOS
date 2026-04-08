@@ -15,7 +15,7 @@ export interface LatencyData {
 export const LatencyDataSchema = z.object({
     path: z.string().nonempty(),
     duration: z.number().nonnegative(),
-    timestamp: z.date(),
+    timestamp: z.date().transform((date) => new Date(date.toISOString())),
 });
 
 // Discriminated union for events

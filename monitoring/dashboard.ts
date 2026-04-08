@@ -2,8 +2,10 @@ import { Request, Response } from 'express';
 import { getAggregatedData } from './dataAggregator';
 import { ServiceError, ValidationError } from './errorClasses';
 import InMemoryStore from './dataStore';
+import { z } from 'zod';
+import { LatencyDataSchema } from './types';
 
-const store = new InMemoryStore<any>();
+const store = new InMemoryStore<{ value: number }>();
 
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
@@ -12,7 +14,7 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
 
         // Apply filtering
         if (filter) {
-            entries = entries.filter(entry => entry.data.someProperty && entry.data.someProperty.includes(filter));
+            entries = entries.filter(entry => entry.data.value && entry.data.value.toString().includes(filter));
         }
 
         // Apply sorting
@@ -37,10 +39,12 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
 
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
-        const { id, value } = req.body;
-        if (!id || value === undefined) {
-            throw new ValidationError('Invalid input data. ID and value are required.');
+        const bodyValidation = LatencyDataSchema.safeParse(req.body);
+        if (!bodyValidation.success) {
+            throw new ValidationError('Invalid input data.');
         }
+
+        const { id, value } = bodyValidation.data;
         store.create({ value }, id);
         res.status(201).json({ message: 'Entry created', id });
     } catch (error) {
@@ -55,10 +59,12 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { value } = req.body;
-        if (value === undefined) {
-            throw new ValidationError('Invalid input data. Value is required.');
+        const bodyValidation = LatencyDataSchema.safeParse(req.body);
+        if (!bodyValidation.success) {
+            throw new ValidationError('Invalid input data.');
         }
+
+        const { value } = bodyValidation.data;
         store.update(id, { value });
         res.status(204).send();
     } catch (error) {
