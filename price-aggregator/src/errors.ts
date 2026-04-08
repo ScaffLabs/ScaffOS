@@ -19,4 +19,18 @@ class NotFoundError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError };
+class OverflowError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'OverflowError';
+    }
+}
+
+class DivisionByZeroError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'DivisionByZeroError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError };

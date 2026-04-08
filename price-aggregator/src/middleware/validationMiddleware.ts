@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
+import { ValidationError } from '../errors';
 
 export const validatePriceData = [
     body('exchange')
@@ -18,7 +19,7 @@ export const validatePriceData = [
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        throw new ValidationError(errors.array().map(err => err.msg).join(', '));
     }
     next();
 };
