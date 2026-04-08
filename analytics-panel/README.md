@@ -1,10 +1,10 @@
 # Analytics Panel
 
 ## Project Description
-The Analytics Panel is a web application that provides performance metrics and strategy comparison tools for analyzing trading strategies. It offers a user-friendly interface to visualize data and manage strategies effectively.
+The Analytics Panel is a web application designed to provide performance metrics and strategy comparison tools for analyzing trading strategies. It features a user-friendly interface to visualize data and manage strategies effectively.
 
 ## Architecture Overview
-The application is built using React for the frontend and Express for the backend. It communicates with a MongoDB database to store and retrieve strategy data. The architecture consists of several components, including health checks, strategy management, and performance metrics fetching.
+The application is structured with React for the frontend and Express for the backend, interacting with a MongoDB database for storing and retrieving strategy data. Major components include health checks, strategy management, and performance metrics fetching.
 
 ## Setup Instructions
 ### Prerequisites
@@ -28,7 +28,7 @@ The application is built using React for the frontend and Express for the backen
    ```bash
    npm start
    ```
-2. The application will be available at `http://localhost:3000`.
+2. Access the application at `http://localhost:3000`.
 
 ## API Reference
 ### Performance Metrics
