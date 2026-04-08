@@ -15,12 +15,15 @@ router.post('/users', authMiddleware,
             return next(new ValidationError(errors.array()));
         }
         const { username, email } = req.body;
-        const existingUser = await findUserById(email);
-        if (existingUser) {
-            return res.status(409).json({ error: 'Email already in use' });
+        try {
+            const user = await createUser(username, email);
+            res.status(201).json(user);
+        } catch (error) {
+            if (error.message === 'Email already in use') {
+                return res.status(409).json({ error: error.message });
+            }
+            next(error);
         }
-        const user = createUser(username, email);
-        res.status(201).json(user);
     }
 );
 
@@ -33,7 +36,7 @@ router.put('/users/:id', authMiddleware,
             return next(new ValidationError(errors.array()));
         }
         const { id } = req.params;
-        const user = await findUserById(id);
+        const user = findUserById(id);
         if (!user) {
             return next(new NotFoundError('User not found'));
         }
@@ -45,5 +48,19 @@ router.put('/users/:id', authMiddleware,
         res.status(204).send();
     }
 );
+
+router.delete('/users/:id', authMiddleware, async (req, res, next) => {
+    const { id } = req.params;
+    const deleted = deleteUser(id);
+    if (!deleted) {
+        return next(new NotFoundError('User not found'));
+    }
+    res.status(204).send();
+});
+
+router.get('/users', authMiddleware, async (req, res) => {
+    const users = getAllUsers();
+    res.status(200).json(users);
+});
 
 export default router;
