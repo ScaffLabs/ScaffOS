@@ -3,6 +3,7 @@ import { initializeRedis } from './config/redis.config';
 import { errorHandler } from './middleware/errorHandler';
 import eventRoutes from './api/eventRoutes';
 import logger from './logger';
+import { config } from './config';
 import { v4 as uuidv4 } from 'uuid';
 
 const app = express();
@@ -21,20 +22,16 @@ const main = async () => {
     });
     app.use('/events', eventRoutes);
     app.use(errorHandler);
-
-    const server = app.listen(3000, () => {
-        logger.info('Server is running on port 3000');
+    
+    const server = app.listen(config.port, () => {
+        logger.info(`Server is running on port ${config.port}`);
     });
-
-    // Graceful shutdown handling
-    const shutdown = async () => {
+    
+    process.on('SIGTERM', async () => {
         logger.info('Shutting down gracefully...');
         await new Promise(resolve => server.close(resolve));
         process.exit(0);
-    };
-
-    process.on('SIGTERM', shutdown);
-    process.on('SIGINT', shutdown);
+    });
 };
 
 main();
