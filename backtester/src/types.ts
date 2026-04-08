@@ -1,20 +1,52 @@
 // Types and schemas for backtester service
 import { z } from 'zod';
 
+/**
+ * A unique identifier for an Order.
+ * @type OrderId
+ * @example 'order-1234'
+ */
 export type OrderId = string & { readonly brand: unique symbol };
+
+/**
+ * A unique identifier for a Trade.
+ * @type TradeId
+ * @example 'trade-5678'
+ */
 export type TradeId = string & { readonly brand: unique symbol };
 
+/**
+ * Historical market data point.
+ * @interface HistoricalData
+ * @property {number} timestamp - Unix timestamp of the data point.
+ * @property {number} price - Price at the given timestamp (must be positive).
+ */
 export interface HistoricalData {
     timestamp: number; // Unix timestamp of the data point
     price: number; // Price at the given timestamp
 }
 
+/**
+ * Strategy parameters for backtesting.
+ * @interface StrategyParameters
+ * @property {number} slippage - Allowed slippage as a decimal (e.g., 0.01 for 1%).
+ * @property {number} buyThreshold - Threshold for buying (0 to 1).
+ * @property {number} sellThreshold - Threshold for selling (0 to 1).
+ */
 export interface StrategyParameters {
-    slippage: number; // Allowed slippage as a decimal (e.g., 0.01 for 1%)
-    buyThreshold: number; // Threshold for buying (0 to 1)
-    sellThreshold: number; // Threshold for selling (0 to 1)
+    slippage: number; // Allowed slippage as a decimal
+    buyThreshold: number; // Threshold for buying
+    sellThreshold: number; // Threshold for selling
 }
 
+/**
+ * Result of a backtest execution.
+ * @interface BacktestResult
+ * @property {number} totalReturns - Total returns from the backtest.
+ * @property {number} trades - Total number of trades executed.
+ * @property {number} winRate - Win rate as a percentage.
+ * @property {string} performanceMetrics - Summary of backtest performance.
+ */
 export interface BacktestResult {
     totalReturns: number; // Total returns from the backtest
     trades: number; // Total number of trades executed

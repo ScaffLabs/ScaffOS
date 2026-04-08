@@ -22,11 +22,11 @@ class NotFoundError extends Error {
     }
 }
 
-const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
     logger.error({
-        message: err.message,
-        stack: err.stack,
-        requestId: req.headers['x-request-id'] || 'N/A'
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+        requestId: req.headers['x-request-id'] || 'N/A',
     });
 
     if (err instanceof ValidationError) {
