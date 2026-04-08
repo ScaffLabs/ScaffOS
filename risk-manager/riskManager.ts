@@ -3,45 +3,62 @@ import { DrawdownCircuitBreaker } from './drawdownCircuitBreaker';
 import { RiskAlerting } from './riskAlerting';
 import { PositionLimits } from './positionLimits';
 
+interface RiskPosition {
+  id: string;
+  asset: string;
+  position: number;
+}
+
 export default class RiskManager {
   private drawdownCircuitBreaker: DrawdownCircuitBreaker;
   private riskAlerting: RiskAlerting;
   private positionLimits: PositionLimits;
+  private riskPositions: RiskPosition[];
 
   constructor() {
     this.drawdownCircuitBreaker = new DrawdownCircuitBreaker(20);
     this.riskAlerting = new RiskAlerting();
     this.positionLimits = new PositionLimits();
+    this.riskPositions = [];
   }
 
   async getRiskPositions(limit: number, offset: number, sort?: string, filter?: string) {
-    // Logic to retrieve risk positions from the database
+    let positions = this.riskPositions;
+    if (filter) {
+      positions = positions.filter(pos => pos.asset.includes(filter));
+    }
+    if (sort) {
+      positions.sort((a, b) => a[sort] > b[sort] ? 1 : -1);
+    }
+    return positions.slice(offset, offset + limit);
   }
 
   async createRiskPosition(asset: string, position: number) {
-    // Assume we have a method to save the risk position
-    const savedPosition = await this.saveRiskPositionToDatabase(asset, position);
+    if (!this.positionLimits.checkLimit(asset, position)) {
+      throw new Error('Position exceeds limit for this asset.');
+    }
+    const newPosition: RiskPosition = { id: this.generateId(), asset, position };
+    this.riskPositions.push(newPosition);
     this.riskAlerting.triggerRiskAlert(`New risk position created for ${asset}`);
-    return savedPosition;
+    return newPosition;
   }
 
   async updateRiskPosition(id: string, position: number) {
-    // Logic to update risk position
+    const index = this.riskPositions.findIndex(pos => pos.id === id);
+    if (index === -1) return null;
+    this.riskPositions[index].position = position;
+    return this.riskPositions[index];
   }
 
   async deleteRiskPosition(id: string) {
-    // Logic to delete risk position
+    const index = this.riskPositions.findIndex(pos => pos.id === id);
+    if (index === -1) return false;
+    this.riskPositions.splice(index, 1);
+    return true;
   }
 
-  private async saveRiskPositionToDatabase(asset: string, position: number) {
-    try {
-      const response = await axios.post(`${process.env.DATABASE_URL}/risk`, { asset, position });
-      return response.data;
-    } catch (error) {
-      // Implement retry or circuit breaker logic here
-      console.error('Failed to save risk position:', error);
-      throw error;
-    }
+  private generateId() {
+    return Math.random().toString(36).substr(2, 9);
   }
 
   async monitorMemoryUsage() {
