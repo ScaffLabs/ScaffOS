@@ -5,7 +5,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { connectToEventBus } from './eventBus';
 import portfolioRoutes from './routes/portfolioRoutes';
-import logger from './services/logger';
+import logger, { requestLogger } from './services/logger';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { healthCheck } from './services/healthService';
@@ -18,6 +18,7 @@ app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100
 }));
+app.use(requestLogger);
 
 connectToEventBus();
 app.use('/api/portfolios', portfolioRoutes);
