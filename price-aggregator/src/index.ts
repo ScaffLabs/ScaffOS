@@ -12,7 +12,7 @@ const app = express();
 const httpServer = http.createServer(app);
 const priceAggregator = new PriceAggregator();
 const memoryMonitor = new MemoryMonitor();
-const connectionPool = createConnectionPool(); // Create a connection pool for DB connections
+const connectionPool = createConnectionPool();
 
 app.use(express.json());
 app.use((req, res, next) => {
@@ -43,11 +43,12 @@ const startApp = async () => {
     });
 
     app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, next) => {
+        const requestId = req.headers['x-request-id'] || generateRequestId();
         try {
             const newPrice = await priceAggregator.addPrice(req.body);
             res.status(201).json(newPrice);
         } catch (error) {
-            logError(error, 'Error adding price');
+            logError(error, 'Error adding price', requestId);
             next(error);
         }
     });
@@ -63,7 +64,6 @@ const startApp = async () => {
     });
 
     app.get('/ready', async (req, res) => {
-        // Implement readiness check based on the app state
         const isReady = await priceAggregator.isReady();
         if (isReady) {
             return res.status(200).json({ status: 'ready' });
@@ -75,7 +75,7 @@ const startApp = async () => {
 
     const shutdown = async () => {
         console.log('Shutting down gracefully...');
-        await connectionPool.drain(); // Drain connections
+        await connectionPool.drain();
         httpServer.close(() => {
             console.log('HTTP server closed');
             process.exit(0);
@@ -87,7 +87,7 @@ const startApp = async () => {
 
     httpServer.listen(config.port, () => {
         console.log(`Price aggregator service running on port ${config.port}`);
-        setInterval(() => memoryMonitor.logMemoryUsage(), 60000); // Log memory usage every minute
+        setInterval(() => memoryMonitor.logMemoryUsage(), 60000);
     });
 };
 

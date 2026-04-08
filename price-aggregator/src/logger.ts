@@ -55,3 +55,24 @@ const generateRequestId = () => {
 };
 
 export default logger;
+
+export const logHttpRequest = (req, res, duration, requestId) => {
+    logger.info({
+        message: 'HTTP Request',
+        method: req.method,
+        path: req.path,
+        status: res.statusCode,
+        duration,
+        requestId,
+    });
+};
+
+export const logHttpError = (error, context, requestId) => {
+    logger.error({
+        message: 'HTTP Error',
+        error: error.message,
+        stack: error.stack,
+        context,
+        requestId,
+    });
+};
