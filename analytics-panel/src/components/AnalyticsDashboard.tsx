@@ -12,6 +12,7 @@ export const AnalyticsDashboard: React.FC = () => {
     useEffect(() => {
         const loadMetrics = async () => {
             setLoading(true);
+            setError(null);
             try {
                 const data = await fetchPerformanceMetrics();
                 setMetrics(data);
@@ -30,7 +31,7 @@ export const AnalyticsDashboard: React.FC = () => {
     }, []);
 
     if (loading) return <div>Loading metrics...</div>;
-    if (error) return <div>{error}</div>;
+    if (error) return <div style={{ color: 'red' }}>{error}</div>;
     if (!metrics) return <div>No metrics available</div>;
 
     return (

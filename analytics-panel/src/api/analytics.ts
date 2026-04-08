@@ -1,68 +1,15 @@
 import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
-import { PerformanceMetrics, PerformanceMetricsSchema, Strategy, StrategySchema } from '../types';
-import { emitEvent } from './eventBus';
-import { dependentHealthCheck } from './dependentHealthCheck';
-import { CircuitBreaker } from 'opossum';
+import { logError } from '../utils/errorLogger';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
-const axiosInstance = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
-
-const fetchWithRetry = async (url: string, options: any, retries: number = 3) => {
+const fetchComparisonData = async (strategyA: string, strategyB: string) => {
     try {
-        return await axiosInstance(url, options);
+        const response = await axios.get(`/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
+        return response.data;
     } catch (error) {
-        if (retries > 0) {
-            console.log(`Retrying ${url}, attempts left: ${retries}`);
-            return fetchWithRetry(url, options, retries - 1);
-        }
-        throw error;
+        logError(error, 'Comparing strategies');
+        throw new ServiceError('Failed to fetch comparison data: ' + error.message);
     }
 };
 
-const circuitBreaker = new CircuitBreaker(fetchWithRetry, {
-    timeout: 3000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000,
-});
-
-const fetchPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
-    try {
-        const response = await circuitBreaker.fire('/api/performance', { method: 'GET' });
-        const validationResult = PerformanceMetricsSchema.safeParse(response.data);
-        if (!validationResult.success) {
-            throw new ServiceError('Invalid performance metrics data');
-        }
-        emitEvent('PERFORMANCE_METRICS_FETCHED', validationResult.data);
-        return validationResult.data;
-    } catch (error) {
-        throw new ServiceError('Failed to fetch performance metrics: ' + error.message);
-    }
-};
-
-const getStrategies = async (): Promise<Strategy[]> => {
-    try {
-        const response = await circuitBreaker.fire('/api/strategies', { method: 'GET' });
-        const strategies = response.data;
-        strategies.forEach(strategy => {
-            const validationResult = StrategySchema.safeParse(strategy);
-            if (!validationResult.success) {
-                throw new ServiceError('Invalid strategy data');
-            }
-        });
-        return strategies;
-    } catch (error) {
-        throw new ServiceError('Failed to fetch strategies: ' + error.message);
-    }
-};
-
-const healthCheck = async () => {
-    try {
-        const healthResults = await dependentHealthCheck();
-        return healthResults;
-    } catch (error) {
-        throw new ServiceError('Health check failed: ' + error.message);
-    }
-};
-
-export { fetchPerformanceMetrics, getStrategies, healthCheck };
+export { fetchComparisonData };
