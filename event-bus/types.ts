@@ -38,3 +38,6 @@ export type GetEventsQuery = {
     sortBy?: keyof Event;
     order?: 'asc' | 'desc';
 };
+
+// Exporting shared types
+export type { OrderId, UserId, EventType, Event };
