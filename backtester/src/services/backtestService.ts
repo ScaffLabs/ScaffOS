@@ -6,31 +6,49 @@ import axios from 'axios';
 import { withRetry, circuitBreaker } from './resilience';
 import { eventEmitter } from './healthCheckService';
 
+class InvalidInputError extends ServiceError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'InvalidInputError';
+    }
+}
+
 const simulateBacktestWithDependencies = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]) => {
     const orderServiceUrl = process.env.ORDER_SERVICE_URL;
     const dataServiceUrl = process.env.DATA_SERVICE_URL;
 
     // Fetch some data from external services as part of the backtest
-    const orderData = await withRetry(() => axios.get(`${orderServiceUrl}/orders`));
-    const historicalDataResponse = await withRetry(() => axios.get(`${dataServiceUrl}/historical-data`));
+    try {
+        const orderData = await withRetry(() => axios.get(`${orderServiceUrl}/orders`));
+        const historicalDataResponse = await withRetry(() => axios.get(`${dataServiceUrl}/historical-data`));
 
-    // Emit events for order and historical data fetched
-    eventEmitter.emit('dataFetched', { orderData: orderData.data, historicalData: historicalDataResponse.data });
+        // Emit events for order and historical data fetched
+        eventEmitter.emit('dataFetched', { orderData: orderData.data, historicalData: historicalDataResponse.data });
 
-    // Here you would integrate that data into your logic
-    logger.info('Fetched order data:', orderData.data);
-    logger.info('Fetched historical data:', historicalDataResponse.data);
+        // Here you would integrate that data into your logic
+        logger.info('Fetched order data:', orderData.data);
+        logger.info('Fetched historical data:', historicalDataResponse.data);
 
-    return calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+        return calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+    } catch (error) {
+        logger.error('Failed to fetch external data:', error.message);
+        throw new ServiceError('Failed to fetch necessary external data.');
+    }
 }, 5, 0);
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<number> {
+    if (historicalData.length === 0) throw new InvalidInputError('Historical data cannot be empty.');
+
     let totalReturns = 0;
     let position = 0;
 
     for (let i = 1; i < historicalData.length; i++) {
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
+
+        if (currentPrice < 0 || previousPrice < 0) {
+            throw new InvalidInputError('Price values must be non-negative.');
+        }
 
         if (currentPrice >= previousPrice * (1 + buyThreshold)) {
             position += (currentPrice - previousPrice) * (1 - slippage);
@@ -44,14 +62,14 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 
 export async function simulateBacktest(params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> {
     try {
-        if (!params || typeof params !== 'object') throw new ServiceError('Invalid parameters.');
+        if (!params || typeof params !== 'object') throw new InvalidInputError('Invalid parameters.');
         StrategyParametersSchema.parse(params);
         if (!Array.isArray(historicalData) || historicalData.length === 0) {
-            throw new ServiceError('Invalid input: historicalData must be a non-empty array.');
+            throw new InvalidInputError('Invalid input: historicalData must be a non-empty array.');
         }
         historicalData.forEach(data => {
             if (typeof data.timestamp !== 'number' || typeof data.price !== 'number') {
-                throw new ServiceError('Each historical data entry must have a numeric timestamp and price.');
+                throw new InvalidInputError('Each historical data entry must have a numeric timestamp and price.');
             }
             HistoricalDataSchema.parse(data);
         });
@@ -81,7 +99,7 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
         BacktestResultSchema.parse(result);
         return result;
     } catch (error) {
-        if (error instanceof ServiceError) throw error;
+        if (error instanceof InvalidInputError) throw error;
         throw new ServiceError('An error occurred during backtesting: ' + error.message);
     }
 }
