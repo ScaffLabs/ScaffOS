@@ -1,5 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import { v4 as uuidv4 } from 'uuid';
 import { StorageInterface } from './StorageInterface';
 
 export class SQLiteStore<T> implements StorageInterface<T> {
@@ -66,5 +67,9 @@ export class SQLiteStore<T> implements StorageInterface<T> {
       await operation();
     }
     await this.run(`COMMIT`);
+  }
+
+  async migrate(data: T[]): Promise<void> {
+    await Promise.all(data.map(async item => await this.create(item)));
   }
 }
