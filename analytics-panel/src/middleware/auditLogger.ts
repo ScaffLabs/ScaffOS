@@ -15,3 +15,8 @@ export const auditLogger = (req: Request, res: Response, next: NextFunction) => 
     });
     next();
 };
+
+export const logSensitiveOperation = (req: Request, operation: string) => {
+    const { user } = req;
+    logger.info(`User ${user?.id} performed sensitive operation: ${operation}`);
+};
