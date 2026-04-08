@@ -1,47 +1,27 @@
 import express from 'express';
 import riskManager from './riskManager';
 import logger from './logger';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
 
 const router = express.Router();
 
-/**
- * @swagger
- * /api/risk:
- *   get:
- *     summary: Retrieve risk positions
- *     parameters:
- *       - name: limit
- *         in: query
- *         description: Number of results to return
- *         required: false
- *         schema:
- *           type: integer
- *       - name: offset
- *         in: query
- *         description: Number of results to skip
- *         required: false
- *         schema:
- *           type: integer
- *       - name: sort
- *         in: query
- *         description: Field to sort by
- *         required: false
- *         schema:
- *           type: string
- *       - name: filter
- *         in: query
- *         description: Field to filter by
- *         required: false
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: A list of risk positions
- *       500:
- *         description: Error retrieving risk positions
- */
+// CORS configuration
+const allowedOrigins = ['http://example.com', 'http://anotherdomain.com'];
+router.use(cors({ origin: allowedOrigins }));
+router.use(helmet()); // Set security-related HTTP headers
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    message: 'Too many requests from this IP, please try again later.'
+});
+router.use(limiter);
+
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
@@ -62,28 +42,6 @@ router.get('/risk', [
     }
 });
 
-/**
- * @swagger
- * /api/risk:
- *   post:
- *     summary: Create a new risk position
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               asset:
- *                 type: string
- *               position:
- *                 type: number
- *     responses:
- *       201:
- *         description: Risk position created
- *       400:
- *         description: Invalid input
- */
 router.post('/risk', [
     body('asset').isString().notEmpty(),
     body('position').isNumeric().isFloat({ min: 0 }),
@@ -102,33 +60,6 @@ router.post('/risk', [
     }
 });
 
-/**
- * @swagger
- * /api/risk/{id}:
- *   put:
- *     summary: Update a risk position
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: Risk position ID
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               position:
- *                 type: number
- *     responses:
- *       204:
- *         description: Risk position updated
- *       404:
- *         description: Risk position not found
- */
 router.put('/risk/:id', [
     param('id').isString(),
     body('position').isNumeric().isFloat({ min: 0 }),
@@ -151,24 +82,6 @@ router.put('/risk/:id', [
     }
 });
 
-/**
- * @swagger
- * /api/risk/{id}:
- *   delete:
- *     summary: Delete a risk position
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: Risk position ID
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Risk position deleted
- *       404:
- *         description: Risk position not found
- */
 router.delete('/risk/:id', [
     param('id').isString(),
 ], async (req, res) => {
