@@ -5,8 +5,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 const logger = winston.createLogger({
   level: isProduction ? 'info' : 'debug',
   format: winston.format.combine(
-    isProduction ? winston.format.json() : winston.format.simple(),
     winston.format.timestamp(),
+    isProduction ? winston.format.json() : winston.format.prettyPrint(),
     winston.format.printf(({ timestamp, level, message, ...metadata }) => {
       const msg = `${timestamp} [${level}]: ${message}`;
       return metadata && Object.keys(metadata).length ? `${msg} ${JSON.stringify(metadata)}` : msg;
