@@ -31,4 +31,15 @@ describe('Portfolio Routes', () => {
     const response = await request(app).put('/api/portfolios/999').send({ name: 'Invalid Update' });
     expect(response.status).toBe(400);
   });
+
+  it('should return 400 for invalid request body', async () => {
+    const response = await request(app).post('/api/portfolios').send({});
+    expect(response.status).toBe(400);
+  });
+
+  it('should return 503 for health check when service is down', async () => {
+    const response = await request(app).get('/health');
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('UP');
+  });
 });

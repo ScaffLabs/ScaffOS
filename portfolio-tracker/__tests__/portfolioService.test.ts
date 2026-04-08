@@ -1,4 +1,4 @@
-import { createPortfolio, getPortfolio, updatePortfolio } from '../src/services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios } from '../src/services/portfolioService';
 import { Portfolio } from '../src/types';
 
 let testPortfolio: Portfolio;
@@ -32,5 +32,14 @@ describe('Portfolio Service', () => {
 
   test('should throw an error when updating a non-existent portfolio', async () => {
     await expect(updatePortfolio('999', { name: 'Updated Name' })).rejects.toThrow('Portfolio not found');
+  });
+
+  test('should throw an error on creating portfolio with invalid data', async () => {
+    await expect(createPortfolio({ name: '', positions: [] })).rejects.toThrow();
+  });
+
+  test('should return an empty array when fetching portfolios if none exist', async () => {
+    const portfolios = await fetchPortfolios();
+    expect(portfolios).toEqual([]);
   });
 });
