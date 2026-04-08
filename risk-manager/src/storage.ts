@@ -6,17 +6,16 @@ export interface Storage<T> {
     update(id: string, item: T): Promise<T | null>;
     delete(id: string): Promise<boolean>;
     findAll(limit?: number, offset?: number): Promise<T[]>;
+    transaction(operations: Array<() => Promise<any>>): Promise<void>;
 }
 
 export class InMemoryStorage<T> implements Storage<T> {
     private items: Map<string, T> = new Map();
-    private ids: string[] = [];
 
     async create(item: T): Promise<T> {
         const id = this.generateId();
         (item as any).id = id;
         this.items.set(id, item);
-        this.ids.push(id);
         return item;
     }
 
@@ -31,10 +30,7 @@ export class InMemoryStorage<T> implements Storage<T> {
     }
 
     async delete(id: string): Promise<boolean> {
-        if (!this.items.has(id)) return false;
-        this.items.delete(id);
-        this.ids = this.ids.filter(existingId => existingId !== id);
-        return true;
+        return this.items.delete(id);
     }
 
     async findAll(limit?: number, offset?: number): Promise<T[]> {
@@ -44,6 +40,17 @@ export class InMemoryStorage<T> implements Storage<T> {
 
     private generateId(): string {
         return Math.random().toString(36).substr(2, 9);
+    }
+
+    async transaction(operations: Array<() => Promise<any>>): Promise<void> {
+        const results: any[] = [];
+        try {
+            for (const operation of operations) {
+                results.push(await operation());
+            }
+        } catch (error) {
+            throw new Error('Transaction failed: ' + error);
+        }
     }
 }
 
@@ -71,20 +78,4 @@ export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
     async findByAsset(asset: string): Promise<RiskPosition[]> {
         return Array.from(this.indexByAsset.get(asset) || []);
     }
-
-    async transaction(operations: Array<() => Promise<any>>): Promise<void> {
-        const results: any[] = [];
-        try {
-            for (const operation of operations) {
-                results.push(await operation());
-            }
-        } catch (error) {
-            throw new Error('Transaction failed: ' + error);
-        }
-    }
-    
-    async reset(): Promise<void> {
-        this.items.clear();
-        this.indexByAsset.clear();
-    }
-} 
+}

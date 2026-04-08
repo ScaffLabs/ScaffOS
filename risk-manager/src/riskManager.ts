@@ -5,8 +5,8 @@ import logger from './logger';
 export default class RiskManager {
     private storage: RiskPositionStorage;
 
-    constructor() {
-        this.storage = new RiskPositionStorage();
+    constructor(storage: RiskPositionStorage) {
+        this.storage = storage;
     }
 
     async getRiskPositions(limit: number, offset: number) {

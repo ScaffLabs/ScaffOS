@@ -4,7 +4,6 @@ import { RiskPositionStorage } from './storage';
 export const migrateData = async (storage: RiskPositionStorage) => {
     // Migration logic can be implemented here
     console.log('Migrating data...');
-    // Example: Adjust schema if necessary
 };
 
 export const seedData = async (storage: RiskPositionStorage) => {
