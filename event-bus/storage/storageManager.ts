@@ -17,12 +17,32 @@ export class StorageManager<T> {
     }
 
     async migrate(): Promise<void> {
-        // Placeholder for data migration logic
         console.log('Migration utility called.');
+        // Implement migration logic if needed
     }
 
     async seedData(): Promise<void> {
-        // Placeholder for data seeding logic
-        console.log('Seeding data called.');
+        console.log('Seeding data...');
+        // Implement seeding logic if needed
+    }
+
+    async findEventById(id: string): Promise<T | null> {
+        return await this.storage.read(id);
+    }
+
+    async createEvent(item: T): Promise<T> {
+        return await this.storage.create(item);
+    }
+
+    async updateEvent(id: string, item: T): Promise<T | null> {
+        return await this.storage.update(id, item);
+    }
+
+    async deleteEvent(id: string): Promise<boolean> {
+        return await this.storage.delete(id);
+    }
+
+    async findAllEvents(limit = 10, offset = 0): Promise<T[]> {
+        return await this.storage.findAll(limit, offset);
     }
 }
