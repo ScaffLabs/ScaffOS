@@ -7,12 +7,13 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import morgan from 'morgan';
+import { MemoryMonitor } from './memoryMonitor';
 
 const app = express();
 const server = http.createServer(app);
 const wss = new Server({ server });
-
 const priceAggregator = new PriceAggregator();
+const memoryMonitor = new MemoryMonitor();
 
 // Middleware Setup
 app.use(cors({ origin: ['http://allowedorigin.com'] }));
@@ -20,10 +21,9 @@ app.use(helmet());
 app.use(morgan('combined'));
 app.use(express.json());
 
-// Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 app.use(limiter);
 
@@ -45,9 +45,25 @@ app.get('/health', async (req, res) => {
     }
 });
 
+app.get('/ready', (req, res) => {
+    res.status(200).json({ status: 'ready' });
+});
+
 wss.on('connection', (ws) => {
     priceAggregator.subscribe(ws);
 });
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+    console.log('Shutting down gracefully...');
+    await priceAggregator.shutdown();
+    server.close(() => {
+        console.log('Server closed.');
+        process.exit(0);
+    });
+});
+
+setInterval(() => memoryMonitor.logMemoryUsage(), 60000);
 
 server.listen(3000, () => {
     console.log('Price aggregator service running on port 3000');

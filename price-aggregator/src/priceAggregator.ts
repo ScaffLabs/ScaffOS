@@ -8,16 +8,21 @@ export class PriceAggregator {
     private prices: PriceData[] = [];
     private currentPrices: CurrentPrices = {};
     private clients: WebSocket[] = [];
+    private intervalId: NodeJS.Timeout | null = null;
 
     constructor() {
         this.startPriceFetch();
     }
 
     private startPriceFetch() {
-        setInterval(async () => {
-            await this.fetchPrices();
-            this.calculateVWAP();
-            this.broadcastPrices();
+        this.intervalId = setInterval(async () => {
+            try {
+                await this.fetchPrices();
+                this.calculateVWAP();
+                this.broadcastPrices();
+            } catch (error) {
+                console.error('Error in price fetch:', error);
+            }
         }, 5000);
     }
 
@@ -87,5 +92,12 @@ export class PriceAggregator {
             }
         }));
         return results.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+    }
+
+    public async shutdown() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+        }
+        this.clients.forEach(client => client.close());
     }
 }
