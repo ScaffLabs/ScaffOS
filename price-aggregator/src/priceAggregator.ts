@@ -1,16 +1,16 @@
 import WebSocket from 'ws';
-import axios from 'axios';
 import { PriceData, CurrentPrices } from './types';
 import { httpClient } from './httpClient';
-import { validationResult } from 'express-validator';
+import { EventEmitter } from 'events';
 
-export class PriceAggregator {
+export class PriceAggregator extends EventEmitter {
     private prices: PriceData[] = [];
     private currentPrices: CurrentPrices = {};
     private clients: WebSocket[] = [];
     private intervalId: NodeJS.Timeout | null = null;
 
     constructor() {
+        super();
         this.startPriceFetch();
     }
 
@@ -20,6 +20,7 @@ export class PriceAggregator {
                 await this.fetchPrices();
                 this.calculateVWAP();
                 this.broadcastPrices();
+                this.emit('pricesUpdated', this.currentPrices);
             } catch (error) {
                 console.error('Error in price fetch:', error);
             }
