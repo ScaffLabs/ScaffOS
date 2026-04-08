@@ -27,4 +27,18 @@ const postConfiguration = async (key: string, value: string): Promise<Configurat
     }
 };
 
-export { fetchHealthStatus, postConfiguration };
+const requestWithRetry = async (requestFunc: () => Promise<any>, retries = 5, backoff = 300) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await requestFunc();
+        } catch (error) {
+            if (i < retries - 1) {
+                await new Promise(res => setTimeout(res, backoff * Math.pow(2, i)));
+            } else {
+                throw error;
+            }
+        }
+    }
+};
+
+export { fetchHealthStatus, postConfiguration, requestWithRetry };
