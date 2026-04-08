@@ -14,3 +14,16 @@ export const seedData = async (storage: RiskPositionStorage) => {
         await storage.create(position);
     }
 };
+
+export const runMigrations = async (storage: RiskPositionStorage) => {
+    // Implement data migration logic here
+    console.log('Running migrations...');
+    // Example migration adjustment if the schema changes
+    // Adjust the logic as per schema updates
+};
+
+export const resetData = async (storage: RiskPositionStorage) => {
+    // Reset the storage to initial state
+    await storage.deleteAll();
+    await seedData(storage);
+};

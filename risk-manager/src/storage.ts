@@ -71,4 +71,15 @@ export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
     async findByAsset(asset: string): Promise<RiskPosition[]> {
         return Array.from(this.indexByAsset.get(asset) || []);
     }
+
+    async transaction(operations: Array<() => Promise<any>>): Promise<void> {
+        const results: any[] = [];
+        try {
+            for (const operation of operations) {
+                results.push(await operation());
+            }
+        } catch (error) {
+            throw new Error('Transaction failed: ' + error);
+        }
+    }
 }
