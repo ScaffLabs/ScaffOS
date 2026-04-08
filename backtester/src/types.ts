@@ -5,13 +5,13 @@ import { z } from 'zod';
  * A unique identifier for an order.
  * @example 'b1f46e61-7a1e-4b4d-bcb2-5b3b7f3e3ab8'
  */
-export type OrderId = string;
+export type OrderId = string & { readonly brand: unique symbol };
 
 /**
  * A unique identifier for a trade.
  * @example 'd2e8e7c5-9cdf-4e2e-bb94-1f3e8f1b9b0d'
  */
-export type TradeId = string;
+export type TradeId = string & { readonly brand: unique symbol };
 
 /**
  * Represents historical market data for backtesting.
