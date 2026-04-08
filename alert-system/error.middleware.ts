@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { ServiceError, ValidationError, NotFoundError } from './error.types';
+import logger from './logger';
 
 export const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err);
+    logger.error(err);
     if (err instanceof ValidationError) {
         return res.status(400).json({ message: 'Validation Error: ' + err.message });
     }
