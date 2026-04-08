@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { publishEvent } from '../utils/eventBus';
 import config from '../config';
-import { Order } from '../types';
+import { Order, OrderSchema } from '../types';
+import { ServiceError } from '../utils/errors';
 import { retry, circuitBreaker } from '../utils/retry';
 
 const BASE_URL = `${config.API_URL}/orders`;
@@ -12,7 +13,11 @@ const submitOrderRequest = async (order: Order) => {
 };
 
 export const submitOrder = circuitBreaker(retry(async (order: Order) => {
-    const result = await submitOrderRequest(order);
+    const validationResult = OrderSchema.safeParse(order);
+    if (!validationResult.success) {
+        throw new ServiceError('Invalid order details');
+    }
+    const result = await submitOrderRequest(validationResult.data);
     publishEvent('ORDER_SUBMITTED', { type: 'ORDER_SUBMITTED', order: result });
     return result;
 }));
