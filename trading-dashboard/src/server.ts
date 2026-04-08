@@ -4,7 +4,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import bodyParser from 'body-parser';
 import { fetchPositions, createPosition, updatePosition, deletePosition } from './api/portfolioApi';
-import { validateInput } from './middleware/inputValidation';
+import { validateInput, validatePositionId } from './middleware/inputValidation';
 import errorHandler from './middleware/errorHandler';
 import logger from './utils/logger';
 
@@ -39,7 +39,7 @@ app.post('/api/positions', async (req, res) => {
     }
 });
 
-app.put('/api/positions/:id', validateInput, async (req, res) => {
+app.put('/api/positions/:id', validatePositionId, validateInput, async (req, res) => {
     const { id } = req.params;
     const { quantity } = req.body;
     try {
@@ -51,7 +51,7 @@ app.put('/api/positions/:id', validateInput, async (req, res) => {
     }
 });
 
-app.delete('/api/positions/:id', async (req, res) => {
+app.delete('/api/positions/:id', validatePositionId, async (req, res) => {
     const { id } = req.params;
     try {
         await deletePosition(id);
