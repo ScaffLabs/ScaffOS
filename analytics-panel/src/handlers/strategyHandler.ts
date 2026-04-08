@@ -4,12 +4,17 @@ import { ValidationError, NotFoundError } from '../errors/customErrors';
 import logger from '../logger';
 
 export const getStrategiesHandler = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, name } = req.query;
+    const { limit = 10, offset = 0, name, sort } = req.query;
     try {
-        const query = {};
-        if (name) query.name = name;
+        const query: any = {};
+        if (name) query.name = { $regex: name, $options: 'i' };
         const strategies = await findStrategies(query);
-        const paginatedStrategies = strategies.slice(Number(offset), Number(offset) + Number(limit));
+        const sortedStrategies = strategies.sort((a, b) => {
+            if (sort === 'asc') return a.name.localeCompare(b.name);
+            if (sort === 'desc') return b.name.localeCompare(a.name);
+            return 0;
+        });
+        const paginatedStrategies = sortedStrategies.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedStrategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
@@ -37,6 +42,9 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
     const { name, parameters } = req.body;
     try {
         const updatedStrategy = await updateStrategy(id, { name, parameters });
+        if (!updatedStrategy) {
+            throw new NotFoundError('Strategy not found.');
+        }
         res.status(200).json(updatedStrategy);
     } catch (error) {
         if (error instanceof NotFoundError) {
@@ -51,7 +59,10 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
 export const deleteStrategyHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        await deleteStrategy(id);
+        const deleted = await deleteStrategy(id);
+        if (!deleted) {
+            throw new NotFoundError('Strategy not found.');
+        }
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {
