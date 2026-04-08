@@ -12,3 +12,8 @@
 ## [1.1.1] - 2023-10-15
 - Fixed issues with API key validation logic.
 - Enhanced error handling in middleware and routes.
+
+## [1.2.0] - 2023-10-20
+- Added user management features including create, update, delete, and fetch users.
+- Introduced validation for user inputs using express-validator.
+- Improved logging for better traceability of issues.
