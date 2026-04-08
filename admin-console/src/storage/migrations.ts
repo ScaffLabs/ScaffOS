@@ -9,8 +9,8 @@ const migrateData = async (sourceDb: Database, targetDb: Database) => {
 };
 
 const runMigrations = async (sourceDbUrl: string, targetDbUrl: string) => {
-    const sourceDb = new Database();
-    const targetDb = new Database();
+    const sourceDb = new Database('in-memory');
+    const targetDb = new Database('in-memory');
     await sourceDb.connect(sourceDbUrl);
     await targetDb.connect(targetDbUrl);
     await migrateData(sourceDb, targetDb);
@@ -18,4 +18,4 @@ const runMigrations = async (sourceDbUrl: string, targetDbUrl: string) => {
     await targetDb.closeConnection();
 };
 
-export { runMigrations };  
+export { runMigrations };

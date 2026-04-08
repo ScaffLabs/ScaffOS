@@ -54,7 +54,7 @@ class Database {
             });
         }
         return [];
-    }  
+    }
 
     async getConfigurationByKey(key: string): Promise<ConfigurationItem | null> {
         if (!this.dbClient) throw new Error('Database not connected');
