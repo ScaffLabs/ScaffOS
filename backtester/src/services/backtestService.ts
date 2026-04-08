@@ -13,18 +13,22 @@ class InvalidInputError extends ServiceError {
     }
 }
 
+const fetchDependencies = async (orderServiceUrl: string, dataServiceUrl: string) => {
+    const orderData = await withRetry(() => axios.get(`${orderServiceUrl}/orders`));
+    const historicalDataResponse = await withRetry(() => axios.get(`${dataServiceUrl}/historical-data`));
+    return { orderData: orderData.data, historicalData: historicalDataResponse.data };
+};
+
 const simulateBacktestWithDependencies = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]) => {
     const orderServiceUrl = process.env.ORDER_SERVICE_URL;
     const dataServiceUrl = process.env.DATA_SERVICE_URL;
 
     try {
-        const orderData = await withRetry(() => axios.get(`${orderServiceUrl}/orders`));
-        const historicalDataResponse = await withRetry(() => axios.get(`${dataServiceUrl}/historical-data`));
+        const { orderData, historicalData: extHistoricalData } = await fetchDependencies(orderServiceUrl, dataServiceUrl);
+        eventEmitter.emit('dataFetched', { orderData, historicalData: extHistoricalData });
 
-        eventEmitter.emit('dataFetched', { orderData: orderData.data, historicalData: historicalDataResponse.data });
-
-        logger.info('Fetched order data:', orderData.data);
-        logger.info('Fetched historical data:', historicalDataResponse.data);
+        logger.info('Fetched order data:', orderData);
+        logger.info('Fetched historical data:', extHistoricalData);
 
         return calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
     } catch (error) {
