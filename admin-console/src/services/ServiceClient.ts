@@ -3,12 +3,15 @@ import config from '../config';
 import { emitEvent } from '../events/EventBus';
 import { EventType, ConfigurationItem } from '../types';
 import { ServiceError } from '../errors/CustomErrors';
+import { CircuitBreaker } from 'opossum';
 
 const BASE_URL = config.API_URL;
 
+const circuitBreaker = new CircuitBreaker({timeout: 5000, errorThresholdPercentage: 50, resetTimeout: 30000});
+
 const fetchHealthStatus = async () => {
     try {
-        const response = await axios.get(`${BASE_URL}/health`);
+        const response = await circuitBreaker.fire(axios.get, `${BASE_URL}/health`);
         emitEvent('SERVICE_HEALTH_UPDATED', response.data);
         return response.data;
     } catch (error) {
@@ -18,7 +21,7 @@ const fetchHealthStatus = async () => {
 
 const postConfiguration = async (key: string, value: string): Promise<ConfigurationItem> => {
     try {
-        const response = await axios.post(`${BASE_URL}/config`, { key, value });
+        const response = await circuitBreaker.fire(axios.post, `${BASE_URL}/config`, { key, value });
         const configItem: ConfigurationItem = { key, value };
         emitEvent('CONFIGURATION_CREATED', configItem);
         return response.data;
