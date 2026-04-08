@@ -45,16 +45,18 @@ export const ComparisonTool: React.FC = () => {
     return (
         <div>
             <h1>Compare Strategies</h1>
-            <select value={strategyA} onChange={(e) => setStrategyA(e.target.value)}>
-                <option value='' disabled>Select Strategy A</option>
-                {strategies.map(strategy => <option key={strategy} value={strategy}>{strategy}</option>)}
-            </select>
-            <select value={strategyB} onChange={(e) => setStrategyB(e.target.value)}>
-                <option value='' disabled>Select Strategy B</option>
-                {strategies.map(strategy => <option key={strategy} value={strategy}>{strategy}</option>)}
-            </select>
-            <button onClick={handleCompare} disabled={loading}>Compare</button>
-            {loading && <div>Loading...</div>}
+            <div>
+                <select value={strategyA} onChange={(e) => setStrategyA(e.target.value)}>
+                    <option value='' disabled>Select Strategy A</option>
+                    {strategies.map(strategy => <option key={strategy} value={strategy}>{strategy}</option>)}
+                </select>
+                <select value={strategyB} onChange={(e) => setStrategyB(e.target.value)}>
+                    <option value='' disabled>Select Strategy B</option>
+                    {strategies.map(strategy => <option key={strategy} value={strategy}>{strategy}</option>)}
+                </select>
+                <button onClick={handleCompare} disabled={loading}>Compare</button>
+            </div>
+            {loading && <div>Loading comparison...</div>}
             {error && <div>{error}</div>}
             {comparisonResult && <div>Better Strategy: {comparisonResult.betterStrategy}</div>}
         </div>

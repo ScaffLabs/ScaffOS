@@ -5,6 +5,7 @@ import { DrawdownChart } from './DrawdownChart';
 export const AnalyticsDashboard: React.FC = () => {
     const [metrics, setMetrics] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadMetrics = async () => {
@@ -13,13 +14,16 @@ export const AnalyticsDashboard: React.FC = () => {
                 setMetrics(data);
             } catch (err) {
                 setError('Failed to load metrics.');
+            } finally {
+                setLoading(false);
             }
         };
         loadMetrics();
     }, []);
 
+    if (loading) return <div>Loading metrics...</div>;
     if (error) return <div>{error}</div>;
-    if (!metrics) return <div>Loading...</div>;
+    if (!metrics) return <div>No metrics available</div>;
 
     return (
         <div>
