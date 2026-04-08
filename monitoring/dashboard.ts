@@ -7,12 +7,6 @@ import { OrderId } from './types';
 
 const store = new InMemoryStore<{ value: number }>();
 
-/**
- * List all entries in the dashboard.
- * @param req - Express request object
- * @param res - Express response object
- * @returns - A JSON array of dashboard entries or a 204 status if no entries are found.
- */
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
         const entries = Array.from(store.storage.values());
@@ -26,12 +20,6 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * Create a new dashboard entry.
- * @param req - Express request object containing id and value in the body.
- * @param res - Express response object
- * @returns - A message confirming the creation of the entry or an error.
- */
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const bodyValidation = LatencyDataSchema.safeParse(req.body);
@@ -39,6 +27,9 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
             throw new ValidationError('Invalid input data. Both id and value are required.');
         }
         const { id, value } = bodyValidation.data;
+        if (store.read(id as OrderId)) {
+            throw new ValidationError('Entry with this ID already exists.');
+        }
         store.create({ value }, id as OrderId);
         res.status(201).json({ message: 'Entry created', id });
     } catch (error) {
@@ -51,12 +42,6 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * Update an existing dashboard entry based on ID.
- * @param req - Express request object containing the ID in the params and new value in the body.
- * @param res - Express response object
- * @returns - 204 status on successful update or an error.
- */
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -82,15 +67,12 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * Delete a dashboard entry based on ID.
- * @param req - Express request object containing the ID in the params.
- * @param res - Express response object
- * @returns - 204 status on successful deletion or an error.
- */
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        if (!store.read(id as OrderId)) {
+            throw new NotFoundError('Entry not found.');
+        }
         store.delete(id as OrderId);
         res.status(204).send();
     } catch (error) {

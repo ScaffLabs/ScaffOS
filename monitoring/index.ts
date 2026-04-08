@@ -42,6 +42,17 @@ app.use(errorMiddleware);
 
 const server = createServer(app);
 
+const gracefulShutdown = () => {
+    console.log('Shutting down gracefully...');
+    server.close(() => {
+        console.log('HTTP server closed.');
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
 server.listen(PORT, () => {
     console.log(`Monitoring service running on port ${PORT}`);
 });
