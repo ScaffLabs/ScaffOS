@@ -51,4 +51,16 @@ describe('portfolioApi', () => {
         (axios.delete as jest.Mock).mockRejectedValue(new Error('Network Error'));
         await expect(deletePosition('2')).rejects.toThrow(NotFoundError);
     });
+
+    it('GET /api/positions should return 400 for invalid pagination parameters', async () => {
+        const response = await request(app).get('/api/positions?limit=invalid');
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: 'Invalid pagination parameters' });
+    });
+
+    it('POST /api/positions without required fields should return 400', async () => {
+        const response = await request(app).post('/api/positions').send({ symbol: 'TSLA' });
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('Invalid position data');
+    });
 });
