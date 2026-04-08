@@ -22,6 +22,7 @@ const checkHealth = async () => {
     } catch (error) {
         logger.error('Other service connection failed', error);
     }
+
     return { redisHealthy, serviceHealthy };
 };
 

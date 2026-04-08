@@ -2,7 +2,6 @@ import axios from 'axios';
 import { config } from '../config';
 import { Message, UserCreated } from '../messageSchema';
 import eventBus from '../eventBus';
-import { circuitBreaker } from '../utils/retry';
 import logger from '../logger';
 
 const fetchUserService = async (userId: string) => {
@@ -10,7 +9,19 @@ const fetchUserService = async (userId: string) => {
     return await axios.get(url);
 };
 
-const fetchUserServiceWithRetry = circuitBreaker(fetchUserService);
+const fetchUserServiceWithRetry = async (userId: string) => {
+    let retries = 3;
+    while (retries > 0) {
+        try {
+            return await fetchUserService(userId);
+        } catch (error) {
+            retries--;
+            logger.error('Error fetching user data, retrying...', error.message);
+            if (retries === 0) throw error;
+            await new Promise(res => setTimeout(res, 1000)); // wait before retrying
+        }
+    }
+};
 
 export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
     try {

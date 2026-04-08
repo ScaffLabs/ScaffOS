@@ -40,6 +40,21 @@ class EventBus {
     public getSubscriptionCount(topic: string): number {
         return this.subscriptions[topic] ? this.subscriptions[topic].length : 0;
     }
+
+    public async publishWithRetry<T>(topic: string, data: T, retries = 3): Promise<void> {
+        const message: Message<T> = { topic, data, timestamp: Date.now() };
+        while (retries > 0) {
+            try {
+                this.emitter.emit(topic, message);
+                return;
+            } catch (error) {
+                retries--;
+                console.error('Publish failed, retrying...', error);
+                await new Promise(res => setTimeout(res, 1000)); // wait before retrying
+                if (retries === 0) throw error;
+            }
+        }
+    }
 }
 
 const eventBus = new EventBus();
