@@ -7,10 +7,19 @@ const querySchema = z.object({
     offset: z.string().optional().transform((val) => Number(val)),
 });
 
+const bodySchema = z.object({
+    id: z.string().nonempty(),
+    value: z.number().int().nonnegative(),
+});
+
 const sanitize = (req: Request, res: Response, next: NextFunction) => {
     try {
         // Sanitize body input
         if (req.body) {
+            const bodyValidation = bodySchema.safeParse(req.body);
+            if (!bodyValidation.success) {
+                throw new ValidationError('Invalid body data.');
+            }
             for (const key in req.body) {
                 if (typeof req.body[key] === 'string') {
                     req.body[key] = req.body[key].trim().replace(/<[^>]*>/g, ''); // Basic XSS prevention

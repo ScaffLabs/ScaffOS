@@ -14,6 +14,7 @@ import config from './config';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { EventEmitter } from 'events';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
 const PORT = config.PORT;
@@ -27,6 +28,14 @@ app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' })); // Set request size limit
 app.use(latencyTracker);
 app.use(auditLogger);
+
+// Security: Prevent CSRF attacks
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('X-Frame-Options', 'DENY');
+    next();
+});
 
 app.get('/health', healthCheck);
 app.get('/dashboard', listDashboardEntries);
