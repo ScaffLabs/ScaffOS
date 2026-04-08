@@ -1,7 +1,8 @@
 import winston from 'winston';
 
-const logFormat = winston.format.printf(({ level, message, timestamp }) => {
-  return `${timestamp} ${level}: ${message}`;
+const logFormat = winston.format.printf(({ level, message, timestamp, ...meta }) => {
+  const logMessage = `${timestamp} ${level}: ${message}`;
+  return meta && Object.keys(meta).length ? `${logMessage} ${JSON.stringify(meta)}` : logMessage;
 });
 
 const logger = winston.createLogger({
