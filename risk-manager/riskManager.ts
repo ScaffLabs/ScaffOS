@@ -2,12 +2,7 @@ import axios from 'axios';
 import { DrawdownCircuitBreaker } from './drawdownCircuitBreaker';
 import { RiskAlerting } from './riskAlerting';
 import { PositionLimits } from './positionLimits';
-
-interface RiskPosition {
-  id: string;
-  asset: string;
-  position: number;
-}
+import { RiskPosition, RiskPositionSchema, RiskEvent } from './sharedTypes';
 
 export default class RiskManager {
   private drawdownCircuitBreaker: DrawdownCircuitBreaker;
@@ -34,10 +29,16 @@ export default class RiskManager {
   }
 
   async createRiskPosition(asset: string, position: number) {
+    const newPosition = { id: this.generateId() as OrderId, asset, position };
+    const validationResult = RiskPositionSchema.safeParse(newPosition);
+    if (!validationResult.success) {
+      throw new Error('Invalid risk position data: ' + validationResult.error);
+    }
+
     if (!this.positionLimits.checkLimit(asset, position)) {
       throw new Error('Position exceeds limit for this asset.');
     }
-    const newPosition: RiskPosition = { id: this.generateId(), asset, position };
+
     this.riskPositions.push(newPosition);
     this.riskAlerting.triggerRiskAlert(`New risk position created for ${asset}`);
     return newPosition;
@@ -46,6 +47,13 @@ export default class RiskManager {
   async updateRiskPosition(id: string, position: number) {
     const index = this.riskPositions.findIndex(pos => pos.id === id);
     if (index === -1) return null;
+
+    const updatedPosition = { ...this.riskPositions[index], position };
+    const validationResult = RiskPositionSchema.safeParse(updatedPosition);
+    if (!validationResult.success) {
+      throw new Error('Invalid risk position data: ' + validationResult.error);
+    }
+
     this.riskPositions[index].position = position;
     return this.riskPositions[index];
   }
@@ -58,7 +66,7 @@ export default class RiskManager {
   }
 
   private generateId() {
-    return Math.random().toString(36).substr(2, 9);
+    return Math.random().toString(36).substr(2, 9) as OrderId;
   }
 
   async monitorMemoryUsage() {
