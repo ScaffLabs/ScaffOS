@@ -10,6 +10,8 @@ import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { logRequest } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
+import { logAudit } from './middleware/auditLogger';
+import { body, validationResult } from 'express-validator';
 
 dotenv.config();
 const app = express();
@@ -33,7 +35,6 @@ const startServer = async () => {
 
 startServer();
 
-// Graceful shutdown
 const shutdown = async () => {
     console.log('Shutting down gracefully...');
     await db.closeConnection();
@@ -45,3 +46,16 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+
+// Middleware for input validation and sanitization
+app.use('/api/config', [
+    body('key').trim().escape().notEmpty().withMessage('Key is required'),
+    body('value').trim().escape().notEmpty().withMessage('Value is required'),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        logAudit(req, res, next);
+    }
+]);
