@@ -1,58 +1,63 @@
 import { User, UserId } from './types';
 import { ValidationError } from './errors';
-import crypto from 'crypto';
+import { createConnectionPool } from './database';
 
-// In-memory store for users
-const users: Map<UserId, User> = new Map();
+const pool = createConnectionPool();
 
-export const createUser = (username: string, email: string): User => {
+export const createUser = async (username: string, email: string): Promise<User> => {
     if (!username || !email) {
         throw new ValidationError(['Username and email are required.']);
     }
-    if (findUserByEmail(email)) {
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
         throw new ValidationError(['Email already in use.']);
     }
     const id: UserId = crypto.randomUUID() as UserId;
-    const user: User = { id, username, email };
-    users.set(id, user);
+    const user = { id, username, email };
+    await pool.query('INSERT INTO users (id, username, email) VALUES ($1, $2, $3)', [id, username, email]);
     return user;
 };
 
-export const updateUser = (id: UserId, userData: Partial<User>): User | null => {
-    const user = users.get(id);
+export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
+    const user = await findUserById(id);
     if (!user) {
         throw new ValidationError(['User not found.']);
     }
     const updatedUser = { ...user, ...userData };
-    users.set(id, updatedUser);
+    await pool.query('UPDATE users SET username = $1, email = $2 WHERE id = $3', [updatedUser.username, updatedUser.email, id]);
     return updatedUser;
 };
 
-export const deleteUser = (id: UserId): boolean => {
-    return users.delete(id);
+export const deleteUser = async (id: UserId): Promise<boolean> => {
+    const result = await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    return result.rowCount > 0;
 };
 
-export const findUserById = (id: UserId): User | undefined => {
-    return users.get(id);
+export const findUserById = async (id: UserId): Promise<User | undefined> => {
+    const res = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    return res.rows[0];
 };
 
-export const findUserByEmail = (email: string): User | undefined => {
-    return [...users.values()].find(user => user.email === email);
+export const findUserByEmail = async (email: string): Promise<User | undefined> => {
+    const res = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    return res.rows[0];
 };
 
-export const getAllUsers = (): User[] => {
-    return Array.from(users.values());
+export const getAllUsers = async (): Promise<User[]> => {
+    const res = await pool.query('SELECT * FROM users');
+    return res.rows;
 };
 
-export const transaction = (callback: () => void) => {
-    const backup = new Map(users);
+export const transaction = async (callback: () => Promise<void>) => {
+    const client = await pool.connect();
     try {
-        callback();
+        await client.query('BEGIN');
+        await callback();
+        await client.query('COMMIT');
     } catch (error) {
-        users.clear();
-        backup.forEach((user, id) => users.set(id, user));
+        await client.query('ROLLBACK');
         throw error;
+    } finally {
+        client.release();
     }
 };
-
-export default { createUser, updateUser, deleteUser, findUserById, getAllUsers, transaction };
