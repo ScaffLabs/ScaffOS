@@ -1,38 +1,57 @@
 import { Order } from './types';
-import { queryDatabase } from './db';
+import { EventEmitter } from 'events';
 
-export interface Storage<T> {
-    create(item: T): Promise<T>;
-    read(id: string): Promise<T | null>;
-    update(id: string, item: T): Promise<T | null>;
-    delete(id: string): Promise<void>;
-    findAll(): Promise<T[]>;
+// In-memory storage for orders
+class InMemoryStorage<T extends { id: string }> {
+    private items: T[] = [];
+    private eventEmitter: EventEmitter;
+
+    constructor() {
+        this.eventEmitter = new EventEmitter();
+    }
+
+    public create(item: T): Promise<T> {
+        this.items.push(item);
+        this.eventEmitter.emit('ORDER_CREATED', item);
+        return Promise.resolve(item);
+    }
+
+    public read(id: string): Promise<T | null> {
+        const item = this.items.find(i => i.id === id);
+        return Promise.resolve(item || null);
+    }
+
+    public update(id: string, updates: Partial<T>): Promise<T | null> {
+        const index = this.items.findIndex(i => i.id === id);
+        if (index === -1) return Promise.resolve(null);
+
+        const updatedItem = { ...this.items[index], ...updates };
+        this.items[index] = updatedItem;
+        this.eventEmitter.emit('ORDER_UPDATED', updatedItem);
+        return Promise.resolve(updatedItem);
+    }
+
+    public delete(id: string): Promise<void> {
+        this.items = this.items.filter(i => i.id !== id);
+        this.eventEmitter.emit('ORDER_DELETED', id);
+        return Promise.resolve();
+    }
+
+    public findAll(): Promise<T[]> {
+        return Promise.resolve(this.items);
+    }
+
+    public onOrderCreated(listener: (order: T) => void): void {
+        this.eventEmitter.on('ORDER_CREATED', listener);
+    }
+
+    public onOrderUpdated(listener: (order: T) => void): void {
+        this.eventEmitter.on('ORDER_UPDATED', listener);
+    }
+
+    public onOrderDeleted(listener: (id: string) => void): void {
+        this.eventEmitter.on('ORDER_DELETED', listener);
+    }
 }
 
-export class PostgresStorage<T extends { id: string }> implements Storage<T> {
-    public async create(item: T): Promise<T> {
-        const result = await queryDatabase('INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5) RETURNING *', [item.id, item.type, item.price, item.quantity, item.status]);
-        return result.rows[0];
-    }
-
-    public async read(id: string): Promise<T | null> {
-        const result = await queryDatabase('SELECT * FROM orders WHERE id = $1', [id]);
-        return result.rows[0] || null;
-    }
-
-    public async update(id: string, item: T): Promise<T | null> {
-        const result = await queryDatabase('UPDATE orders SET type = $1, price = $2, quantity = $3, status = $4 WHERE id = $5 RETURNING *', [item.type, item.price, item.quantity, item.status, id]);
-        return result.rows[0] || null;
-    }
-
-    public async delete(id: string): Promise<void> {
-        await queryDatabase('DELETE FROM orders WHERE id = $1', [id]);
-    }
-
-    public async findAll(): Promise<T[]> {
-        const result = await queryDatabase('SELECT * FROM orders', []);
-        return result.rows;
-    }
-}
-
-export const storage = new PostgresStorage<Order>();
+export const storage = new InMemoryStorage<Order>();
