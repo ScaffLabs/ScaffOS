@@ -1,11 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
+import { StorageInterface } from './StorageInterface';
 
 interface Entity<T> {
   id: string;
   data: T;
 }
 
-export class InMemoryStore<T> {
+export class InMemoryStore<T> implements StorageInterface<T> {
   private store: Map<string, Entity<T>> = new Map();
 
   async create(data: T): Promise<Entity<T>> {
@@ -36,12 +37,20 @@ export class InMemoryStore<T> {
     return Array.from(this.store.values());
   }
 
+  async findByField(field: keyof T, value: any): Promise<Entity<T>[]> {
+    return Array.from(this.store.values()).filter(entity => entity.data[field] === value);
+  }
+
   async transaction(operations: Array<() => Promise<void>>): Promise<void> {
     const results: any[] = [];
     for (const operation of operations) {
       results.push(await operation());
     }
     return results;
+  }
+
+  async migrate(newData: T[]): Promise<void> {
+    await Promise.all(newData.map(data => this.create(data)));
   }
 }
 
