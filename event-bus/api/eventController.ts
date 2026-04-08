@@ -22,7 +22,7 @@ const limiter = rateLimit({
     message: { message: 'Too many requests, please try again later.' }
 });
 
-const csrfProtection = csurf();
+const csrfProtection = csurf({ cookie: true });
 
 export const createEvent = async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -116,9 +116,15 @@ export const eventRoutes = () => {
     router.use(expressSanitizer());
     router.use(csrfProtection);
     router.use(limiter);
-    router.post('/', [body('title').notEmpty().withMessage('Title is required'), body('type').isIn(['userCreated', 'orderPlaced']).withMessage('Invalid event type')], createEvent);
+    router.post('/', [
+        body('title').notEmpty().withMessage('Title is required'),
+        body('type').isIn(['userCreated', 'orderPlaced']).withMessage('Invalid event type')
+    ], createEvent);
     router.get('/', getEvents);
-    router.put('/:id', [body('title').optional().notEmpty(), body('description').optional().isString()], updateEvent);
+    router.put('/:id', [
+        body('title').optional().notEmpty(),
+        body('description').optional().isString()
+    ], updateEvent);
     router.delete('/:id', deleteEvent);
     return router;
 };
