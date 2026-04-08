@@ -1,4 +1,3 @@
-// interServiceClient.ts
 import axios from 'axios';
 import config from './config';
 import logger from './logger';
@@ -28,4 +27,14 @@ const fetchWithRetry = async (url: string) => {
 
 export const fetchUserData = async (userId: string) => {
     return await fetchWithRetry(`${config.USER_SERVICE_URL}/users/${userId}`);
+};
+
+export const checkServiceHealth = async (url: string) => {
+    try {
+        await fetchWithRetry(url);
+        return true;
+    } catch (error) {
+        logger.error(`Service health check failed for ${url}: ${error.message}`);
+        return false;
+    }
 };

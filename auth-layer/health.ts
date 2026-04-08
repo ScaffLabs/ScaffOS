@@ -21,4 +21,4 @@ router.get('/ready', async (req, res) => {
     res.status(503).json({ status: 'unhealthy' });
 });
 
-export default router; 
+export default router;
