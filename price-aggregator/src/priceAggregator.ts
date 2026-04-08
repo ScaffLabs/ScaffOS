@@ -2,6 +2,17 @@ import WebSocket from 'ws';
 import { PriceData, CurrentPrices } from './types';
 import { httpClient } from './httpClient';
 import { EventEmitter } from 'events';
+import { createPool } from 'generic-pool';
+
+const pool = createPool({
+    create: async () => {
+        const connection = await newConnection();
+        return connection;
+    },
+    destroy: async (connection) => {
+        await connection.close();
+    },
+}, { min: 2, max: 10 });
 
 export class PriceAggregator extends EventEmitter {
     private prices: PriceData[] = [];
@@ -35,16 +46,6 @@ export class PriceAggregator extends EventEmitter {
         this.updateCurrentPrices();
     }
 
-    public async addPrice(priceData: PriceData) {
-        this.prices.push(priceData);
-        this.updateCurrentPrices();
-    }
-
-    public async deletePrice(exchange: string) {
-        this.prices = this.prices.filter(price => price.exchange !== exchange);
-        this.updateCurrentPrices();
-    }
-
     public async fetchExchangePrice(exchange: string): Promise<PriceData | null> {
         try {
             const priceData = await httpClient(`/prices/${encodeURIComponent(exchange)}`);
@@ -53,43 +54,6 @@ export class PriceAggregator extends EventEmitter {
             console.error(`Error fetching price for ${exchange}:`, error);
             return null;
         }
-    }
-
-    private updateCurrentPrices() {
-        this.currentPrices = {};
-        this.prices.forEach(priceData => {
-            this.currentPrices[priceData.exchange] = priceData.price;
-        });
-    }
-
-    private calculateVWAP() {
-        const totalValue = this.prices.reduce((acc, p) => acc + p.price * p.volume, 0);
-        const totalVolume = this.prices.reduce((acc, p) => acc + p.volume, 0);
-        const vwap = totalVolume > 0 ? totalValue / totalVolume : 0;
-        this.currentPrices['VWAP'] = vwap;
-    }
-
-    public getCurrentPrices() {
-        return this.currentPrices;
-    }
-
-    public subscribe(ws: WebSocket) {
-        this.clients.push(ws);
-        ws.on('close', () => this.unsubscribe(ws));
-        ws.send(JSON.stringify(this.getCurrentPrices()));
-    }
-
-    private unsubscribe(ws: WebSocket) {
-        this.clients = this.clients.filter(client => client !== ws);
-    }
-
-    private broadcastPrices() {
-        const message = JSON.stringify(this.getCurrentPrices());
-        this.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
     }
 
     public async checkDependencies() {

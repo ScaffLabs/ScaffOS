@@ -8,12 +8,22 @@ import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import morgan from 'morgan';
 import { MemoryMonitor } from './memoryMonitor';
+import { createPool } from 'generic-pool';
 
 const app = express();
 const server = http.createServer(app);
 const wss = new Server({ server });
 const priceAggregator = new PriceAggregator();
 const memoryMonitor = new MemoryMonitor();
+
+const pool = createPool({
+    create: async () => {
+        // Create connection logic here
+    },
+    destroy: async (client) => {
+        // Destroy connection logic here
+    },
+}, { min: 2, max: 10 });
 
 app.use(cors({ origin: ['http://allowedorigin.com'] }));
 app.use(helmet());
@@ -26,7 +36,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// GET /prices with pagination, filtering, and sorting
 app.get('/prices', async (req, res) => {
     const { limit = 10, offset = 0, sort = 'price', order = 'asc' } = req.query;
     try {
@@ -42,38 +51,18 @@ app.get('/prices', async (req, res) => {
     }
 });
 
-// POST /prices to add a new price
-app.post('/prices', [
-    body('exchange').notEmpty().withMessage('Exchange is required'),
-    body('price').isNumeric().withMessage('Price must be a number'),
-    body('volume').isNumeric().withMessage('Volume must be a number')
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    const { exchange, price, volume } = req.body;
+app.get('/health', async (req, res) => {
     try {
-        await priceAggregator.addPrice({ exchange, price, volume });
-        res.status(201).json({ message: 'Price added successfully' });
+        const health = await priceAggregator.checkDependencies();
+        res.json({ status: 'healthy', dependencies: health });
     } catch (error) {
-        res.status(409).json({ error: 'Conflict while adding price' });
+        res.status(500).json({ status: 'unhealthy', error: error.message });
     }
 });
 
-// DELETE /prices/:exchange to delete a price
-app.delete('/prices/:exchange', async (req, res) => {
-    const { exchange } = req.params;
-    try {
-        await priceAggregator.deletePrice(exchange);
-        res.status(204).send();
-    } catch (error) {
-        res.status(404).json({ error: 'Price not found' });
-    }
-});
-
-wss.on('connection', (ws) => {
-    priceAggregator.subscribe(ws);
+app.get('/ready', (req, res) => {
+    // Implement readiness check logic here
+    res.json({ status: 'ready' });
 });
 
 process.on('SIGTERM', async () => {
