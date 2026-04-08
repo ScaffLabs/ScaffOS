@@ -8,6 +8,9 @@ const store = new InMemoryStore<{ value: number }>();
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
         const entries = Array.from(store.storage.values());
+        if (entries.length === 0) {
+            return res.status(204).json({ message: 'No entries available.' });
+        }
         res.status(200).json(entries);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch entries.' });

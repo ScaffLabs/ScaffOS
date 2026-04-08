@@ -6,7 +6,8 @@ export const healthCheck = async (req: Request, res: Response) => {
         const healthStatus = await checkServiceHealth();
         res.status(200).json({ status: 'UP', services: healthStatus });
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Health check failed:', error);
+        res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
 
@@ -16,11 +17,11 @@ export const readyCheck = async (req: Request, res: Response) => {
         const allServicesUp = Object.values(healthStatus).every(status => status);
         res.status(allServicesUp ? 200 : 503).json({ status: allServicesUp ? 'READY' : 'NOT READY' });
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Ready check failed:', error);
+        res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
 
-// Additional health check for memory usage
 export const memoryHealthCheck = (req: Request, res: Response) => {
     const memoryUsage = process.memoryUsage();
     const totalMemory = memoryUsage.rss / (1024 * 1024);
