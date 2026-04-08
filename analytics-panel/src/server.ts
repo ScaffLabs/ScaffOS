@@ -9,21 +9,24 @@ import { validateQueryParams } from './middleware/inputValidator';
 import { validateStrategy } from './middleware/strategyValidator';
 import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies } from './services/strategyService';
 import morgan from 'morgan';
+import { body, validationResult } from 'express-validator';
+import { auditLogger } from './middleware/auditLogger';
 
 const app = express();
 const server = http.createServer(app);
 
 // Middleware Setup
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: ['https://your-allowed-origin.com'] }));
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 15 * 60 * 1000,  // 15 minutes
     max: 100,
 });
 app.use(limiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(morgan('combined'));
+app.use(auditLogger);
 
 // Health Check Endpoint
 app.get('/api/health', healthCheckHandler);
@@ -69,7 +72,7 @@ app.put('/api/strategies/:id', validateStrategy, async (req, res) => {
     }
 });
 
-// Delete Strategy
+// Delete Strategy with audit
 app.delete('/api/strategies/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -88,7 +91,7 @@ app.delete('/api/strategies/:id', async (req, res) => {
 app.get('/api/strategies', async (req, res) => {
     const { limit = 10, offset = 0, sort = 'name', order = 'asc' } = req.query;
     try {
-        const strategies = await findStrategies({}); // You can implement filtering logic here based on query params.
+        const strategies = await findStrategies({});
         const sortedStrategies = strategies.sort((a, b) => {
             const modifier = order === 'asc' ? 1 : -1;
             return a.data[sort] > b.data[sort] ? modifier : -modifier;
