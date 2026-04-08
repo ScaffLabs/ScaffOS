@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { AlertMessage, validateAlertMessage } from './alert.schema';
 import { AlertStore } from './storage';
 import { ValidationError, ServiceError, NotFoundError } from './error.types';
+import logger, { logRequest, logError } from './logger';
 
 export class AlertController {
     private alertStore: AlertStore;
@@ -11,17 +12,21 @@ export class AlertController {
     }
 
     async getActiveAlerts(req: Request, res: Response) {
+        const start = Date.now();
         try {
             const alerts = await this.alertStore.findIndex({});
             if (!alerts.length) return res.status(204).send();
             return res.json(alerts);
         } catch (error) {
-            console.error(error);
+            logError(error, { method: req.method, path: req.path });
             return res.status(500).json({ message: 'Failed to fetch active alerts.' });
+        } finally {
+            logRequest(req, res, start);
         }
     }
 
     async addAlert(req: Request, res: Response) {
+        const start = Date.now();
         try {
             const alert = validateAlertMessage(req.body);
             const createdAlert = await this.alertStore.create(alert);
@@ -30,13 +35,16 @@ export class AlertController {
             if (error instanceof ValidationError) {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
             }
-            console.error(error);
+            logError(error, { method: req.method, path: req.path });
             return res.status(500).json({ message: 'Failed to add alert.' });
+        } finally {
+            logRequest(req, res, start);
         }
     }
 
     async updateAlert(req: Request, res: Response) {
         const alertId = req.params.id;
+        const start = Date.now();
         try {
             const updatedAlert = await this.alertStore.update(alertId, req.body);
             if (!updatedAlert) {
@@ -47,13 +55,16 @@ export class AlertController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
-            console.error(error);
+            logError(error, { method: req.method, path: req.path });
             return res.status(500).json({ message: 'Failed to update alert.' });
+        } finally {
+            logRequest(req, res, start);
         }
     }
 
     async deleteAlert(req: Request, res: Response) {
         const alertId = req.params.id;
+        const start = Date.now();
         try {
             const deleted = await this.alertStore.delete(alertId);
             if (!deleted) {
@@ -64,8 +75,10 @@ export class AlertController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
-            console.error(error);
+            logError(error, { method: req.method, path: req.path });
             return res.status(500).json({ message: 'Failed to delete alert.' });
+        } finally {
+            logRequest(req, res, start);
         }
     }
-} 
+}

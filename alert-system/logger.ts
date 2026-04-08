@@ -39,7 +39,7 @@ export const logAudit = (action: string, details: any) => {
   logger.info({ action, details }, 'Audit log entry');
 };
 
-export const logRequestId = (req: Request, res: Response) => {
+export const logRequestId = (req: Request) => {
   const requestId = req.headers['x-request-id'] || 'N/A';
   logger.info({ requestId }, 'Processing request');
 };
