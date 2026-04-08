@@ -1,10 +1,10 @@
 # Portfolio Tracker
 
 ## Project Description
-The Portfolio Tracker service allows users to manage their investment portfolios by creating, retrieving, and updating portfolio information.
+The Portfolio Tracker service allows users to manage their investment portfolios by creating, retrieving, and updating portfolio information. This service is designed to be scalable and maintainable, leveraging an event-driven architecture to handle updates efficiently.
 
 ## Architecture Overview
-This service is built using Node.js and Express. It utilizes an event bus for handling portfolio updates and is structured to allow easy scalability and maintainability.
+This service is built using Node.js and Express, utilizing an event bus for handling portfolio updates and Axios for making HTTP requests to external services. The service is structured to allow easy extensibility and integration with other services.
 
 ## Setup Instructions
 ### Prerequisites
@@ -35,7 +35,7 @@ This service is built using Node.js and Express. It utilizes an event bus for ha
 - **Response:** `201 Created` with portfolio object
 - **Status Codes:**
   - `201`: Portfolio created successfully
-  - `400`: Bad request
+  - `400`: Bad request due to validation errors
 
 ### GET /api/portfolios/:id
 - **Response:** `200 OK` with portfolio object or `404 Not Found`
@@ -48,19 +48,26 @@ This service is built using Node.js and Express. It utilizes an event bus for ha
 - **Response:** `200 OK` with updated portfolio object or `400 Bad Request`
 - **Status Codes:**
   - `200`: Portfolio updated successfully
-  - `400`: Invalid update
+  - `400`: Invalid update request
+
+### GET /health
+- **Response:** `200 OK` with service health status.
+- **Status Codes:**
+  - `200`: Service is up
+  - `503`: Service is down
 
 ## Environment Variables
 | Variable | Description | Default |
 |----------|-------------|---------|
 | PORT     | Port to listen on | 3000 |
+| PORTFOLIO_SERVICE_URL | External portfolio service URL | http://localhost:3001/api/portfolios |
 
 ## Development Guide
 1. Use `npm run test` to run tests.
-2. Follow best practices for code contributions.
+2. Follow best practices for code contributions, including proper documentation and test coverage.
 
 ## Deployment Guide
-Use Docker for containerization or deploy directly to a cloud service of your choice.
+The service can be containerized using Docker or deployed directly to a cloud service provider. Ensure to set the environment variables in your deployed environment.
 
 ## Contributing
 Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
