@@ -39,7 +39,8 @@ export interface HealthCheckResponse {
  */
 export type AppEvent = 
     | { type: 'CONFIGURATION_CREATED'; payload: ConfigurationItem }
-    | { type: 'SERVICE_HEALTH_UPDATED'; payload: HealthCheckResponse };
+    | { type: 'SERVICE_HEALTH_UPDATED'; payload: HealthCheckResponse }
+    | { type: 'EVENT_TYPE'; payload: unknown }; // New event type added
 
 /**
  * Zod schema for validating AppEvent objects.
@@ -47,6 +48,7 @@ export type AppEvent =
 export const AppEventSchema = z.union([
     z.object({ type: z.literal('CONFIGURATION_CREATED'), payload: ConfigurationItemSchema }),
     z.object({ type: z.literal('SERVICE_HEALTH_UPDATED'), payload: z.object({ serviceHealth: z.record(z.string()), database: z.enum(['up', 'down']) }) }),
+    z.object({ type: z.literal('EVENT_TYPE'), payload: z.unknown() }) // New event type schema added
 ]);
 
 /**
