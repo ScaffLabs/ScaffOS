@@ -54,4 +54,25 @@ describe('API Endpoints', () => {
         const response = await request(app).delete('/api/positions/99');
         expect(response.status).toBe(404);
     });
+
+    // New tests for edge cases and error paths
+    it('GET /api/positions should return 400 for invalid query params', async () => {
+        const response = await request(app).get('/api/positions?limit=invalid');
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: 'Invalid limit parameter' });
+    });
+
+    it('PUT /api/positions/:id with missing ID should return 404', async () => {
+        const response = await request(app)
+            .put('/api/positions/')
+            .send({ quantity: 10 });
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: 'Position not found' });
+    });
+
+    it('DELETE /api/positions/:id with invalid ID should return 404', async () => {
+        const response = await request(app).delete('/api/positions/invalid');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: 'Position not found' });
+    });
 });

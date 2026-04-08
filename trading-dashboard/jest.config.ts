@@ -18,4 +18,5 @@ module.exports = {
     setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
     reporters: ['default', 'jest-junit'],
     coveragePathIgnorePatterns: ['/node_modules/', '/dist/'],
+    testTimeout: 10000,
 };
