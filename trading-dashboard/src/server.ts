@@ -7,6 +7,7 @@ import { fetchPositions, createPosition, updatePosition, deletePosition } from '
 import { validateInput, validatePositionId } from './middleware/inputValidation';
 import errorHandler from './middleware/errorHandler';
 import logger from './utils/logger';
+import { healthCheck, readyCheck, registerShutdownHandlers, monitorMemoryUsage } from './utils/healthCheck';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -62,9 +63,15 @@ app.delete('/api/positions/:id', validatePositionId, async (req, res) => {
     }
 });
 
+app.get('/health', healthCheck);
+app.get('/ready', readyCheck);
+
 // Error handling middleware
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
+    setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
 });
+
+registerShutdownHandlers(server);
