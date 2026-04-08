@@ -7,7 +7,6 @@ import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
 import { RiskPositionSchema } from './sharedTypes';
-import csrf from 'csurf';
 
 const csrfProtection = csrf({ cookie: true });
 
