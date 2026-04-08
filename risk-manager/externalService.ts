@@ -22,3 +22,15 @@ export const fetchWithRetry = async (url: string, retries: number = 5): Promise<
         }
     }
 };
+
+export const fetchDataWithTimeout = async (url: string, timeout: number, retries: number = 3): Promise<any> => {
+    const source = axios.CancelToken.source();
+    const timeoutId = setTimeout(() => {
+        source.cancel('Request timed out');
+    }, timeout);
+    try {
+        return await fetchWithRetry(url);
+    } finally {
+        clearTimeout(timeoutId);
+    }
+};
