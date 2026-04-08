@@ -8,7 +8,6 @@ import rateLimit from 'express-rate-limit';
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
-// Rate limiting middleware for event creation
 const createEventLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -45,34 +44,6 @@ export const getEvents = async (req: Request<{}, {}, {}, GetEventsQuery>, res: R
     }
 };
 
-export const updateEvent = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
-    try {
-        const validation = updateEventSchema.safeParse(req.body);
-        if (!validation.success) {
-            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
-        }
-        const event = await storage.update(req.params.id, validation.data);
-        if (!event) {
-            throw new NotFoundError('Event not found');
-        }
-        res.status(200).json(event);
-    } catch (error) {
-        handleError(error, res);
-    }
-};
-
-export const deleteEvent = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
-    try {
-        const deleted = await storage.delete(req.params.id);
-        if (!deleted) {
-            throw new NotFoundError('Event not found');
-        }
-        res.status(204).send();
-    } catch (error) {
-        handleError(error, res);
-    }
-};
-
 const handleError = (error: Error, res: Response) => {
     if (error instanceof ValidationError) {
         res.status(400).json({ message: error.message });
@@ -87,6 +58,4 @@ const handleError = (error: Error, res: Response) => {
 const router = Router();
 router.post('/', createEventLimiter, createEvent);
 router.get('/', getEvents);
-router.put('/:id', updateEvent);
-router.delete('/:id', deleteEvent);
 export default router;
