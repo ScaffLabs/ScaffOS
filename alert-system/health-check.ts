@@ -33,12 +33,17 @@ export class HealthCheck {
     static async checkHealth(req: Request, res: Response) {
         const services = ['webhook', 'email'];
         const health = await this.checkServices(services);
-        const memory = this.memoryUsage();
+        const memory = await this.memoryUsage();
         return res.json({ services: health, memory });
     }
 
     static async checkReady(req: Request, res: Response) {
         const dbStatus = mongoose.connection.readyState === 1;
         return res.json({ ready: dbStatus });
+    }
+
+    static async checkMemoryUsage(req: Request, res: Response) {
+        const memory = await this.memoryUsage();
+        return res.json({ memory });
     }
 }
