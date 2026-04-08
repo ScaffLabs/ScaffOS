@@ -7,6 +7,7 @@ import { AlertStore, IDataStore } from './storage';
 import { MigrationUtil } from './migrations';
 import { logStartup } from './logger';
 import { errorMiddleware } from './error.middleware';
+import alertRoutes from './alert.routes';
 
 const app = express();
 const eventBus = new EventBus();
@@ -15,8 +16,19 @@ const alertConfig = new AlertConfiguration({ thresholds: { price: 100, risk: 50 
 const alertStore: IDataStore<AlertMessage> = new AlertStore();
 
 app.use(express.json());
+app.use('/api', alertRoutes);
 app.use('/health', (req, res) => new AlertController().healthCheck(req, res));
 app.use('/ready', (req, res) => new AlertController().readyCheck(req, res));
+
+app.use(errorMiddleware);
+
+const server = app.listen(3000, () => {
+    logStartup({ thresholds: alertConfig.getConfiguration().thresholds, services: ['webhook', 'email', 'websocket'] });
+    console.log('Alert system running on port 3000');
+});
+
+HealthCheck.checkServices(['webhook', 'email', 'websocket']);
+MigrationUtil.seedData(alertStore);
 
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received: closing HTTP server');
@@ -29,13 +41,3 @@ process.on('SIGINT', async () => {
     await alertStore.transaction([]); // Drain connections
     process.exit(0);
 });
-
-app.use(errorMiddleware);
-
-const server = app.listen(3000, () => {
-    logStartup({ thresholds: alertConfig.getConfiguration().thresholds, services: ['webhook', 'email', 'websocket'] });
-    console.log('Alert system running on port 3000');
-});
-
-HealthCheck.checkServices(['webhook', 'email', 'websocket']);
-MigrationUtil.seedData(alertStore);
