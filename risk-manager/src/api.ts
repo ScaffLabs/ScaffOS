@@ -44,8 +44,8 @@ router.get('/risk', [
 });
 
 router.post('/risk', [
-    body('asset').isString().notEmpty(),
-    body('position').isNumeric().isFloat({ min: 0 }),
+    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
+    body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -63,7 +63,7 @@ router.post('/risk', [
 
 router.put('/risk/:id', [
     param('id').isString(),
-    body('position').isNumeric().isFloat({ min: 0 }),
+    body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -79,7 +79,7 @@ router.put('/risk/:id', [
         res.status(204).send();
     } catch (error) {
         logger.error('Error updating risk position: ', error);
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 

@@ -25,6 +25,7 @@ export default class RiskManager {
             if (error instanceof ValidationError) {
                 throw error;
             }
+            logger.error('Error creating risk position: ', error);
             throw new ServiceError('Error creating risk position.');
         }
     }
@@ -38,6 +39,10 @@ export default class RiskManager {
             await notifyEventBus({ type: 'RiskPositionDeleted', id }); // Notify event bus
             return true; // Return success
         } catch (error) {
+            if (error instanceof NotFoundError) {
+                throw error;
+            }
+            logger.error('Error deleting risk position: ', error);
             throw new ServiceError('Error deleting risk position.');
         }
     }

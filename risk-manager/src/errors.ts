@@ -1,3 +1,5 @@
+import { Request, Response, NextFunction } from 'express';
+
 class ServiceError extends Error {
     constructor(message: string) {
         super(message);
