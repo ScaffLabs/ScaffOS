@@ -7,16 +7,29 @@ import { errorHandler } from './errors';
 import MemoryQueue from './memoryQueue';
 import loggingMiddleware from './middleware/loggingMiddleware';
 import requestIdMiddleware from './middleware/requestIdMiddleware';
+import gracefulShutdown from './gracefulShutdown';
+import { createPool } from 'mysql2/promise';
+import { healthCheckServices } from './externalService';
 
 const app = express();
 const server = http.createServer(app);
 
-app.use(requestIdMiddleware); // Add request ID middleware
-app.use(loggingMiddleware); // Add logging middleware
+// MySQL connection pooling
+const dbPool = createPool({
+    host: 'localhost',
+    user: 'root',
+    database: 'risk_manager',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
 app.use(express.json());
+app.use(requestIdMiddleware);
+app.use(loggingMiddleware);
 app.use('/api', apiRouter);
 app.use('/health', healthRouter);
-app.use(errorHandler); // Global error handler
+app.use(errorHandler);
 
 const startServer = async () => {
     const PORT = process.env.PORT || 3000;
@@ -24,5 +37,19 @@ const startServer = async () => {
         logger.info(`Server is running on port ${PORT}`);
     });
 };
+
+// Health check interval to monitor service health
+setInterval(async () => {
+    try {
+        const healthStatus = await healthCheckServices();
+        logger.info('Health check status: ', healthStatus);
+    } catch (error) {
+        logger.error('Health check failed: ', error);
+    }
+}, 60000);
+
+// Graceful Shutdown
+process.on('SIGTERM', async () => await gracefulShutdown(dbPool));
+process.on('SIGINT', async () => await gracefulShutdown(dbPool));
 
 startServer();
