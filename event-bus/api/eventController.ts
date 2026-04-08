@@ -7,6 +7,9 @@ import eventBus from '../eventBus';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../logger';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import cors from 'cors';
+import { body, query, validationResult } from 'express-validator';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -18,6 +21,11 @@ const limiter = rateLimit({
 });
 
 export const createEvent = async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
         const parsed = createEventSchema.safeParse(req.body);
         if (!parsed.success) {
@@ -26,6 +34,7 @@ export const createEvent = async (req: Request, res: Response) => {
         const newEvent: Event = { id: uuidv4() as OrderId, ...parsed.data, createdAt: new Date(), updatedAt: new Date() };
         const createdEvent = await storage.create(newEvent);
         eventBus.publish('eventCreated', createdEvent);
+        logger.info(`Event created: ${JSON.stringify(createdEvent)}`);
         res.status(201).json(createdEvent);
     } catch (error) {
         handleErrors(error, res);
@@ -51,6 +60,11 @@ export const getEvents = async (req: Request<{}, {}, {}, GetEventsQuery>, res: R
 
 export const updateEvent = async (req: Request<{ id: string }>, res: Response) => {
     const { id } = req.params;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
         const existingEvent = await storage.read(id);
         if (!existingEvent) {
@@ -74,6 +88,7 @@ export const deleteEvent = async (req: Request<{ id: string }>, res: Response) =
         if (!deleted) {
             throw new NotFoundError('Event not found');
         }
+        logger.info(`Event deleted: ${id}`);
         res.status(204).send();
     } catch (error) {
         handleErrors(error, res);
@@ -92,9 +107,11 @@ const handleErrors = (error: Error, res: Response) => {
 
 export const eventRoutes = () => {
     const router = Router();
-    router.post('/', limiter, createEvent);
+    router.use(cors({ origin: ['http://your-allowed-origin.com'], methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
+    router.use(helmet());
+    router.post('/', limiter, [body('title').notEmpty().withMessage('Title is required'), body('type').isIn(['userCreated', 'orderPlaced']).withMessage('Invalid event type')], createEvent);
     router.get('/', getEvents);
-    router.put('/:id', updateEvent);
+    router.put('/:id', [body('title').optional().notEmpty(), body('description').optional().isString()], updateEvent);
     router.delete('/:id', deleteEvent);
     return router;
 };
