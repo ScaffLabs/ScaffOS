@@ -23,7 +23,7 @@ backtestRouter.post('/', async (req, res, next) => {
         if (error instanceof ValidationError) {
             return next(error);
         }
-        next(new ServiceError('Error during backtest')); // Handling unexpected errors
+        next(new ServiceError('Error during backtest'));
     }
 });
 
@@ -35,6 +35,52 @@ backtestRouter.get('/:id', async (req, res, next) => {
             throw new NotFoundError('Backtest result not found.');
         }
         res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
+backtestRouter.get('/', async (req, res, next) => {
+    const { limit = 10, offset = 0, sort = 'createdAt', order = 'asc' } = req.query;
+    try {
+        const results = await store.findAll(Number(limit), Number(offset), (entity) => entity.data);
+        const sortedResults = results.sort((a, b) => order === 'asc' ? a.data[sort] - b.data[sort] : b.data[sort] - a.data[sort]);
+        res.status(200).json(sortedResults);
+    } catch (error) {
+        next(error);
+    }
+});
+
+backtestRouter.put('/:id', async (req, res, next) => {
+    const { id } = req.params;
+    const { strategyParams, historicalData } = req.body;
+    try {
+        const existing = await store.read(id);
+        if (!existing) {
+            throw new NotFoundError('Backtest result not found.');
+        }
+        StrategyParametersSchema.parse(strategyParams);
+        if (!Array.isArray(historicalData) || historicalData.length === 0) {
+            throw new ValidationError('historicalData must be a non-empty array.');
+        }
+        historicalData.forEach(data => HistoricalDataSchema.parse(data));
+
+        const updatedResult = await simulateBacktest(strategyParams, historicalData);
+        await store.update(id, { strategyParams, historicalData, result: updatedResult });
+        res.status(204).send();
+    } catch (error) {
+        next(error);
+    }
+});
+
+backtestRouter.delete('/:id', async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const deleted = await store.delete(id);
+        if (!deleted) {
+            throw new NotFoundError('Backtest result not found.');
+        }
+        res.status(204).send();
     } catch (error) {
         next(error);
     }
