@@ -8,6 +8,7 @@ services:
       - NODE_ENV=development
       - JWT_SECRET=your_jwt_secret
       - API_KEY_SECRET=your_api_key_secret
+      - DATABASE_URL=your_database_url
     volumes:
       - .:/usr/src/app
     depends_on:
