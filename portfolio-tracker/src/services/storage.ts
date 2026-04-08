@@ -1,6 +1,19 @@
 import { Portfolio, PortfolioUpdate } from '../types';
 
-class InMemoryStorage {
+abstract class Storage {
+    abstract create(portfolioData: Omit<Portfolio, 'id'>): Portfolio;
+    abstract read(id: string): Portfolio | undefined;
+    abstract update(id: string, data: PortfolioUpdate): Portfolio | undefined;
+    abstract delete(id: string): boolean;
+    abstract getAll(): Portfolio[];
+    abstract clear(): void;
+    abstract migrate(portfolios: Portfolio[]): void;
+    abstract getByIds(ids: string[]): Portfolio[];
+    abstract transaction(actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): Portfolio[];
+    abstract indexBy(field: keyof Portfolio): { [key: string]: Portfolio[] };
+}
+
+class InMemoryStorage extends Storage {
     private portfolios: Portfolio[] = [];
     private idCounter: number = 1;
 

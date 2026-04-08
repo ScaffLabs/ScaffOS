@@ -20,3 +20,11 @@ export const clearAllData = async (): Promise<void> => {
 export const fetchAllData = async (): Promise<Portfolio[]> => {
     return storage.getAll();
 };
+
+export const transaction = async (actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): Promise<Portfolio[]> => {
+    return storage.transaction(actions, portfolioIds);
+};
+
+export const indexBy = async (field: keyof Portfolio): Promise<{ [key: string]: Portfolio[] }> => {
+    return storage.indexBy(field);
+};
