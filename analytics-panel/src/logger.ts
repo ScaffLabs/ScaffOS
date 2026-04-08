@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { v4 as uuidv4 } from 'uuid';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -27,6 +28,15 @@ export const logStartup = (config: Record<string, any>) => {
 
 export const logPerformance = (queryName: string, duration: number) => {
     logger.debug({ queryName, duration }, 'Performance timing for query');
+};
+
+export const logWithRequestId = (req: Request, res: Response, next: NextFunction) => {
+    req.id = uuidv4();
+    res.on('finish', () => {
+        const duration = Date.now() - req.startTime;
+        logRequest(req.method, req.path, res.statusCode, duration, req.id);
+    });
+    next();
 };
 
 export default logger;
