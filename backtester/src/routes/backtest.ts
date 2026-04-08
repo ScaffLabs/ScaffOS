@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { simulateBacktest } from '../services/backtestService';
-import { ValidationError, NotFoundError } from '../middleware/errorHandler';
+import { ValidationError, NotFoundError, ServiceError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
 import { HistoricalDataSchema, StrategyParametersSchema } from '../types';

@@ -1,11 +1,20 @@
 import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
-import { ServiceError } from '../middleware/errorHandler';
+import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { logger } from '../utils/logger';
 import { withRetry, circuitBreaker } from './resilience';
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<number> {
-    // Implementation of calculateReturns...
+    if (!Array.isArray(historicalData) || historicalData.length === 0) {
+        throw new ValidationError('Historical data must be a non-empty array.');
+    }
+    // Dummy implementation that simulates return calculation
+    let totalReturns = 0; // Placeholder for actual calculations
+    historicalData.forEach(data => {
+        if (data.price <= 0) throw new ValidationError('Price must be positive.');
+        totalReturns += data.price * (1 - slippage);
+    });
+    return totalReturns;
 }
 
 const simulateWithRetry = withRetry(async (params: StrategyParameters, historicalData: HistoricalData[]) => {
