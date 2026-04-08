@@ -10,6 +10,7 @@ import logger, { logStartup } from './logger';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import { requestIdMiddleware, errorHandlingMiddleware } from './middleware';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,8 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));
+app.use(requestIdMiddleware);
+app.use(logRequest);
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -46,6 +49,8 @@ const serverInstance = startServer().catch(err => {
     process.exit(1);
 });
 
+app.use(errorHandlingMiddleware);
+
 process.on('uncaughtException', (error) => {
     logger.error('Uncaught Exception:', error);
     serverInstance.then(server => server.close(() => process.exit(1)));
@@ -64,9 +69,8 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
     logger.info('Received SIGINT. Graceful shutdown initiated.');
     serverInstance.then(server => server.close(() => process.exit(0)));
-};
+});
 
-// Monitor memory usage and log warnings if usage exceeds configured limit
 setInterval(() => {
     const memoryUsage = process.memoryUsage();
     console.log(`Memory Usage: RSS: ${memoryUsage.rss}, Heap Total: ${memoryUsage.heapTotal}, Heap Used: ${memoryUsage.heapUsed}`);
