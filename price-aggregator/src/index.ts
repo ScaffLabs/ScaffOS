@@ -8,7 +8,7 @@ import { config } from './config';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { logRequest, logAudit, logError } from './logger';
+import { logRequest, logError } from './logger';
 import { ServiceError } from './errors';
 import csrf from 'csurf';
 import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
@@ -70,7 +70,6 @@ const startApp = async () => {
         try {
             const newPriceData = req.body;
             const createdPrice = await priceAggregator.addPrice(newPriceData);
-            logAudit('Price added', newPriceData);
             res.status(201).json(createdPrice);
         } catch (error) {
             logError(error, 'Failed to add price');
