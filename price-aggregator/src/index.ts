@@ -8,7 +8,7 @@ import { config } from './config';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { logRequest, logError } from './logger';
+import { logRequest, logError, logStartup } from './logger';
 import { ServiceError } from './errors';
 import csrf from 'csurf';
 import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
@@ -42,6 +42,7 @@ app.use((req, res, next) => {
 });
 
 const startApp = async () => {
+    logStartup(config);
     await migrateData([]);
     await seedData();
 
@@ -57,11 +58,14 @@ const startApp = async () => {
 
     app.get('/prices', async (req, res, next) => {
         const { limit = 10, offset = 0, sort = 'price', order = 'asc' } = req.query;
+        const start = Date.now();
         try {
             const prices = await priceAggregator.getCurrentPrices();
             const sortedPrices = Object.entries(prices)
                 .sort(([, a], [, b]) => (order === 'asc' ? a - b : b - a))
                 .slice(offset, offset + limit);
+            const duration = Date.now() - start;
+            logPerformance('GET /prices', duration);
             res.status(200).json(sortedPrices);
         } catch (error) {
             logError(error, 'Failed to fetch current prices');

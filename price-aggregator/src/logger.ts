@@ -35,12 +35,18 @@ export const logError = (error, context) => {
     });
 };
 
-export const logAudit = (action, context) => {
+export const logStartup = (config) => {
     logger.info({
-        message: 'Audit log',
-        action,
-        context,
-        timestamp: new Date().toISOString(),
+        message: 'Service starting',
+        config,
+    });
+};
+
+export const logPerformance = (operation, duration) => {
+    logger.info({
+        message: 'Performance log',
+        operation,
+        duration,
     });
 };
 
