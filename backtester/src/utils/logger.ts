@@ -4,12 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
+  level: process.env.LOG_LEVEL || 'info',
+  format: isDevelopment ? winston.format.combine(
+    winston.format.colorize(),
+    winston.format.simple()
+  ) : winston.format.json(),
   transports: [
-    new winston.transports.Console({
-      format: isDevelopment ? winston.format.combine(winston.format.colorize(), winston.format.simple()) : winston.format.json(),
-    }),
+    new winston.transports.Console(),
   ],
 });
 
@@ -24,10 +25,11 @@ const requestLogger = (req, res, next) => {
     requestId,
   });
   res.on('finish', () => {
+    const duration = Date.now() - req.startTime;
     logger.info({
       message: 'Response sent',
       status: res.statusCode,
-      duration: Date.now() - req.startTime,
+      duration,
       requestId,
     });
   });
@@ -46,7 +48,7 @@ const logRequestDuration = (req, res, next) => {
   const start = process.hrtime();
   res.on('finish', () => {
     const duration = process.hrtime(start);
-    const durationInMs = duration[0] * 1000 + duration[1] / 1000000;
+    const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
     logger.info({
       message: 'Request duration',
       duration: durationInMs,
