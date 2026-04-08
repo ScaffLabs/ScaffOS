@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
+import { emitEvent } from './eventBus';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 const axiosInstance = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
@@ -18,7 +19,9 @@ const fetchWithRetry = async (url: string, config?: any, retries: number = 0) =>
 };
 
 export const fetchPerformanceMetrics = async () => {
-    return await fetchWithRetry('/api/performance');
+    const data = await fetchWithRetry('/api/performance');
+    emitEvent('performanceMetricsFetched', data);
+    return data;
 };
 
 export const fetchComparisonData = async (strategyA: string, strategyB: string) => {
