@@ -1,9 +1,8 @@
+// backtest.ts
 import { Router } from 'express';
 import { simulateBacktest } from '../services/backtestService';
-import { HistoricalDataSchema, StrategyParametersSchema, PaginationSchema } from '../types';
 import { ValidationError, NotFoundError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
-import xss from 'xss';
 import rateLimit from 'express-rate-limit';
 import { logger } from '../utils/logger';
 
@@ -32,14 +31,7 @@ backtestRouter.post('/', async (req, res, next) => {
             }
         });
 
-        const sanitizedStrategyParams = {
-            ...strategyParams,
-            buyThreshold: parseFloat(strategyParams.buyThreshold.toString()),
-            sellThreshold: parseFloat(strategyParams.sellThreshold.toString()),
-            slippage: parseFloat(strategyParams.slippage.toString()),
-        };
-
-        const result = await simulateBacktest(sanitizedStrategyParams, historicalData);
+        const result = await simulateBacktest(strategyParams, historicalData);
         const entity = await store.create({ strategyParams, historicalData, result });
         res.status(201).json({ id: entity.id, result });
     } catch (error) {
