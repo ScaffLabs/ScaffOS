@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 import rateLimit from 'express-rate-limit';
 import { config } from '../config';
+import healthCheckRouter from './routes/healthCheck';
 
 const app = express();
 const PORT = config.port;
@@ -28,6 +29,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
@@ -44,19 +46,29 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/backtest', backtestRouter);
+app.use('/health', healthCheckRouter);
 app.use(errorHandler);
 
 const server = app.listen(PORT, () => {
   logger.info(`Backtester service running on port ${PORT}`);
-  logger.info('Configuration: ', config);
 });
 
-const shutdown = () => {
-  server.close(() => {
-    logger.info('Server closed');
-    process.exit(0);
-  });
+const shutdown = async () => {
+  logger.info('Shutting down gracefully...');
+  await new Promise(resolve => server.close(resolve));
+  logger.info('Server closed');
+  process.exit(0);
 };
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Rejection:', reason);
+  shutdown();
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  shutdown();
+});

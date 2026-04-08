@@ -6,17 +6,16 @@ import { healthCheckServices } from './healthCheckService';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
+const TIMEOUT = 5000; // 5 seconds timeout
 const eventEmitter = new EventEmitter();
 
 async function fetchDataFromService(url: string, retries: number = MAX_RETRIES): Promise<any> {
   try {
-    const start = Date.now();
-    const response = await axios.get(url);
-    const duration = Date.now() - start;
-    logger.debug(`Fetched data from ${url} in ${duration}ms`);
+    const response = await axios.get(url, { timeout: TIMEOUT });
     return response.data;
   } catch (error) {
     if (retries > 0) {
+      logger.warn(`Retrying ${url}, attempts left: ${retries}`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       return fetchDataFromService(url, retries - 1);
     }
