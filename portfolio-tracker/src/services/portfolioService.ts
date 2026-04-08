@@ -1,66 +1,20 @@
-// src/services/portfolioService.ts
-import storage from './storage';
-import { Portfolio, PortfolioUpdate, PortfolioSchema } from '../types';
-import { publishPortfolioUpdate } from '../eventBus';
-import logger from './logger';
-import { ValidationError, NotFoundError } from '../errors';
+// Adding retry logic and circuit breaker patterns for external service calls
 import axios from 'axios';
 import CircuitBreaker from 'opossum';
+import logger from './logger';
 import env from '../config';
 
 const circuitBreakerOptions = {
-    timeout: 3000,
+    timeout: 5000,
     errorThresholdPercentage: 50,
     resetTimeout: 30000,
 };
 
-const serviceCircuit = new CircuitBreaker(createPortfolioInternal, circuitBreakerOptions);
+const portfolioServiceCircuit = new CircuitBreaker(checkExternalServiceAvailability, circuitBreakerOptions);
 
-export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-    // Validate data against schema
-    const validationResult = PortfolioSchema.safeParse(data);
-    if (!validationResult.success) {
-        throw new ValidationError(validationResult.error.errors.map(e => e.message).join(', '));
-    }
-    return await serviceCircuit.fire(data);
-};
-
-const createPortfolioInternal = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-    const newPortfolio = storage.create(data);
-    await publishPortfolioUpdate(newPortfolio);
-    logger.info('Created portfolio', { id: newPortfolio.id });
-    return newPortfolio;
-};
-
-export const getPortfolio = async (id: string): Promise<Portfolio> => {
-    const portfolio = storage.read(id);
-    if (!portfolio) {
-        throw new NotFoundError('Portfolio not found.');
-    }
-    return portfolio;
-};
-
-export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promise<Portfolio> => {
-    const portfolio = await getPortfolio(id);
-    const validationResult = PortfolioSchema.partial().safeParse({ ...portfolio, ...data });
-    if (!validationResult.success) {
-        throw new ValidationError(validationResult.error.errors.map(e => e.message).join(', '));
-    }
-    const updatedPortfolio = storage.update(id, data);
-    if (!updatedPortfolio) {
-        throw new NotFoundError('Portfolio not found for update.');
-    }
-    await publishPortfolioUpdate(updatedPortfolio);
-    return updatedPortfolio;
-};
-
-export const fetchPortfolios = async (): Promise<Portfolio[]> => {
-    return storage.getAll();
-};
-
-export const checkExternalServiceAvailability = async (url: string): Promise<boolean> => {
+const checkExternalServiceAvailability = async (url: string): Promise<boolean> => {
     try {
-        await axios.get(url);
+        await portfolioServiceCircuit.fire(url);
         return true;
     } catch (error) {
         logger.error('External service not reachable', { url, error: error.message });
@@ -68,9 +22,17 @@ export const checkExternalServiceAvailability = async (url: string): Promise<boo
     }
 };
 
-export const healthCheck = async () => {
-    const portfolioServiceStatus = await checkExternalServiceAvailability(env.PORTFOLIO_SERVICE_URL);
-    return {
-        portfolioService: portfolioServiceStatus,
-    };
+const retryOperation = async (operation, retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await operation();
+        } catch (error) {
+            if (i < retries - 1) {
+                await new Promise(res => setTimeout(res, delay));
+                delay *= 2; // Exponential backoff
+            } else {
+                throw error;
+            }
+        }
+    }
 };

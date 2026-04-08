@@ -56,20 +56,3 @@ setInterval(async () => {
     const memoryUsage = process.memoryUsage();
     logger.info('Memory Usage', memoryUsage);
 }, 60000);
-
-const retryOperation = async (operation, retries = 5, delay = 1000) => {
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await operation();
-        } catch (error) {
-            if (i < retries - 1) {
-                await setTimeout(delay);
-                delay *= 2; // Exponential backoff
-            } else {
-                throw error;
-            }
-        }
-    }
-};
-
-export { retryOperation };
