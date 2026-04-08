@@ -41,3 +41,11 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         return res.status(401).json({ error: error.message });
     }
 };
+
+export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    const apiKey = req.headers['x-api-key'];
+    if (!rateLimit(apiKey)) {
+        return res.status(429).json({ error: 'Rate limit exceeded' });
+    }
+    next();
+};
