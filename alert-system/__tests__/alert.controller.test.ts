@@ -43,6 +43,16 @@ describe('AlertController', () => {
         expect(res.json).toHaveBeenCalledWith({ message: expect.stringContaining('Invalid alert data') });
     });
 
+    test('should return 400 for empty alert data', async () => {
+        const req = { body: {} } as any;
+        const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+        await alertController.addAlert(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({ message: expect.stringContaining('Invalid alert data') });
+    });
+
     test('should update an alert and return it', async () => {
         const alert: AlertMessage = { id: '1', type: 'price', threshold: 100, currentValue: 120, createdAt: new Date() };
         await alertStore.create(alert);
@@ -96,15 +106,5 @@ describe('AlertController', () => {
 
         expect(res.status).toHaveBeenCalledWith(500);
         expect(res.json).toHaveBeenCalledWith({ message: 'Failed to add alert.' });
-    });
-
-    test('should return 400 for empty alert data', async () => {
-        const req = { body: {} } as any;
-        const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
-
-        await alertController.addAlert(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ message: expect.stringContaining('Invalid alert data') });
     });
 });
