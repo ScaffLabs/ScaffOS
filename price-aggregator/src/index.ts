@@ -80,6 +80,14 @@ const startApp = async () => {
         }
     });
 
+    app.get('/ready', async (req, res) => {
+        const isReady = await priceAggregator.checkReady();
+        if (isReady) {
+            return res.status(200).json({ status: 'ready' });
+        }
+        res.status(503).json({ status: 'not ready' });
+    });
+
     app.use(errorMiddleware);
 
     const shutdown = async () => {
