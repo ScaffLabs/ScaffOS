@@ -2,6 +2,7 @@ import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import axios from 'axios';
 import { EventEmitter } from 'events';
 import logger from '../utils/logger';
+import { healthCheckServices } from './healthCheckService';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
@@ -20,13 +21,24 @@ async function fetchDataFromService(url: string, retries: number = MAX_RETRIES):
       return fetchDataFromService(url, retries - 1);
     }
     logger.error(`Failed to fetch from ${url}: ${error.message}`);
-    throw new ServiceError('Service unavailable');
+    throw new Error('Service unavailable');
   }
 }
 
+async function fetchOrders() {
+  const url = process.env.ORDER_SERVICE_URL + '/api/orders';
+  return await fetchDataFromService(url);
+}
+
+async function fetchHistoricalData() {
+  const url = process.env.DATA_SERVICE_URL + '/api/historical-data';
+  return await fetchDataFromService(url);
+}
+
 export async function simulateBacktest(params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> {
+  await healthCheckServices(); // Check health before proceeding
   if (historicalData.length === 0) {
-    throw new ValidationError('historicalData cannot be empty.');
+    throw new Error('historicalData cannot be empty.');
   }
 
   const [orders, historicalDataResponse] = await Promise.all([
@@ -68,3 +80,10 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
     performanceMetrics: `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}%`
   };
 }
+
+// Event emission for backtest completion
+export function emitBacktestComplete(result: BacktestResult) {
+  eventEmitter.emit('backtestComplete', result);
+}
+
+export { eventEmitter };
