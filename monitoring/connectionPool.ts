@@ -6,6 +6,7 @@ import EventEmitter from 'eventemitter3';
 
 const MAX_RETRIES = 3;
 const TIMEOUT = 5000;
+const BACKOFF_FACTOR = 200;
 const circuit = new Map(); // To track circuit breaker states
 const serviceEmitter = new EventEmitter();
 
@@ -22,30 +23,27 @@ const createConnectionPool = () => {
         return connections[service];
     };
 
-    const requestWithRetry = async (service, method, url, data = null, retries = MAX_RETRIES) => {
-        const start = Date.now();
+    const requestWithRetry = async (service, method, url, data = null, retries = MAX_RETRIES, backoff = BACKOFF_FACTOR) => {
         if (circuit.get(service)) {
             throw new Error('Circuit breaker is open');
         }
         try {
             const connection = getConnection(service);
             const response = await connection[method](url, data);
-            const duration = Date.now() - start;
-            logger.debug({ service, method, url, duration }, 'External API call');
             return response.data;
         } catch (error) {
             logger.error({ error: error.message }, `Error in ${service} connection`);
             if (error.isAxiosError && error.response) {
-                // Circuit breaker logic
                 circuit.set(service, true);
                 serviceEmitter.emit('circuitOpen', { service });
                 setTimeout(() => {
                     circuit.delete(service);
                     serviceEmitter.emit('circuitClosed', { service });
-                }, 30000); // Reset circuit after 30 seconds
+                }, 30000);
             }
             if (retries > 0) {
-                return requestWithRetry(service, method, url, data, retries - 1);
+                await new Promise(resolve => setTimeout(resolve, backoff));
+                return requestWithRetry(service, method, url, data, retries - 1, backoff * 2);
             }
             throw new ValidationError('Service unavailable after retries.');
         }

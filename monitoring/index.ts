@@ -4,7 +4,8 @@ import { healthCheck, readyCheck } from './healthCheck';
 import errorMiddleware from './errorMiddleware';
 import { createConnectionPool } from './connectionPool';
 import { auditLogger } from './auditLogger';
-import logger, { logRequest, logStartup } from './logger';
+import { logRequest } from './logger';
+import { limiter } from './rateLimiter';
 import helmet from 'helmet';
 import cors from 'cors';
 import config from './config';
@@ -12,9 +13,6 @@ import config from './config';
 const app = express();
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
-
-// Startup logging
-logStartup();
 
 // CORS Configuration
 app.use(cors({
@@ -28,6 +26,7 @@ app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
 app.use(auditLogger);
 app.use(logRequest);
+app.use(limiter);
 
 // Health Check Endpoints
 app.get('/health', healthCheck);
@@ -39,9 +38,9 @@ app.use(errorMiddleware);
 const server = createServer(app);
 
 const gracefulShutdown = () => {
-    logger.info('Shutting down gracefully...');
+    console.log('Shutting down gracefully...');
     server.close(() => {
-        logger.info('HTTP server closed.');
+        console.log('HTTP server closed.');
         process.exit(0);
     });
 };
@@ -50,5 +49,12 @@ process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 server.listen(PORT, () => {
-    logger.info(`Monitoring service running on port ${PORT}`);
+    console.log(`Monitoring service running on port ${PORT}`);
 });
+
+setInterval(() => {
+    const memoryUsage = process.memoryUsage();
+    const totalMemory = memoryUsage.rss / (1024 * 1024);
+    const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
+    console.log(`Memory Usage: Total - ${totalMemory.toFixed(2)} MB, Used - ${usedMemory.toFixed(2)} MB`);
+}, 60000);
