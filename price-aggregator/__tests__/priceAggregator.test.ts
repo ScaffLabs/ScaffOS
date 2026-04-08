@@ -22,16 +22,19 @@ describe('PriceAggregator', () => {
     });
 
     test('should fetch prices and calculate VWAP', async () => {
-        const fetchPricesSpy = jest.spyOn(priceAggregator as any, 'fetchPrices');
+        jest.spyOn(priceAggregator as any, 'fetchPrices').mockResolvedValueOnce([
+            { exchange: 'exchange1', price: 100, volume: 10 },
+            { exchange: 'exchange2', price: 200, volume: 20 }
+        ]);
         await priceAggregator.fetchPrices();
-
-        expect(fetchPricesSpy).toHaveBeenCalled();
-        expect(priceAggregator.getCurrentPrices()).toHaveProperty('VWAP');
+        const currentPrices = priceAggregator.getCurrentPrices();
+        expect(currentPrices).toHaveProperty('VWAP');
+        expect(currentPrices.VWAP).toBeCloseTo(166.67, 2);
     });
 
     test('should handle empty price data gracefully', async () => {
-        priceAggregator['prices'] = [];
-        await expect(priceAggregator['calculateVWAP']()).resolves.not.toThrow();
+        jest.spyOn(priceAggregator as any, 'fetchPrices').mockResolvedValueOnce([]);
+        await priceAggregator.fetchPrices();
         expect(priceAggregator.getCurrentPrices()).toHaveProperty('VWAP', 0);
     });
 
@@ -56,5 +59,14 @@ describe('PriceAggregator', () => {
 
     test('should throw error if price not found during deletion', async () => {
         await expect(priceAggregator.deletePrice('nonexistent')).rejects.toThrow('Price not found');
+    });
+
+    test('should throw error if invalid price data is added', async () => {
+        await expect(priceAggregator.addPrice({ exchange: '', price: -10, volume: -5 })).rejects.toThrow();
+    });
+
+    test('should handle error during price addition', async () => {
+        jest.spyOn(priceAggregator as any, 'validatePriceData').mockImplementationOnce(() => { throw new Error('Validation Error'); });
+        await expect(priceAggregator.addPrice({ exchange: 'exchange1', price: 100, volume: 10 })).rejects.toThrow('Validation Error');
     });
 });

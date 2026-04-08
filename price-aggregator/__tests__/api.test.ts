@@ -48,4 +48,20 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ error: 'Failed to fetch prices' });
     });
+
+    test('POST /prices should add new price', async () => {
+        const newPriceData = { exchange: 'exchange1', price: 120, volume: 30 };
+        (priceAggregator.addPrice as jest.Mock).mockResolvedValueOnce(newPriceData);
+        const response = await request(app).post('/prices').send(newPriceData);
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual(newPriceData);
+    });
+
+    test('POST /prices should return 400 on invalid data', async () => {
+        const invalidPriceData = { exchange: '', price: -50, volume: 0 };
+        (priceAggregator.addPrice as jest.Mock).mockRejectedValueOnce(new Error('Validation Error'));
+        const response = await request(app).post('/prices').send(invalidPriceData);
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: 'Validation Error' });
+    });
 });
