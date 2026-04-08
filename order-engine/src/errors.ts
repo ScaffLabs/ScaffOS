@@ -33,4 +33,18 @@ class InternalServerError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DatabaseError, InternalServerError };
+class OverflowError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'OverflowError';
+    }
+}
+
+class DivisionByZeroError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'DivisionByZeroError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DatabaseError, InternalServerError, OverflowError, DivisionByZeroError };

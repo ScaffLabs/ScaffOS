@@ -1,6 +1,6 @@
 import { Order, OrderSchema } from './types';
 import { emitWithRetry } from './eventBus';
-import { ServiceError, ValidationError, NotFoundError } from './errors';
+import { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError } from './errors';
 import { queryDatabase } from './db';
 import logger from './logger';
 
@@ -13,10 +13,10 @@ export const createOrderService = async (orderData: unknown) => {
     }
     const order = parsedOrder.data;
     try {
+        if (order.price < 0) throw new OverflowError('Price cannot be negative.');
         const createdOrder = await queryDatabase('INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5) RETURNING *', [order.id, order.type, order.price, order.quantity, order.status]);
         await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder.rows[0] });
         logger.info('Order created successfully', { order: createdOrder.rows[0] });
-        await fetchData(`${ANOTHER_SERVICE_URL}/orders`, createdOrder.rows[0]);
         return createdOrder.rows[0];
     } catch (error) {
         logger.error('Error creating order:', error);
@@ -37,7 +37,6 @@ export const updateOrderService = async (id: string, updates: unknown) => {
         const updatedOrder = await queryDatabase('UPDATE orders SET type = COALESCE($1, type), price = COALESCE($2, price), quantity = COALESCE($3, quantity), status = COALESCE($4, status) WHERE id = $5 RETURNING *', [updates.type, updates.price, updates.quantity, updates.status, id]);
         await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder.rows[0] });
         logger.info('Order updated successfully', { order: updatedOrder.rows[0] });
-        await fetchData(`${ANOTHER_SERVICE_URL}/orders/${id}`, updatedOrder.rows[0]);
         return updatedOrder.rows[0];
     } catch (error) {
         logger.error('Error updating order:', error);
@@ -54,14 +53,13 @@ export const deleteOrderService = async (id: string) => {
         await queryDatabase('DELETE FROM orders WHERE id = $1', [id]);
         await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
         logger.info('Order deleted successfully', { id });
-        await fetchData(`${ANOTHER_SERVICE_URL}/orders/${id}`, { deleted: true });
     } catch (error) {
         logger.error('Error deleting order:', error);
         throw new ServiceError('Could not delete order. Please try again later.');
     }
 };
 
-export const getOrdersService = async ({ limit, offset, status, sortBy, sortOrder }) => {
+export const getOrdersService = async ({ limit, offset, status }) => {
     let query = 'SELECT * FROM orders';
     const params: any[] = [];
 
@@ -70,7 +68,6 @@ export const getOrdersService = async ({ limit, offset, status, sortBy, sortOrde
         params.push(status);
     }
 
-    query += ' ORDER BY ' + (sortBy || 'price') + ' ' + (sortOrder || 'asc');
     query += ' LIMIT $2 OFFSET $3';
     params.push(limit, offset);
 
