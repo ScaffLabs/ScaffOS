@@ -51,9 +51,33 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
   let totalReturns = 0;
   let trades = 0;
   let winRate = 0;
+  let wins = 0;
 
-  // Simulate backtest logic using orders and historical data
-  // This is where you implement the actual backtest logic
+  // Implementing the backtest logic
+  for (let i = 0; i < historicalData.length; i++) {
+    const currentData = historicalData[i];
+    const order = orders.find(o => o.timestamp === currentData.timestamp);
+
+    if (order) {
+      const entryPrice = currentData.price;
+      const slippageAdjustedPrice = entryPrice * (1 + params.slippage);
+      const shouldBuy = entryPrice <= slippageAdjustedPrice * (1 - params.buyThreshold);
+      const shouldSell = entryPrice >= slippageAdjustedPrice * (1 + params.sellThreshold);
+
+      if (shouldBuy) {
+        trades++;
+        // Simulate buying
+        totalReturns -= entryPrice;
+      } else if (shouldSell) {
+        trades++;
+        // Simulate selling
+        totalReturns += entryPrice;
+        wins++;
+      }
+    }
+  }
+
+  winRate = trades > 0 ? wins / trades : 0;
 
   return {
     totalReturns,
