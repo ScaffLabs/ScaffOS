@@ -16,7 +16,7 @@ class InMemoryStore<T> implements IDataStore<T> {
     async create(item: T): Promise<T> {
         const id = this.nextId++.toString();
         this.data.set(id, { ...item, id });
-        return { ...item, id };  
+        return { ...item, id };
     }
 
     async read(id: string): Promise<T | null> {
@@ -49,7 +49,6 @@ class InMemoryStore<T> implements IDataStore<T> {
 }
 
 export class AlertStore extends InMemoryStore<AlertMessage> {
-    // Adding indexing for common queries.
     private index: Map<string, Map<string, AlertMessage>> = new Map();
 
     async create(item: AlertMessage): Promise<AlertMessage> {
