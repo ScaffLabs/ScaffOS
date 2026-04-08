@@ -9,6 +9,7 @@ import cors from 'cors';
 import { logAudit } from './audit.logger';
 import xss from 'xss-clean';
 import bodyParser from 'body-parser';
+import { ValidationError } from './error.types';
 
 const alertStore = new AlertStore();
 const alertController = new AlertController(alertStore);
@@ -60,7 +61,10 @@ router.post('/api/alerts', async (req, res) => {
         logAudit('POST /api/alerts', { alertId: createdAlert.id });
         return res.status(201).json(createdAlert);
     } catch (error) {
-        return res.status(400).json({ message: error.message });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ message: 'Validation Error: ' + error.message });
+        }
+        return res.status(500).json({ message: 'Failed to create alert.' });
     } finally {
         logAudit('POST /api/alerts', { duration: Date.now() - start });
     }

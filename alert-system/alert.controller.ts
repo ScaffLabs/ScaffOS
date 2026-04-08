@@ -18,7 +18,7 @@ export class AlertController {
             if (!alerts.length) return res.status(204).send();
             return res.json(alerts);
         } catch (error) {
-            logError(error, { method: req.method, path: req.path });
+            logError(error);
             return res.status(500).json({ message: 'Failed to fetch active alerts.' });
         } finally {
             logRequest(req, res, start);
@@ -38,7 +38,7 @@ export class AlertController {
             } else if (error instanceof ServiceError) {
                 return res.status(500).json({ message: 'Service error occurred.' });
             }
-            logError(error, { method: req.method, path: req.path });
+            logError(error);
             return res.status(500).json({ message: 'Failed to add alert.' });
         } finally {
             logRequest(req, res, start);
@@ -58,7 +58,7 @@ export class AlertController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
-            logError(error, { method: req.method, path: req.path });
+            logError(error);
             return res.status(500).json({ message: 'Failed to update alert.' });
         } finally {
             logRequest(req, res, start);
@@ -78,10 +78,10 @@ export class AlertController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
-            logError(error, { method: req.method, path: req.path });
+            logError(error);
             return res.status(500).json({ message: 'Failed to delete alert.' });
         } finally {
             logRequest(req, res, start);
         }
     }
-}
+} 

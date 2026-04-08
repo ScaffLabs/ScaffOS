@@ -15,3 +15,12 @@ export const errorMiddleware = (err: Error, req: Request, res: Response, next: N
     }
     return res.status(500).json({ message: 'An unexpected error occurred.' });
 };
+
+const gracefulShutdown = () => {
+    // Logic to close connections or perform cleanup before shutdown
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+process.on('uncaughtException', gracefulShutdown);
+process.on('unhandledRejection', gracefulShutdown);
