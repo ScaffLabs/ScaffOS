@@ -11,6 +11,8 @@ import errorMiddleware from './errorMiddleware';
 import { limiter } from './rateLimiter';
 import config from './config';
 import { createConnectionPool } from './connectionPool';
+import { sanitize } from './sanitize';
+import { auditLogger } from './auditLogger';
 
 const app = express();
 const PORT = config.PORT;
@@ -23,6 +25,8 @@ app.use(helmet());
 app.use(cors({ origin: ['https://example.com', 'https://another-domain.com'] }));
 app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' }));
+app.use(auditLogger);
+app.use(sanitize);
 
 app.use((req, res, next) => {
     req.headers['x-request-id'] = Math.random().toString(36).substring(2, 15);
