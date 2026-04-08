@@ -27,7 +27,7 @@ export class InMemoryStore<T extends { id: string }> implements Store<T> {
 
     update(id: string, item: Partial<T>): T | undefined {
         if (!this.data[id]) return undefined;
-        this.data[id] = { ...this.data[id], ...item };
+        this.data[id] = { ...this.data[id], ...item }; 
         return this.data[id];
     }
 
@@ -64,9 +64,7 @@ export class InMemoryStore<T extends { id: string }> implements Store<T> {
         return [
             { id: '1', symbol: 'AAPL', quantity: 100 },
             { id: '2', symbol: 'GOOGL', quantity: 50 },
-            { id: '3', symbol: 'MSFT', quantity: 75 },
-            { id: '4', symbol: 'TSLA', quantity: 30 },
-            { id: '5', symbol: 'AMZN', quantity: 20 }
+            { id: '3', symbol: 'MSFT', quantity: 75 }
         ];
     }
 }

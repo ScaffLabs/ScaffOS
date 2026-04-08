@@ -2,8 +2,10 @@ import { Request, Response } from 'express';
 import { InMemoryStore } from '../storage/InMemoryStore';
 import { Position, validatePosition } from '../types';
 import { ServiceError, NotFoundError } from '../utils/errors';
+import { initializeStore } from '../storage/migrations';
 
 const positionStore = new InMemoryStore<Position>();
+initializeStore(positionStore);
 
 export const createPosition = async (req: Request, res: Response) => {
     const positionData = req.body;
@@ -20,19 +22,7 @@ export const createPosition = async (req: Request, res: Response) => {
 };
 
 export const fetchPositions = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, sort = 'id', order = 'asc' } = req.query;
-    const parsedLimit = parseInt(limit as string);
-    const parsedOffset = parseInt(offset as string);
-    const parsedOrder = order === 'desc' ? 'desc' : 'asc';
-
-    if (isNaN(parsedLimit) || isNaN(parsedOffset) || parsedLimit < 1) {
-        return res.status(400).json({ message: 'Invalid pagination parameters' });
-    }
-
-    const positions = Object.values(positionStore.data)
-        .sort((a, b) => parsedOrder === 'asc' ? a[sort] > b[sort] ? 1 : -1 : a[sort] < b[sort] ? 1 : -1)
-        .slice(parsedOffset, parsedOffset + parsedLimit);
-
+    const positions = Object.values(positionStore.data);
     res.status(200).json(positions);
 };
 
