@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { OrderBook } from './orderBook';
 import { Order, OrderSchemas } from './types';
+import { logAudit } from './logger';
 
 const orderBook = new OrderBook();
 
@@ -15,6 +16,7 @@ export const createOrder = (req: Request, res: Response): void => {
   const order: Order = parsedResult.data;
   console.log('[INFO] Creating order:', order.id);
   orderBook.addOrder(order);
+  logAudit('CREATE_ORDER', order.id);
   res.status(201).send({ ...order });
 };
 
@@ -56,6 +58,7 @@ export const updateOrder = (req: Request, res: Response): void => {
 
   const updatedOrder = parsedResult.data;
   orderBook.getOrders()[orderIndex] = updatedOrder;
+  logAudit('UPDATE_ORDER', updatedOrder.id);
   res.status(200).send(updatedOrder);
 };
 
@@ -69,5 +72,6 @@ export const deleteOrder = (req: Request, res: Response): void => {
   }
 
   orderBook.getOrders().splice(orderIndex, 1);
+  logAudit('DELETE_ORDER', id);
   res.status(204).send();
 };
