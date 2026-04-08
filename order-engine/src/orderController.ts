@@ -1,3 +1,4 @@
+// Import necessary modules
 import { Request, Response } from 'express';
 import { Order, OrderSchema } from './types';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
@@ -7,55 +8,9 @@ import { validationResult } from 'express-validator';
 
 /**
  * @swagger
- * tags:
- *   name: Orders
- *   description: Order management
- */
-
-/**
- * @swagger
- * /orders:
- *   post:
- *     summary: Create a new order
- *     tags: [Orders]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Order'
- *     responses:
- *       201:
- *         description: Order created successfully
- *       400:
- *         description: Invalid order data
- */
-export const createOrder = async (req: Request, res: Response): Promise<void> => {
-    const validationErrors = validationResult(req);
-    if (!validationErrors.isEmpty()) {
-        return res.status(400).json({ errors: validationErrors.array() });
-    }
-    try {
-        await OrderSchema.parseAsync(req.body);
-        const order: Order = req.body;
-        const createdOrder = await createOrderService(order);
-        res.status(201).json(createdOrder);
-        logger.info('Order created successfully', { order: createdOrder, requestId: req.headers['x-request-id'] });
-    } catch (error) {
-        logger.error('Error creating order', { error: error.message, requestId: req.headers['x-request-id'] });
-        if (error instanceof ValidationError) {
-            res.status(400).json({ errors: error.errors });
-        } else {
-            res.status(500).json({ message: 'Internal Server Error' });
-        }
-    }
-};
-
-/**
- * @swagger
  * /orders:
  *   get:
- *     summary: Retrieve all orders
+ *     summary: Retrieve all orders with pagination and filtering
  *     tags: [Orders]
  *     parameters:
  *       - in: query
@@ -100,6 +55,45 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
     } catch (error) {
         logger.error('Error retrieving orders', { error: error.message, requestId: req.headers['x-request-id'] });
         res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+/**
+ * @swagger
+ * /orders:
+ *   post:
+ *     summary: Create a new order
+ *     tags: [Orders]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Order'
+ *     responses:
+ *       201:
+ *         description: Order created successfully
+ *       400:
+ *         description: Invalid order data
+ */
+export const createOrder = async (req: Request, res: Response): Promise<void> => {
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        return res.status(400).json({ errors: validationErrors.array() });
+    }
+    try {
+        await OrderSchema.parseAsync(req.body);
+        const order: Order = req.body;
+        const createdOrder = await createOrderService(order);
+        res.status(201).json(createdOrder);
+        logger.info('Order created successfully', { order: createdOrder, requestId: req.headers['x-request-id'] });
+    } catch (error) {
+        logger.error('Error creating order', { error: error.message, requestId: req.headers['x-request-id'] });
+        if (error instanceof ValidationError) {
+            res.status(400).json({ errors: error.errors });
+        } else {
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
     }
 };
 

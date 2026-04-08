@@ -62,11 +62,20 @@ export const deleteOrderService = async (id: string) => {
 };
 
 export const getOrdersService = async ({ limit, offset, status, sortBy, sortOrder }) => {
+    let query = 'SELECT * FROM orders';
+    const params: any[] = [];
+
+    if (status) {
+        query += ' WHERE status = $1';
+        params.push(status);
+    }
+
+    query += ' ORDER BY ' + (sortBy || 'price') + ' ' + (sortOrder || 'asc');
+    query += ' LIMIT $2 OFFSET $3';
+    params.push(limit, offset);
+
     try {
-        let orders = await queryDatabase('SELECT * FROM orders ORDER BY $1 $2 LIMIT $3 OFFSET $4', [sortBy || 'price', sortOrder || 'asc', limit, offset]);
-        if (status) {
-            orders.rows = orders.rows.filter(order => order.status === status);
-        }
+        const orders = await queryDatabase(query, params);
         logger.info('Orders retrieved successfully', { count: orders.rowCount });
         return orders.rows;
     } catch (error) {
