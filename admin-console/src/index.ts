@@ -13,6 +13,7 @@ import errorHandler from './middleware/errorHandler';
 import { logRequest } from './middleware/logger';
 import { logAudit } from './middleware/auditLogger';
 import { body, validationResult } from 'express-validator';
+import xss from 'xss-clean';
 
 dotenv.config();
 const app = express();
@@ -29,6 +30,7 @@ app.use(helmet());
 app.use(cors({ origin: ['http://your-allowed-origin.com'], credentials: true }));
 app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' }));
+app.use(xss()); // XSS protection
 app.use(logRequest);
 app.use((req, res, next) => {
     if (!req.is('application/json')) {
@@ -58,8 +60,6 @@ const gracefulShutdown = async () => {
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
-startServer();
-
 app.post('/api/config', [
     body('key').trim().escape().notEmpty().withMessage('Key is required'),
     body('value').trim().escape().notEmpty().withMessage('Value is required'),
@@ -68,7 +68,15 @@ app.post('/api/config', [
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    // Handle the creation of configuration... 
+    try {
+        const { key, value } = req.body;
+        // Assume a function to save the configuration
+        await db.createConfiguration({ key, value });
+        res.status(201).json({ message: 'Configuration created successfully!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
 app.use((req, res, next) => {
