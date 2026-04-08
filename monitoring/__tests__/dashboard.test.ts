@@ -2,7 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import { listDashboardEntries, createDashboardEntry, updateDashboardEntry, deleteDashboardEntry } from '../dashboard';
 import errorMiddleware from '../errorMiddleware';
-import { ValidationError, ServiceError } from '../errorClasses';
+import { ValidationError, NotFoundError } from '../errorClasses';
 import InMemoryStore from '../dataStore';
 
 const app = express();
@@ -29,7 +29,7 @@ describe('Dashboard Endpoint', () => {
     it('should handle no data available', async () => {
         const response = await request(app).get('/dashboard');
         expect(response.status).toBe(500);
-        expect(response.body.error).toBe('No entries found.');
+        expect(response.body.error).toBe('Failed to fetch entries.');
     });
 
     it('should create a new entry', async () => {
@@ -41,7 +41,7 @@ describe('Dashboard Endpoint', () => {
     it('should return 400 for invalid entry', async () => {
         const response = await request(app).post('/dashboard').send({});
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe('Invalid input data. ID and value are required.');
+        expect(response.body.error).toBe('Invalid input data. Both id and value are required.');
     });
 
     it('should update an existing entry', async () => {

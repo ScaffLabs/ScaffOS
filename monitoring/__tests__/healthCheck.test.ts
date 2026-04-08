@@ -15,7 +15,6 @@ describe('Health Check Endpoint', () => {
     it('should handle unexpected errors', async () => {
         jest.spyOn(console, 'error').mockImplementation(() => {});
 
-        // Simulating an unexpected error by throwing an error in healthCheck
         const faultyHealthCheck = (req, res) => { throw new Error('Unexpected error'); };
         app.get('/health', faultyHealthCheck);
 

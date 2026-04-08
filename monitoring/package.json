@@ -6,7 +6,9 @@
     "start": "ts-node src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest --collectCoverage --coverageReporters=text",
+    "test:integration": "jest --testPathPattern=__tests__/"
   },
   "dependencies": {
     "express": "^4.17.1",
