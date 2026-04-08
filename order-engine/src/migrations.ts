@@ -19,5 +19,6 @@ export const migrateData = async () => {
 };
 
 export const migrateOrders = async () => {
-  // Logic for migrating orders from one storage to another
+  console.log('Migrating orders...');
+  // Logic for migrating orders from one storage to another can be implemented here
 };
