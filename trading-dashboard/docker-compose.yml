@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  trading-dashboard:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - API_URL=http://trading-dashboard:3000/api
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=trading_dashboard
+    depends_on:
+      - db
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: trading_dashboard
+    ports:
+      - '3306:3306'
