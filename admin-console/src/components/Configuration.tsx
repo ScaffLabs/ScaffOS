@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { postConfiguration } from '../services/ServiceClient';
 import { ConfigurationItem, ConfigurationItemSchema } from '../types';
+import { ValidationError } from '../errors/CustomErrors';
 
 const Configuration: React.FC = () => {
     const [key, setKey] = useState<string>('');
@@ -24,7 +25,11 @@ const Configuration: React.FC = () => {
             setKey('');
             setValue('');
         } catch (err) {
-            setError('Failed to create configuration. Please try again.');
+            if (err instanceof ValidationError) {
+                setError(err.message);
+            } else {
+                setError('Failed to create configuration. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
