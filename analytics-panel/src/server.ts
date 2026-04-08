@@ -14,16 +14,12 @@ import { validateQueryParams } from './middleware/inputValidator';
 import { validateStrategy } from './middleware/strategyValidator';
 import errorHandler from './middleware/errorHandler';
 import { MongoClient } from 'mongodb';
-import { setTimeout } from 'timers/promises';
-import pRetry from 'p-retry';
-import { circuitBreaker } from 'opossum';
-import { Queue } from 'bull';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
 const mongoClient = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
-const requestQueue = new Queue('requestQueue');
 
 // Middleware configurations
 app.use(cors({ origin: ['http://localhost:3000', 'https://yourdomain.com'] }));
@@ -71,13 +67,8 @@ process.on('SIGINT', shutdown);
 
 const connectToDatabase = async () => {
     try {
-        await pRetry(async () => {
-            await mongoClient.connect();
-            console.log('Connected to MongoDB');
-        }, {
-            retries: 5,
-            minTimeout: 1000,
-        });
+        await mongoClient.connect();
+        console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
     }

@@ -6,7 +6,7 @@ export const auditLogger = (req: Request, res: Response, next: NextFunction) => 
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        logger.logRequest(method, url, res.statusCode, duration);
+        logger.logRequest(method, url, res.statusCode, duration, req.id);
         // Log sensitive data only if necessary, avoid logging sensitive information
         if (method === 'POST' && url.includes('/api/strategies')) {
             const { name } = req.body;
@@ -14,9 +14,4 @@ export const auditLogger = (req: Request, res: Response, next: NextFunction) => 
         }
     });
     next();
-};
-
-export const logSensitiveOperation = (req: Request, operation: string) => {
-    const { user } = req;
-    logger.info(`User ${user?.id} performed sensitive operation: ${operation}`);
 };
