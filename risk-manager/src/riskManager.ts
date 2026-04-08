@@ -2,17 +2,26 @@ import { RiskPosition, RiskPositionSchema, OrderId } from './sharedTypes';
 import { RiskPositionStorage } from './storage';
 import logger from './logger';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
-import { fetchEventBusData } from './externalService';
+import { PositionLimits } from './positionLimits';
 
 export default class RiskManager {
     private storage: RiskPositionStorage;
+    private positionLimits: PositionLimits;
 
     constructor(storage: RiskPositionStorage) {
         this.storage = storage;
+        this.positionLimits = new PositionLimits(); // Initialize PositionLimits
+    }
+
+    async setPositionLimit(asset: string, limit: number): Promise<void> {
+        this.positionLimits.setLimit(asset, limit);
     }
 
     async createRiskPosition(asset: string, position: number): Promise<RiskPosition> {
         try {
+            if (!this.positionLimits.checkLimit(asset, position)) {
+                throw new ValidationError('Position exceeds limit for asset: ' + asset);
+            }
             const newPosition: RiskPosition = { id: this.generateId(), asset, position };
             const validationResult = RiskPositionSchema.safeParse(newPosition);
             if (!validationResult.success) {
@@ -20,7 +29,6 @@ export default class RiskManager {
             }
             const createdPosition = await this.storage.create(newPosition);
             logger.info('Created new risk position', createdPosition);
-            await fetchEventBusData(); // Fetch data from event bus
             return createdPosition;
         } catch (error) {
             if (error instanceof ValidationError) {
@@ -36,6 +44,9 @@ export default class RiskManager {
             const existingPosition = await this.storage.read(id);
             if (!existingPosition) {
                 throw new NotFoundError('Risk position not found.');
+            }
+            if (!this.positionLimits.checkLimit(existingPosition.asset, position)) {
+                throw new ValidationError('Position exceeds limit for asset: ' + existingPosition.asset);
             }
             const updatedPosition: RiskPosition = { ...existingPosition, position };
             const validationResult = RiskPositionSchema.safeParse(updatedPosition);
