@@ -66,8 +66,12 @@ export const deleteOrder = async (req: Request, res: Response): Promise<void> =>
 };
 
 export const getOrders = async (req: Request, res: Response): Promise<void> => {
+    const { limit = 10, offset = 0, status, sortBy = 'price', sortOrder = 'asc' } = req.query;
     try {
-        const orders = await getOrdersService();
+        const orders = await getOrdersService({ limit, offset, status, sortBy, sortOrder });
+        if (orders.length === 0) {
+            return res.status(404).json({ message: 'No orders found.' });
+        }
         res.status(200).json(orders);
         logger.info('Orders retrieved successfully', { count: orders.length, requestId: req.headers['x-request-id'] });
     } catch (error) {

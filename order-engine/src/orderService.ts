@@ -63,11 +63,23 @@ export const deleteOrderService = async (id: string) => {
     }
 };
 
-export const getOrdersService = async () => {
+export const getOrdersService = async ({ limit, offset, status, sortBy, sortOrder }) => {
     try {
-        const orders = await storage.findAll();
-        logger.info('Orders retrieved successfully', { count: orders.length });
-        return orders;
+        let orders = await storage.findAll();
+        if (status) {
+            orders = orders.filter(order => order.status === status);
+        }
+        if (sortBy) {
+            orders.sort((a, b) => {
+                if (sortOrder === 'desc') {
+                    return b[sortBy] - a[sortBy];
+                }
+                return a[sortBy] - b[sortBy];
+            });
+        }
+        const paginatedOrders = orders.slice(offset, offset + limit);
+        logger.info('Orders retrieved successfully', { count: paginatedOrders.length });
+        return paginatedOrders;
     } catch (error) {
         logger.error('Error retrieving orders:', error);
         throw new ServiceError('Could not retrieve orders. Please try again later.');
