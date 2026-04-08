@@ -4,12 +4,15 @@ import { LatencyData, LatencyDataSchema } from './types';
 import logger from './logger';
 import { createConnectionPool } from './connectionPool';
 import { serviceEmitter } from './connectionPool';
+import { sanitize } from './sanitize';
 
 const connectionPool = createConnectionPool();
 
+// List Dashboard Entries with pagination and filtering
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
-        const response = await connectionPool.requestWithRetry('order', 'get', '/dashboard');
+        const { limit = 10, offset = 0 } = req.query;
+        const response = await connectionPool.requestWithRetry('order', 'get', `/dashboard?limit=${limit}&offset=${offset}`);
         if (!response || response.length === 0) {
             return res.status(204).json({ message: 'No entries available.' });
         }
@@ -23,6 +26,7 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
     }
 };
 
+// Create Dashboard Entry with validation
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const bodyValidation = LatencyDataSchema.safeParse(req.body);
@@ -46,6 +50,7 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
+// Update Dashboard Entry with validation
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -67,6 +72,7 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
+// Delete Dashboard Entry
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -80,3 +86,6 @@ export const deleteDashboardEntry = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+// Add the sanitize middleware to all routes
+app.use(sanitize);
