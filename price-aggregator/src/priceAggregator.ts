@@ -64,6 +64,10 @@ export class PriceAggregator extends EventEmitter {
                 acc[priceData.exchange] = priceData.price;
                 return acc;
             }, {} as CurrentPrices);
+            // Calculate VWAP
+            const totalVolume = prices.reduce((sum, p) => sum + p.volume, 0);
+            const weightedPriceSum = prices.reduce((sum, p) => sum + (p.price * p.volume), 0);
+            this.currentPrices['VWAP'] = totalVolume > 0 ? (weightedPriceSum / totalVolume) : 0;
         } catch (error) {
             logError(error, 'Error updating current prices');
             throw new ServiceError('Failed to update current prices.');
@@ -84,6 +88,13 @@ export class PriceAggregator extends EventEmitter {
         this.emit('PRICE_ADDED', priceData);
         this.clients.forEach(client => {
             client.send(JSON.stringify(priceData));
+        });
+    }
+
+    public subscribe(client: WebSocket) {
+        this.clients.push(client);
+        client.on('close', () => {
+            this.clients = this.clients.filter(c => c !== client);
         });
     }
 }
