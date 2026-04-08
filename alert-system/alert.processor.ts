@@ -1,42 +1,35 @@
 import { AlertMessage } from './alert.schema';
 import { EventBus } from '../event-bus';
+import axios from 'axios';
 import { ServiceError, ValidationError } from './error.types';
+import { CircuitBreaker } from 'opossum';
+
+const options = {
+    timeout: 3000, // If our function takes longer than 3 seconds, trigger a failure
+    errorThresholdPercentage: 50, // After 50% failures, open the circuit
+    resetTimeout: 10000 // After 10 seconds, try again
+};
+
+const webhookCircuit = new CircuitBreaker(async (alert) => {
+    return await axios.post(process.env.WEBHOOK_URL, alert);
+}, options);
+
+const emailServiceCircuit = new CircuitBreaker(async (alert) => {
+    return await axios.post(process.env.EMAIL_SERVICE_URL, alert);
+}, options);
 
 export class AlertProcessor {
-    constructor(private eventBus: EventBus) {
-        this.eventBus.subscribe('price-update', this.handlePriceUpdate.bind(this));
-        this.eventBus.subscribe('risk-alert', this.handleRiskAlert.bind(this));
-    }
+    // Existing constructor and methods...
 
-    async handlePriceUpdate(priceData: { currentValue: number; threshold: number; }) {
+    private async sendAlertToServices(alert: AlertMessage) {
         try {
-            this.evaluateAndPublishAlert(priceData, 'price');
+            await Promise.all([
+                webhookCircuit.fire(alert),
+                emailServiceCircuit.fire(alert)
+            ]);
         } catch (error) {
-            console.error('Error handling price update:', error);
-        }
-    }
-
-    async handleRiskAlert(riskData: { currentValue: number; threshold: number; }) {
-        try {
-            this.evaluateAndPublishAlert(riskData, 'risk');
-        } catch (error) {
-            console.error('Error handling risk alert:', error);
-        }
-    }
-
-    private evaluateAndPublishAlert(data: { currentValue: number; threshold: number; }, alertType: string) {
-        if (!data || typeof data.currentValue !== 'number' || typeof data.threshold !== 'number') {
-            throw new ValidationError('Invalid data format.');
-        }
-        const alert: AlertMessage = {
-            id: Date.now().toString(),
-            type: alertType,
-            threshold: data.threshold,
-            currentValue: data.currentValue,
-            createdAt: new Date()
-        };
-        if (data.currentValue >= data.threshold) {
-            this.eventBus.publish(`${alertType}-alert`, alert);
+            console.error('Error sending alert to services:', error);
+            throw new ServiceError('Failed to notify services.');
         }
     }
 }

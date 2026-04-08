@@ -1,13 +1,22 @@
 import { Request, Response } from 'express';
-import os from 'os';
+import axios from 'axios';
 
 export class HealthCheck {
-    static checkServices(services: string[]): boolean {
-        // Logic to check the health of services
-        return true;
+    static async checkServices(services: string[]): Promise<{ [key: string]: boolean }> {
+        const results: { [key: string]: boolean } = {};
+        await Promise.all(services.map(async (service) => {
+            try {
+                const res = await axios.get(`${process.env[service + '_URL']}/health`);
+                results[service] = res.status === 200;
+            } catch (error) {
+                console.error(`Health check for ${service} failed:`, error);
+                results[service] = false;
+            }
+        }));
+        return results;
     }
 
-    static memoryUsage(req: Request, res: Response) {
+    static async memoryUsage(req: Request, res: Response) {
         const memoryUsage = process.memoryUsage();
         return res.json({
             rss: memoryUsage.rss,
@@ -18,4 +27,4 @@ export class HealthCheck {
             free: os.freemem(),
         });
     }
-} 
+}
