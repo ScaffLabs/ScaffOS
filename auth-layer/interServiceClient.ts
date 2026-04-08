@@ -1,3 +1,4 @@
+// interServiceClient.ts
 import axios from 'axios';
 import config from './config';
 import logger from './logger';
@@ -52,16 +53,6 @@ export const healthCheckService = async (serviceUrl: string) => {
     }
 };
 
-export const subscribeToUserCreated = (listener: (user: any) => void) => {
-    const eventBus = require('./eventBus').default;
-    eventBus.on('userCreated', listener);
-};
-
-export const emitUserCreated = (user: any) => {
-    const eventBus = require('./eventBus').default;
-    eventBus.emit('userCreated', user);
-};
-
 export const checkServiceHealth = async (serviceUrl: string) => {
     try {
         const response = await axios.get(serviceUrl);
@@ -70,4 +61,14 @@ export const checkServiceHealth = async (serviceUrl: string) => {
         logger.error(`Service health check failed for ${serviceUrl}`, { error: error.message });
         return false;
     }
+};
+
+export const emitUserCreated = (user: any) => {
+    const eventBus = require('./eventBus').default;
+    eventBus.emit('userCreated', user);
+};
+
+export const subscribeToUserCreated = (listener: (user: any) => void) => {
+    const eventBus = require('./eventBus').default;
+    eventBus.on('userCreated', listener);
 };
