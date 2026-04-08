@@ -23,3 +23,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.1.1] - 2023-10-20
 - Updated documentation to include detailed contribution guidelines.
+
+## [1.1.2] - 2023-10-25
+- Improved memory usage monitoring and logging for performance optimization.
+- Added additional validation for API requests to enhance security.

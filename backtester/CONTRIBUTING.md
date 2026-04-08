@@ -28,3 +28,8 @@ Please adhere to the [Code of Conduct](CODE_OF_CONDUCT.md) in all interactions.
 
 ## Questions?
 If you have any questions about contributing, feel free to reach out!
+
+## Additional Guidelines
+- Ensure your code follows the project's style guide.
+- Write clear and concise commit messages.
+- When fixing a bug, reference the issue number in your commit message.
