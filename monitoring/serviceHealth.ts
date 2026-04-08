@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import EventEmitter from 'eventemitter3';
 import config from './config';
+import logger from './logger';
 
 const serviceEmitter = new EventEmitter();
 const SERVICE_URLS = {
@@ -15,11 +16,12 @@ const TIMEOUT = 5000;
 const checkService = async (service: string, retries = MAX_RETRIES): Promise<boolean> => {
     try {
         const response = await axios.get(`${SERVICE_URLS[service]}/health`, { timeout: TIMEOUT });
-        return response.data.status === 'UP';
+        const status = response.data.status === 'UP';
+        logger.logServiceHealth(service, status);
+        return status;
     } catch (error) {
-        console.error(`Error checking ${service}:`, error.message);
+        logger.error({ error: error.message }, `Error checking ${service}`);
         if (retries > 0) {
-            console.log(`Retrying ${service} health check... (${MAX_RETRIES - retries + 1})`);
             return checkService(service, retries - 1);
         }
         return false;
@@ -36,13 +38,13 @@ export const checkServiceHealth = async (req: Request, res: Response) => {
         serviceEmitter.emit('serviceStatus', servicesStatus);
         res.status(200).json(servicesStatus);
     } catch (error) {
-        console.error('Health check failed:', error.message);
+        logger.error({ error: error.message }, 'Health check failed');
         res.status(500).json({ error: 'Health check failed' });
     }
 };
 
 serviceEmitter.on('serviceStatus', (status) => {
-    console.log('Service status updated:', status);
+    logger.info('Service status updated:', status);
 });
 
 export default serviceEmitter;

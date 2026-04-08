@@ -35,4 +35,12 @@ export const logStartup = () => {
     });
 };
 
+export const logServiceHealth = (service, status) => {
+    logger.info({ service, status }, 'Service health checked');
+};
+
+export const logDatabaseQuery = (query, duration) => {
+    logger.debug({ query, duration }, 'Database query executed');
+};
+
 export default logger;
