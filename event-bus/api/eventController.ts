@@ -3,16 +3,9 @@ import { StorageManager } from '../storage/storageManager';
 import { Event, createEventSchema, updateEventSchema } from '../types';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
-import sanitizer from 'express-sanitizer';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
-
-// Middleware for sanitizing inputs
-export const sanitizeInputs = (req: Request, res: Response, next: Function) => {
-    req.body = req.sanitize(req.body);
-    next();
-};
 
 export const createEvent = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -21,7 +14,6 @@ export const createEvent = async (req: Request, res: Response): Promise<void> =>
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
         }
         const event = await storage.create(validation.data);
-        logger.logSensitiveOperation('createEvent', { data: event }); // Log the operation
         res.status(201).json(event);
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -46,9 +38,9 @@ export const getEvents = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Add sanitizeInputs middleware to routes
+// Additional controller methods for update, delete, and health check can be added here.
 const router = Router();
-router.post('/', sanitizeInputs, createEvent);
-router.get('/', sanitizeInputs, getEvents);
+router.post('/', createEvent);
+router.get('/', getEvents);
 
 export default router;
