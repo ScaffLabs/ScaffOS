@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     depends_on:
-      - another-service # Example dependent service
+      - another-service
   another-service:
     image: some/other-service-image
     ports:
