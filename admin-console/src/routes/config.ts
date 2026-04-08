@@ -36,24 +36,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.get('/:key', async (req, res) => {
-    const { key } = req.params;
-    try {
-        const configItem = await db.getConfigurationByKey(key);
-        if (!configItem) {
-            logger.warn(`Configuration not found: ${key}`);
-            throw new NotFoundError('Configuration not found');
-        }
-        res.status(200).json(configItem);
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        logger.error(`Error fetching configuration: ${error.message}`);
-        res.status(500).json({ error: 'Failed to fetch configuration' });
-    }
-});
-
 router.put('/', async (req, res) => {
     const configItem: ConfigurationItem = req.body;
     try {

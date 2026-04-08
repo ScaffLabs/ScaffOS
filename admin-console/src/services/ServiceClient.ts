@@ -32,4 +32,13 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     }
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration };
+const updateConfiguration = async (key: string, value: string): Promise<void> => {
+    const configItem: ConfigurationItem = { key, value };
+    try {
+        await axios.put(`${BASE_URL}/config`, configItem);
+    } catch (error) {
+        throw new ServiceError('Failed to update configuration');
+    }
+};
+
+export { fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration }; 
