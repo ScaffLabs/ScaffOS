@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { z } from 'zod';
 
 dotenv.config();
 
@@ -10,22 +11,23 @@ interface Config {
   PORT: number;
 }
 
-const getConfig = (): Config => {
-  const { JWT_SECRET, EVENT_BUS_URL, ANOTHER_SERVICE_URL, NODE_ENV = 'development', PORT = 3000 } = process.env;
+const envSchema = z.object({
+  JWT_SECRET: z.string().nonempty(),
+  EVENT_BUS_URL: z.string().url(),
+  ANOTHER_SERVICE_URL: z.string().url(),
+  NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
+  PORT: z.coerce.number().default(3000)
+});
 
-  if (!JWT_SECRET) {
-    throw new Error('Missing JWT_SECRET in environment variables');
+const parseEnv = () => {
+  const parsed = envSchema.safeParse(process.env);
+  if (!parsed.success) {
+    console.error('Invalid environment variables:', parsed.error.format());
+    process.exit(1);
   }
-
-  return {
-    JWT_SECRET,
-    EVENT_BUS_URL,
-    ANOTHER_SERVICE_URL,
-    NODE_ENV: NODE_ENV as 'development' | 'staging' | 'production',
-    PORT: Number(PORT),
-  };
+  return parsed.data;
 };
 
-const config = getConfig();
+const config: Config = parseEnv();
 
 export default config;
