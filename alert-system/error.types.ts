@@ -19,6 +19,20 @@ export class NotFoundError extends Error {
     }
 }
 
+export class OverflowError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'OverflowError';
+    }
+}
+
+export class DivisionByZeroError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'DivisionByZeroError';
+    }
+}
+
 /**
  * Interface for error response structure.
  */
@@ -30,4 +44,4 @@ export interface ErrorResponse {
 /**
  * Types for common application errors.
  */
-export type AppError = ServiceError | ValidationError | NotFoundError;
+export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError;

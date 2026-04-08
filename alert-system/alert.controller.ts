@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { AlertMessage, validateAlertMessage } from './alert.schema';
 import { AlertStore } from './storage';
-import { ValidationError, ServiceError, NotFoundError } from './error.types';
+import { ValidationError, ServiceError, NotFoundError, DivisionByZeroError } from './error.types';
 import logger, { logRequest, logError } from './logger';
 
 export class AlertController {
@@ -34,6 +34,8 @@ export class AlertController {
         } catch (error) {
             if (error instanceof ValidationError) {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
+            } else if (error instanceof DivisionByZeroError) {
+                return res.status(400).json({ message: 'Cannot divide by zero.' });
             }
             logError(error, { method: req.method, path: req.path });
             return res.status(500).json({ message: 'Failed to add alert.' });
