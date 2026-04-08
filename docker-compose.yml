@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  monitoring:
+    build:
+      context: ./monitoring
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./monitoring/.env
+
+  order_service:
+    image: order_service:latest
+    ports:
+      - '4000:4000'
+    environment:
+      - NODE_ENV=development
+
+  user_service:
+    image: user_service:latest
+    ports:
+      - '5000:5000'
+    environment:
+      - NODE_ENV=development
