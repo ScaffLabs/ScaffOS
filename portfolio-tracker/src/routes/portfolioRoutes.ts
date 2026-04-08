@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createPortfolio, getPortfolio, updatePortfolio } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios } from '../services/portfolioService';
 
 const router = Router();
 
@@ -27,6 +27,15 @@ router.put('/:id', async (req, res) => {
     res.json(updatedPortfolio);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+router.get('/', async (req, res) => {
+  try {
+    const portfolios = await fetchPortfolios();
+    res.json(portfolios);
+  } catch (error) {
+    res.status(503).json({ error: 'Service unavailable' });
   }
 });
 

@@ -1,39 +1,45 @@
+import axios from 'axios';
 import { Portfolio, PortfolioUpdate } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
+import CircuitBreaker from 'circuit-breaker-js';
+
+const PORTFOLIO_SERVICE_URL = process.env.PORTFOLIO_SERVICE_URL || 'http://localhost:3001/api/portfolios';
+const circuitBreaker = new CircuitBreaker({ timeout: 3000, errorsThreshold: 2, resetTimeout: 10000 });
 
 let portfolios: Portfolio[] = [];
 
-/**
- * Creates a new portfolio and publishes an update event.
- * This function constructs a new portfolio object, assigns a unique ID,
- * pushes it to the portfolios array, and then notifies any subscribers
- * of the event.
- */
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-  const newPortfolio: Portfolio = { id: String(portfolios.length + 1), ...data };  // Assigns a unique ID based on the current length
-  portfolios.push(newPortfolio); // Adds the new portfolio to the in-memory array
-  await publishPortfolioUpdate(newPortfolio); // Notifies subscribers of the new portfolio
-  return newPortfolio; // Returns the newly created portfolio
+  const newPortfolio: Portfolio = { id: String(portfolios.length + 1), ...data };
+  portfolios.push(newPortfolio);
+  await publishPortfolioUpdate(newPortfolio);
+  return newPortfolio;
 };
 
-/**
- * Retrieves a portfolio by its ID.
- * This function searches the portfolios array for a matching ID
- * and returns the portfolio if found, or undefined if not.
- */
 export const getPortfolio = async (id: string): Promise<Portfolio | undefined> => {
-  return portfolios.find(portfolio => portfolio.id === id); // Searches for the portfolio by ID
+  return portfolios.find(portfolio => portfolio.id === id);
 };
 
-/**
- * Updates an existing portfolio.
- * Throws an error if the portfolio is not found.
- * After updating, it publishes an event to notify subscribers.
- */
 export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promise<Portfolio | undefined> => {
   const portfolio = await getPortfolio(id);
-  if (!portfolio) throw new Error('Portfolio not found'); // Error handling if portfolio is not found
-  Object.assign(portfolio, data); // Updates the portfolio properties with new data
-  await publishPortfolioUpdate(portfolio); // Notifies subscribers of the updated portfolio
-  return portfolio; // Returns the updated portfolio
+  if (!portfolio) throw new Error('Portfolio not found');
+  Object.assign(portfolio, data);
+  await publishPortfolioUpdate(portfolio);
+  return portfolio;
+};
+
+const retryRequest = async (fn: Function) => {
+  for (let i = 0; i < 3; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === 2) throw error;
+    }
+  }
+};
+
+export const fetchPortfolios = async () => {
+  return await retryRequest(async () => {
+    const response = await circuitBreaker.fire(() => axios.get(PORTFOLIO_SERVICE_URL));
+    return response.data;
+  });
 };
