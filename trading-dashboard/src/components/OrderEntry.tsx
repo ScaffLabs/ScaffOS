@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { submitOrder } from '../api/orderApi';
+import { publishEvent } from '../utils/eventBus';
 
 const OrderEntry: React.FC = () => {
     const [orderDetails, setOrderDetails] = useState({ symbol: '', quantity: 0, type: 'buy' });
@@ -7,6 +8,7 @@ const OrderEntry: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         await submitOrder(orderDetails);
+        publishEvent('ORDER_SUBMITTED', orderDetails);
         // handle success or error
     };
 
