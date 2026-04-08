@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { AlertMessage } from './alert.schema';
+import { AlertMessage, validateAlertMessage } from './alert.schema';
 import { alertStore } from './index';
 import { ValidationError, ServiceError } from './error.types';
 
@@ -14,9 +14,9 @@ export class AlertController {
         }
     }
 
-    async addAlert(alert: AlertMessage) {
+    async addAlert(alertData: unknown) {
         try {
-            this.validateAlert(alert);
+            const alert = validateAlertMessage(alertData);
             this.activeAlerts.push(alert);
             await alertStore.create(alert);
         } catch (error) {
@@ -24,15 +24,6 @@ export class AlertController {
                 throw new ValidationError('Invalid alert data: ' + error.message);
             }
             throw new ServiceError('Failed to add alert.');
-        }
-    }
-
-    private validateAlert(alert: AlertMessage) {
-        if (!alert.type || !alert.threshold || !alert.currentValue) {
-            throw new ValidationError('All fields are required.');
-        }
-        if (typeof alert.threshold !== 'number' || typeof alert.currentValue !== 'number') {
-            throw new ValidationError('Threshold and current value must be numbers.');
         }
     }
 
