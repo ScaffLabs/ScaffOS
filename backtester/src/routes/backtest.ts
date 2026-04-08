@@ -1,10 +1,10 @@
-// backtest.ts
 import { Router } from 'express';
 import { simulateBacktest } from '../services/backtestService';
 import { ValidationError, NotFoundError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 import rateLimit from 'express-rate-limit';
 import { logger } from '../utils/logger';
+import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();

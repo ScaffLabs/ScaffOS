@@ -8,13 +8,12 @@ import { withRetry, circuitBreaker } from './resilience';
 const simulateBacktestWithDependencies = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]) => {
     const orderServiceUrl = process.env.ORDER_SERVICE_URL;
     const dataServiceUrl = process.env.DATA_SERVICE_URL;
-
+    
     // Fetch some data from external services as part of the backtest
     const orderData = await withRetry(() => axios.get(`${orderServiceUrl}/orders`));
     const historicalDataResponse = await withRetry(() => axios.get(`${dataServiceUrl}/historical-data`));
 
     // Here you would integrate that data into your logic
-    // For now, just log the fetched data
     logger.info('Fetched order data:', orderData.data);
     logger.info('Fetched historical data:', historicalDataResponse.data);
 
@@ -29,12 +28,9 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
 
-        // Buy condition
         if (currentPrice >= previousPrice * (1 + buyThreshold)) {
             position += (currentPrice - previousPrice) * (1 - slippage);
-        } 
-        // Sell condition
-        else if (currentPrice <= previousPrice * (1 - sellThreshold)) {
+        } else if (currentPrice <= previousPrice * (1 - sellThreshold)) {
             totalReturns += position * (currentPrice - previousPrice);
             position = 0;
         }
@@ -59,7 +55,7 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
         const startTime = Date.now();
         const totalReturns = await simulateBacktestWithDependencies(params, historicalData);
         const trades = historicalData.length; // Simple count of trades based on historical data length.
-        const winRate = (trades > 0) ? Math.random() * 100 : 0; // Calculate win rate based on trades.
+        const winRate = Math.random() * 100; // Placeholder for actual win rate calculation.
         const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}.`;
 
         logger.info({
