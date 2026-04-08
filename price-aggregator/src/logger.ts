@@ -22,7 +22,7 @@ export const logRequest = (req, res, duration) => {
         path: req.path,
         status: res.statusCode,
         duration,
-        requestId: req.headers['x-request-id'],
+        requestId: req.headers['x-request-id'] || generateRequestId(),
     });
 };
 
@@ -42,6 +42,10 @@ export const logAudit = (action, context) => {
         context,
         timestamp: new Date().toISOString(),
     });
+};
+
+const generateRequestId = () => {
+    return 'req-' + Math.random().toString(36).substr(2, 9);
 };
 
 export const logSensitiveOperation = (operation, context) => {

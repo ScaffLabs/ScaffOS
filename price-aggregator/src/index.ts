@@ -9,7 +9,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
-import { logRequest, logAudit } from './logger';
+import { logRequest, logAudit, logError } from './logger';
 import { ServiceError } from './errors';
 
 const app = express();
@@ -28,6 +28,15 @@ app.use(limiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        logRequest(req, res, duration);
+    });
+    next();
+});
+
 const startApp = async () => {
     await migrateData([]);
     await seedData();
@@ -37,6 +46,7 @@ const startApp = async () => {
             const health = await priceAggregator.checkDependencies();
             res.status(200).json({ status: 'healthy', dependencies: health });
         } catch (error) {
+            logError(error, 'Health check failed');
             next(new ServiceError('Health check failed.'));
         }
     });
@@ -47,6 +57,7 @@ const startApp = async () => {
             if (Object.keys(prices).length === 0) return res.status(204).send();
             res.status(200).json(prices);
         } catch (error) {
+            logError(error, 'Failed to fetch current prices');
             next(new ServiceError('Failed to fetch current prices.'));
         }
     });
@@ -66,6 +77,7 @@ const startApp = async () => {
             logAudit('Price added', newPriceData);
             res.status(201).json(createdPrice);
         } catch (error) {
+            logError(error, 'Failed to add price');
             next(error);
         }
     });
