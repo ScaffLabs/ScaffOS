@@ -1,13 +1,32 @@
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
 import { backtestRouter } from './routes/backtest';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
+import rateLimit from 'express-rate-limit';
 import { config } from '../config';
 
 const app = express();
 const PORT = config.port;
 
-app.use(express.json());
+// CORS configuration
+const allowedOrigins = ['http://localhost:3000'];
+app.use(cors({ origin: allowedOrigins }));
+
+// Helmet for security headers
+app.use(helmet());
+
+// Limit request size
+app.use(express.json({ limit: '1mb' }));
+
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100,
+  message: 'Too many requests, please try again later.',
+});
+app.use(limiter);
 
 app.use((req, res, next) => {
   const start = Date.now();

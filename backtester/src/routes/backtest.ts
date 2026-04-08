@@ -4,21 +4,22 @@ import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
 import { ValidationError, NotFoundError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 import rateLimit from 'express-rate-limit';
+import sanitizer from 'express-sanitizer';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();
 
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100,
-  message: 'Too many requests, please try again later.',
-});
-
-backtestRouter.use(limiter);
+backtestRouter.use(sanitizer());
 
 backtestRouter.post('/', async (req, res, next) => {
   const { strategyParams, historicalData } = req.body;
   try {
+    // Sanitize input
+    strategyParams.slippage = Number(req.sanitize(strategyParams.slippage));
+    strategyParams.buyThreshold = Number(req.sanitize(strategyParams.buyThreshold));
+    strategyParams.sellThreshold = Number(req.sanitize(strategyParams.sellThreshold));
+    HistoricalDataSchema.parse(historicalData);
+
     StrategyParametersSchema.parse(strategyParams);
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
       throw new ValidationError('historicalData must be a non-empty array.');
@@ -64,6 +65,7 @@ backtestRouter.put('/:id', async (req, res, next) => {
   const { id } = req.params;
   const { strategyParams, historicalData } = req.body;
   try {
+    // Sanitize input
     StrategyParametersSchema.parse(strategyParams);
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
       throw new ValidationError('historicalData must be a non-empty array.');
