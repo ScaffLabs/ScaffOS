@@ -26,4 +26,12 @@ describe('API Key Functions', () => {
     it('should return null for an invalid API key', () => {
         expect(getUserIdFromApiKey('invalid_key')).toBe(null);
     });
+
+    it('should handle empty API key on validation', () => {
+        expect(validateApiKey('')).toBe(false);
+    });
+
+    it('should handle empty API key on retrieval', () => {
+        expect(getUserIdFromApiKey('')).toBe(null);
+    });
 });

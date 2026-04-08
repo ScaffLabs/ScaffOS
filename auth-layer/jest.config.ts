@@ -6,4 +6,7 @@ export default {
     testEnvironment: 'node',
     moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, { prefix: '<rootDir>/' }),
     testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+    collectCoverage: true,
+    coverageDirectory: 'coverage',
+    coverageReporters: ['text', 'lcov'],
 };
