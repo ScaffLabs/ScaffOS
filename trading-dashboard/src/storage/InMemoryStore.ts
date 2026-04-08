@@ -60,15 +60,13 @@ export class InMemoryStore<T extends { id: string }> implements Store<T> {
         this.inTransaction = false;
     }
 
-    migrateData(data: T[]): void {
-        data.forEach(item => this.create(item));
-    }
-
     seedData(): T[] {
         return [
             { id: '1', symbol: 'AAPL', quantity: 100 },
             { id: '2', symbol: 'GOOGL', quantity: 50 },
-            { id: '3', symbol: 'MSFT', quantity: 75 }
+            { id: '3', symbol: 'MSFT', quantity: 75 },
+            { id: '4', symbol: 'TSLA', quantity: 30 },
+            { id: '5', symbol: 'AMZN', quantity: 20 }
         ];
     }
 }
