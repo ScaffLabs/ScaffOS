@@ -5,7 +5,6 @@ import http from 'http';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
-import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -46,6 +45,16 @@ const startApp = async () => {
         } catch (error) {
             logError(error, 'Error adding price');
             next(error);
+        }
+    });
+
+    app.get('/health', async (req, res, next) => {
+        try {
+            const health = await priceAggregator.checkDependencies();
+            res.status(200).json({ status: 'healthy', dependencies: health });
+        } catch (error) {
+            logError(error, 'Health check failed');
+            res.status(500).json({ status: 'unhealthy', error: error.message });
         }
     });
 

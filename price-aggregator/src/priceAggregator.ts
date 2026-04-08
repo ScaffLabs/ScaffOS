@@ -1,19 +1,26 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices, PriceDataSchema } from './types';
+import { PriceData, CurrentPrices, PriceDataSchema, PriceEvent } from './types';
 import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
+import { EventBus } from './eventBus';
 import { ServiceError, ValidationError, OverflowError, DivisionByZeroError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
     private clients: WebSocket[] = [];
+    private eventBus = new EventBus();
+
+    constructor() {
+        this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
+    }
 
     public async addPrice(priceData: PriceData): Promise<PriceData> {
         this.validatePriceData(priceData);
         try {
             const newPrice = await storage.create(priceData);
             await this.updateCurrentPrices();
+            this.eventBus.emit('PRICE_ADDED', { type: 'PRICE_ADDED', data: newPrice });
             return newPrice;
         } catch (error) {
             logError(error, 'Error adding price data');
@@ -50,7 +57,32 @@ export class PriceAggregator {
         }
     }
 
+    private handlePriceEvent(event: PriceEvent): void {
+        // Handle price events, such as broadcasting to connected clients
+        this.broadcastPriceUpdate(event.data);
+    }
+
+    private broadcastPriceUpdate(priceData: PriceData): void {
+        this.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(priceData));
+            }
+        });
+    }
+
     public getCurrentPrices(): CurrentPrices {
         return this.currentPrices;
+    }
+
+    public async checkDependencies(): Promise<{ [key: string]: string }> {
+        const healthStatus: { [key: string]: string } = {};
+        try {
+            await httpClient('/health');
+            healthStatus['priceService'] = 'healthy';
+        } catch (error) {
+            healthStatus['priceService'] = 'unhealthy';
+            logError(error, 'Price service dependency is unhealthy');
+        }
+        return healthStatus;
     }
 }
