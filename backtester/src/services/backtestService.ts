@@ -4,7 +4,7 @@ import axios from 'axios';
 import { logger } from '../utils/logger';
 import { withRetry, circuitBreaker } from './resilience';
 
-async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<number> {
+async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
     }
@@ -26,15 +26,14 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         }
     }
 
-    return totalReturns;
+    const winRate = trades > 0 ? (totalReturns > 0 ? 100 : 0) : 0; // Simple win rate calculation
+    const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate}%`;
+    return { totalReturns, trades, winRate, performanceMetrics };
 }
 
 const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     try {
-        const totalReturns = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
-        const trades = historicalData.length; // Total trades simulated
-        const winRate = trades > 0 ? (totalReturns > 0 ? 100 : 0) : 0; // Simple win rate calculation
-        const performanceMetrics = `Simulated ${trades} trades with ${winRate}% win rate`;
+        const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
 
         if (trades > 0) {
             await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades })); // Notify order service
