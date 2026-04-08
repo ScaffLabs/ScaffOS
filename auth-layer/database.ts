@@ -1,8 +1,10 @@
-import { Pool } from 'pg'; // Assuming PostgreSQL
+import { Pool } from 'pg';
 import config from './config';
+import logger from './logger';
 
 const pool = new Pool({
     connectionString: config.DATABASE_URL,
+    connectionTimeoutMillis: 3000,
 });
 
 export const createConnectionPool = () => {
@@ -13,13 +15,21 @@ export const createConnectionPool = () => {
                 const res = await client.query(text, params);
                 return res;
             } catch (err) {
-                console.error('Query error', err);
+                logger.error('Query error', err);
                 throw err;
             } finally {
                 client.release();
             }
         },
-        isReady: () => pool && pool.totalCount > 0,
+        isReady: async () => {
+            try {
+                await pool.query('SELECT 1');
+                return true;
+            } catch (err) {
+                logger.error('Database connection is not ready', err);
+                return false;
+            }
+        },
         drain: async () => {
             await pool.end();
         },

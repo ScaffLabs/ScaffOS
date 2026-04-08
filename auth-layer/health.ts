@@ -21,4 +21,12 @@ router.get('/health', async (req, res) => {
     res.status(200).json({ services: [userServiceHealth, otherServiceHealth] });
 });
 
+router.get('/ready', async (req, res) => {
+    const isDatabaseReady = await connectionPool.isReady();
+    if (!isDatabaseReady) {
+        return res.status(503).json({ status: 'not ready' });
+    }
+    res.status(200).json({ status: 'ready' });
+});
+
 export default router;

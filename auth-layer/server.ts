@@ -6,22 +6,31 @@ import userRoutes from './userRoutes';
 import errorMiddleware from './errorMiddleware';
 import logger from './logger';
 import { createConnectionPool } from './database';
+import { monitorMemoryUsage } from './monitor';
 
 const app = express();
 const server = http.createServer(app);
 const connectionPool = createConnectionPool();
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        logger.info(`Request: ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms`);
+    });
+    next();
+});
 app.use('/health', healthRouter);
 app.use('/api', userRoutes);
-
-// Error handling middleware
 app.use(errorMiddleware);
 
 const start = async () => {
     await connectionPool;
-    server.listen(process.env.PORT || 3000, () => {
-        logger.info(`Server listening on port ${process.env.PORT || 3000}`);
+    monitorMemoryUsage();
+    server.listen(PORT, () => {
+        logger.info(`Server listening on port ${PORT}`);
     });
 };
 
@@ -36,5 +45,4 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-
 start();

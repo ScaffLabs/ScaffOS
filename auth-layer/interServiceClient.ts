@@ -3,8 +3,11 @@ import config from './config';
 import logger from './logger';
 
 const baseURL = config.BASE_URL;
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
+const MAX_RETRIES = 5;
+const RETRY_DELAY_BASE = 1000; // Base delay in ms
+const circuitBreakerTimeout = 10000; // 10 seconds
+let isCircuitOpen = false;
+let circuitBreakerLastOpen = 0;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -14,11 +17,22 @@ const fetchWithRetry = async (url: string, retries: number = MAX_RETRIES) => {
             const response = await axios.get(url);
             return response.data;
         } catch (error) {
+            if (isCircuitOpen) {
+                if (Date.now() - circuitBreakerLastOpen > circuitBreakerTimeout) {
+                    isCircuitOpen = false;
+                    logger.info('Circuit breaker reset');
+                } else {
+                    throw new Error('Service temporarily unavailable, circuit is open');
+                }
+            }
             if (i < retries - 1) {
+                const backoffTime = Math.pow(2, i) * RETRY_DELAY_BASE;
                 logger.warn(`Retrying fetch: ${url}, attempt: ${i + 1}`);
-                await delay(RETRY_DELAY);
+                await delay(backoffTime);
             } else {
                 logger.error('Final attempt failed', { error: error.message });
+                isCircuitOpen = true;
+                circuitBreakerLastOpen = Date.now();
                 throw new Error('Fetching failed after retries');
             }
         }
