@@ -42,10 +42,26 @@ export class PriceAggregator extends EventEmitter {
     }
 
     private async updateCurrentPrices() {
-        const prices = await storage.findAll();
-        this.currentPrices = {};
-        prices.forEach(priceData => {
-            this.currentPrices[priceData.exchange] = priceData.price;
-        });
+        try {
+            const prices = await storage.findAll();
+            if (!prices || prices.length === 0) {
+                throw new ServiceError('No prices available for update.');
+            }
+            this.currentPrices = {};
+            prices.forEach(priceData => {
+                this.currentPrices[priceData.exchange] = priceData.price;
+            });
+        } catch (error) {
+            logError(error, 'Error updating current prices');
+            throw new ServiceError('Failed to update current prices.');
+        }
+    }
+
+    public getCurrentPrices(): CurrentPrices {
+        return this.currentPrices;
+    }
+
+    private startPriceFetch() {
+        // Fetch prices logic here.
     }
 }
