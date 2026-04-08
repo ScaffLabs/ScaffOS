@@ -42,15 +42,9 @@ export const getPortfolio = async (id: string): Promise<Portfolio> => {
 
 export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promise<Portfolio> => {
     const portfolio = await getPortfolio(id);
-    if (data.name && typeof data.name !== 'string') {
-        throw new ValidationError('Portfolio name must be a string.');
-    }
-    if (data.positions) {
-        for (const position of data.positions) {
-            if (!position.symbol || position.quantity < 0 || position.averagePrice < 0) {
-                throw new ValidationError('Each position must be valid with a symbol, non-negative quantity, and non-negative average price.');
-            }
-        }
+    const validationResult = PortfolioSchema.partial().safeParse({ ...portfolio, ...data });
+    if (!validationResult.success) {
+        throw new ValidationError(validationResult.error.errors.map(e => e.message).join(', '));
     }
     const updatedPortfolio = storage.update(id, data);
     if (!updatedPortfolio) {
