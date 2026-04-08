@@ -23,7 +23,8 @@ export class StorageManager<T> {
 
     async seedData(): Promise<void> {
         console.log('Seeding data...');
-        // Implement seeding logic if needed
+        // Example seeding data if required
+        await this.storage.create({ title: 'Sample Event', description: 'This is a sample event', type: 'userCreated', createdAt: new Date(), updatedAt: new Date() });
     }
 
     async findEventById(id: string): Promise<T | null> {
