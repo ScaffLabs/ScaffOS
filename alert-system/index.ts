@@ -7,6 +7,7 @@ import { config } from './config';
 import logger, { logStartup } from './logger';
 import bodyParser from 'body-parser';
 import pLimit from 'p-limit';
+import { MongoClient } from 'mongodb';
 
 const app = express();
 const eventBus = new EventBus();
@@ -18,12 +19,13 @@ app.use(bodyParser.json({ limit: '1mb' })); // Limit request size
 app.get('/health', HealthCheck.checkHealth);
 app.get('/ready', HealthCheck.checkReady);
 
+const mongoClient = new MongoClient(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+
 const connectDatabase = async () => {
-    const connectionOptions = { useNewUrlParser: true, useUnifiedTopology: true };
     const retries = 5;
     for (let i = 0; i < retries; i++) {
         try {
-            await mongoose.connect(process.env.MONGO_URI, connectionOptions);
+            await mongoClient.connect();
             logger.info('Connected to MongoDB');
             break;
         } catch (error) {
@@ -46,7 +48,7 @@ const server = app.listen(config.PORT, () => {
 
 const shutdown = async () => {
     logger.info('Shutting down gracefully...');
-    await mongoose.connection.close();
+    await mongoClient.close();
     server.close(() => {
         logger.info('Server closed');
         process.exit(0);
