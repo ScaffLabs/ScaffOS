@@ -5,7 +5,7 @@ services:
     ports:
       - '3000:3000'
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV}
       REDIS_URL: redis://redis:6379
   redis:
     image: 'redis:alpine'
