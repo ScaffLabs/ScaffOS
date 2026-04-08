@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
 import { PerformanceMetrics, PerformanceMetricsSchema, Strategy, StrategySchema } from '../types';
 import { emitEvent } from './eventBus';
+import { dependentHealthCheck } from './dependentHealthCheck';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 const axiosInstance = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
@@ -48,4 +49,13 @@ const getStrategies = async (): Promise<Strategy[]> => {
     }
 };
 
-export { fetchPerformanceMetrics, getStrategies };
+const healthCheck = async () => {
+    try {
+        const healthResults = await dependentHealthCheck();
+        return healthResults;
+    } catch (error) {
+        throw new ServiceError('Health check failed: ' + error.message);
+    }
+};
+
+export { fetchPerformanceMetrics, getStrategies, healthCheck };
