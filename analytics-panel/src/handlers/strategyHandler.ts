@@ -1,3 +1,4 @@
+// Import necessary modules
 import { Request, Response } from 'express';
 import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, initializeStore } from '../services/strategyService';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
@@ -5,8 +6,12 @@ import { ValidationError, NotFoundError } from '../errors/customErrors';
 // Handler to fetch all strategies based on query parameters
 export const getStrategiesHandler = async (req: Request, res: Response) => {
     try {
-        const strategies = await findStrategies(req.query);
-        res.status(200).json(strategies);
+        const { limit = 10, offset = 0, name } = req.query;
+        const query = {};
+        if (name) query.name = name;
+        const strategies = await findStrategies(query);
+        const paginatedStrategies = strategies.slice(offset, offset + limit);
+        res.status(200).json(paginatedStrategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
         res.status(500).json({ error: 'Internal Server Error' });
