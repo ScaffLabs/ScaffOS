@@ -23,7 +23,7 @@ backtestRouter.post('/', async (req, res, next) => {
         if (error instanceof ValidationError) {
             return next(error);
         }
-        next(new ServiceError('Error during backtest'));
+        next(new ServiceError('Error during backtest: ' + error.message));
     }
 });
 
@@ -36,7 +36,10 @@ backtestRouter.get('/:id', async (req, res, next) => {
         }
         res.status(200).json(result);
     } catch (error) {
-        next(error);
+        if (error instanceof NotFoundError) {
+            return next(error);
+        }
+        next(new ServiceError('Error retrieving backtest result: ' + error.message));
     }
 });
 
@@ -44,10 +47,13 @@ backtestRouter.get('/', async (req, res, next) => {
     const { limit = 10, offset = 0, sort = 'createdAt', order = 'asc' } = req.query;
     try {
         const results = await store.findAll(Number(limit), Number(offset), (entity) => entity.data);
+        if (results.length === 0) {
+            throw new NotFoundError('No backtest results found.');
+        }
         const sortedResults = results.sort((a, b) => order === 'asc' ? a.data[sort] - b.data[sort] : b.data[sort] - a.data[sort]);
         res.status(200).json(sortedResults);
     } catch (error) {
-        next(error);
+        next(new ServiceError('Error retrieving backtest results: ' + error.message));
     }
 });
 
@@ -69,7 +75,10 @@ backtestRouter.put('/:id', async (req, res, next) => {
         await store.update(id, { strategyParams, historicalData, result: updatedResult });
         res.status(204).send();
     } catch (error) {
-        next(error);
+        if (error instanceof ValidationError || error instanceof NotFoundError) {
+            return next(error);
+        }
+        next(new ServiceError('Error updating backtest: ' + error.message));
     }
 });
 
@@ -82,7 +91,10 @@ backtestRouter.delete('/:id', async (req, res, next) => {
         }
         res.status(204).send();
     } catch (error) {
-        next(error);
+        if (error instanceof NotFoundError) {
+            return next(error);
+        }
+        next(new ServiceError('Error deleting backtest: ' + error.message));
     }
 });
 

@@ -22,24 +22,29 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 }
 
 export async function simulateBacktest(params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> {
-    StrategyParametersSchema.parse(params);
-    if (!Array.isArray(historicalData) || historicalData.length === 0) {
-        throw new ServiceError('Invalid input: historicalData must be a non-empty array.');
+    try {
+        StrategyParametersSchema.parse(params);
+        if (!Array.isArray(historicalData) || historicalData.length === 0) {
+            throw new ServiceError('Invalid input: historicalData must be a non-empty array.');
+        }
+        historicalData.forEach(data => HistoricalDataSchema.parse(data));
+
+        const totalReturns = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+        const trades = historicalData.length; // Simple count of trades based on historical data length.
+        const winRate = Math.random() * 100; // Placeholder for actual win rate calculation.
+        const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}.`;
+
+        const result: BacktestResult = {
+            totalReturns,
+            trades,
+            winRate,
+            performanceMetrics,
+        };
+
+        BacktestResultSchema.parse(result);
+        return result;
+    } catch (error) {
+        if (error instanceof ServiceError) throw error;
+        throw new ServiceError('An error occurred during backtesting: ' + error.message);
     }
-    historicalData.forEach(data => HistoricalDataSchema.parse(data));
-
-    const totalReturns = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
-    const trades = historicalData.length; // Simple count of trades based on historical data length.
-    const winRate = Math.random() * 100; // Placeholder for actual win rate calculation.
-    const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}.`;
-
-    const result: BacktestResult = {
-        totalReturns,
-        trades,
-        winRate,
-        performanceMetrics,
-    };
-
-    BacktestResultSchema.parse(result);
-    return result;
 }
