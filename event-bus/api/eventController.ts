@@ -3,6 +3,7 @@ import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
 import { Event, createEventSchema, updateEventSchema } from '../types';
 import { StorageManager } from '../storage/storageManager';
+import { v4 as uuidv4 } from 'uuid';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -17,7 +18,7 @@ export const createEvent = async (req: Request, res: Response) => {
         const createdEvent = await storage.create(newEvent);
         res.status(201).json(createdEvent);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(error instanceof ValidationError ? 400 : 500).json({ message: error.message });
     }
 };
 
@@ -28,7 +29,7 @@ export const getEvents = async (req: Request, res: Response) => {
         const events = await storage.findAll(limit, offset);
         res.json(events);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -41,7 +42,7 @@ export const getEventById = async (req: Request, res: Response) => {
         }
         res.json(event);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(error instanceof NotFoundError ? 404 : 500).json({ message: error.message });
     }
 };
 
@@ -58,7 +59,7 @@ export const updateEvent = async (req: Request, res: Response) => {
         }
         res.json(event);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : 500).json({ message: error.message });
     }
 };
 
@@ -71,6 +72,6 @@ export const deleteEvent = async (req: Request, res: Response) => {
         }
         res.status(204).send();
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(error instanceof NotFoundError ? 404 : 500).json({ message: error.message });
     }
 };
