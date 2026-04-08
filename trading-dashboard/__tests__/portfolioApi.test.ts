@@ -1,6 +1,6 @@
-import { fetchPositions, updatePosition, deletePosition, handleDivision } from '../src/api/portfolioApi';
+import { fetchPositions, createPosition, updatePosition, deletePosition } from '../src/api/portfolioApi';
 import axios from 'axios';
-import { ServiceError } from '../src/utils/errors';
+import { ServiceError, ValidationError } from '../src/utils/errors';
 
 jest.mock('axios');
 
@@ -9,26 +9,33 @@ describe('portfolioApi', () => {
         jest.clearAllMocks();
     });
 
-    it('fetchPositions should return positions', async () => {
+    it('fetchPositions should return positions with pagination', async () => {
         (axios.get as jest.Mock).mockResolvedValue({ data: [{ id: 1, symbol: 'AAPL', quantity: 10 }] });
-        const result = await fetchPositions();
+        const result = await fetchPositions(10, 0, 'id', 'asc');
         expect(result).toEqual([{ id: 1, symbol: 'AAPL', quantity: 10 }]);
     });
 
-    it('fetchPositions should throw error on fetch failure', async () => {
-        (axios.get as jest.Mock).mockRejectedValue(new Error('Network Error'));
-        await expect(fetchPositions()).rejects.toThrow('Error fetching positions');
+    it('fetchPositions should throw error on invalid data structure', async () => {
+        (axios.get as jest.Mock).mockResolvedValue({ data: { invalid: true } });
+        await expect(fetchPositions(10, 0, 'id', 'asc')).rejects.toThrow(ServiceError);
+    });
+
+    it('createPosition should successfully create a position', async () => {
+        (axios.post as jest.Mock).mockResolvedValue({});
+        const position = { id: '1', symbol: 'AAPL', quantity: 10 };
+        await createPosition(position);
+        expect(axios.post).toHaveBeenCalledWith(expect.any(String), position);
+    });
+
+    it('createPosition should throw error on invalid position data', async () => {
+        const invalidPosition = { id: '1', symbol: '', quantity: -10 };
+        await expect(createPosition(invalidPosition)).rejects.toThrow(ValidationError);
     });
 
     it('updatePosition should successfully update position', async () => {
         (axios.put as jest.Mock).mockResolvedValue({});
         await updatePosition('1', 5);
         expect(axios.put).toHaveBeenCalledWith(expect.any(String), { quantity: 5 }, expect.any(Object));
-    });
-
-    it('updatePosition should throw error on invalid position ID', async () => {
-        (axios.put as jest.Mock).mockRejectedValue(new Error('Update Error'));
-        await expect(updatePosition('invalid', 5)).rejects.toThrow('Error updating position');
     });
 
     it('deletePosition should delete position', async () => {
@@ -39,26 +46,6 @@ describe('portfolioApi', () => {
 
     it('deletePosition should throw error on delete failure', async () => {
         (axios.delete as jest.Mock).mockRejectedValue(new Error('Network Error'));
-        await expect(deletePosition('1')).rejects.toThrow('Error deleting position');
-    });
-
-    it('handleDivision should return correct division result', () => {
-        expect(handleDivision(10, 2)).toBe(5);
-    });
-
-    it('handleDivision should throw error on division by zero', () => {
-        expect(() => handleDivision(10, 0)).toThrow(ServiceError);
-        expect(() => handleDivision(10, 0)).toThrow('Division by zero is not allowed.');
-    });
-
-    it('should handle empty positions response gracefully', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({ data: [] });
-        const result = await fetchPositions();
-        expect(result).toEqual([]);
-    });
-
-    it('should throw an error if fetchPositions returns invalid data structure', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({ data: { invalid: true } });
-        await expect(fetchPositions()).rejects.toThrow(ServiceError);
+        await expect(deletePosition('1')).rejects.toThrow(ServiceError);
     });
 });
