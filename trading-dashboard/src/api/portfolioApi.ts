@@ -22,8 +22,13 @@ export const createPosition = async (req: Request, res: Response) => {
 };
 
 export const fetchPositions = async (req: Request, res: Response) => {
+    const { limit = 10, offset = 0 } = req.query;
+    if (isNaN(Number(limit)) || isNaN(Number(offset))) {
+        return res.status(400).json({ message: 'Invalid pagination parameters' });
+    }
     const positions = Object.values(positionStore.data);
-    res.status(200).json(positions);
+    const paginatedPositions = positions.slice(Number(offset), Number(offset) + Number(limit));
+    res.status(200).json(paginatedPositions);
 };
 
 export const updatePosition = async (req: Request, res: Response) => {
