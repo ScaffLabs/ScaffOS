@@ -6,4 +6,5 @@ export interface StorageInterface<T> {
     findAll(): Promise<any[]>;
     transaction(operations: Array<() => Promise<void>>): Promise<void>;
     migrate(data: T[]): Promise<void>;
+    findByIndex(indexKey: string): Promise<any[]>;
 }

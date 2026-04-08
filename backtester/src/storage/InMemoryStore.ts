@@ -69,7 +69,6 @@ export class InMemoryStore<T> implements StorageInterface<T> {
             const result = await operation();
             results.push(result);
         }
-        return results;
     }
 
     async migrate(data: T[]): Promise<void> {
