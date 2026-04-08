@@ -4,13 +4,8 @@ services:
     build: .
     ports:
       - '3000:3000'
-    environment:
-      - NODE_ENV=development
-      - API_URL=http://trading-dashboard:3000/api
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=password
-      - DB_NAME=trading_dashboard
+    env_file:
+      - .env
     depends_on:
       - db
   db:
