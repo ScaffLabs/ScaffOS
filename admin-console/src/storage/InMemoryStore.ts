@@ -3,6 +3,7 @@ class InMemoryStore<T> {
     private index: Map<string, Set<string>> = new Map();
 
     async create(id: string, item: T): Promise<void> {
+        if (this.data.has(id)) throw new Error('Item already exists');
         this.data.set(id, item);
         this.indexItem(id, item);
     }
