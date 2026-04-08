@@ -46,8 +46,12 @@ class InMemoryStorage {
         return this.portfolios.filter(portfolio => ids.includes(portfolio.id));
     }
 
-    public transaction(actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): void {
-        const results = portfolioIds.map(id => actions(id));
+    public transaction(actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): Portfolio[] {
+        const results: Portfolio[] = [];
+        for (const id of portfolioIds) {
+            const result = actions(id);
+            if (result) results.push(result);
+        }
         return results;
     }
 
