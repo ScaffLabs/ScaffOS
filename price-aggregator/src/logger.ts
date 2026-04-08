@@ -44,4 +44,13 @@ export const logAudit = (action, context) => {
     });
 };
 
+export const logSensitiveOperation = (operation, context) => {
+    logger.info({
+        message: 'Sensitive operation',
+        operation,
+        context,
+        timestamp: new Date().toISOString(),
+    });
+};
+
 export default logger;

@@ -25,7 +25,7 @@ const limiter = rateLimit({
     max: 100,
 });
 app.use(limiter);
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 const startApp = async () => {
@@ -39,11 +39,6 @@ const startApp = async () => {
         } catch (error) {
             next(new ServiceError('Health check failed.'));
         }
-    });
-
-    app.get('/ready', (req, res) => {
-        // Assuming service is ready if it can respond to health checks
-        res.status(200).json({ status: 'ready' });
     });
 
     app.get('/prices', async (req, res, next) => {
