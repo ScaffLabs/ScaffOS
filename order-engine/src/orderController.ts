@@ -2,11 +2,11 @@ import { Request, Response } from 'express';
 import { OrderBook } from './orderBook';
 import { Order, OrderSchemas } from './types';
 import { logAudit } from './logger';
+import { queryDatabase } from './db';
 
 const orderBook = new OrderBook();
 
-// Create a new order
-export const createOrder = (req: Request, res: Response): void => {
+export const createOrder = async (req: Request, res: Response): Promise<void> => {
   const parsedResult = OrderSchemas.OrderSchema.safeParse(req.body);
 
   if (!parsedResult.success) {
@@ -17,33 +17,20 @@ export const createOrder = (req: Request, res: Response): void => {
   console.log('[INFO] Creating order:', order.id);
   orderBook.addOrder(order);
   logAudit('CREATE_ORDER', order.id);
+
+  // Persist order to the database
+  const query = 'INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5)';
+  await queryDatabase(query, [order.id, order.type, order.price, order.quantity, order.status]);
+
   res.status(201).send({ ...order });
 };
 
-// Get all orders with pagination, filtering, and sorting
-export const getOrders = (req: Request, res: Response): void => {
-  const { limit = 10, offset = 0, sort = 'id', order = 'asc', status } = req.query;
-
-  let orders = orderBook.getOrders();
-
-  // Filter by status if provided
-  if (status) {
-    orders = orders.filter(order => order.status === status);
-  }
-
-  // Sort orders
-  orders.sort((a, b) => {
-    const comparison = a[sort] < b[sort] ? -1 : a[sort] > b[sort] ? 1 : 0;
-    return order === 'asc' ? comparison : -comparison;
-  });
-
-  // Paginate results
-  const paginatedOrders = orders.slice(offset, offset + limit);
-  res.status(200).send({ total: orders.length, data: paginatedOrders });
+export const getOrders = async (req: Request, res: Response): Promise<void> => {
+  const orders = orderBook.getOrders();
+  res.status(200).json(orders);
 };
 
-// Update an existing order
-export const updateOrder = (req: Request, res: Response): void => {
+export const updateOrder = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const parsedResult = OrderSchemas.OrderSchema.safeParse(req.body);
 
@@ -59,19 +46,33 @@ export const updateOrder = (req: Request, res: Response): void => {
   const updatedOrder = parsedResult.data;
   orderBook.getOrders()[orderIndex] = updatedOrder;
   logAudit('UPDATE_ORDER', updatedOrder.id);
+
+  // Update order in the database
+  const query = 'UPDATE orders SET type = $1, price = $2, quantity = $3, status = $4 WHERE id = $5';
+  await queryDatabase(query, [updatedOrder.type, updatedOrder.price, updatedOrder.quantity, updatedOrder.status, id]);
+
   res.status(200).send(updatedOrder);
 };
 
-// Delete an order
-export const deleteOrder = (req: Request, res: Response): void => {
+export const deleteOrder = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const orderIndex = orderBook.getOrders().findIndex(order => order.id === id);
-
   if (orderIndex === -1) {
     return res.status(404).json({ message: 'Order not found' });
   }
 
+  // Remove order from the order book
   orderBook.getOrders().splice(orderIndex, 1);
   logAudit('DELETE_ORDER', id);
+
+  // Delete order from the database
+  const query = 'DELETE FROM orders WHERE id = $1';
+  await queryDatabase(query, [id]);
+
   res.status(204).send();
+};
+
+export const matchOrders = async (req: Request, res: Response): Promise<void> => {
+  orderBook.matchOrders();
+  res.status(200).send({ message: 'Orders matched successfully.' });
 };
