@@ -1,34 +1,16 @@
-// Import necessary modules
-import { Request, Response } from 'express';
-import { Order, OrderSchema } from './types';
-import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
-import { ValidationError, NotFoundError } from './errors';
-import logger from './logger';
-import { validationResult } from 'express-validator';
+import { body } from 'express-validator';
 
-export const getOrders = async (req: Request, res: Response): Promise<void> => {
-    const { limit = '10', offset = '0', status, sortBy = 'price', sortOrder = 'asc' } = req.query;
-    const parsedLimit = parseInt(limit as string);
-    const parsedOffset = parseInt(offset as string);
+// Validation middleware for creating an order
+export const createOrderValidators = [
+    body('id').isString().withMessage('ID must be a string'),
+    body('type').isIn(['limit', 'market', 'stop']).withMessage('Type must be one of limit, market, or stop'),
+    body('price').isNumeric().isPositive().withMessage('Price must be a positive number'),
+    body('quantity').isInt({ gt: 0 }).withMessage('Quantity must be a positive integer'),
+    body('status').isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled')
+];
 
-    if (isNaN(parsedLimit) || isNaN(parsedOffset) || parsedLimit < 1 || parsedOffset < 0) {
-        return res.status(400).json({ message: 'Invalid limit or offset value.' });
-    }
-
-    try {
-        const orders = await getOrdersService({ limit: parsedLimit, offset: parsedOffset, status, sortBy, sortOrder });
-        if (orders.length === 0) {
-            return res.status(404).json({ message: 'No orders found.' });
-        }
-        res.status(200).json(orders);
-        logger.info('Orders retrieved successfully', { count: orders.length, requestId: req.headers['x-request-id'] });
-    } catch (error) {
-        logger.error('Error retrieving orders', { error: error.message, requestId: req.headers['x-request-id'] });
-        res.status(500).json({ message: 'Internal Server Error', error: error.message });
-    }
-};
-
-export const createOrder = async (req: Request, res: Response): Promise<void> => {
+// Attach validators to the createOrder method
+export const createOrder = [createOrderValidators, async (req: Request, res: Response): Promise<void> => {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         return res.status(400).json({ errors: validationErrors.array() });
@@ -47,44 +29,4 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
             res.status(500).json({ message: 'Internal Server Error', error: error.message });
         }
     }
-};
-
-export const updateOrder = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const validationErrors = validationResult(req);
-    if (!validationErrors.isEmpty()) {
-        return res.status(400).json({ errors: validationErrors.array() });
-    }
-    try {
-        await OrderSchema.partial().parseAsync(req.body);
-        const updatedOrder = await updateOrderService(id, req.body);
-        if (!updatedOrder) {
-            return res.status(404).json({ message: 'Order not found.' });
-        }
-        res.status(200).json(updatedOrder);
-        logger.info('Order updated successfully', { order: updatedOrder, requestId: req.headers['x-request-id'] });
-    } catch (error) {
-        logger.error('Error updating order', { error: error.message, requestId: req.headers['x-request-id'] });
-        if (error instanceof NotFoundError) {
-            res.status(404).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: 'Internal Server Error', error: error.message });
-        }
-    }
-};
-
-export const deleteOrder = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    try {
-        await deleteOrderService(id);
-        res.status(204).send();
-        logger.info('Order deleted successfully', { id, requestId: req.headers['x-request-id'] });
-    } catch (error) {
-        logger.error('Error deleting order', { error: error.message, requestId: req.headers['x-request-id'] });
-        if (error instanceof NotFoundError) {
-            res.status(404).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: 'Internal Server Error', error: error.message });
-        }
-    }
-};
+}];
