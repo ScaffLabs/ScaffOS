@@ -17,10 +17,13 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 
         if (currentPrice <= 0) throw new ValidationError('Price must be positive.');
 
-        if (currentPrice > previousPrice * (1 + buyThreshold)) { // Buy Condition
+        // Buy Condition
+        if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
             totalReturns += currentPrice * (1 - slippage) - previousPrice; // Calculate profit after slippage
-        } else if (currentPrice < previousPrice * (1 - sellThreshold)) { // Sell Condition
+        } 
+        // Sell Condition
+        else if (currentPrice < previousPrice * (1 - sellThreshold)) {
             trades++;
             totalReturns += previousPrice * (1 - slippage) - currentPrice; // Calculate profit after slippage
         }
@@ -33,8 +36,10 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 
 const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     try {
+        // Perform the backtest calculation
         const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
 
+        // Notify order service if trades occurred
         if (trades > 0) {
             await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades })); // Notify order service
         }

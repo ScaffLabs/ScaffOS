@@ -110,3 +110,5 @@ npm start
 ## Changelog
 - **1.0.0** - Initial release.
 - **1.0.1** - Added comprehensive documentation including API reference, development and deployment guides.
+- **1.1.0** - Enhanced error handling and logging for better tracking of issues.
+- **1.1.1** - Updated documentation to include detailed contribution guidelines.

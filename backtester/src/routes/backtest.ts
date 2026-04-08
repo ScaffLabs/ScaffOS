@@ -4,7 +4,6 @@ import { ValidationError, NotFoundError, ServiceError } from '../middleware/erro
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
 import { HistoricalDataSchema, StrategyParametersSchema, PaginationSchema } from '../types';
-import { z } from 'zod';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();
@@ -12,7 +11,9 @@ const store = new InMemoryStore();
 backtestRouter.post('/', async (req, res, next) => {
     const { strategyParams, historicalData } = req.body;
     try {
+        // Validate strategy parameters
         StrategyParametersSchema.parse(strategyParams);
+        // Validate historical data
         if (!Array.isArray(historicalData) || historicalData.length === 0) {
             throw new ValidationError('historicalData must be a non-empty array.');
         }
@@ -52,49 +53,17 @@ backtestRouter.get('/:id', async (req, res, next) => {
     }
 });
 
-backtestRouter.put('/:id', async (req, res, next) => {
-    const { id } = req.params;
-    const { strategyParams, historicalData } = req.body;
+backtestRouter.get('/', async (req, res, next) => {
+    const { limit, offset, sort, order } = PaginationSchema.parse(req.query);
     try {
-        const existingEntity = await store.read(id);
-        if (!existingEntity) {
-            throw new NotFoundError('Backtest result not found for update.');
-        }
-        StrategyParametersSchema.parse(strategyParams);
-        if (!Array.isArray(historicalData) || historicalData.length === 0) {
-            throw new ValidationError('historicalData must be a non-empty array.');
-        }
-        historicalData.forEach(data => {
-            HistoricalDataSchema.parse(data);
+        const results = await store.findAll();
+        const sortedResults = results.sort((a, b) => {
+            return order === 'asc' ? a.data.createdAt - b.data.createdAt : b.data.createdAt - a.data.createdAt;
         });
-
-        const sanitizedHistoricalData = historicalData.map(data => req.sanitize(data));
-        const updatedEntity = await store.update(id, { strategyParams, historicalData: sanitizedHistoricalData });
-        logger.info({ message: 'Backtest updated', id });
-        res.status(200).json(updatedEntity);
+        const paginatedResults = sortedResults.slice(offset, offset + limit);
+        res.status(200).json(paginatedResults);
     } catch (error) {
-        if (error instanceof NotFoundError) {
-            logger.warn({ message: 'Not found error for ID', id });
-            return next(error);
-        }
-        next(new ServiceError('Error updating backtest: ' + error.message));
-    }
-});
-
-backtestRouter.delete('/:id', async (req, res, next) => {
-    const { id } = req.params;
-    try {
-        const deleted = await store.delete(id);
-        if (!deleted) {
-            throw new NotFoundError('Backtest result not found for deletion.');
-        }
-        res.status(204).send();
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            logger.warn({ message: 'Not found error for ID', id });
-            return next(error);
-        }
-        next(new ServiceError('Error deleting backtest result: ' + error.message));
+        next(new ServiceError('Error retrieving backtest results: ' + error.message));
     }
 });
 
