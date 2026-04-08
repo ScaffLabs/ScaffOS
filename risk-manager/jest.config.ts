@@ -6,4 +6,9 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov'],
+  globals: {
+    'ts-jest': {
+      diagnostics: false,
+    },
+  },
 };
