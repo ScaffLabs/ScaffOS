@@ -10,6 +10,10 @@ export const dashboard = async (req: Request, res: Response) => {
         }
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        if (error instanceof ServiceError) {
+            res.status(500).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     }
 };
