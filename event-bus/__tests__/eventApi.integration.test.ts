@@ -42,6 +42,12 @@ describe('Event API Integration Tests', () => {
             expect(Array.isArray(response.body)).toBe(true);
             expect(response.body.length).toBe(1);
         });
+
+        it('should return 404 for no events found', async () => {
+            const response = await request(app).get('/events?limit=0');
+            expect(response.status).toBe(404);
+            expect(response.body.message).toBe('No events found');
+        });
     });
 
     describe('PUT /events/:id', () => {

@@ -1,6 +1,7 @@
 import { publish } from '../publisher';
 import redisClient from '../redisClient';
 import { Message } from '../messageSchema';
+import { createEventSchema } from '../types';
 
 jest.mock('../redisClient');
 
@@ -41,6 +42,13 @@ describe('Publisher Tests', () => {
 
     it('should throw an error when publishing fails', async () => {
         (redisClient.publish as jest.Mock).mockRejectedValueOnce(new Error('Redis error'));
-        await expect(publish(message)).rejects.toThrow('Failed to publish message');
+        await expect(publish(message)).rejects.toThrow('Failed to publish message after retries');
+    });
+
+    it('should retry publishing on failure', async () => {
+        (redisClient.publish as jest.Mock).mockRejectedValueOnce(new Error('Redis error'));
+        (redisClient.publish as jest.Mock).mockResolvedValueOnce(1);
+        await publish(message);
+        expect(redisClient.publish).toHaveBeenCalledTimes(2);
     });
 });
