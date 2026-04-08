@@ -1,16 +1,20 @@
-// Import necessary modules and types
 import { Request, Response } from 'express';
 import { findStrategies, createStrategy, updateStrategy, deleteStrategy } from '../services/strategyService';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
 import logger from '../logger';
 
-// Handler to get strategies with pagination and filtering
+// Handler to get strategies with pagination, filtering, and sorting
 export const getStrategiesHandler = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, name } = req.query;
+    const { limit = 10, offset = 0, name, sortBy = 'name', sortOrder = 'asc' } = req.query;
     try {
-        const query = name ? { name: name.toString() } : {};
+        const query: any = {};
+        if (name) query.name = { $regex: name.toString(), $options: 'i' };
         const strategies = await findStrategies(query);
-        const paginatedStrategies = strategies.slice(Number(offset), Number(offset) + Number(limit));
+        const sortedStrategies = strategies.sort((a, b) => {
+            const comparison = a.name.localeCompare(b.name);
+            return sortOrder === 'desc' ? -comparison : comparison;
+        });
+        const paginatedStrategies = sortedStrategies.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedStrategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
