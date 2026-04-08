@@ -63,4 +63,4 @@ export const validateAppEvent = (event: unknown): AppEvent => {
         throw new Error(result.error.errors.map(err => err.message).join(', '));
     }
     return result.data;
-};
+}
