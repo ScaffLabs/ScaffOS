@@ -1,7 +1,10 @@
 import request from 'supertest';
 import app from '../src/server';
+import { fetchPositions, createPosition, updatePosition, deletePosition } from '../src/api/portfolioApi';
 import { InMemoryStore } from '../src/storage/InMemoryStore';
 import { Position } from '../src/types';
+
+jest.mock('../src/api/portfolioApi');
 
 describe('API Endpoints Integration Tests', () => {
     let store: InMemoryStore<Position>;
@@ -12,7 +15,7 @@ describe('API Endpoints Integration Tests', () => {
     });
 
     it('GET /api/positions returns a list of positions', async () => {
-        const response = await request(app).get('/api/positions?limit=10&offset=0&sortBy=id&order=asc');
+        const response = await request(app).get('/api/positions');
         expect(response.status).toBe(200);
         expect(Array.isArray(response.body)).toBe(true);
         expect(response.body.length).toBe(1);
