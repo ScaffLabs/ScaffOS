@@ -1,3 +1,4 @@
+// Import necessary packages
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -9,15 +10,17 @@ import { getStrategiesHandler, createStrategyHandler, updateStrategyHandler, del
 import logger, { logStartup } from './logger';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { validateQueryParams } from './middleware/inputValidator';
+import { validateStrategy } from './middleware/strategyValidator';
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
 // Middleware configurations
-app.use(cors());
+app.use(cors({ origin: ['http://localhost:3000', 'https://yourdomain.com'] }));
 app.use(helmet());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' })); // Set request body size limit
 app.use(auditLogger);
 
 // Rate limiting
@@ -33,9 +36,9 @@ app.get('/api/ready', readyCheckHandler);
 app.get('/api/dependent-health', dependentHealthCheckHandler);
 
 // Strategy management endpoints
-app.get('/api/strategies', getStrategiesHandler);
-app.post('/api/strategies', createStrategyHandler);
-app.put('/api/strategies/:id', updateStrategyHandler);
+app.get('/api/strategies', validateQueryParams, getStrategiesHandler);
+app.post('/api/strategies', validateStrategy, createStrategyHandler);
+app.put('/api/strategies/:id', validateStrategy, updateStrategyHandler);
 app.delete('/api/strategies/:id', deleteStrategyHandler);
 
 // Graceful shutdown mechanism

@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import { findStrategies, createStrategy, updateStrategy, deleteStrategy } from '../services/strategyService';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
+import logger from '../logger';
 
 // Handler to get strategies with pagination and filtering
 export const getStrategiesHandler = async (req: Request, res: Response) => {
@@ -25,6 +26,7 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
             throw new ValidationError('Name and parameters are required.');
         }
         const newStrategy = await createStrategy({ name, parameters });
+        logger.logRequest('POST', '/api/strategies', 201, 0); // Log creation
         res.status(201).json(newStrategy);
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -48,6 +50,7 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
         if (!updatedStrategy) {
             throw new NotFoundError('Strategy not found.');
         }
+        logger.logRequest('PUT', `/api/strategies/${id}`, 200, 0); // Log update
         res.status(200).json(updatedStrategy);
     } catch (error) {
         if (error instanceof ValidationError || error instanceof NotFoundError) {
@@ -67,6 +70,7 @@ export const deleteStrategyHandler = async (req: Request, res: Response) => {
         if (!deleted) {
             throw new NotFoundError('Strategy not found.');
         }
+        logger.logRequest('DELETE', `/api/strategies/${id}`, 204, 0); // Log deletion
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {
