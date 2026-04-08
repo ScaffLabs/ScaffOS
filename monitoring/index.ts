@@ -7,9 +7,9 @@ import { latencyTracker } from './latencyTracker';
 import { checkServiceHealth } from './serviceHealth';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import bodyParser from 'body-parser';
 import { sanitize } from './sanitize';
+import { auditLogger } from './auditLogger'; // New audit logger
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -19,6 +19,7 @@ app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' })); // Set request size limit
 
 app.use(latencyTracker);
+app.use(auditLogger); // Use audit logging middleware
 
 app.get('/health', healthCheck);
 app.get('/dashboard', listDashboardEntries);
