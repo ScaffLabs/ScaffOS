@@ -4,7 +4,6 @@ import { LatencyData, LatencyDataSchema } from './types';
 import logger from './logger';
 import { createConnectionPool } from './connectionPool';
 import { serviceEmitter } from './connectionPool';
-import { sanitize } from './sanitize';
 
 const connectionPool = createConnectionPool();
 
@@ -29,12 +28,11 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
 // Create Dashboard Entry with validation
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
-        const bodyValidation = LatencyDataSchema.safeParse(req.body);
+        const bodyValidation = LatencyDataSchema.safeParse({ ...req.body, timestamp: new Date() });
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data. Both id and value are required.');
+            throw new ValidationError('Invalid input data. Both path and duration are required.');
         }
-        const { path, duration } = bodyValidation.data;
-        const timestamp = new Date();
+        const { path, duration, timestamp } = bodyValidation.data;
         const response = await connectionPool.requestWithRetry('order', 'post', '/dashboard', { path, duration, timestamp });
         serviceEmitter.emit('latency_record', { path, duration, timestamp });
         res.status(201).json({ message: 'Entry created', id: response.id });
@@ -49,43 +47,3 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-
-// Update Dashboard Entry with validation
-export const updateDashboardEntry = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const bodyValidation = LatencyDataSchema.pick({ duration: true }).safeParse(req.body);
-        if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data.');
-        }
-        await connectionPool.requestWithRetry('order', 'put', `/dashboard/${id}`, bodyValidation.data);
-        res.status(204).send();
-    } catch (error) {
-        logger.error(error, req);
-        if (error instanceof ValidationError) {
-            return res.status(400).json({ error: error.message });
-        }
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-};
-
-// Delete Dashboard Entry
-export const deleteDashboardEntry = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        await connectionPool.requestWithRetry('order', 'delete', `/dashboard/${id}`);
-        res.status(204).send();
-    } catch (error) {
-        logger.error(error, req);
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-};
-
-// Add the sanitize middleware to all routes
-app.use(sanitize);
