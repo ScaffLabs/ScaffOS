@@ -1,55 +1,35 @@
 import axios from 'axios';
 import config from '../config';
-import { emitEvent } from '../events/EventBus';
 import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
-import { CircuitBreaker } from 'opossum';
 
 const BASE_URL = config.API_URL;
 
-const circuitBreaker = new CircuitBreaker({
-    timeout: 5000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000
-});
-
-const fetchHealthStatus = async () => {
+const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
-        const response = await axios.get(`${BASE_URL}/health`);
-        emitEvent('SERVICE_HEALTH_UPDATED', response.data);
+        const response = await axios.get(`${BASE_URL}/config`);
         return response.data;
     } catch (error) {
-        throw new ServiceError('Failed to fetch health status');
+        throw new ServiceError('Failed to fetch configurations');
     }
 };
 
 const postConfiguration = async (key: string, value: string): Promise<ConfigurationItem> => {
     const configItem: ConfigurationItem = { key, value };
     try {
-        const response = await circuitBreaker.fire(axios.post, `${BASE_URL}/config`, configItem);
-        emitEvent('CONFIGURATION_CREATED', configItem);
+        const response = await axios.post(`${BASE_URL}/config`, configItem);
         return response.data;
     } catch (error) {
         throw new ServiceError('Failed to create configuration');
     }
 };
 
-const requestWithRetry = async (requestFunc: () => Promise<any>, retries = 5, backoff = 300) => {
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await requestFunc();
-        } catch (error) {
-            if (i < retries - 1) {
-                await new Promise(res => setTimeout(res, backoff * Math.pow(2, i)));
-            } else {
-                throw error;
-            }
-        }
+const deleteConfiguration = async (key: string): Promise<void> => {
+    try {
+        await axios.delete(`${BASE_URL}/config/${key}`);
+    } catch (error) {
+        throw new ServiceError('Failed to delete configuration');
     }
 };
 
-const healthCheckWithRetry = async () => {
-    return requestWithRetry(fetchHealthStatus);
-};
-
-export { fetchHealthStatus, postConfiguration, healthCheckWithRetry };
+export { fetchConfigurations, postConfiguration, deleteConfiguration };

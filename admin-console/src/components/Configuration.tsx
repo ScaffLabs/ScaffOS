@@ -1,14 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { postConfiguration } from '../services/ServiceClient';
+import { postConfiguration, fetchConfigurations, updateConfiguration, deleteConfiguration } from '../services/ServiceClient';
 import { ConfigurationItem, ConfigurationItemSchema } from '../types';
 import { ValidationError } from '../errors/CustomErrors';
 
 const Configuration: React.FC = () => {
     const [key, setKey] = useState<string>('');
     const [value, setValue] = useState<string>('');
+    const [configurations, setConfigurations] = useState<ConfigurationItem[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+
+    const fetchAllConfigurations = async () => {
+        setLoading(true);
+        try {
+            const configs = await fetchConfigurations();
+            setConfigurations(configs);
+        } catch (err) {
+            setError('Error fetching configurations');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAllConfigurations();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,14 +40,26 @@ const Configuration: React.FC = () => {
             setSuccessMessage('Configuration created successfully!');
             setKey('');
             setValue('');
+            fetchAllConfigurations();
         } catch (err) {
             if (err instanceof ValidationError) {
                 setError(err.message);
-            } else if (err.response) {
-                setError('Error: ' + err.response.data.error);
             } else {
                 setError('Failed to create configuration. Please try again.');
             }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (key: string) => {
+        setLoading(true);
+        try {
+            await deleteConfiguration(key);
+            setSuccessMessage('Configuration deleted successfully!');
+            fetchAllConfigurations();
+        } catch (err) {
+            setError('Failed to delete configuration.');
         } finally {
             setLoading(false);
         }
@@ -64,6 +93,15 @@ const Configuration: React.FC = () => {
             </form>
             {error && <div style={{ color: 'red' }}>{error}</div>}
             {successMessage && <div style={{ color: 'green' }}>{successMessage}</div>}
+            <h2>Existing Configurations:</h2>
+            <ul>
+                {configurations.map(config => (
+                    <li key={config.key}>
+                        {config.key}: {config.value} 
+                        <button onClick={() => handleDelete(config.key)}>Delete</button>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 };
