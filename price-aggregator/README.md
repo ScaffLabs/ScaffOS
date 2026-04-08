@@ -56,6 +56,8 @@ npm run test:watch
 | Variable      | Description                        | Default Value         |
 |---------------|------------------------------------|-----------------------|
 | BASE_URL     | Base URL for price exchanges       | https://api.example.com |
+| PORT         | Port number for the application    | 3000                  |
+| NODE_ENV     | Environment for the application    | development            |
 
 ## Development Guide
 - Use `npm run dev` to start the service in development mode.
