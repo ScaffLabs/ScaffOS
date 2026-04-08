@@ -6,19 +6,33 @@ import { migrateData } from './migrations';
 import { setupGracefulShutdown } from './shutdown';
 import { setupRequestQueue } from './requestQueue';
 import { monitorMemoryUsage } from './memoryMonitor';
-import { errorHandlingMiddleware } from './middleware';
 import logger, { logStartup } from './logger';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import { validationResult } from 'express-validator';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
 app.use(cors({ origin: ['http://allowed-origin.com'] }));
-app.use(bodyParser.json());
-app.use(errorHandlingMiddleware);
+app.use(bodyParser.json({ limit: '1mb' }));
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later'
+});
+app.use(limiter);
+
+app.use((req, res, next) => {
+    // Validate content type
+    if (req.headers['content-type'] !== 'application/json') {
+        return res.status(415).send('Content type must be application/json');
+    }
+    next();
+});
 
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
@@ -26,7 +40,6 @@ orderRouter(app);
 
 const startServer = async () => {
     await migrateData();
-    await setupConnectionPooling();
     setupRequestQueue(app);
     setupGracefulShutdown();
     monitorMemoryUsage();
