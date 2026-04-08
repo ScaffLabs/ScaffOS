@@ -17,7 +17,7 @@ const Configuration: React.FC = () => {
 
         try {
             const configItem: ConfigurationItem = { key, value };
-            // Validate the item before posting
+            // Validate the item using Zod schema
             ConfigurationItemSchema.parse(configItem);
             setLoading(true);
             await postConfiguration(configItem.key, configItem.value);
