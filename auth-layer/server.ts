@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit';
 import healthRouter from './health';
 import userRoutes from './userRoutes';
 import errorMiddleware from './errorMiddleware';
-import logger, { logRequest } from './logger';
+import logger, { logRequest, startupLog } from './logger';
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 
@@ -15,9 +15,12 @@ const server = http.createServer(app);
 const connectionPool = createConnectionPool();
 const PORT = process.env.PORT || 3000;
 
+// Startup logs
+startupLog('Auth Layer Service');
+
 // CORS configuration
 app.use(cors({
-    origin: ['https://your-allowed-origin.com'], // Replace with your allowed origin(s)
+    origin: ['https://your-allowed-origin.com'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
 }));
@@ -27,8 +30,8 @@ app.use(helmet());
 
 // Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
 });
 app.use(limiter);
 
