@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { format } from 'logform';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -10,6 +11,7 @@ const logger = winston.createLogger({
     ) : winston.format.json(),
     transports: [
         new winston.transports.Console(),
+        new winston.transports.File({ filename: 'audit.log', level: 'info' }),
     ],
 });
 
@@ -30,6 +32,15 @@ export const logError = (error, context) => {
         error: error.message,
         stack: error.stack,
         context,
+    });
+};
+
+export const logAudit = (action, context) => {
+    logger.info({
+        message: 'Audit log',
+        action,
+        context,
+        timestamp: new Date().toISOString(),
     });
 };
 
