@@ -49,12 +49,10 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     return storage.update(id, updates);
 };
 
-export const checkExternalPortfolioService = async () => {
-    try {
-        await circuitBreaker.fire(() => retryRequest(() => axiosInstance.get('/')));
-        return true;
-    } catch (error) {
-        throw new Error('Portfolio service is down');
+export const deletePortfolio = async (id: string): Promise<void> => {
+    const deleted = storage.delete(id);
+    if (!deleted) {
+        throw new NotFoundError('Portfolio not found');
     }
 };
 
