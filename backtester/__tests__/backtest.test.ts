@@ -38,18 +38,18 @@ describe('Backtest API', () => {
     expect(response.status).toBe(400);
   });
 
-  it('should return 404 for non-existing backtest result', async () => {
-    const response = await request(app)
-      .get('/api/backtest/non-existing-id');
-    expect(response.status).toBe(404);
-  });
-
   it('should handle edge cases with empty historical data', async () => {
     const strategyParams: StrategyParameters = { slippage: 0.01, buyThreshold: 0.5, sellThreshold: 0.5 };
     const response = await request(app)
       .post('/api/backtest')
       .send({ strategyParams, historicalData: [] });
     expect(response.status).toBe(400);
+  });
+
+  it('should return 404 for non-existing backtest result', async () => {
+    const response = await request(app)
+      .get('/api/backtest/non-existing-id');
+    expect(response.status).toBe(404);
   });
 });
 
