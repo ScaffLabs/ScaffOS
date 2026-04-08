@@ -24,8 +24,8 @@ app.use(cors({
 }));
 
 // Middleware setup
-app.use(helmet()); // Set secure HTTP headers
-app.use(express.json({ limit: '1mb' })); // Limit request size
+app.use(helmet());
+app.use(express.json({ limit: '1mb' }));
 app.use(auditLogger);
 app.use(logRequest);
 app.use(latencyTracker);
