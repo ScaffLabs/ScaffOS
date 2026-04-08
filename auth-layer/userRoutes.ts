@@ -1,12 +1,10 @@
 import express from 'express';
-import { createUser, findUserById, findUserByEmail } from './user';
+import { createUser, findUserById, findUserByEmail, updateUser, deleteUser, getAllUsers } from './storage';
 import { authMiddleware } from './middleware';
 import { body, validationResult } from 'express-validator';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { sanitize } from 'some-sanitization-library'; // Assume a sanitization library is used
 import cors from 'cors';
-import { auditLog } from './audit'; // Audit logging utility
 
 const router = express.Router();
 
@@ -25,13 +23,16 @@ const limiter = rateLimit({
 });
 router.use(limiter);
 
+// Get all users with pagination
 router.get('/users', authMiddleware, async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = parseInt(req.query.offset as string) || 0;
-    const users = await User.find().limit(limit).skip(offset);
+
+    const users = getAllUsers().slice(offset, offset + limit);
     res.status(200).json(users);
 });
 
+// Create a new user
 router.post('/users', authMiddleware, body('username').isString().trim().escape(), body('email').isEmail().normalizeEmail(), async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -45,10 +46,10 @@ router.post('/users', authMiddleware, body('username').isString().trim().escape(
     }
 
     const user = createUser(username, email);
-    await auditLog('User created', { username, email }); // Log sensitive operations
     res.status(201).json(user);
 });
 
+// Update a user
 router.put('/users/:id', authMiddleware, body('username').optional().isString().trim().escape(), body('email').optional().isEmail().normalizeEmail(), async (req, res) => {
     const { id } = req.params;
     const user = findUserById(id);
@@ -57,20 +58,19 @@ router.put('/users/:id', authMiddleware, body('username').optional().isString().
     }
 
     const { username, email } = req.body;
-    if (username) user.username = sanitize(username);
-    if (email) user.email = sanitize(email);
-    await auditLog('User updated', { id, username, email });
+    if (username) user.username = username;
+    if (email) user.email = email;
+    updateUser(id, user);
     res.status(204).send();
 });
 
+// Delete a user
 router.delete('/users/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
-    const userIndex = users.findIndex(user => user.id === id);
-    if (userIndex === -1) {
+    const success = deleteUser(id);
+    if (!success) {
         return res.status(404).json({ error: 'User not found' });
     }
-    users.splice(userIndex, 1);
-    await auditLog('User deleted', { id });
     res.status(204).send();
 });
 
