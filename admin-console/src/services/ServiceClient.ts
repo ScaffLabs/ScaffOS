@@ -44,4 +44,8 @@ const requestWithRetry = async (requestFunc: () => Promise<any>, retries = 5, ba
     }
 };
 
-export { fetchHealthStatus, postConfiguration, requestWithRetry };
+const healthCheckWithRetry = async () => {
+    return requestWithRetry(fetchHealthStatus);
+};
+
+export { fetchHealthStatus, postConfiguration, requestWithRetry, healthCheckWithRetry };
