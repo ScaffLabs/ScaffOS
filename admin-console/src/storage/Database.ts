@@ -35,7 +35,7 @@ class Database {
             if (this.dbClient instanceof Client) {
                 await this.dbClient.query(query, [item.key, item.value]);
             } else if (this.dbClient instanceof sqlite3.Database) {
-                await new Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     this.dbClient.run(query, [item.key, item.value], (err) => err ? reject(err) : resolve(null));
                 });
             }
@@ -68,7 +68,7 @@ class Database {
             if (this.dbClient instanceof Client) {
                 await this.dbClient.query(query, [key]);
             } else if (this.dbClient instanceof sqlite3.Database) {
-                await new Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     this.dbClient.run(query, [key], (err) => err ? reject(err) : resolve(null));
                 });
             }
