@@ -50,3 +50,20 @@ export const dependentHealthCheck = async () => {
 export const getStrategies = async () => {
     return await fetchWithRetry('/api/strategies');
 };
+
+export const compareStrategies = async (strategyA: string, strategyB: string) => {
+    const data = await fetchComparisonData(strategyA, strategyB);
+    if (!data.betterStrategy) {
+        throw new ServiceError('Unable to determine better strategy');
+    }
+    return data;
+};
+
+export const getPerformanceData = async () => {
+    const metrics = await fetchPerformanceMetrics();
+    return {
+        drawdown: metrics.drawdown,
+        maxDrawdown: metrics.maxDrawdown,
+        sharpeRatio: metrics.sharpeRatio,
+    };
+};
