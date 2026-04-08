@@ -3,6 +3,10 @@ import { app } from '../index';
 import { createEventSchema } from '../types';
 
 describe('Event API Tests', () => {
+    beforeEach(async () => {
+        await request(app).delete('/events'); // Reset the events
+    });
+
     describe('POST /events', () => {
         it('should create an event with valid data', async () => {
             const response = await request(app)
@@ -32,9 +36,11 @@ describe('Event API Tests', () => {
 
     describe('GET /events', () => {
         it('should return a list of events', async () => {
+            await request(app).post('/events').send({ title: 'Event 1', description: 'Description 1', type: 'userCreated' });
             const response = await request(app).get('/events');
             expect(response.status).toBe(200);
             expect(Array.isArray(response.body)).toBe(true);
+            expect(response.body.length).toBe(1);
         });
 
         it('should return 404 for no events found', async () => {
