@@ -42,12 +42,14 @@ This service is built using Express.js and connects to Redis for event publishin
   ```
 - **Response**:
   - **201**: Event created successfully
+  - **400**: Validation error
 
 ### Get Events
 - **Method**: GET
 - **Path**: /events
 - **Response**:
   - **200**: A list of events
+  - **404**: No events found
 
 ### Update Event
 - **Method**: PUT
@@ -60,12 +62,14 @@ This service is built using Express.js and connects to Redis for event publishin
   ```
 - **Response**:
   - **200**: Event updated successfully
+  - **404**: Event not found
 
 ### Delete Event
 - **Method**: DELETE
 - **Path**: /events/:id
 - **Response**:
   - **204**: Event deleted successfully
+  - **404**: Event not found
 
 ### Health Check
 - **Method**: GET

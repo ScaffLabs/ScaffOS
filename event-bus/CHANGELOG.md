@@ -14,3 +14,7 @@
 ## [1.0.2] - 2023-10-03
 - Added detailed README.md with comprehensive setup instructions, API reference, and environment variables table.
 - Updated CHANGELOG.md for version history.
+
+## [1.0.3] - 2023-10-04
+- Enhanced error handling with more descriptive messages.
+- Improved API documentation for clarity and completeness.
