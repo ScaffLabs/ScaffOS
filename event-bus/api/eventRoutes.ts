@@ -18,8 +18,10 @@ const router = Router();
  *           properties:
  *             title:
  *               type: string
+ *               description: Title of the event
  *             description:
  *               type: string
+ *               description: Description of the event
  *             type:
  *               type: string
  *               enum: [userCreated, orderPlaced]
@@ -34,15 +36,19 @@ const router = Router();
  *       - in: query
  *         name: limit
  *         type: integer
+ *         description: Number of events to return (default: 10)
  *       - in: query
  *         name: offset
  *         type: integer
+ *         description: Number of events to skip (default: 0)
  *       - in: query
  *         name: sortBy
  *         type: string
+ *         description: Field to sort by (e.g., createdAt)
  *       - in: query
  *         name: order
  *         type: string
+ *         description: Sort order (asc or desc)
  *     responses:
  *       200:
  *         description: A list of events
