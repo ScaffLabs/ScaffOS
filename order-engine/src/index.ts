@@ -8,7 +8,7 @@ import { setupRequestQueue } from './requestQueue';
 import { monitorMemoryUsage } from './memoryMonitor';
 import { setupConnectionPooling } from './db';
 import { errorHandlingMiddleware } from './middleware';
-import { logRequest } from './logger';
+import { logRequest, logError } from './logger';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -19,7 +19,8 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors({ origin: ['http://allowed-origin.com'] }));
 app.use(bodyParser.json());
-app.use(logRequest); // Add logging middleware
+app.use(logRequest);
+app.use(errorHandlingMiddleware);
 
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
@@ -31,7 +32,6 @@ const startServer = async () => {
     setupRequestQueue(app);
     setupGracefulShutdown();
     monitorMemoryUsage();
-    app.use(errorHandlingMiddleware);
     app.listen(PORT, () => {
         logger.info(`Order Engine listening on port ${PORT}`);
     });
@@ -41,3 +41,25 @@ startServer().catch(err => {
     logger.error('Failed to start the server:', err);
     process.exit(1);
 });
+
+process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled Rejection:', reason);
+    process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+    logger.info('SIGTERM received. Shutting down gracefully.');
+    setupGracefulShutdown();
+});
+
+process.on('SIGINT', () => {
+    logger.info('SIGINT received. Shutting down gracefully.');
+    setupGracefulShutdown();
+});
+
+export default app;

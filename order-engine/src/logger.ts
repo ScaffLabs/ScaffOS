@@ -19,16 +19,21 @@ const logger = winston.createLogger({
 
 export const logRequest = (req, res, next) => {
     const start = process.hrtime();
+    const requestId = req.headers['x-request-id'] || generateRequestId();
     res.on('finish', () => {
         const duration = process.hrtime(start);
         const durationInMs = (duration[0] * 1e3 + duration[1] / 1e6).toFixed(2);
-        logger.info(`Request: ${req.method} ${req.path} - ${res.statusCode} - ${durationInMs}ms`, { requestId: req.headers['x-request-id'] });
+        logger.info(`Request: ${req.method} ${req.path} - ${res.statusCode} - ${durationInMs}ms`, { requestId });
     });
     next();
 };
 
 export const logError = (error, req) => {
     logger.error('Error occurred', { error: error.stack, requestId: req.headers['x-request-id'] });
+};
+
+const generateRequestId = () => {
+    return 'req-' + Math.random().toString(36).substr(2, 9);
 };
 
 export default logger;
