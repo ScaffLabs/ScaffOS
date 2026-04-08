@@ -54,13 +54,4 @@ const generateRequestId = () => {
     return 'req-' + Math.random().toString(36).substr(2, 9);
 };
 
-export const logSensitiveOperation = (operation, context) => {
-    logger.info({
-        message: 'Sensitive operation logged',
-        operation,
-        context,
-        timestamp: new Date().toISOString(),
-    });
-};
-
 export default logger;

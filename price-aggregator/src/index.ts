@@ -4,25 +4,46 @@ import { PriceAggregator } from './priceAggregator';
 import http from 'http';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
+import { logRequest, logError, logStartup } from './logger';
 
 const app = express();
 const httpServer = http.createServer(app);
 const priceAggregator = new PriceAggregator();
 
+app.use(express.json());
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        logRequest(req, res, duration);
+    });
+    next();
+});
+
 const startApp = async () => {
     await migrateData([]); // Pass any old data if necessary
     await seedData(); // Seed initial data
+    logStartup(config);
 
     app.get('/prices', async (req, res, next) => {
         try {
             const prices = await priceAggregator.getCurrentPrices();
             res.status(200).json(prices);
         } catch (error) {
+            logError(error, 'Error fetching prices');
             next(error);
         }
     });
 
-    // Additional endpoints and error handling...
+    app.post('/prices', async (req, res, next) => {
+        try {
+            const newPrice = await priceAggregator.addPrice(req.body);
+            res.status(201).json(newPrice);
+        } catch (error) {
+            logError(error, 'Error adding price');
+            next(error);
+        }
+    });
 
     app.use(errorMiddleware);
 
