@@ -47,6 +47,11 @@ This service is built using Express.js and connects to Redis for event publishin
 ### Get Events
 - **Method**: GET
 - **Path**: /events
+- **Query Parameters**:
+  - **limit**: Number of events to return (default: 10)
+  - **offset**: Number of events to skip (default: 0)
+  - **sortBy**: Field to sort by (e.g., createdAt)
+  - **order**: Sort order (asc or desc)
 - **Response**:
   - **200**: A list of events
   - **404**: No events found
