@@ -19,6 +19,7 @@ async function fetchDataFromService(url: string, retries: number = MAX_RETRIES):
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       return fetchDataFromService(url, retries - 1);
     }
+    logger.error(`Failed to fetch from ${url}: ${error.message}`);
     throw error;
   }
 }
@@ -50,7 +51,7 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
     fetchOrders(),
     fetchHistoricalData()
   ]);
-
+  
   let totalReturns = 0;
   let trades = 0;
   let wins = 0;
