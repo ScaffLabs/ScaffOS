@@ -43,7 +43,7 @@ export interface Strategy {
  */
 export const StrategySchema = z.object({
     name: z.string().min(1, { message: 'Name must be at least 1 character long.' }),
-    parameters: z.object({}).catchall(z.any()).optional(),
+    parameters: z.record(z.any()).optional(),
 });
 
 /**
