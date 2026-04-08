@@ -1,1 +1,38 @@
-import { Request, Response } from 'express';import axios from 'axios';import EventEmitter from 'eventemitter3';const serviceEmitter = new EventEmitter();const SERVICE_URLS = { orderService: process.env.ORDER_SERVICE_URL, userService: process.env.USER_SERVICE_URL };const checkService = async (service: string) => {try {const response = await axios.get(`${SERVICE_URLS[service]}/health`);return response.data.status === 'UP';} catch (error) {return false;}};export const checkServiceHealth = async (req: Request, res: Response) => {try {const results = await Promise.all(Object.keys(SERVICE_URLS).map(service => checkService(service)));const servicesStatus = Object.keys(SERVICE_URLS).reduce((acc, service, index) => {acc[service] = results[index];return acc;}, {});res.status(200).json(servicesStatus);} catch (error) {res.status(500).json({ error: 'Health check failed' });}};serviceEmitter.on('serviceStatus', (status) => {console.log('Service status updated:', status);});export default serviceEmitter;
+import { Request, Response } from 'express';
+import axios from 'axios';
+import EventEmitter from 'eventemitter3';
+
+const serviceEmitter = new EventEmitter();
+const SERVICE_URLS = {
+    orderService: process.env.ORDER_SERVICE_URL,
+    userService: process.env.USER_SERVICE_URL
+};
+
+const checkService = async (service: string) => {
+    try {
+        const response = await axios.get(`${SERVICE_URLS[service]}/health`);
+        return response.data.status === 'UP';
+    } catch (error) {
+        return false;
+    }
+};
+
+export const checkServiceHealth = async (req: Request, res: Response) => {
+    try {
+        const results = await Promise.all(Object.keys(SERVICE_URLS).map(service => checkService(service)));
+        const servicesStatus = Object.keys(SERVICE_URLS).reduce((acc, service, index) => {
+            acc[service] = results[index];
+            return acc;
+        }, {});
+        serviceEmitter.emit('serviceStatus', servicesStatus);
+        res.status(200).json(servicesStatus);
+    } catch (error) {
+        res.status(500).json({ error: 'Health check failed' });
+    }
+};
+
+serviceEmitter.on('serviceStatus', (status) => {
+    console.log('Service status updated:', status);
+});
+
+export default serviceEmitter;
