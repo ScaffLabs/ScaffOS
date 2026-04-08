@@ -4,13 +4,12 @@ import { ValidationError, NotFoundError } from '../errors/customErrors';
 import logger from '../logger';
 
 export const getStrategiesHandler = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, name, sort } = req.query;
+    const { limit = 10, offset = 0, name } = req.query;
     try {
-        const query: any = {};
-        if (name) query.name = { $regex: name.toString(), $options: 'i' };
+        const query = {};
+        if (name) query.name = name;
         const strategies = await findStrategies(query);
-        const sortedStrategies = sort ? strategies.sort((a, b) => (a.name > b.name ? 1 : -1)) : strategies;
-        const paginatedStrategies = sortedStrategies.slice(Number(offset), Number(offset) + Number(limit));
+        const paginatedStrategies = strategies.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedStrategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
@@ -21,11 +20,7 @@ export const getStrategiesHandler = async (req: Request, res: Response) => {
 export const createStrategyHandler = async (req: Request, res: Response) => {
     const { name, parameters } = req.body;
     try {
-        if (!name || !parameters) {
-            throw new ValidationError('Name and parameters are required.');
-        }
         const newStrategy = await createStrategy({ name, parameters });
-        logger.logRequest('POST', '/api/strategies', 201, 0);
         res.status(201).json(newStrategy);
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -41,10 +36,6 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, parameters } = req.body;
     try {
-        const existingStrategy = await findStrategies({ id });
-        if (!existingStrategy) {
-            throw new NotFoundError('Strategy not found.');
-        }
         const updatedStrategy = await updateStrategy(id, { name, parameters });
         res.status(200).json(updatedStrategy);
     } catch (error) {
@@ -60,10 +51,7 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
 export const deleteStrategyHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        const deleted = await deleteStrategy(id);
-        if (!deleted) {
-            throw new NotFoundError('Strategy not found.');
-        }
+        await deleteStrategy(id);
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {
