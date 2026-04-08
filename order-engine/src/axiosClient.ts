@@ -29,3 +29,11 @@ export const fetchData = async (url: string) => {
 export const postData = async (url: string, data: any) => {
     return retry(() => circuitBreaker.fire(() => httpClient.post(url, data)));
 };
+
+export const putData = async (url: string, data: any) => {
+    return retry(() => circuitBreaker.fire(() => httpClient.put(url, data)));
+};
+
+export const deleteData = async (url: string) => {
+    return retry(() => circuitBreaker.fire(() => httpClient.delete(url)));
+};
