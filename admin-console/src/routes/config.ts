@@ -1,134 +1,70 @@
-/**
- * @swagger
- * tags:
- *   name: Configurations
- *   description: API for managing configurations
- */
+import express from 'express';
+import { logger } from '../middleware/logger';
+import { ConfigurationItem } from '../types';
+import Database from '../storage/Database';
 
-/**
- * @swagger
- * /api/config:
- *   post:
- *     summary: Create a new configuration
- *     tags: [Configurations]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               key:
- *                 type: string
- *                 example: testKey
- *               value:
- *                 type: string
- *                 example: testValue
- *     responses:
- *       201:
- *         description: Configuration created successfully
- *       400:
- *         description: Bad Request
- */
+const router = express.Router();
+const db = new Database();
 
-/**
- * @swagger
- * /api/config:
- *   get:
- *     summary: Get all configurations
- *     tags: [Configurations]
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           example: 10
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *           example: 0
- *       - in: query
- *         name: sortBy
- *         schema:
- *           type: string
- *           example: key
- *       - in: query
- *         name: order
- *         schema:
- *           type: string
- *           example: asc
- *     responses:
- *       200:
- *         description: A list of configurations
- *       404:
- *         description: No configurations found
- */
+router.post('/', async (req, res) => {
+    const configItem: ConfigurationItem = req.body;
+    try {
+        await db.createConfiguration(configItem);
+        logger.info(`Configuration created: ${configItem.key}`);
+        res.status(201).json({ message: 'Configuration created successfully!' });
+    } catch (error) {
+        logger.error(`Error creating configuration: ${error.message}`);
+        res.status(400).json({ error: 'Failed to create configuration' });
+    }
+});
 
-/**
- * @swagger
- * /api/config/{key}:
- *   get:
- *     summary: Get configuration by key
- *     tags: [Configurations]
- *     parameters:
- *       - in: path
- *         name: key
- *         required: true
- *         description: The configuration key
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Configuration found
- *       404:
- *         description: Configuration not found
- */
+router.get('/', async (req, res) => {
+    try {
+        const configurations = await db.getConfigurations({ limit: 100, offset: 0, sortBy: 'key', order: 'asc' });
+        res.status(200).json(configurations);
+    } catch (error) {
+        logger.error(`Error fetching configurations: ${error.message}`);
+        res.status(500).json({ error: 'Failed to fetch configurations' });
+    }
+});
 
-/**
- * @swagger
- * /api/config:
- *   put:
- *     summary: Update an existing configuration
- *     tags: [Configurations]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               key:
- *                 type: string
- *                 example: testKey
- *               value:
- *                 type: string
- *                 example: newValue
- *     responses:
- *       200:
- *         description: Configuration updated successfully
- *       404:
- *         description: Configuration not found
- *       400:
- *         description: Bad Request
- */
+router.get('/:key', async (req, res) => {
+    const { key } = req.params;
+    try {
+        const configItem = await db.getConfigurationByKey(key);
+        if (!configItem) {
+            logger.warn(`Configuration not found: ${key}`);
+            return res.status(404).json({ error: 'Configuration not found' });
+        }
+        res.status(200).json(configItem);
+    } catch (error) {
+        logger.error(`Error fetching configuration: ${error.message}`);
+        res.status(500).json({ error: 'Failed to fetch configuration' });
+    }
+});
 
-/**
- * @swagger
- * /api/config/{key}:
- *   delete:
- *     summary: Delete a configuration
- *     tags: [Configurations]
- *     parameters:
- *       - in: path
- *         name: key
- *         required: true
- *         description: The configuration key
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Configuration deleted successfully
- *       404:
- *         description: Configuration not found
- */
+router.put('/', async (req, res) => {
+    const configItem: ConfigurationItem = req.body;
+    try {
+        await db.updateConfiguration(configItem);
+        logger.info(`Configuration updated: ${configItem.key}`);
+        res.status(200).json({ message: 'Configuration updated successfully!' });
+    } catch (error) {
+        logger.error(`Error updating configuration: ${error.message}`);
+        res.status(400).json({ error: 'Failed to update configuration' });
+    }
+});
+
+router.delete('/:key', async (req, res) => {
+    const { key } = req.params;
+    try {
+        await db.deleteConfiguration(key);
+        logger.info(`Configuration deleted: ${key}`);
+        res.status(204).send();
+    } catch (error) {
+        logger.error(`Error deleting configuration: ${error.message}`);
+        res.status(404).json({ error: 'Configuration not found' });
+    }
+});
+
+export default router;

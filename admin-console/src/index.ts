@@ -8,11 +8,9 @@ import config from './config';
 import Database from './storage/Database';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
-import { logRequest, logSuccess } from './middleware/logger';
+import { logRequest, logError, logSuccess } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
-import { CircuitBreaker } from 'opossum';
 import { EventEmitter } from 'events';
-import os from 'os';
 
 dotenv.config();
 const app = express();
@@ -49,11 +47,3 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-
-const monitorMemoryUsage = () => {
-    setInterval(() => {
-        const memoryUsage = process.memoryUsage();
-        logSuccess(`Memory Usage: RSS: ${memoryUsage.rss}, Heap Total: ${memoryUsage.heapTotal}, Heap Used: ${memoryUsage.heapUsed}`);
-    }, 60000);
-};
-monitorMemoryUsage();
