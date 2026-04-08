@@ -12,3 +12,5 @@ export const recordLatency = (data: LatencyData) => {
     }
     latencyRecords.push(data);
 };
+
+export const getLatencyRecords = () => latencyRecords;

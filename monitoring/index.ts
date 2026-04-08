@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON body
 app.use(express.json());
-
 // Middleware to track latency of requests
 app.use(latencyTracker);
 // Rate limiting middleware

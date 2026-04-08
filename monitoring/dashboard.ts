@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { getAggregatedData } from './dataAggregator';
-import { ServiceError } from './errorClasses';
+import { ServiceError, ValidationError } from './errorClasses';
 
 export const dashboard = async (req: Request, res: Response) => {
     try {
@@ -12,6 +12,8 @@ export const dashboard = async (req: Request, res: Response) => {
     } catch (error) {
         if (error instanceof ServiceError) {
             res.status(500).json({ error: error.message });
+        } else if (error instanceof ValidationError) {
+            res.status(400).json({ error: error.message });
         } else {
             res.status(500).json({ error: 'Internal Server Error' });
         }
