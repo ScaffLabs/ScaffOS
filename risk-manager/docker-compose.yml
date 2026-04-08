@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  risk-manager:
+    build: .
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    depends_on:
+      - another-service # Example dependent service
+  another-service:
+    image: some/other-service-image
+    ports:
+      - '4000:4000'
