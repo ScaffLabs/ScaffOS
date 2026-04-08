@@ -20,7 +20,8 @@ const logger = pino({
 
 export const logRequest = (req: Request, res: Response, start: number) => {
   const duration = Date.now() - start;
-  logger.info({ method: req.method, path: req.path, status: res.statusCode, duration }, 'Request completed');
+  const requestId = req.headers['x-request-id'] || 'N/A';
+  logger.info({ method: req.method, path: req.path, status: res.statusCode, duration, requestId }, 'Request completed');
 };
 
 export const logError = (error: Error, context: any) => {
