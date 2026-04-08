@@ -4,7 +4,7 @@
 The Order Engine is a microservice responsible for managing orders in a trading system. It allows users to create, retrieve, update, and delete orders while providing health and readiness checks.
 
 ## Architecture Overview
-The service uses a simple REST API built with Express.js, with an in-memory storage mechanism for orders. It handles requests through a queue system to ensure reliability and scalability.
+The service uses a REST API built with Express.js, utilizing an in-memory storage mechanism for orders. It manages requests through a queue system to ensure reliability and scalability.
 
 ## Setup Instructions
 ### Prerequisites
@@ -27,6 +27,9 @@ The service uses a simple REST API built with Express.js, with an in-memory stor
    ```bash
    PORT=3000
    BASE_URL=http://localhost:3000
+   DATABASE_URL=http://localhost:5432
+   ANOTHER_SERVICE_URL=http://localhost:4000
+   ORDER_SERVICE_URL=http://localhost:5000
    ```
 2. Start the server:
    ```bash
@@ -68,6 +71,9 @@ The service uses a simple REST API built with Express.js, with an in-memory stor
 |-------------|-----------------------------------|
 | PORT        | Port for the server to listen on  |
 | BASE_URL    | Base URL for external API calls    |
+| DATABASE_URL | URL for the database connection   |
+| ANOTHER_SERVICE_URL | URL for another service connection   |
+| ORDER_SERVICE_URL | URL for order service connection   |
 
 ## Development Guide
 - Ensure you have the necessary environment set up.
