@@ -4,11 +4,10 @@ import crypto from 'crypto';
 interface DataStore<T> {
     create(item: T): T;
     read(id: UserId): T | undefined;
-    update(id: UserId, item: T): T | null;
+    update(id: UserId, item: Partial<T>): T | null;
     delete(id: UserId): boolean;
     findAll(): T[];
     findByIndex(index: string, value: string): T[];
-    transaction(operations: (store: this) => void): void;
 }
 
 class InMemoryStore<T> implements DataStore<T> {
@@ -27,7 +26,7 @@ class InMemoryStore<T> implements DataStore<T> {
         return this.store.get(id);
     }
 
-    update(id: UserId, item: T): T | null {
+    update(id: UserId, item: Partial<T>): T | null {
         const existingItem = this.store.get(id);
         if (!existingItem) return null;
         const updatedItem = { ...existingItem, ...item };
@@ -50,18 +49,16 @@ class InMemoryStore<T> implements DataStore<T> {
         return ids ? Array.from(ids).map(id => this.store.get(id)).filter(Boolean) as T[] : [];
     }
 
-    transaction(operations: (store: this) => void): void {
-        const originalStore = new Map(this.store);
-        try {
-            operations(this);
-        } catch (error) {
-            this.store = originalStore; // Rollback on error
-            throw error;
-        }
-    }
-
     private indexItem(id: UserId, item: T) {
-        // Indexing logic here (for example, based on username or email)
+        // Example indexing logic based on User's email field
+        if ('email' in item) {
+            const emailIndex = this.index.get('email') || new Map();
+            const emailValue = (item as any).email;
+            const ids = emailIndex.get(emailValue) || new Set();
+            ids.add(id);
+            emailIndex.set(emailValue, ids);
+            this.index.set('email', emailIndex);
+        }
     }
 }
 
