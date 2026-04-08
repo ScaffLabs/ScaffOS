@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from './storage';
 import { validateAndSanitizeUserInput, authMiddleware } from './middleware';
 import logger from './logger';
+import { rateLimit } from './rateLimit';
 
 const router = express.Router();
 
@@ -22,8 +23,14 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
 });
 
 router.get('/users', authMiddleware, async (req, res) => {
+    const { limit = 10, offset = 0, sortBy = 'createdAt', order = 'asc' } = req.query;
     const users = getAllUsers();
-    res.status(200).json(users);
+    const sortedUsers = users.sort((a, b) => {
+        if (order === 'asc') return a[sortBy] > b[sortBy] ? 1 : -1;
+        return a[sortBy] < b[sortBy] ? 1 : -1;
+    });
+    const paginatedUsers = sortedUsers.slice(Number(offset), Number(offset) + Number(limit));
+    res.status(200).json(paginatedUsers);
 });
 
 router.get('/users/:id', authMiddleware, async (req, res) => {
@@ -56,6 +63,14 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
     }
     logger.info('User deleted', { userId });
     res.status(204).send();
+});
+
+router.use((req, res, next) => {
+    const apiKey = req.headers['x-api-key'];
+    if (!rateLimit(apiKey)) {
+        return res.status(429).json({ error: 'Rate limit exceeded' });
+    }
+    next();
 });
 
 export default router;
