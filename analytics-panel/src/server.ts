@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { logWithRequestId } from './logger';
+import errorHandler from './middleware/errorHandler';
 import { monitorMemoryUsage } from './utils/monitor';
 import { gracefulShutdown } from './utils/shutdown';
 
@@ -28,6 +29,9 @@ app.use('/api/', limiter); // Apply rate limiting to all routes
 // Routes
 app.use('/api/strategies', strategyRoutes);
 app.use('/api', healthRoutes);
+
+// Error handling middleware
+app.use(errorHandler);
 
 const startServer = async () => {
     const PORT = process.env.PORT || 3000;
