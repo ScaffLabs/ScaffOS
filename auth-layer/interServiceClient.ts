@@ -3,8 +3,8 @@ import config from './config';
 import logger from './logger';
 
 const MAX_RETRIES = 5;
-const RETRY_DELAY_BASE = 1000; // Base delay in ms
-const circuitBreakerTimeout = 10000; // 10 seconds
+const RETRY_DELAY_BASE = 1000;
+const circuitBreakerTimeout = 10000;
 let isCircuitOpen = false;
 let circuitBreakerLastOpen = 0;
 
@@ -40,13 +40,4 @@ const fetchWithRetry = async (url: string) => {
 
 export const fetchUserData = async (userId: string) => {
     return await fetchWithRetry(`${config.USER_SERVICE_URL}/users/${userId}`);
-};
-
-export const sendEvent = async (event: any) => {
-    try {
-        await axios.post(`${config.EVENT_BUS_URL}/events`, event);
-    } catch (error) {
-        logger.error('Error sending event', { event, error: error.message });
-        throw new Error('Event send failed');
-    }
 };

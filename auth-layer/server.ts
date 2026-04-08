@@ -2,7 +2,6 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import healthRouter from './health';
 import userRoutes from './userRoutes';
 import errorMiddleware from './errorMiddleware';
@@ -16,29 +15,10 @@ const server = http.createServer(app);
 const connectionPool = createConnectionPool();
 const PORT = process.env.PORT || 3000;
 
-// Startup logs
 startupLog('Auth Layer Service');
-
-// CORS configuration
-app.use(cors({
-    origin: ['https://your-allowed-origin.com'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-}));
-
-// Security headers with helmet
+app.use(cors());
 app.use(helmet());
-
-// Request ID middleware
 app.use(requestIdMiddleware);
-
-// Rate limiting middleware
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-});
-app.use(limiter);
-
 app.use(express.json());
 app.use(logRequest);
 app.use('/health', healthRouter);

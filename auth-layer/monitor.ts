@@ -1,8 +1,9 @@
 import { setInterval } from 'timers';
+import logger from './logger';
 
 export const monitorMemoryUsage = () => {
     setInterval(() => {
         const memoryUsage = process.memoryUsage();
-        console.log(`Memory Usage: RSS ${memoryUsage.rss} - Heap Total ${memoryUsage.heapTotal} - Heap Used ${memoryUsage.heapUsed}`);
-    }, 60000); // Log every minute
+        logger.info(`Memory Usage: RSS ${memoryUsage.rss} - Heap Total ${memoryUsage.heapTotal} - Heap Used ${memoryUsage.heapUsed}`);
+    }, 60000);
 };
