@@ -8,6 +8,7 @@ interface DataStore<T> {
     delete(id: UserId): boolean;
     findAll(): T[];
     findByIndex(index: string, value: string): T[];
+    transaction(operations: (store: this) => void): void;
 }
 
 class InMemoryStore<T> implements DataStore<T> {
@@ -50,6 +51,16 @@ class InMemoryStore<T> implements DataStore<T> {
         const ids = indexMap.get(value);
         if (!ids) return [];
         return Array.from(ids).map(id => this.store.get(id)!);
+    }
+
+    transaction(operations: (store: this) => void): void {
+        const previousState = new Map(this.store);
+        try {
+            operations(this);
+        } catch (error) {
+            this.store = previousState; // Rollback
+            throw error;
+        }
     }
 
     private indexItem(id: UserId, item: T) {
