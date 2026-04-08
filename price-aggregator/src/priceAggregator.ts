@@ -40,10 +40,7 @@ export class PriceAggregator extends EventEmitter {
     }
 
     public async fetchPricesFromExchanges(): Promise<void> {
-        const exchangeUrls = [
-            '/exchange1/prices',
-            '/exchange2/prices'
-        ];
+        const exchangeUrls = ['/exchange1/prices', '/exchange2/prices'];
         const pricePromises = exchangeUrls.map(url => httpClient(url));
         try {
             const prices = await Promise.all(pricePromises);
