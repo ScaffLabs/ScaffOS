@@ -11,6 +11,7 @@ const envSchema = Joi.object({
     DB_USER: Joi.string().required(),
     DB_PASSWORD: Joi.string().required(),
     DB_NAME: Joi.string().required(),
+    EXTERNAL_API_URL: Joi.string().uri().required(),
 }).unknown();
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -28,6 +29,7 @@ const config = {
         password: envVars.DB_PASSWORD,
         name: envVars.DB_NAME,
     },
+    externalApiUrl: envVars.EXTERNAL_API_URL,
 };
 
 export default config;
