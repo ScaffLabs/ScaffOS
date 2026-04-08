@@ -8,7 +8,8 @@ const store = new InMemoryStore<LatencyData>();
 
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
-        const { limit = 10, offset = 0 } = req.query;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const offset = parseInt(req.query.offset as string) || 0;
         const entries = store.getAll().slice(offset, offset + limit);
         if (entries.length === 0) {
             return res.status(204).json([]);
@@ -22,12 +23,11 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
 
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
-        const bodyValidation = LatencyDataSchema.safeParse(req.body);
+        const bodyValidation = LatencyDataSchema.safeParse({ ...req.body, timestamp: new Date() });
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data. Both path and duration are required.');
         }
-        const { path, duration } = bodyValidation.data;
-        const timestamp = new Date();
+        const { path, duration, timestamp } = bodyValidation.data;
         store.create({ path, duration, timestamp }, path);
         logger.info(`Created new entry: ${path}`);
         res.status(201).json({ message: 'Entry created', id: path });
