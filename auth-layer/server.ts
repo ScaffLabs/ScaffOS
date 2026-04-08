@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import healthRouter from './health';
 import config from './config';
+import logger from './logger'; // Importing logger
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 
@@ -14,13 +15,27 @@ app.use(healthRouter);
 
 const PORT = process.env.PORT || 3000;
 
-// Health check route
+app.use((req, res, next) => {
+    const start = process.hrtime();
+    res.on('finish', () => {
+        const [seconds, nanoseconds] = process.hrtime(start);
+        const duration = seconds * 1000 + nanoseconds / 1000000;
+        logger.info('Request completed', {
+            method: req.method,
+            path: req.path,
+            status: res.statusCode,
+            duration: duration.toFixed(3),
+            requestId: req.headers['x-request-id'] || 'N/A',
+        });
+    });
+    next();
+});
+
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy' });
 });
 
 app.get('/ready', (req, res) => {
-    // Check if the connection pool is ready
     if (connectionPool.isReady()) {
         return res.status(200).json({ status: 'ready' });
     }
@@ -28,10 +43,10 @@ app.get('/ready', (req, res) => {
 });
 
 const shutdown = async () => {
-    console.log('Shutting down gracefully...');
-    await connectionPool.drain(); // Drain connections
+    logger.info('Shutting down gracefully...');
+    await connectionPool.drain();
     server.close(() => {
-        console.log('Server closed');
+        logger.info('Server closed');
         process.exit(0);
     });
 };
@@ -42,7 +57,7 @@ process.on('SIGINT', shutdown);
 const start = async () => {
     await monitorMemoryUsage(); // Start memory monitoring
     server.listen(PORT, () => {
-        console.log(`Server listening on port ${PORT}`);
+        logger.info(`Server listening on port ${PORT}`);
     });
 };
 
