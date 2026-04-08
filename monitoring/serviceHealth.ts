@@ -1,18 +1,20 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import EventEmitter from 'eventemitter3';
+import config from './config';
 
 const serviceEmitter = new EventEmitter();
 const SERVICE_URLS = {
-    orderService: process.env.ORDER_SERVICE_URL,
-    userService: process.env.USER_SERVICE_URL
+    orderService: config.ORDER_SERVICE_URL,
+    userService: config.USER_SERVICE_URL
 };
 
 const checkService = async (service: string) => {
     try {
-        const response = await axios.get(`${SERVICE_URLS[service]}/health`);
+        const response = await axios.get(`${SERVICE_URLS[service]}/health`, { timeout: 5000 });
         return response.data.status === 'UP';
     } catch (error) {
+        console.error(`Error checking ${service}:`, error.message);
         return false;
     }
 };
@@ -27,6 +29,7 @@ export const checkServiceHealth = async (req: Request, res: Response) => {
         serviceEmitter.emit('serviceStatus', servicesStatus);
         res.status(200).json(servicesStatus);
     } catch (error) {
+        console.error('Health check failed:', error.message);
         res.status(500).json({ error: 'Health check failed' });
     }
 };
