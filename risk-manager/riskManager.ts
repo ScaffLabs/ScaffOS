@@ -2,19 +2,28 @@ import axios from 'axios';
 import { DrawdownCircuitBreaker } from './drawdownCircuitBreaker';
 import { RiskAlerting } from './riskAlerting';
 import { PositionLimits } from './positionLimits';
-import { RiskPosition, RiskPositionSchema, RiskEvent } from './sharedTypes';
+import { RiskPosition, RiskPositionSchema } from './sharedTypes';
+import MemoryQueue from './memoryQueue';
 
 export default class RiskManager {
   private drawdownCircuitBreaker: DrawdownCircuitBreaker;
   private riskAlerting: RiskAlerting;
   private positionLimits: PositionLimits;
   private riskPositions: RiskPosition[];
+  private riskPositionQueue: MemoryQueue;
 
   constructor() {
     this.drawdownCircuitBreaker = new DrawdownCircuitBreaker(20);
     this.riskAlerting = new RiskAlerting();
     this.positionLimits = new PositionLimits();
     this.riskPositions = [];
+    this.riskPositionQueue = new MemoryQueue();
+    this.riskPositionQueue.eventEmitter.on('itemAdded', this.handleNewRiskPosition.bind(this));
+  }
+
+  private handleNewRiskPosition(position: RiskPosition) {
+    this.riskPositions.push(position);
+    this.riskAlerting.triggerRiskAlert(`New risk position added for asset: ${position.asset}`);
   }
 
   async getRiskPositions(limit: number, offset: number, sort?: string, filter?: string) {
@@ -29,7 +38,7 @@ export default class RiskManager {
   }
 
   async createRiskPosition(asset: string, position: number) {
-    const newPosition = { id: this.generateId() as OrderId, asset, position };
+    const newPosition = { id: this.generateId(), asset, position };
     const validationResult = RiskPositionSchema.safeParse(newPosition);
     if (!validationResult.success) {
       throw new Error('Invalid risk position data: ' + validationResult.error);
@@ -39,8 +48,7 @@ export default class RiskManager {
       throw new Error('Position exceeds limit for this asset.');
     }
 
-    this.riskPositions.push(newPosition);
-    this.riskAlerting.triggerRiskAlert(`New risk position created for ${asset}`);
+    this.riskPositionQueue.enqueue(newPosition);
     return newPosition;
   }
 
@@ -66,13 +74,6 @@ export default class RiskManager {
   }
 
   private generateId() {
-    return Math.random().toString(36).substr(2, 9) as OrderId;
+    return Math.random().toString(36).substr(2, 9);
   }
-
-  async monitorMemoryUsage() {
-    const memoryUsage = process.memoryUsage();
-    console.log(`Memory Usage: RSS: ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`);
-  }
-
-  setInterval(this.monitorMemoryUsage.bind(this), 60000);
 }
