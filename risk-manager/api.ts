@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import RiskManager from './riskManager';
 import authMiddleware from './authMiddleware';
 import logger from './logger';
+import rateLimitMiddleware from './rateLimitMiddleware';
 
 const router = express.Router();
 const riskManager = new RiskManager();
