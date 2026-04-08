@@ -1,44 +1,37 @@
 import express from 'express';
-import { healthCheck, readyCheck } from './utils/healthCheck';
-import { registerShutdownHandlers } from './utils/healthCheck';
-import { InMemoryStore } from './storage/InMemoryStore';
-import { migrateData, seedData } from './storage/migrations';
-import { Position } from './types';
-import logger, { logStartup } from './utils/logger';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { healthCheck } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
+import { registerRoutes } from './api/portfolioApi';
 
 const app = express();
+
+// Security middleware
+app.use(helmet());
+app.use(cors({ origin: ['http://your-allowed-origin.com'] }));
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 100,
+    message: 'Too many requests, please try again later.',
+});
+app.use(limiter);
+
 app.use(express.json());
 
-const positionStore = new InMemoryStore<Position>();
-migrateData(positionStore, seedData());
-
 app.get('/api/health', healthCheck);
-app.get('/api/ready', readyCheck);
-app.get('/api/positions', async (req, res) => {
-    const positions = Object.values(positionStore.data);
-    res.status(200).json(positions);
-});
 
-app.post('/api/positions', async (req, res) => {
-    const newPosition = req.body;
-    try {
-        const createdPosition = positionStore.create(newPosition);
-        res.status(201).json({ message: 'Position created successfully', position: createdPosition });
-    } catch (error) {
-        logger.error(error.message);
-        res.status(400).json({ message: 'Invalid position data', error: error.message });
-    }
-});
+// Register API routes
+registerRoutes(app);
 
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
-    logStartup({ port: PORT });
     console.log(`Server is running on port ${PORT}`);
 });
-
-registerShutdownHandlers(server);
 
 export default app;

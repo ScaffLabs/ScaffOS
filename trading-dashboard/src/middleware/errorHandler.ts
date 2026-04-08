@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ServiceError, ValidationError, NotFoundError } from '../utils/errors';
+import logger from '../utils/logger';
 
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
     if (err instanceof ValidationError) {
@@ -9,9 +10,10 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
         return res.status(404).json({ message: err.message });
     }
     if (err instanceof ServiceError) {
-        return res.status(500).json({ message: err.message, type: 'ServiceError' });
+        logger.error('Service error occurred', { message: err.message }); // Avoid logging sensitive data
+        return res.status(500).json({ message: 'Internal Server Error', type: 'ServiceError' });
     }
-    console.error(err);
+    logger.error('Unknown error occurred', { error: err.message }); // Avoid logging sensitive data
     return res.status(500).json({ message: 'Internal Server Error', type: 'UnknownError' });
 };
 
