@@ -5,6 +5,7 @@ import { Order, OrderSchema } from '../types';
 
 const OrderEntry: React.FC = () => {
     const [orderDetails, setOrderDetails] = useState<Order>({ id: '' as OrderId, symbol: '', quantity: 0, type: 'buy' });
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -13,9 +14,12 @@ const OrderEntry: React.FC = () => {
             alert('Invalid order details!');
             return;
         }
-        await submitOrder(validationResult.data);
-        publishEvent('ORDER_SUBMITTED', validationResult.data);
-        // handle success or error
+        try {
+            await submitOrder(validationResult.data);
+            publishEvent('ORDER_SUBMITTED', validationResult.data);
+        } catch (err) {
+            setError('Failed to submit order: ' + (err instanceof Error ? err.message : 'Unknown error'));
+        }
     };
 
     return (
@@ -23,6 +27,7 @@ const OrderEntry: React.FC = () => {
             <input type='text' placeholder='Symbol' onChange={(e) => setOrderDetails({ ...orderDetails, symbol: e.target.value })} />
             <input type='number' placeholder='Quantity' onChange={(e) => setOrderDetails({ ...orderDetails, quantity: +e.target.value })} />
             <button type='submit'>Place Order</button>
+            {error && <div style={{ color: 'red' }}>{error}</div>}
         </form>
     );
 };
