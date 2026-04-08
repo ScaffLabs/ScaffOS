@@ -13,18 +13,9 @@ const positionStore = new InMemoryStore<Position>();
 migrateData(positionStore, seedData());
 
 app.get('/api/health', healthCheck);
-app.get('/api/ready', async (req, res) => {
-    try {
-        const externalHealth = await checkExternalServiceHealth();
-        res.status(externalHealth.status === 'UP' ? 200 : 500).send(externalHealth);
-    } catch (error) {
-        res.status(500).send({ status: 'NOT READY', error: error.message });
-    }
-});
-
 app.get('/api/positions', async (req, res) => {
     try {
-        const positions = await positionStore.findByIndex('symbol', 'AAPL');
+        const positions = Object.values(positionStore.data);
         res.status(200).json(positions);
     } catch (error) {
         logger.error(error.message);
