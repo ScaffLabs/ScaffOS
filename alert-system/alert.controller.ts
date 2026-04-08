@@ -14,31 +14,31 @@ export class AlertController {
     async getActiveAlerts(req: Request, res: Response) {
         const start = Date.now();
         try {
-            const alerts = await this.alertStore.findIndex({}); // Fetch all active alerts
-            if (!alerts.length) return res.status(204).send(); // Return 204 if no alerts are found
-            return res.json(alerts); // Return the fetched alerts
+            const alerts = await this.alertStore.findIndex({});
+            if (!alerts.length) return res.status(204).send();
+            return res.json(alerts);
         } catch (error) {
-            logError(error, { method: req.method, path: req.path }); // Log errors for monitoring
-            return res.status(500).json({ message: 'Failed to fetch active alerts.' }); // Handle error response
+            logError(error, { method: req.method, path: req.path });
+            return res.status(500).json({ message: 'Failed to fetch active alerts.' });
         } finally {
-            logRequest(req, res, start); // Log request duration and details
+            logRequest(req, res, start);
         }
     }
 
     async addAlert(req: Request, res: Response) {
         const start = Date.now();
         try {
-            const alert = validateAlertMessage(req.body); // Validate incoming alert data
-            const createdAlert = await this.alertStore.create(alert); // Create alert in data store
-            return res.status(201).json(createdAlert); // Return created alert
+            const alert = validateAlertMessage(req.body);
+            const createdAlert = await this.alertStore.create(alert);
+            return res.status(201).json(createdAlert);
         } catch (error) {
             if (error instanceof ValidationError) {
-                return res.status(400).json({ message: 'Invalid alert data: ' + error.message }); // Handle validation errors
+                return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
             }
             logError(error, { method: req.method, path: req.path });
-            return res.status(500).json({ message: 'Failed to add alert.' }); // Handle error response
+            return res.status(500).json({ message: 'Failed to add alert.' });
         } finally {
-            logRequest(req, res, start); // Log request duration and details
+            logRequest(req, res, start);
         }
     }
 
@@ -46,19 +46,19 @@ export class AlertController {
         const alertId = req.params.id;
         const start = Date.now();
         try {
-            const updatedAlert = await this.alertStore.update(alertId, req.body); // Update alert in data store
+            const updatedAlert = await this.alertStore.update(alertId, req.body);
             if (!updatedAlert) {
-                throw new NotFoundError('Alert not found.'); // Throw error if alert doesn't exist
+                throw new NotFoundError('Alert not found.');
             }
-            return res.json(updatedAlert); // Return updated alert
+            return res.json(updatedAlert);
         } catch (error) {
             if (error instanceof NotFoundError) {
-                return res.status(404).json({ message: error.message }); // Handle not found error
+                return res.status(404).json({ message: error.message });
             }
             logError(error, { method: req.method, path: req.path });
-            return res.status(500).json({ message: 'Failed to update alert.' }); // Handle error response
+            return res.status(500).json({ message: 'Failed to update alert.' });
         } finally {
-            logRequest(req, res, start); // Log request duration and details
+            logRequest(req, res, start);
         }
     }
 
@@ -66,19 +66,19 @@ export class AlertController {
         const alertId = req.params.id;
         const start = Date.now();
         try {
-            const deleted = await this.alertStore.delete(alertId); // Delete alert from data store
+            const deleted = await this.alertStore.delete(alertId);
             if (!deleted) {
-                throw new NotFoundError('Alert not found.'); // Throw error if alert doesn't exist
+                throw new NotFoundError('Alert not found.');
             }
-            return res.status(204).send(); // Return 204 for successful deletion
+            return res.status(204).send();
         } catch (error) {
             if (error instanceof NotFoundError) {
-                return res.status(404).json({ message: error.message }); // Handle not found error
+                return res.status(404).json({ message: error.message });
             }
             logError(error, { method: req.method, path: req.path });
-            return res.status(500).json({ message: 'Failed to delete alert.' }); // Handle error response
+            return res.status(500).json({ message: 'Failed to delete alert.' });
         } finally {
-            logRequest(req, res, start); // Log request duration and details
+            logRequest(req, res, start);
         }
     }
 }

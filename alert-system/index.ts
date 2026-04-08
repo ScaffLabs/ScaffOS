@@ -4,7 +4,7 @@ import { EventBus } from '../event-bus';
 import { AlertProcessor } from './alert.processor';
 import { HealthCheck } from './health-check';
 import { config } from './config';
-import logger from './logger';
+import logger, { logStartup } from './logger';
 
 const app = express();
 const eventBus = new EventBus();
@@ -28,6 +28,7 @@ const connectDatabase = async () => {
 connectDatabase();
 
 const server = app.listen(config.PORT, () => {
+    logStartup(config);
     logger.info(`Alert system running on port ${config.PORT}`);
 });
 

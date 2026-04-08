@@ -1,48 +1,39 @@
-import pino from 'pino';
-import { Request, Response } from 'express';
+import winston from 'winston';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-const logger = pino({
-  transport: isProduction ? undefined : {
-    target: 'pino-pretty',
-    options: { colorize: true }
-  },
-  level: 'info',
-  base: null,
-  timestamp: pino.stdTimeFunctions.isoTime,
-  formatters: {
-    level(label) {
-      return { level: label.toUpperCase() };
-    }
-  }
+const logger = winston.createLogger({
+  level: isProduction ? 'info' : 'debug',
+  format: winston.format.combine(
+    isProduction ? winston.format.json() : winston.format.simple(),
+    winston.format.timestamp(),
+    winston.format.printf(({ timestamp, level, message, ...metadata }) => {
+      const msg = `${timestamp} [${level}]: ${message}`;
+      return metadata && Object.keys(metadata).length ? `${msg} ${JSON.stringify(metadata)}` : msg;
+    })
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'combined.log' })
+  ]
 });
 
-export const logRequest = (req: Request, res: Response, start: number) => {
+export const logRequest = (req, res, start) => {
   const duration = Date.now() - start;
   const requestId = req.headers['x-request-id'] || 'N/A';
   logger.info({ method: req.method, path: req.path, status: res.statusCode, duration, requestId }, 'Request completed');
 };
 
-export const logError = (error: Error, context: any) => {
+export const logError = (error, context) => {
   logger.error({ error: error.stack, context }, 'An error occurred');
 };
 
-export const logStartup = (config: any) => {
+export const logStartup = (config) => {
   logger.info({ config }, 'Service started with configuration');
 };
 
-export const logPerformance = (operation: string, duration: number) => {
+export const logPerformance = (operation, duration) => {
   logger.debug({ operation, duration }, 'Performance timing');
-};
-
-export const logAudit = (action: string, details: any) => {
-  logger.info({ action, details }, 'Audit log entry');
-};
-
-export const logRequestId = (req: Request) => {
-  const requestId = req.headers['x-request-id'] || 'N/A';
-  logger.info({ requestId }, 'Processing request');
 };
 
 export default logger;
