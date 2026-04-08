@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
-import { fetchServiceHealth, checkServiceHealth } from '../api/externalApi';
+import { fetchServiceHealth } from '../api/externalApi';
 import { closePool } from './connectionPool';
 
 export const healthCheck = async (req: Request, res: Response) => {
-    const serviceHealth = await checkServiceHealth();
+    const serviceHealth = await fetchServiceHealth();
     res.status(serviceHealth.status === 'UP' ? 200 : 500).send(serviceHealth);
 };
 
 export const readyCheck = async (req: Request, res: Response) => {
-    const serviceHealth = await checkServiceHealth();
+    const serviceHealth = await fetchServiceHealth();
     if (serviceHealth.status === 'UP') {
         res.status(200).send({ status: 'READY' });
     } else {

@@ -4,8 +4,9 @@ import { migrateData, seedData } from './storage/migrations';
 import { Position } from './types';
 import logger, { logStartup } from './utils/logger';
 import errorHandler from './middleware/errorHandler';
-import { healthCheck } from './api/externalApi';
+import { healthCheck, readyCheck } from './utils/healthCheck';
 import { registerShutdownHandlers } from './utils/healthCheck';
+import { monitorMemoryUsage } from './utils/healthCheck';
 
 const app = express();
 app.use(express.json());
@@ -14,6 +15,7 @@ const positionStore = new InMemoryStore<Position>();
 migrateData(positionStore, seedData());
 
 app.get('/api/health', healthCheck);
+app.get('/api/ready', readyCheck);
 
 app.get('/api/positions', async (req, res) => {
     try {
@@ -45,5 +47,7 @@ const server = app.listen(PORT, () => {
 });
 
 registerShutdownHandlers(server);
+
+setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
 
 export default app;
