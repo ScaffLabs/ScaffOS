@@ -4,12 +4,13 @@ import logger from './logger';
 import loggingMiddleware from './middleware/loggingMiddleware';
 import authMiddleware from './authMiddleware';
 import rateLimit from 'express-rate-limit';
+import { body, query, param, validationResult } from 'express-validator';
 
 const router = express.Router();
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 
 router.use(loggingMiddleware);
@@ -52,7 +53,16 @@ router.use(limiter);
  *       500:
  *         description: Error retrieving risk positions
  */
-router.get('/risk', async (req, res) => {
+router.get('/risk', [
+    query('limit').optional().isInt({ min: 1 }).toInt(),
+    query('offset').optional().isInt({ min: 0 }).toInt(),
+    query('sort').optional().isString(),
+    query('filter').optional().isString(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const { limit = 10, offset = 0, sort, filter } = req.query;
         const positions = await riskManager.getRiskPositions(Number(limit), Number(offset), sort, filter);
@@ -85,7 +95,14 @@ router.get('/risk', async (req, res) => {
  *       400:
  *         description: Invalid input
  */
-router.post('/risk', async (req, res) => {
+router.post('/risk', [
+    body('asset').isString().notEmpty(),
+    body('position').isNumeric().isFloat({ min: 0 }),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const { asset, position } = req.body;
         const newPosition = await riskManager.createRiskPosition(asset, position);
@@ -123,7 +140,14 @@ router.post('/risk', async (req, res) => {
  *       404:
  *         description: Risk position not found
  */
-router.put('/risk/:id', async (req, res) => {
+router.put('/risk/:id', [
+    param('id').isString(),
+    body('position').isNumeric().isFloat({ min: 0 }),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const { id } = req.params;
         const { position } = req.body;
@@ -156,7 +180,13 @@ router.put('/risk/:id', async (req, res) => {
  *       404:
  *         description: Risk position not found
  */
-router.delete('/risk/:id', async (req, res) => {
+router.delete('/risk/:id', [
+    param('id').isString(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const { id } = req.params;
         const deleted = await riskManager.deleteRiskPosition(id);
