@@ -60,4 +60,28 @@ describe('Risk Manager API', () => {
       .set('Authorization', 'Bearer valid_token');
     expect(response.status).toBe(204);
   });
+
+  it('should return 404 for non-existing risk position', async () => {
+    const response = await request(app)
+      .put('/api/risk/non_existing_id')
+      .send({ position: 100 })
+      .set('Authorization', 'Bearer valid_token');
+    expect(response.status).toBe(404);
+  });
+
+  it('should return 404 for deleting non-existing risk position', async () => {
+    const response = await request(app)
+      .delete('/api/risk/non_existing_id')
+      .set('Authorization', 'Bearer valid_token');
+    expect(response.status).toBe(404);
+  });
+
+  it('should handle internal server error gracefully', async () => {
+    jest.spyOn(app, 'get').mockImplementationOnce(() => { throw new Error('Test error'); });
+    const response = await request(app)
+      .get('/api/risk')
+      .set('Authorization', 'Bearer valid_token');
+    expect(response.status).toBe(500);
+    expect(response.body.error).toBe('Internal Server Error');
+  });
 });
