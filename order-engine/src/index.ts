@@ -15,7 +15,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
-app.use(cors({ origin: ['http://allowed-origin.com'] }));
+app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));
 
 const limiter = rateLimit({
@@ -34,23 +34,34 @@ const startServer = async () => {
     setupRequestQueue(app);
     setupGracefulShutdown(app);
     monitorMemoryUsage();
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         logStartup({ PORT, ENV: process.env.NODE_ENV });
         logger.info(`Order Engine listening on port ${PORT}`);
     });
+    return server;
 };
 
-startServer().catch(err => {
+const serverInstance = startServer().catch(err => {
     logger.error('Failed to start the server:', err);
     process.exit(1);
 });
 
 process.on('uncaughtException', (error) => {
     logger.error('Uncaught Exception:', error);
-    process.exit(1);
+    serverInstance.then(server => server.close(() => process.exit(1)));
 });
 
 process.on('unhandledRejection', (reason) => {
     logger.error('Unhandled Rejection:', reason);
-    process.exit(1);
+    serverInstance.then(server => server.close(() => process.exit(1)));
+});
+
+process.on('SIGTERM', () => {
+    logger.info('Received SIGTERM. Graceful shutdown initiated.');
+    serverInstance.then(server => server.close(() => process.exit(0)));
+});
+
+process.on('SIGINT', () => {
+    logger.info('Received SIGINT. Graceful shutdown initiated.');
+    serverInstance.then(server => server.close(() => process.exit(0)));
 });
