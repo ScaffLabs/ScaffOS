@@ -26,3 +26,7 @@
 - Added comprehensive inline documentation for complex logic to enhance maintainability.
 - Implemented user authentication for API access control.
 - Refactored error handling middleware to support new error types.
+
+## [1.5.0] - 2023-11-02
+- Improved API documentation in README.md to provide detailed endpoint descriptions.
+- Added explanations for error handling and logging in the README.

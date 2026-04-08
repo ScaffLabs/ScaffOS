@@ -85,3 +85,8 @@ Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing
 
 ## Changelog
 See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+---
+
+## API Error Handling
+Error handling is implemented through a centralized middleware that captures and formats errors into a consistent response structure. This ensures clarity for clients on what went wrong and why.
