@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2023-10-21
+### Added
+- Detailed documentation in README.md, enhancing clarity on setup, API usage, and contribution guidelines.
+- Contribution guidelines in CONTRIBUTING.md to streamline the process for new contributors.
+- Version history and change tracking in CHANGELOG.md for better transparency.
+
 ## [1.2.0] - 2023-10-20
 ### Added
 - Comprehensive documentation in README.md.

@@ -1,27 +1,28 @@
 # Contributing to Risk Manager Service
 
-Thank you for considering contributing to the Risk Manager service! We welcome contributions of all kinds, including bug fixes, new features, and documentation improvements.
+Thank you for considering contributing to the Risk Manager service! We appreciate your efforts in improving the project.
 
 ## How to Contribute
-1. **Fork the repository**: Use the GitHub interface to create a copy of the repository on your own account.
-2. **Create a branch**: Work on your changes in a new branch. Use a descriptive name for your branch that reflects the work you are doing.
+1. **Fork the Repository**: Create a personal copy of the repository.
+2. **Create a Branch**: Use a descriptive name for your branch. For example:
    ```bash
-   git checkout -b my-feature-branch
+   git checkout -b feature/my-feature
    ```
-3. **Make your changes**: Implement your feature or bug fix. Ensure you follow the coding standards and write tests where applicable.
-4. **Commit your changes**: Write clear, concise commit messages that describe your changes. Consider using the following format:
+3. **Make Your Changes**: Implement the feature or fix the bug. Ensure you adhere to the coding standards and conventions.
+4. **Write Tests**: Add unit tests for any new functionality or to verify bug fixes.
+5. **Commit Your Changes**: Use clear and concise commit messages. Example formats:
    ```bash
-   git commit -m "Fix: describe the bug fix"
-   git commit -m "Feature: describe the new feature"
+   git commit -m "Fix: description of the bug"
+   git commit -m "Feature: description of the new feature"
    ```
-5. **Push to your fork**: Upload your changes to your forked repository.
+6. **Push to Your Fork**: Upload your changes to your forked repository:
    ```bash
-   git push origin my-feature-branch
+   git push origin feature/my-feature
    ```
-6. **Open a pull request**: Navigate to the original repository and click on the “New Pull Request” button. Provide a description of your changes, why they are necessary, and any relevant information.
+7. **Open a Pull Request**: Go to the original repository and click on the “New Pull Request” button. Provide a comprehensive description of your changes, the reasoning behind them, and any relevant information.
 
 ## Code of Conduct
-Please adhere to our Code of Conduct while contributing. Be respectful and constructive in your interactions.
+Please follow our Code of Conduct in all interactions. Be respectful and constructive.
 
 ## Thank You!
-We appreciate your contributions and support for the Risk Manager service!
+Your contributions are invaluable, and we greatly appreciate your support in making the Risk Manager service better!
