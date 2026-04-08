@@ -1,0 +1,34 @@
+import { Request, Response, NextFunction } from 'express';
+
+class ServiceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ServiceError';
+  }
+}
+
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}
+
+const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof ValidationError) {
+    return res.status(400).json({ error: err.message });
+  }
+  if (err instanceof NotFoundError) {
+    return res.status(404).json({ error: err.message });
+  }
+  return res.status(500).json({ error: 'Internal Server Error' });
+};
+
+export { ServiceError, ValidationError, NotFoundError, errorHandler };
