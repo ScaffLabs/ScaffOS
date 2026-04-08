@@ -2,7 +2,7 @@ import axios from 'axios';
 import config from '../config';
 import { emitEvent } from '../events/EventBus';
 import { ServiceError } from '../errors/CustomErrors';
-import { ConfigurationItem } from '../types';
+import { ConfigurationItem, ConfigurationItemSchema } from '../types';
 import { CircuitBreaker } from 'opossum';
 
 const BASE_URL = config.API_URL;
@@ -24,9 +24,11 @@ const fetchHealthStatus = async () => {
 };
 
 const postConfiguration = async (key: string, value: string): Promise<ConfigurationItem> => {
+    const configItem: ConfigurationItem = { key, value };
+    ConfigurationItemSchema.parse(configItem); // Validate configuration item against schema
     try {
-        const response = await circuitBreaker.fire(axios.post, `${BASE_URL}/config`, { key, value });
-        emitEvent('CONFIGURATION_CREATED', { key, value });
+        const response = await circuitBreaker.fire(axios.post, `${BASE_URL}/config`, configItem);
+        emitEvent('CONFIGURATION_CREATED', configItem);
         return response.data;
     } catch (error) {
         throw new ServiceError('Failed to create configuration');
