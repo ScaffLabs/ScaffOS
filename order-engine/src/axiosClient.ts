@@ -37,3 +37,13 @@ export const putData = async (url: string, data: any) => {
 export const deleteData = async (url: string) => {
     return retry(() => circuitBreaker.fire(() => httpClient.delete(url)));
 };
+
+export const healthCheck = async (url: string) => {
+    try {
+        const response = await fetchData(url);
+        return response.status === 200;
+    } catch (error) {
+        console.error(`Health check failed for ${url}:`, error);
+        return false;
+    }
+};

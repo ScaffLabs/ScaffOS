@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { fetchData } from './axiosClient';
-import { ServiceError } from './errors';
 
 const checkServiceHealth = async (url: string) => {
     try {
