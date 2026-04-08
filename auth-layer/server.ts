@@ -1,10 +1,9 @@
-// server.ts
 import express from 'express';
 import http from 'http';
 import healthRouter from './health';
 import userRoutes from './userRoutes';
 import errorMiddleware from './errorMiddleware';
-import logger from './logger';
+import logger, { logRequest } from './logger';
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 
@@ -14,14 +13,7 @@ const connectionPool = createConnectionPool();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        logger.info(`Request: ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms`);
-    });
-    next();
-});
+app.use(logRequest);
 app.use('/health', healthRouter);
 app.use('/api', userRoutes);
 app.use(errorMiddleware);
