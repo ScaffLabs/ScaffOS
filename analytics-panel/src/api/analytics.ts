@@ -3,6 +3,7 @@ import { ServiceError } from '../errors/customErrors';
 import { PerformanceMetrics, PerformanceMetricsSchema, Strategy, StrategySchema } from '../types';
 import { emitEvent } from './eventBus';
 import { dependentHealthCheck } from './dependentHealthCheck';
+import { CircuitBreaker } from 'opossum';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 const axiosInstance = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
@@ -19,9 +20,15 @@ const fetchWithRetry = async (url: string, options: any, retries: number = 3) =>
     }
 };
 
+const circuitBreaker = new CircuitBreaker(fetchWithRetry, {
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000,
+});
+
 const fetchPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
     try {
-        const response = await fetchWithRetry('/api/performance', { method: 'GET' });
+        const response = await circuitBreaker.fire('/api/performance', { method: 'GET' });
         const validationResult = PerformanceMetricsSchema.safeParse(response.data);
         if (!validationResult.success) {
             throw new ServiceError('Invalid performance metrics data');
@@ -35,7 +42,7 @@ const fetchPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
 
 const getStrategies = async (): Promise<Strategy[]> => {
     try {
-        const response = await fetchWithRetry('/api/strategies', { method: 'GET' });
+        const response = await circuitBreaker.fire('/api/strategies', { method: 'GET' });
         const strategies = response.data;
         strategies.forEach(strategy => {
             const validationResult = StrategySchema.safeParse(strategy);
