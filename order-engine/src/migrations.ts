@@ -1,18 +1,8 @@
-import { queryDatabase } from './db';
 import { Order } from './types';
 import { storage } from './storage';
 
 export const createOrdersTable = async () => {
-    const query = `
-        CREATE TABLE IF NOT EXISTS orders (
-            id VARCHAR PRIMARY KEY,
-            type VARCHAR NOT NULL,
-            price NUMERIC NOT NULL,
-            quantity INTEGER NOT NULL,
-            status VARCHAR NOT NULL
-        );
-    `;
-    await queryDatabase(query, []);
+    // In-memory storage does not require a physical table creation.
 };
 
 export const seedData = async () => {
@@ -27,8 +17,6 @@ export const seedData = async () => {
 };
 
 export const migrateData = async () => {
-    console.log('Creating orders table...');
-    await createOrdersTable();
     console.log('Seeding initial data...');
     await seedData();
     console.log('Seeding complete!');

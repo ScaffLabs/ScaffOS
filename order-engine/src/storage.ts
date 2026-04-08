@@ -1,10 +1,11 @@
 import { Order } from './types';
 import { EventEmitter } from 'events';
 
-// In-memory storage for orders
+// In-memory storage for orders with support for transactions and migrations
 class InMemoryStorage<T extends { id: string }> {
     private items: T[] = [];
     private eventEmitter: EventEmitter;
+    private transactions: { [key: string]: T[] } = {};
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -39,6 +40,23 @@ class InMemoryStorage<T extends { id: string }> {
 
     public findAll(): Promise<T[]> {
         return Promise.resolve(this.items);
+    }
+
+    public beginTransaction(transactionId: string): void {
+        this.transactions[transactionId] = [];
+    }
+
+    public commitTransaction(transactionId: string): Promise<void> {
+        delete this.transactions[transactionId];
+        return Promise.resolve();
+    }
+
+    public rollbackTransaction(transactionId: string): Promise<void> {
+        if (this.transactions[transactionId]) {
+            this.transactions[transactionId].forEach(item => this.delete(item.id));
+            delete this.transactions[transactionId];
+        }
+        return Promise.resolve();
     }
 
     public onOrderCreated(listener: (order: T) => void): void {
