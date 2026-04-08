@@ -13,19 +13,7 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// CORS configuration
-const allowedOrigins = ['http://example.com', 'http://anotherdomain.com'];
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    }
-}));
-
-// Middleware setup
+app.use(cors());
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -34,11 +22,17 @@ app.use('/api', userRoutes);
 app.use(errorMiddleware);
 
 const start = async () => {
-    await createConnectionPool();
-    monitorMemoryUsage();
-    server.listen(PORT, () => {
-        logger.info(`Server listening on port ${PORT}`);
-    });
+    try {
+        await createConnectionPool();
+        monitorMemoryUsage();
+        server.listen(PORT, () => {
+            startupLog(`Auth Layer Service`);
+            logger.info(`Server listening on port ${PORT}`);
+        });
+    } catch (error) {
+        logger.error('Error starting server', { error: error.message });
+        process.exit(1);
+    }
 };
 
 const shutdown = async () => {

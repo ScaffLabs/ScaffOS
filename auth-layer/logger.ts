@@ -34,4 +34,8 @@ export const startupLog = (appName: string) => {
     logger.info(`Connected to database at ${process.env.DATABASE_URL}`);
 };
 
+export const logPerformance = (context: string, duration: number) => {
+    logger.info(`Performance - ${context}: ${duration}ms`);
+};
+
 export default logger;
