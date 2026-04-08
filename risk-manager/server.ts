@@ -6,11 +6,11 @@ import { setReady } from './healthCheck';
 import logger from './logger';
 import { RiskPositionStorage, seedData, runMigrations } from './migrations';
 import { createPool } from 'mysql2/promise';
+import MemoryQueue from './memoryQueue';
 
 const app = express();
 const server = http.createServer(app);
 const storage = new RiskPositionStorage();
-
 const dbPool = createPool({
     host: 'localhost',
     user: 'root',
