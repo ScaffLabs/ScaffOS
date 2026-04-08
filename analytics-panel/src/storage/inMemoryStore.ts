@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { MongoClient } from 'mongodb';
 
 interface Record<T> {
     id: string;
@@ -12,12 +13,20 @@ interface Store<T> {
     delete(id: string): Promise<boolean>;
     find(query: Partial<T>): Promise<Record<T>[]>
     transaction(operations: Array<() => Promise<any>>): Promise<void>;
-    index(field: keyof T): void;
 }
 
 export class InMemoryStore<T> implements Store<T> {
     private records: Record<T>[] = [];
     private indexes: { [key: string]: Map<any, Record<T>[]> } = {};
+    private client: MongoClient;
+
+    constructor(mongoUri: string) {
+        this.client = new MongoClient(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
+    }
+
+    async connect() {
+        await this.client.connect();
+    }
 
     async create(record: T): Promise<Record<T>> {
         const newRecord = { id: uuidv4(), data: record };

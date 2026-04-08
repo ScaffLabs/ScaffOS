@@ -14,10 +14,13 @@ import { Server } from 'socket.io';
 import { validateQueryParams } from './middleware/inputValidator';
 import { validateStrategy } from './middleware/strategyValidator';
 import errorHandler from './middleware/errorHandler';
+import { MongoClient } from 'mongodb';
+import { setTimeout } from 'timers/promises';
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
+const mongoClient = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
 
 // Middleware configurations
 app.use(cors({ origin: ['http://localhost:3000', 'https://yourdomain.com'] }));
@@ -53,6 +56,7 @@ app.use(errorHandler);
 // Graceful shutdown mechanism
 const shutdown = async () => {
     console.log('Shutting down gracefully...');
+    await mongoClient.close();
     await new Promise(resolve => {
         server.close(resolve);
     });
@@ -62,8 +66,22 @@ const shutdown = async () => {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
+const connectToDatabase = async () => {
+    try {
+        await mongoClient.connect();
+        console.log('Connected to MongoDB');
+    } catch (error) {
+        console.error('Error connecting to MongoDB:', error);
+    }
+};
+
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    logStartup({ PORT });
-    console.log(`Server is running on port ${PORT}`);
-});
+const startServer = async () => {
+    await connectToDatabase();
+    server.listen(PORT, () => {
+        logStartup({ PORT });
+        console.log(`Server is running on port ${PORT}`);
+    });
+};
+
+startServer();

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import os from 'os';
-import { ServiceError } from '../errors/customErrors';
+import { dependentHealthCheck } from '../api/analytics';
 
 export const healthCheckHandler = async (req: Request, res: Response) => {
     try {
@@ -8,8 +8,8 @@ export const healthCheckHandler = async (req: Request, res: Response) => {
             status: 'ok',
             uptime: process.uptime(),
             memoryUsage: process.memoryUsage(),
-            timestamp: new Date(),
             cpuUsage: os.cpus(),
+            timestamp: new Date(),
         };
         res.status(200).json(healthStatus);
     } catch (error) {
@@ -20,8 +20,12 @@ export const healthCheckHandler = async (req: Request, res: Response) => {
 
 export const readyCheckHandler = async (req: Request, res: Response) => {
     try {
-        // Additional checks can be added here (database connections, etc.)
-        res.status(200).json({ status: 'ready' });
+        const dependencies = await dependentHealthCheck();
+        const allHealthy = dependencies.every(dep => dep.healthy);
+        res.status(allHealthy ? 200 : 503).json({
+            status: allHealthy ? 'ready' : 'not ready',
+            dependencies,
+        });
     } catch (error) {
         console.error('Ready check failed:', error);
         res.status(500).json({ error: 'Ready check failed.' });
