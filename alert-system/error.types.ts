@@ -18,3 +18,16 @@ export class NotFoundError extends Error {
         this.name = 'NotFoundError';
     }
 }
+
+/**
+ * Interface for error response structure.
+ */
+export interface ErrorResponse {
+    message: string;
+    code?: number;
+}
+
+/**
+ * Types for common application errors.
+ */
+export type AppError = ServiceError | ValidationError | NotFoundError;
