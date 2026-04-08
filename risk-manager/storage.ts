@@ -52,7 +52,9 @@ export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
 
     async create(item: RiskPosition): Promise<RiskPosition> {
         const createdItem = await super.create(item);
-        this.indexByAsset.set(createdItem.asset, (this.indexByAsset.get(createdItem.asset) || new Set()).add(createdItem));
+        const assetSet = this.indexByAsset.get(createdItem.asset) || new Set();
+        assetSet.add(createdItem);
+        this.indexByAsset.set(createdItem.asset, assetSet);
         return createdItem;
     }
 
