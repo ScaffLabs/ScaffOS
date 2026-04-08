@@ -1,6 +1,7 @@
 import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import { ServiceError } from '../middleware/errorHandler';
 import axios from 'axios';
+import { withRetry, circuitBreaker } from './resilience';
 import { logger } from '../utils/logger';
 
 class InvalidInputError extends ServiceError {
@@ -20,6 +21,14 @@ async function fetchDependencies(orderServiceUrl: string, dataServiceUrl: string
         throw new ServiceError('Failed to fetch necessary external data.');
     }
 }
+
+const fetchOrderDataWithRetry = circuitBreaker(async () => {
+    return await withRetry(() => axios.get(`${process.env.ORDER_SERVICE_URL}/orders`));
+}, 3, []);
+
+const fetchHistoricalDataWithRetry = circuitBreaker(async () => {
+    return await withRetry(() => axios.get(`${process.env.DATA_SERVICE_URL}/historical-data`));
+}, 3, []);
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<number> {
     if (historicalData.length === 0) throw new InvalidInputError('Historical data cannot be empty.');

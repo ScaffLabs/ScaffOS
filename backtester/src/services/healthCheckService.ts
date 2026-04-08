@@ -28,7 +28,7 @@ export async function healthCheckServices() {
   return results;
 }
 
-export { eventEmitter };
+export { eventEmitter }; 
 
 export async function checkAllHealth() {
   const servicesHealth = await healthCheckServices();
