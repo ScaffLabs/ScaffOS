@@ -2,6 +2,24 @@ import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import { ServiceError } from '../middleware/errorHandler';
 import { BacktestResultSchema } from '../types';
 import { logger } from '../utils/logger';
+import axios from 'axios';
+import { withRetry, circuitBreaker } from './resilience';
+
+const simulateBacktestWithDependencies = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]) => {
+    const orderServiceUrl = process.env.ORDER_SERVICE_URL;
+    const dataServiceUrl = process.env.DATA_SERVICE_URL;
+
+    // Fetch some data from external services as part of the backtest
+    const orderData = await withRetry(() => axios.get(`${orderServiceUrl}/orders`));
+    const historicalDataResponse = await withRetry(() => axios.get(`${dataServiceUrl}/historical-data`));
+
+    // Here you would integrate that data into your logic
+    // For now, just log the fetched data
+    logger.info('Fetched order data:', orderData.data);
+    logger.info('Fetched historical data:', historicalDataResponse.data);
+
+    return calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+}, 5, 0);
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<number> {
     let totalReturns = 0;
@@ -36,7 +54,7 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
         });
 
         const startTime = Date.now();
-        const totalReturns = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+        const totalReturns = await simulateBacktestWithDependencies(params, historicalData);
         const trades = historicalData.length; // Simple count of trades based on historical data length.
         const winRate = Math.random() * 100; // Placeholder for actual win rate calculation.
         const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}.`;
