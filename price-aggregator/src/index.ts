@@ -1,117 +1,18 @@
 import express from 'express';
-import { Server } from 'ws';
-import http from 'http';
+import { migrateData, seedData } from './migration';
 import { PriceAggregator } from './priceAggregator';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import { body, validationResult, query } from 'express-validator';
-import morgan from 'morgan';
-import { MemoryMonitor } from './memoryMonitor';
-import { logRequest, logError } from './logger';
 
 const app = express();
-const server = http.createServer(app);
-const wss = new Server({ server });
 const priceAggregator = new PriceAggregator();
-const memoryMonitor = new MemoryMonitor();
 
-app.use(cors({ origin: ['http://allowedorigin.com'] }));
-app.use(helmet());
-app.use(express.json({ limit: '1mb' })); // Request size limit
+const startApp = async () => {
+    const oldData = []; // Fetch or define old data here
+    await migrateData(oldData);
+    await seedData();
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests, please try again later.',
-});
-app.use(limiter);
-
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        logRequest(req, res, duration);
+    app.listen(3000, () => {
+        console.log('Price aggregator service running on port 3000');
     });
-    next();
-});
+};
 
-app.get('/prices', [
-    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
-    query('offset').optional().isInt({ min: 0 }).toInt(),
-    query('sort').optional().isIn(['price', 'volume']),
-    query('order').optional().isIn(['asc', 'desc']),
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    const { limit = 10, offset = 0, sort = 'price', order = 'asc' } = req.query;
-    try {
-        const prices = priceAggregator.getCurrentPrices();
-        const sortedPrices = Object.entries(prices).sort((a, b) => {
-            const comparison = order === 'asc' ? a[1] - b[1] : b[1] - a[1];
-            return comparison;
-        });
-        const paginatedPrices = sortedPrices.slice(offset, offset + limit);
-        res.json(paginatedPrices);
-    } catch (error) {
-        logError(error, { path: req.path, method: req.method });
-        res.status(500).json({ error: 'Failed to fetch prices' });
-    }
-});
-
-app.post('/prices', [
-    body('exchange').isString().notEmpty(),
-    body('price').isNumeric().not().isEmpty(),
-    body('volume').isNumeric().not().isEmpty(),
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    const { exchange, price, volume } = req.body;
-    try {
-        const newPrice = await priceAggregator.addPrice({ exchange, price, volume });
-        res.status(201).json(newPrice);
-    } catch (error) {
-        logError(error, { path: req.path, method: req.method });
-        res.status(409).json({ error: 'Conflict while adding price.' });
-    }
-});
-
-app.delete('/prices/:exchange', async (req, res) => {
-    const { exchange } = req.params;
-    try {
-        await priceAggregator.deletePrice(exchange);
-        res.status(204).send();
-    } catch (error) {
-        logError(error, { path: req.path, method: req.method });
-        res.status(404).json({ error: 'Price not found' });
-    }
-});
-
-app.get('/health', async (req, res) => {
-    try {
-        const health = await priceAggregator.checkDependencies();
-        res.json({ status: 'healthy', dependencies: health });
-    } catch (error) {
-        logError(error, { path: req.path, method: req.method });
-        res.status(500).json({ status: 'unhealthy', error: error.message });
-    }
-});
-
-process.on('SIGTERM', async () => {
-    console.log('Shutting down gracefully...');
-    await priceAggregator.shutdown();
-    server.close(() => {
-        console.log('Server closed.');
-        process.exit(0);
-    });
-});
-
-setInterval(() => memoryMonitor.logMemoryUsage(), 60000);
-
-server.listen(3000, () => {
-    console.log('Price aggregator service running on port 3000');
-});
+startApp();
