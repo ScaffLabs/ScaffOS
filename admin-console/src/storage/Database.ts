@@ -24,12 +24,13 @@ class Database {
         await this.store.delete(key);
     }
 
-    async findByValue(value: string): Promise<ConfigurationItem[]> {
-        return this.store.findByIndex('value', value);
-    }
-
-    async transaction(operations: Array<() => Promise<void>>): Promise<void> {
-        await this.store.transaction(operations);
+    async findAll({ limit, offset, sortBy, order }: { limit: number; offset: number; sortBy: string; order: 'asc' | 'desc';}): Promise<ConfigurationItem[]> {
+        const allItems = Array.from(this.store.getAll()); // Assume this method exists
+        const sortedItems = allItems.sort((a, b) => {
+            const comparison = a[sortBy].localeCompare(b[sortBy]);
+            return order === 'asc' ? comparison : -comparison;
+        });
+        return sortedItems.slice(offset, offset + limit);
     }
 }
 
