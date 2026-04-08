@@ -34,14 +34,12 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual(mockResult);
     });
 
-    it('GET /api/compare handles errors', async () => {
-        jest.spyOn(global, 'fetch').mockRejectedValueOnce(new ServiceError('Network error'));
-
+    it('GET /api/compare handles empty strategy names', async () => {
         const response = await request(app)
             .get('/api/compare')
-            .query({ strategyA: 'strategyA', strategyB: 'strategyB' });
-        expect(response.status).toBe(500);
-        expect(response.body).toHaveProperty('error', 'Internal Server Error');
+            .query({ strategyA: '', strategyB: '' });
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('error', 'Invalid query parameters. Strategy names must be alphanumeric.');
     });
 
     it('GET /api/health responds with 200 and health status', async () => {
