@@ -1,26 +1,27 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { healthCheck, readyCheck } from './health';
-import { createOrder, getOrders, updateOrder, deleteOrder } from './orderController';
+import { orderRouter } from './orderController';
 import { migrateData } from './migrations';
 import { setupGracefulShutdown } from './shutdown';
 import { setupRequestQueue } from './requestQueue';
 import { monitorMemoryUsage } from './memoryMonitor';
 import { setupConnectionPooling } from './db';
 import { errorHandlingMiddleware } from './middleware';
-import { connectToDatabase } from './db';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(helmet());
+app.use(cors({ origin: ['http://allowed-origin.com'] }));
 app.use(bodyParser.json());
 
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
-app.post('/orders', createOrder);
-app.get('/orders', getOrders);
-app.put('/orders/:id', updateOrder);
-app.delete('/orders/:id', deleteOrder);
+orderRouter(app);
 
 const startServer = async () => {
     await migrateData();

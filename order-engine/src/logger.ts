@@ -12,3 +12,13 @@ export const logAudit = (action: string, orderId: string) => {
     }
   });
 };
+
+export const logError = (error: Error) => {
+  const timeStamp = new Date().toISOString();
+  const logEntry = `${timeStamp} - ERROR: ${error.message}\n`;
+  fs.appendFile(logFilePath, logEntry, (err) => {
+    if (err) {
+      console.error('Failed to log error entry:', err);
+    }
+  });
+};
