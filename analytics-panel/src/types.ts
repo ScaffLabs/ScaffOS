@@ -1,4 +1,3 @@
-// Types and Schemas for Analytics Panel
 import { z } from 'zod';
 
 /**
@@ -23,8 +22,8 @@ export interface PerformanceMetrics {
  * Schema for validating performance metrics using Zod.
  */
 export const PerformanceMetricsSchema = z.object({
-    drawdown: z.array(z.number()),
-    maxDrawdown: z.number(),
+    drawdown: z.array(z.number()).nonempty(),
+    maxDrawdown: z.number().min(0),
     sharpeRatio: z.number(),
 });
 
@@ -42,7 +41,7 @@ export interface Strategy {
  * Schema for validating strategies using Zod.
  */
 export const StrategySchema = z.object({
-    name: z.string().min(1, { message: 'Name must be at least 1 character long.' }),
+    name: z.string().min(1, { message: 'Name must be at least 1 character long.' }).regex(/^[a-zA-Z0-9_]+$/, { message: 'Name must be alphanumeric.' }),
     parameters: z.record(z.any()).optional(),
 });
 
@@ -72,8 +71,8 @@ export interface StrategyComparisonEvent {
  */
 export const StrategyComparisonEventSchema = z.object({
     type: z.literal('STRATEGY_COMPARISON'),
-    strategyA: z.string(),
-    strategyB: z.string(),
+    strategyA: z.string().min(1),
+    strategyB: z.string().min(1),
     result: z.string(),
 });
 
