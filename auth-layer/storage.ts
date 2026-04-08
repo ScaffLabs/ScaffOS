@@ -1,6 +1,7 @@
 import { User, UserId } from './types';
 import { ValidationError } from './errors';
 import { createConnectionPool } from './database';
+import crypto from 'crypto';
 
 const pool = createConnectionPool();
 
