@@ -1,27 +1,30 @@
 import axios from 'axios';
 import config from '../config';
+import { ServiceError } from '../utils/errors';
 
 export const fetchPositions = async () => {
     try {
-        const response = await axios.get(`${config.API_URL}/positions`, { headers: { 'Access-Control-Allow-Origin': '*' }});
+        const response = await axios.get(`${config.API_URL}/positions`);
+        if (!Array.isArray(response.data)) throw new ServiceError('Invalid data structure');
         return response.data;
     } catch (error) {
-        throw new Error('Error fetching positions');
+        throw new ServiceError('Error fetching positions: ' + error.message);
     }
 };
 
 export const updatePosition = async (positionId: string, quantity: number) => {
+    if (typeof quantity !== 'number' || quantity <= 0) throw new ServiceError('Invalid quantity');
     try {
-        await axios.put(`${config.API_URL}/positions/${positionId}`, { quantity }, { headers: { 'Access-Control-Allow-Origin': '*' }});
+        await axios.put(`${config.API_URL}/positions/${positionId}`, { quantity });
     } catch (error) {
-        throw new Error('Error updating position');
+        throw new ServiceError('Error updating position: ' + error.message);
     }
 };
 
 export const deletePosition = async (positionId: string) => {
     try {
-        await axios.delete(`${config.API_URL}/positions/${positionId}`, { headers: { 'Access-Control-Allow-Origin': '*' }});
+        await axios.delete(`${config.API_URL}/positions/${positionId}`);
     } catch (error) {
-        throw new Error('Error deleting position');
+        throw new ServiceError('Error deleting position: ' + error.message);
     }
 };
