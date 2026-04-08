@@ -1,12 +1,10 @@
 import express from 'express';
+import { healthCheck } from './api/externalApi';
 import { InMemoryStore } from './storage/InMemoryStore';
 import { migrateData, seedData } from './storage/migrations';
 import { Position } from './types';
 import logger, { logStartup } from './utils/logger';
 import errorHandler from './middleware/errorHandler';
-import { healthCheck, readyCheck } from './utils/healthCheck';
-import { registerShutdownHandlers } from './utils/healthCheck';
-import { monitorMemoryUsage } from './utils/healthCheck';
 
 const app = express();
 app.use(express.json());
@@ -15,7 +13,14 @@ const positionStore = new InMemoryStore<Position>();
 migrateData(positionStore, seedData());
 
 app.get('/api/health', healthCheck);
-app.get('/api/ready', readyCheck);
+app.get('/api/ready', async (req, res) => {
+    try {
+        const externalHealth = await checkExternalServiceHealth();
+        res.status(externalHealth.status === 'UP' ? 200 : 500).send(externalHealth);
+    } catch (error) {
+        res.status(500).send({ status: 'NOT READY', error: error.message });
+    }
+});
 
 app.get('/api/positions', async (req, res) => {
     try {
@@ -45,9 +50,5 @@ const server = app.listen(PORT, () => {
     logStartup({ port: PORT });
     console.log(`Server is running on port ${PORT}`);
 });
-
-registerShutdownHandlers(server);
-
-setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
 
 export default app;
