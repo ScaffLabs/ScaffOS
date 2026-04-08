@@ -4,7 +4,7 @@ import { httpClient, postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
 import { EventBus } from './eventBus';
-import { ServiceError, ValidationError } from './errors';
+import { ServiceError, ValidationError, NullValueError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -28,38 +28,10 @@ export class PriceAggregator {
         }
     }
 
-    public async fetchExternalPrices(): Promise<void> {
-        try {
-            const prices = await httpClient('/external-prices');
-            for (const priceData of prices) {
-                await this.addPrice(priceData);
-            }
-        } catch (error) {
-            logError(error, 'Failed to fetch external prices');
-            throw new ServiceError('Could not fetch prices from external service.');
-        }
-    }
-
-    public async getCurrentPrices(): Promise<CurrentPrices> {
-        if (Object.keys(this.currentPrices).length === 0) {
-            await this.updateCurrentPrices();
-        }
-        return this.currentPrices;
-    }
-
-    public async checkDependencies(): Promise<{ [key: string]: string }> {
-        const healthStatus: { [key: string]: string } = {};
-        try {
-            await httpClient('/health');
-            healthStatus['priceService'] = 'healthy';
-        } catch (error) {
-            healthStatus['priceService'] = 'unhealthy';
-            logError(error, 'Price service dependency is unhealthy');
-        }
-        return healthStatus;
-    }
-
     private validatePriceData(priceData: PriceData): void {
+        if (!priceData.exchange || priceData.price == null || priceData.volume == null) {
+            throw new NullValueError('Price data contains null or empty values.');
+        }
         const validation = PriceDataSchema.safeParse(priceData);
         if (!validation.success) {
             throw new ValidationError(JSON.stringify(validation.error.errors));
@@ -78,7 +50,11 @@ export class PriceAggregator {
             totalVolume += price.volume;
         });
 
-        this.currentPrices.VWAP = totalVolume ? totalValue / totalVolume : 0;
+        if (totalVolume === 0) {
+            throw new DivisionByZeroError('Total volume cannot be zero when calculating VWAP.');
+        }
+
+        this.currentPrices.VWAP = totalValue / totalVolume;
     }
 
     private handlePriceEvent(event: PriceEvent): void {

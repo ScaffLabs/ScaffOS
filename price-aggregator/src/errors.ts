@@ -33,4 +33,11 @@ class DivisionByZeroError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError };
+class NullValueError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'NullValueError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError, NullValueError };
