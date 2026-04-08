@@ -10,3 +10,7 @@
 ## [1.0.1] - 2023-10-02
 - Added health check endpoint to monitor service health.
 - Updated documentation with API reference and environment variables.
+
+## [1.0.2] - 2023-10-03
+- Added detailed README.md with comprehensive setup instructions, API reference, and environment variables table.
+- Updated CHANGELOG.md for version history.
