@@ -2,15 +2,15 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Database from '../storage/Database';
 import { ConfigurationItem } from '../types';
+import { logAudit } from '../middleware/auditLogger';
 
 const router = express.Router();
 const db = new Database();
 
-// Route to create a new configuration
 router.post('/', [
     body('key').trim().escape().notEmpty().withMessage('Key is required'),
     body('value').trim().escape().notEmpty().withMessage('Value is required'),
-], async (req, res) => {
+], logAudit, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -24,7 +24,6 @@ router.post('/', [
     }
 });
 
-// Route to get all configurations with pagination and sorting
 router.get('/', async (req, res) => {
     const { limit = '10', offset = '0', sortBy = 'key', order = 'asc' } = req.query;
     const parsedLimit = parseInt(limit as string);
@@ -38,7 +37,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Route to get a specific configuration by key
 router.get('/:key', async (req, res) => {
     try {
         const item = await db.readConfiguration(req.params.key);
@@ -49,11 +47,10 @@ router.get('/:key', async (req, res) => {
     }
 });
 
-// Route to update an existing configuration
 router.put('/', [
     body('key').trim().escape().notEmpty().withMessage('Key is required'),
     body('value').trim().escape().notEmpty().withMessage('Value is required'),
-], async (req, res) => {
+], logAudit, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -67,7 +64,6 @@ router.put('/', [
     }
 });
 
-// Route to delete a configuration by key
 router.delete('/:key', async (req, res) => {
     try {
         await db.deleteConfiguration(req.params.key);
