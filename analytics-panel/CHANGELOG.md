@@ -21,3 +21,9 @@ All notable changes to this project will be documented in this file.
 - Added CONTRIBUTING.md for developer guidelines.
 - Updated README.md with detailed setup instructions.
 - Improved error messages for user feedback in API responses.
+
+## [1.3.0] - 2023-10-30
+- Added comprehensive logging for API requests and errors.
+- Improved health check endpoint to include memory usage and uptime.
+- Implemented input validation for strategy creation and updates.
+- Updated dependencies for security and performance enhancements.
