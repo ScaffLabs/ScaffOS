@@ -12,10 +12,12 @@ import { healthCheck, readinessCheck } from './services/healthService';
 import { Pool } from 'pg';
 import env from './config';
 import { CircuitBreaker } from 'circuit-breaker-js';
+import axios from 'axios';
 
 const app = express();
 const dbPool = new Pool({ connectionString: process.env.DATABASE_URL });
 const circuitBreaker = new CircuitBreaker();
+const axiosInstance = axios.create({ timeout: 5000 });
 
 app.use(json({ limit: '1mb' }));
 app.use(helmet());
@@ -52,3 +54,20 @@ setInterval(async () => {
     const memoryUsage = process.memoryUsage();
     logger.info('Memory Usage', memoryUsage);
 }, 60000);
+
+const retryPromise = async (promiseFn, retries = 5) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await promiseFn();
+        } catch (error) {
+            if (i === retries - 1) throw error;
+            await new Promise(res => setTimeout(res, Math.pow(2, i) * 1000)); // Exponential backoff
+        }
+    }
+};
+
+const checkExternalService = async () => {
+    await retryPromise(() => axiosInstance.get(env.PORTFOLIO_SERVICE_URL));
+};
+
+setInterval(checkExternalService, 300000); // Check every 5 minutes
