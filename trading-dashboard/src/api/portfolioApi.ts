@@ -1,6 +1,6 @@
 import axios from 'axios';
 import config from '../config';
-import { ServiceError } from '../utils/errors';
+import { ServiceError, ValidationError } from '../utils/errors';
 
 export const fetchPositions = async () => {
     try {
@@ -13,7 +13,7 @@ export const fetchPositions = async () => {
 };
 
 export const updatePosition = async (positionId: string, quantity: number) => {
-    if (typeof quantity !== 'number' || quantity <= 0) throw new ServiceError('Invalid quantity');
+    if (typeof quantity !== 'number' || quantity <= 0) throw new ValidationError('Invalid quantity');
     try {
         await axios.put(`${config.API_URL}/positions/${positionId}`, { quantity });
     } catch (error) {
@@ -27,4 +27,9 @@ export const deletePosition = async (positionId: string) => {
     } catch (error) {
         throw new ServiceError('Error deleting position: ' + error.message);
     }
+};
+
+export const handleDivision = (numerator: number, denominator: number) => {
+    if (denominator === 0) throw new ServiceError('Division by zero is not allowed.');
+    return numerator / denominator;
 };
