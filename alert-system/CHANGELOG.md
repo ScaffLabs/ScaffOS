@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2023-10-15
+### Added
+- Comprehensive README documentation including project description, architecture overview, setup instructions, API reference, and guides for development and deployment.
+
+### Changed
+- Improved error handling and logging in the Alert System.
+
 ## [1.0.0] - 2023-10-01
 ### Added
 - Initial release of the Alert System.

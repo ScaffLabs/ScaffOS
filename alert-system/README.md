@@ -17,11 +17,14 @@ The Alert System is built using Node.js and Express. It follows a microservices 
 
 ### Install
 1. Clone the repository:
+   
    ```bash
    git clone <repository-url>
    cd alert-system
    ```
+
 2. Install dependencies:
+   
    ```bash
    npm install
    ```
@@ -76,3 +79,8 @@ Please refer to the `CONTRIBUTING.md` file for guidelines on contributing to thi
 
 ## License
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+## Changelog
+### [1.0.1] - 2023-10-15
+- Added comprehensive README documentation including project description, architecture overview, setup instructions, API reference, and guides for development and deployment.
+- Improved error handling and logging in the Alert System.
