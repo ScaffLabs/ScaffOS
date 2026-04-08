@@ -3,12 +3,15 @@ import { CircuitBreaker } from 'circuit-breaker-js';
 
 const BASE_URL = process.env.BASE_URL || 'https://api.example.com';
 const MAX_RETRIES = 3;
+const TIMEOUT = 5000; // 5 seconds timeout
 
 const breaker = new CircuitBreaker({
-    timeout: 3000,
+    timeout: TIMEOUT,
     errorThresholdPercentage: 50,
     resetTimeout: 30000,
 });
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 export const httpClient = async (path: string, config?: AxiosRequestConfig) => {
     const url = `${BASE_URL}${path}`;
@@ -16,12 +19,12 @@ export const httpClient = async (path: string, config?: AxiosRequestConfig) => {
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
-            const response = await breaker.fire(() => axios.get(url, config));
+            const response = await breaker.fire(() => axios.get(url, { ...config, timeout: TIMEOUT }));
             return response.data;
         } catch (error) {
             lastError = error;
             console.error(`Request failed (attempt ${attempt + 1}):`, error);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // backoff
+            await delay(Math.pow(2, attempt) * 1000); // exponential backoff
         }
     }
 
@@ -34,12 +37,12 @@ export const postHttpClient = async (path: string, data: any, config?: AxiosRequ
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
-            const response = await breaker.fire(() => axios.post(url, data, config));
+            const response = await breaker.fire(() => axios.post(url, data, { ...config, timeout: TIMEOUT }));
             return response.data;
         } catch (error) {
             lastError = error;
             console.error(`Request failed (attempt ${attempt + 1}):`, error);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // backoff
+            await delay(Math.pow(2, attempt) * 1000); // exponential backoff
         }
     }
 

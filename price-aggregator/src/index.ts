@@ -12,6 +12,7 @@ import { MemoryMonitor } from './memoryMonitor';
 import { createConnectionPool } from './dbConnection';
 import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
 import { ValidationError, ServiceError } from './errors';
+import { performance } from 'perf_hooks';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -40,7 +41,26 @@ app.get('/health', async (req, res, next) => {
     }
 });
 
+app.get('/ready', async (req, res) => {
+    // Check readiness logic, e.g., DB connection check
+    res.status(200).json({ status: 'ready' });
+});
+
 app.use(errorMiddleware);
+
+let shutdownInitiated = false;
+
+const gracefulShutdown = async () => {
+    if (shutdownInitiated) return;
+    shutdownInitiated = true;
+    console.log('Shutting down gracefully...');
+    await connectionPool.drain();
+    httpServer.close();
+    console.log('Closed all connections.');
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 const startApp = async () => {
     await migrateData([]);
