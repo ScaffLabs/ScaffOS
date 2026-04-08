@@ -1,11 +1,9 @@
 import { Request, Response } from 'express';
 import { ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
-import { createConnectionPool } from './connectionPool';
 import InMemoryStore from './dataStore';
 import { LatencyData, LatencyDataSchema } from './types';
 
-const connectionPool = createConnectionPool();
 const store = new InMemoryStore<LatencyData>();
 
 export const listDashboardEntries = async (req: Request, res: Response) => {
@@ -31,6 +29,7 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
         const { path, duration } = bodyValidation.data;
         const timestamp = new Date();
         store.create({ path, duration, timestamp }, path);
+        logger.info(`Created new entry: ${path}`);
         res.status(201).json({ message: 'Entry created', id: path });
     } catch (error) {
         logger.error(error, req);
@@ -54,6 +53,22 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         }
         const updatedData = { ...existingEntry, ...bodyValidation.data };
         store.update(id, updatedData);
+        logger.info(`Updated entry: ${id}`);
+        res.status(204).send();
+    } catch (error) {
+        logger.error(error, req);
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+export const deleteDashboardEntry = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        store.delete(id);
+        logger.info(`Deleted entry: ${id}`);
         res.status(204).send();
     } catch (error) {
         logger.error(error, req);
