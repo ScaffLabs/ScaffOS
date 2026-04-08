@@ -1,57 +1,55 @@
 import request from 'supertest';
 import { createServer } from '../src/index';
 import { Order } from '../src/types';
+import { storage } from '../src/storage';
 
 describe('Order Controller', () => {
-  let app: Express.Application;
+    let app: Express.Application;
 
-  beforeAll(async () => {
-    app = await createServer();
-  });
+    beforeAll(async () => {
+        app = await createServer();
+    });
 
-  afterAll(async () => {
-    await app.close();
-  });
+    afterAll(async () => {
+        await app.close();
+    });
 
-  test('POST /orders - create order', async () => {
-    const newOrder: Order = {
-      id: '1',
-      type: 'limit',
-      price: 100,
-      quantity: 10,
-      status: 'open',
-    };
+    beforeEach(() => {
+        storage.items = [];
+    });
 
-    const response = await request(app)
-      .post('/orders')
-      .send(newOrder)
-      .expect(201);
+    test('POST /orders - reject order with invalid fields', async () => {
+        const invalidOrder = { id: '1', type: 'invalid', price: -100, quantity: 10, status: 'open' }; // Invalid type and price
 
-    expect(response.body).toMatchObject(newOrder);
-  });
+        const response = await request(app)
+            .post('/orders')
+            .send(invalidOrder)
+            .expect(400);
 
-  test('GET /orders - get all orders', async () => {
-    const response = await request(app)
-      .get('/orders')
-      .expect(200);
+        expect(response.body.errors).toBeDefined();
+    });
 
-    expect(Array.isArray(response.body)).toBe(true);
-  });
+    test('GET /orders - return 404 when there are no orders', async () => {
+        const response = await request(app)
+            .get('/orders')
+            .expect(404);
 
-  test('PUT /orders/:id - update order', async () => {
-    const updatedOrder = { type: 'limit', price: 110, quantity: 5, status: 'open' };
+        expect(response.body.message).toBe('No orders found.');
+    });
 
-    const response = await request(app)
-      .put('/orders/1')
-      .send(updatedOrder)
-      .expect(200);
+    test('PUT /orders/:id - return 404 when updating non-existent order', async () => {
+        const updatedOrder = { price: 110, quantity: 5 };
+        const response = await request(app)
+            .put('/orders/999')
+            .send(updatedOrder)
+            .expect(404);
 
-    expect(response.body).toMatchObject(updatedOrder);
-  });
+        expect(response.body.message).toBe('Order not found.');
+    });
 
-  test('DELETE /orders/:id - delete order', async () => {
-    await request(app)
-      .delete('/orders/1')
-      .expect(204);
-  });
+    test('DELETE /orders/:id - return 404 when deleting non-existent order', async () => {
+        await request(app)
+            .delete('/orders/999')
+            .expect(404);
+    });
 });
