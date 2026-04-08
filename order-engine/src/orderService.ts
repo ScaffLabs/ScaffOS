@@ -22,18 +22,20 @@ export const createOrderService = async (orderData: unknown) => {
     }
 };
 
-export const getOrdersService = async () => {
+export const fetchExternalService = async (url: string) => {
     try {
-        const orders = await storage.findAll();
-        if (!orders || orders.length === 0) {
-            throw new ServiceError('No orders available.');
-        }
-        logger.info('Retrieved orders successfully', { count: orders.length });
-        return orders;
+        const response = await axios.get(url);
+        return response.data;
     } catch (error) {
-        logger.error('Error fetching orders:', error);
-        throw new ServiceError('Could not fetch orders. Please try again later.');
+        logger.error('Error fetching external service:', error);
+        throw new ServiceError('Failed to fetch external service.');
     }
+};
+
+export const updateOrderWithExternalService = async (id: string, updates: unknown) => {
+    const order = await updateOrderService(id, updates);
+    await fetchExternalService(`${process.env.ORDER_SERVICE_URL}/orders/${id}`);
+    return order;
 };
 
 export const updateOrderService = async (id: string, updates: unknown) => {
@@ -57,35 +59,4 @@ export const updateOrderService = async (id: string, updates: unknown) => {
         logger.error('Error updating order:', error);
         throw new ServiceError('Could not update order. Please try again later.');
     }
-};
-
-export const deleteOrderService = async (id: string) => {
-    const orderToDelete = await storage.read(id);
-    if (!orderToDelete) {
-        throw new NotFoundError('Order not found.');
-    }
-    try {
-        await storage.delete(id);
-        await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
-        logger.info('Order deleted successfully', { id });
-    } catch (error) {
-        logger.error('Error deleting order:', error);
-        throw new ServiceError('Could not delete order. Please try again later.');
-    }
-};
-
-export const fetchExternalService = async (url: string) => {
-    try {
-        const response = await axios.get(url);
-        return response.data;
-    } catch (error) {
-        logger.error('Error fetching external service:', error);
-        throw new ServiceError('Failed to fetch external service.');
-    }
-};
-
-export const updateOrderWithExternalService = async (id: string, updates: unknown) => {
-    const order = await updateOrderService(id, updates);
-    await fetchExternalService(`${process.env.ORDER_SERVICE_URL}/orders/${id}`);
-    return order;
 };

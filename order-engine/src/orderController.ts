@@ -4,6 +4,7 @@ import { storage } from './storage';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import { ValidationError, NotFoundError } from './errors';
 import logger from './logger';
+import { emitWithRetry } from './eventBus';
 
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
     const requestId = req.headers['x-request-id'] || generateRequestId();
@@ -11,48 +12,10 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         const order: Order = req.body;
         const createdOrder = await createOrderService(order);
         res.status(201).json(createdOrder);
+        await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder });
         logger.info('Order created successfully', { requestId, order: createdOrder });
     } catch (error) {
         logger.error('Failed to create order', { error: error.message, requestId });
-        handleError(res, error);
-    }
-};
-
-export const getOrders = async (req: Request, res: Response): Promise<void> => {
-    const requestId = req.headers['x-request-id'] || generateRequestId();
-    try {
-        const orders = await getOrdersService();
-        res.status(200).json(orders);
-        logger.info('Retrieved orders successfully', { requestId, count: orders.length });
-    } catch (error) {
-        logger.error('Failed to retrieve orders', { error: error.message, requestId });
-        handleError(res, error);
-    }
-};
-
-export const updateOrder = async (req: Request, res: Response): Promise<void> => {
-    const requestId = req.headers['x-request-id'] || generateRequestId();
-    try {
-        const { id } = req.params;
-        const updates = req.body;
-        const updatedOrder = await updateOrderService(id, updates);
-        res.status(200).json(updatedOrder);
-        logger.info('Order updated successfully', { requestId, order: updatedOrder });
-    } catch (error) {
-        logger.error('Failed to update order', { error: error.message, requestId });
-        handleError(res, error);
-    }
-};
-
-export const deleteOrder = async (req: Request, res: Response): Promise<void> => {
-    const requestId = req.headers['x-request-id'] || generateRequestId();
-    try {
-        const { id } = req.params;
-        await deleteOrderService(id);
-        res.status(204).send();
-        logger.info('Order deleted successfully', { requestId, id });
-    } catch (error) {
-        logger.error('Failed to delete order', { error: error.message, requestId });
         handleError(res, error);
     }
 };
@@ -70,4 +33,33 @@ const handleError = (res: Response, error: Error) => {
 
 const generateRequestId = () => {
     return 'req-' + Math.random().toString(36).substr(2, 9);
+};
+
+export const updateOrder = async (req: Request, res: Response): Promise<void> => {
+    const requestId = req.headers['x-request-id'] || generateRequestId();
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const updatedOrder = await updateOrderService(id, updates);
+        res.status(200).json(updatedOrder);
+        await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
+        logger.info('Order updated successfully', { requestId, order: updatedOrder });
+    } catch (error) {
+        logger.error('Failed to update order', { error: error.message, requestId });
+        handleError(res, error);
+    }
+};
+
+export const deleteOrder = async (req: Request, res: Response): Promise<void> => {
+    const requestId = req.headers['x-request-id'] || generateRequestId();
+    try {
+        const { id } = req.params;
+        await deleteOrderService(id);
+        res.status(204).send();
+        await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
+        logger.info('Order deleted successfully', { requestId, id });
+    } catch (error) {
+        logger.error('Failed to delete order', { error: error.message, requestId });
+        handleError(res, error);
+    }
 };
