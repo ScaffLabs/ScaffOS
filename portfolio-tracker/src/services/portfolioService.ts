@@ -1,38 +1,46 @@
-// Adding retry logic and circuit breaker patterns for external service calls
-import axios from 'axios';
-import CircuitBreaker from 'opossum';
-import logger from './logger';
-import env from '../config';
+import { Portfolio, PortfolioUpdate } from '../types';
+import storage from './storage';
+import { ValidationError, NotFoundError } from '../errors';
 
-const circuitBreakerOptions = {
-    timeout: 5000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000,
-};
-
-const portfolioServiceCircuit = new CircuitBreaker(checkExternalServiceAvailability, circuitBreakerOptions);
-
-const checkExternalServiceAvailability = async (url: string): Promise<boolean> => {
-    try {
-        await portfolioServiceCircuit.fire(url);
-        return true;
-    } catch (error) {
-        logger.error('External service not reachable', { url, error: error.message });
-        return false;
+export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
+    const { name, positions } = portfolioData;
+    if (!name || positions.length === 0) {
+        throw new ValidationError('Name and positions are required.');
     }
+    return storage.create(portfolioData);
 };
 
-const retryOperation = async (operation, retries = 3, delay = 1000) => {
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await operation();
-        } catch (error) {
-            if (i < retries - 1) {
-                await new Promise(res => setTimeout(res, delay));
-                delay *= 2; // Exponential backoff
-            } else {
-                throw error;
-            }
+export const getPortfolio = async (id: string): Promise<Portfolio> => {
+    const portfolio = storage.read(id);
+    if (!portfolio) {
+        throw new NotFoundError('Portfolio not found');
+    }
+    return portfolio;
+};
+
+export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Promise<Portfolio> => {
+    const existingPortfolio = storage.read(id);
+    if (!existingPortfolio) {
+        throw new NotFoundError('Portfolio not found');
+    }
+    if (updates.positions && updates.positions.length === 0) {
+        throw new ValidationError('Positions array cannot be empty.');
+    }
+    return storage.update(id, updates);
+};
+
+export const fetchPortfolios = async (options: { limit: number; offset: number; sort: string; order: string; }): Promise<Portfolio[]> => {
+    const { limit, offset, sort, order } = options;
+    const portfolios = storage.getAll();
+    const sortedPortfolios = portfolios.sort((a, b) => {
+        if (sort === 'name') {
+            return order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
         }
-    }
+        return 0;
+    });
+    return sortedPortfolios.slice(offset, offset + limit);
+};
+
+export const clearPortfolios = () => {
+    storage.clear();
 };
