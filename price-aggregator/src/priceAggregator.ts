@@ -1,11 +1,10 @@
-// Importing necessary modules and types
 import WebSocket from 'ws';
 import { PriceData, CurrentPrices, PriceDataSchema, PriceEvent } from './types';
 import { httpClient, postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
 import { EventBus } from './eventBus';
-import { ServiceError, ValidationError, NotFoundError } from './errors';
+import { ServiceError, ValidationError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -25,9 +24,6 @@ export class PriceAggregator {
             return newPrice;
         } catch (error) {
             logError(error, 'Error adding price data');
-            if (error instanceof ValidationError) {
-                throw new ValidationError('Invalid price data.');
-            }
             throw new ServiceError('Failed to add price.');
         }
     }
@@ -42,6 +38,13 @@ export class PriceAggregator {
             logError(error, 'Failed to fetch external prices');
             throw new ServiceError('Could not fetch prices from external service.');
         }
+    }
+
+    public async getCurrentPrices(): Promise<CurrentPrices> {
+        if (Object.keys(this.currentPrices).length === 0) {
+            await this.updateCurrentPrices();
+        }
+        return this.currentPrices;
     }
 
     public async checkDependencies(): Promise<{ [key: string]: string }> {
@@ -65,10 +68,6 @@ export class PriceAggregator {
 
     private async updateCurrentPrices(): Promise<void> {
         const allPrices = await storage.findAll();
-        if (allPrices.length === 0) {
-            this.currentPrices.VWAP = 0;
-            return;
-        }
         this.currentPrices = {};
         let totalValue = 0;
         let totalVolume = 0;
@@ -79,7 +78,7 @@ export class PriceAggregator {
             totalVolume += price.volume;
         });
 
-        this.currentPrices.VWAP = totalVolume > 0 ? totalValue / totalVolume : 0;
+        this.currentPrices.VWAP = totalVolume ? totalValue / totalVolume : 0;
     }
 
     private handlePriceEvent(event: PriceEvent): void {
