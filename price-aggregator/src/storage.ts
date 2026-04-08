@@ -4,6 +4,7 @@ interface Storage<T> {
     update(id: string, item: T): Promise<T | null>;
     delete(id: string): Promise<void>;
     findAll(query?: Partial<T>): Promise<T[]>;
+    transaction(operations: () => Promise<void>): Promise<void>;
 }
 
 class InMemoryStorage<T> implements Storage<T> {
@@ -43,6 +44,16 @@ class InMemoryStorage<T> implements Storage<T> {
             if (match) results.push(item);
         }
         return results;
+    }
+
+    async transaction(operations: () => Promise<void>): Promise<void> {
+        const snapshot = new Map(this.items);
+        try {
+            await operations();
+        } catch (error) {
+            this.items = snapshot;
+            throw error;
+        }
     }
 }
 

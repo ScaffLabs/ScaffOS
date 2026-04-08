@@ -16,3 +16,10 @@ export const seedData = async () => {
         await storage.create(price);
     }
 };
+
+export const clearData = async () => {
+    await storage.transaction(async () => {
+        const allPrices = await storage.findAll();
+        await Promise.all(allPrices.map(price => storage.delete(price.id)));
+    });
+};
