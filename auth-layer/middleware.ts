@@ -3,6 +3,8 @@ import { body, validationResult } from 'express-validator';
 import { verifyToken } from './jwt';
 import { validateApiKey } from './apiKey';
 import logger, { logError } from './logger';
+import csrf from 'csurf';
+const csrfProtection = csrf({ cookie: true });
 
 export const sanitizeInput = (input: string) => {
     return input.replace(/<[^>]*>/g, ''); // Basic XSS prevention by stripping HTML tags
@@ -48,3 +50,5 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         return res.status(401).json({ error: error.message });
     }
 };
+
+export const csrfMiddleware = csrfProtection;

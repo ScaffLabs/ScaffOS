@@ -11,6 +11,7 @@ import logger, { startupLog } from './logger';
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 import { logRequest } from './logger';
+import { sanitizeInput } from './middleware';
 
 const app = express();
 const server = http.createServer(app);
