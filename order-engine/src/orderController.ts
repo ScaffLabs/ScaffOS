@@ -39,5 +39,8 @@ export const deleteOrder = async (req: Request, res: Response): Promise<void> =>
 
 export const getOrders = async (req: Request, res: Response): Promise<void> => {
     const orders = await storage.findAll();
+    if (!orders || orders.length === 0) {
+        throw new NotFoundError('No orders found.');
+    }
     res.status(200).json(orders);
 };

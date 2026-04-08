@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError, ServiceError, NotFoundError } from './errors';
 
-// Other middleware code...
-
 export const errorHandlingMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error(err);
     if (err instanceof ValidationError) {
         return res.status(400).json({ message: err.message });
     }
@@ -13,8 +12,5 @@ export const errorHandlingMiddleware = (err: Error, req: Request, res: Response,
     if (err instanceof ServiceError) {
         return res.status(500).json({ message: 'Internal Server Error' });
     }
-    return res.status(500).json({ message: 'An unexpected error occurred.' });
+    res.status(500).json({ message: 'An unexpected error occurred.' });
 };
-
-// Export all middleware functions
-export { securityMiddleware, validateOrder, validateOrderUpdate, errorHandlingMiddleware };
