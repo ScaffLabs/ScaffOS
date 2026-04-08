@@ -39,24 +39,24 @@ The server will be running on port 3000.
 ## API Reference
 ### Get Active Alerts
 - **Method**: `GET`
-- **Path**: `/alerts`
+- **Path**: `/api/alerts`
 - **Response**: `200 OK` with a JSON array of active alerts.
 
 ### Create Alert
 - **Method**: `POST`
-- **Path**: `/alerts`
+- **Path**: `/api/alerts`
 - **Request Body**: `{ "type": "string", "threshold": "number", "currentValue": "number" }`
 - **Response**: `201 Created` with the created alert.
 
 ### Update Alert
 - **Method**: `PUT`
-- **Path**: `/alerts/:id`
+- **Path**: `/api/alerts/:id`
 - **Request Body**: `{ "threshold": "number" }`
 - **Response**: `200 OK` with the updated alert.
 
 ### Delete Alert
 - **Method**: `DELETE`
-- **Path**: `/alerts/:id`
+- **Path**: `/api/alerts/:id`
 - **Response**: `204 No Content` if successful.
 
 ## Environment Variables
