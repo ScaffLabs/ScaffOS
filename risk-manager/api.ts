@@ -5,8 +5,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import RiskManager from './riskManager';
 import authMiddleware from './authMiddleware';
-import axios from 'axios';
-import { setReady } from './healthCheck';
 import logger from './logger';
 
 const router = express.Router();
@@ -30,16 +28,6 @@ router.use((req: Request, res: Response, next: NextFunction) => {
     logger.info(`Request: ${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`);
   });
   next();
-});
-
-router.get('/health', async (req: Request, res: Response) => {
-  const serviceHealth = await Promise.all([
-    checkServiceHealth(process.env.EVENT_BUS_URL || ''),
-    checkServiceHealth(process.env.ANOTHER_SERVICE_URL || ''),
-  ]);
-  const isHealthy = serviceHealth.every(status => status);
-  setReady(isHealthy);
-  res.status(200).json({ status: isHealthy ? 'healthy' : 'unhealthy' });
 });
 
 router.get('/risk', async (req: Request, res: Response) => {
