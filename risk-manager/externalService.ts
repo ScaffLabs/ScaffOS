@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { DrawdownCircuitBreaker } from './drawdownCircuitBreaker';
+import logger from './logger';
+import config from './config';
 
 const circuitBreaker = new DrawdownCircuitBreaker(20);
 
@@ -17,20 +19,28 @@ export const fetchWithRetry = async (url: string, retries: number = 5): Promise<
                 throw new Error('Circuit breaker is active, skipping request');
             }
             if (i === retries - 1) throw error;
-            console.log(`Retrying... (${i + 1})`);
+            logger.warn(`Retrying... (${i + 1})`);
             await exponentialBackoff(i);
         }
     }
 };
 
-export const fetchDataWithTimeout = async (url: string, timeout: number, retries: number = 3): Promise<any> => {
-    const source = axios.CancelToken.source();
-    const timeoutId = setTimeout(() => {
-        source.cancel('Request timed out');
-    }, timeout);
+export const checkServiceHealth = async (url: string): Promise<boolean> => {
     try {
-        return await fetchWithRetry(url);
-    } finally {
-        clearTimeout(timeoutId);
+        const response = await axios.get(url);
+        return response.status === 200;
+    } catch (error) {
+        logger.error(`Health check failed for ${url}: ${error.message}`);
+        return false;
     }
+};
+
+export const fetchEventBusData = async () => {
+    const url = `${config.EVENT_BUS_URL}/events`;
+    return await fetchWithRetry(url);
+};
+
+export const fetchAnotherServiceData = async () => {
+    const url = `${config.ANOTHER_SERVICE_URL}/data`;
+    return await fetchWithRetry(url);
 };
