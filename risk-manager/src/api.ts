@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
+import { RiskPositionSchema } from './sharedTypes';
 
 const router = express.Router();
 
@@ -71,7 +72,7 @@ router.put('/risk/:id', [
     try {
         const { id } = req.params;
         const { position } = req.body;
-        const updatedPosition = await riskManager.updateRiskPosition(id, position);
+        const updatedPosition = await riskManager.updateRiskPosition(id as unknown as OrderId, position);
         if (!updatedPosition) {
             return res.status(404).send();
         }
@@ -91,7 +92,7 @@ router.delete('/risk/:id', [
     }
     try {
         const { id } = req.params;
-        const deleted = await riskManager.deleteRiskPosition(id);
+        const deleted = await riskManager.deleteRiskPosition(id as unknown as OrderId);
         if (!deleted) {
             return res.status(404).send();
         }

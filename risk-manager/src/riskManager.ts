@@ -34,14 +34,14 @@ export default class RiskManager {
         }
     }
 
-    async updateRiskPosition(id: string, position: number): Promise<RiskPosition | null> {
+    async updateRiskPosition(id: OrderId, position: number): Promise<RiskPosition | null> {
         try {
             const existingPosition = await this.storage.read(id);
             if (!existingPosition) {
                 throw new NotFoundError('Risk position not found.');
             }
 
-            const updatedPosition: RiskPosition = { ...existingPosition, position }; 
+            const updatedPosition: RiskPosition = { ...existingPosition, position };
             const validationResult = RiskPositionSchema.safeParse(updatedPosition);
             if (!validationResult.success) {
                 throw new ValidationError('Invalid risk position data: ' + validationResult.error.errors);
@@ -56,7 +56,7 @@ export default class RiskManager {
         }
     }
 
-    async deleteRiskPosition(id: string): Promise<boolean> {
+    async deleteRiskPosition(id: OrderId): Promise<boolean> {
         try {
             const deleted = await this.storage.delete(id);
             if (!deleted) {
