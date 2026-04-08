@@ -1,9 +1,11 @@
 import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import axios from 'axios';
 import { healthCheckServices } from './healthCheckService';
+import { EventEmitter } from 'events';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
+const eventEmitter = new EventEmitter();
 
 async function fetchDataFromService(url: string, retries: number = MAX_RETRIES): Promise<any> {
   try {
@@ -18,21 +20,40 @@ async function fetchDataFromService(url: string, retries: number = MAX_RETRIES):
   }
 }
 
-export async function simulateBacktest(params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> {
+async function fetchOrders() {
   const ordersUrl = `${process.env.ORDER_SERVICE_URL}/orders`;
-  const dataUrl = `${process.env.DATA_SERVICE_URL}/historical-data`;
+  try {
+    const orders = await fetchDataFromService(ordersUrl);
+    return orders;
+  } catch (error) {
+    eventEmitter.emit('error', { service: 'Order Service', error });
+    throw new Error('Failed to fetch orders');
+  }
+}
 
+async function fetchHistoricalData() {
+  const dataUrl = `${process.env.DATA_SERVICE_URL}/historical-data`;
+  try {
+    const historicalData = await fetchDataFromService(dataUrl);
+    return historicalData;
+  } catch (error) {
+    eventEmitter.emit('error', { service: 'Data Service', error });
+    throw new Error('Failed to fetch historical data');
+  }
+}
+
+export async function simulateBacktest(params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> {
   const [orders, historicalDataResponse] = await Promise.all([
-    fetchDataFromService(ordersUrl),
-    fetchDataFromService(dataUrl)
+    fetchOrders(),
+    fetchHistoricalData()
   ]);
 
   let totalReturns = 0;
   let trades = 0;
   let winRate = 0;
 
-  // Implement backtest simulation logic with slippage and performance metrics
-  // Use fetched orders and historical data
+  // Simulate backtest logic using orders and historical data
+  // This is where you implement the actual backtest logic
 
   return {
     totalReturns,
