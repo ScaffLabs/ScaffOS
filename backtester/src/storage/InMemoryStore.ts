@@ -21,15 +21,13 @@ export class InMemoryStore<T> implements StorageInterface<T> {
     }
 
     private indexData(entity: Entity<T>): void {
-        // Example indexing by a property if applicable
-        // Assuming T has a 'name' property for demonstration
-        if ((entity.data as any).name) {
-            const indexKey = (entity.data as any).name;
+        Object.keys(entity.data).forEach(key => {
+            const indexKey = entity.data[key];
             if (!this.index.has(indexKey)) {
                 this.index.set(indexKey, new Set());
             }
             this.index.get(indexKey)!.add(entity.id);
-        }
+        });
     }
 
     async read(id: string): Promise<Entity<T> | undefined> {
@@ -51,10 +49,8 @@ export class InMemoryStore<T> implements StorageInterface<T> {
     async delete(id: string): Promise<boolean> {
         if (this.store.has(id)) {
             const entity = this.store.get(id);
-            // Remove from index
-            if (entity && (entity.data as any).name) {
-                const indexKey = (entity.data as any).name;
-                this.index.get(indexKey)?.delete(id);
+            if (entity) {
+                this.index.delete(entity.data);
             }
             this.store.delete(id);
             logger.info({ message: 'Deleted entity', id });
