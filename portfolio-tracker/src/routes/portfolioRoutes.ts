@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, deletePortfolio } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, deletePortfolio, healthCheckPortfolioService } from '../services/portfolioService';
 import logger from '../services/logger';
 
 const router = Router();
@@ -20,6 +20,17 @@ router.post('/', [
     } catch (error) {
         logger.error('Error creating portfolio', { error: error.message });
         res.status(400).json({ error: error.message });
+    }
+});
+
+// Health check endpoint
+router.get('/health', async (req, res) => {
+    try {
+        const healthStatus = await healthCheckPortfolioService();
+        res.json(healthStatus);
+    } catch (error) {
+        logger.error('Health check failed', { error: error.message });
+        res.status(503).json({ status: 'DOWN', error: error.message });
     }
 });
 
@@ -100,4 +111,4 @@ router.get('/', [
     }
 });
 
-export default router; 
+export default router;

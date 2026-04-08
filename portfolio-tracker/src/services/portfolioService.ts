@@ -1,5 +1,5 @@
 import storage from './storage';
-import { Portfolio, PortfolioUpdate } from '../types';
+import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import CircuitBreaker from 'circuit-breaker-js';
 import axios from 'axios';
@@ -53,14 +53,18 @@ export const fetchPortfolios = async ({ limit, offset, sort, order }): Promise<P
     return sortedPortfolios.slice(offset, offset + limit);
 };
 
-export const healthCheckPortfolioService = async (): Promise<boolean> => {
+export const healthCheckPortfolioService = async (): Promise<HealthCheckResponse> => {
     try {
-        await retry(async (times) => {
-            return await axios.get(process.env.PORTFOLIO_SERVICE_URL);
-        }, retryOptions);
-        return true;
+        const portfolioServiceStatus = await circuitBreaker.fire(async () => {
+            await retry(async (times) => {
+                return await axios.get(process.env.PORTFOLIO_SERVICE_URL);
+            }, retryOptions);
+            return true;
+        });
+        return { status: 'UP', portfolioService: portfolioServiceStatus };
     } catch (error) {
-        throw new Error('Portfolio service unreachable');
+        console.error('Health check failed:', error);
+        return { status: 'DOWN', portfolioService: false, error: error.message };
     }
 };
 
