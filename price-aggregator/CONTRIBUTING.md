@@ -13,8 +13,8 @@ Thank you for your interest in contributing to the Price Aggregator project! Her
    ```bash
    git checkout -b my-feature-branch
    ```
-4. **Make your changes**: Implement your feature or fix.
-5. **Write tests**: Ensure that your code is well-tested. Add tests in the `__tests__` directory.
+4. **Make your changes**: Implement your feature or fix, ensuring you follow the project's coding standards.
+5. **Write tests**: Ensure that your code is well-tested. Add tests in the `__tests__` directory to cover your changes.
 6. **Commit your changes**: Commit your changes with a clear message:
    ```bash
    git commit -m "Add my feature"
@@ -26,8 +26,8 @@ Thank you for your interest in contributing to the Price Aggregator project! Her
 8. **Submit a pull request**: Go to the original repository and create a pull request.
 
 ## Guidelines
-- Follow the existing code style.
-- Write clear commit messages.
-- Document your code and changes appropriately.
+- Follow the existing code style and conventions used throughout the project.
+- Write clear, informative commit messages that describe the purpose of your changes.
+- Document your code and changes appropriately to help other developers understand your work.
 
 Thank you for contributing!

@@ -11,3 +11,8 @@
 - Added comprehensive documentation including README, CONTRIBUTING, and CHANGELOG.
 - Improved error handling in price fetching logic.
 - Enhanced logging capabilities for better traceability.
+
+## [1.2.0] - 2023-10-20
+- Established a memory monitoring system to log memory usage periodically.
+- Implemented additional error types for better error categorization.
+- Updated API reference in README.md for clarity.
