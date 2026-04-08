@@ -9,11 +9,12 @@ const envSchema = Joi.object({
     NODE_ENV: Joi.string().valid('development', 'staging', 'production').default('development'),
     DATABASE_URL: Joi.string().required(),
     API_KEY: Joi.string().required(),
+    API_URL: Joi.string().uri().required(),
 }).unknown(true);
 
 const { error, value: envVars } = envSchema.validate(process.env);
 if (error) {
-    throw new Error(`Configuration validation error: {error.message}`);
+    throw new Error(`Configuration validation error: ${error.message}`);
 }
 
 const config = {
@@ -21,6 +22,7 @@ const config = {
     nodeEnv: envVars.NODE_ENV,
     databaseUrl: envVars.DATABASE_URL,
     apiKey: envVars.API_KEY,
+    apiUrl: envVars.API_URL,
 };
 
 const logger = winston.createLogger({
@@ -29,6 +31,6 @@ const logger = winston.createLogger({
     transports: [new winston.transports.Console()],
 });
 
-logger.info(`Configuration loaded: {JSON.stringify(config)}`);
+logger.info(`Configuration loaded: ${JSON.stringify(config)}`);
 
 export default config;
