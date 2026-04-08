@@ -5,10 +5,14 @@ import http from 'http';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
+import { MemoryMonitor } from './memoryMonitor';
+import { createConnectionPool } from './dbConnection';
 
 const app = express();
 const httpServer = http.createServer(app);
 const priceAggregator = new PriceAggregator();
+const memoryMonitor = new MemoryMonitor();
+const connectionPool = createConnectionPool(); // Create a connection pool for DB connections
 
 app.use(express.json());
 app.use((req, res, next) => {
@@ -21,8 +25,8 @@ app.use((req, res, next) => {
 });
 
 const startApp = async () => {
-    await migrateData([]); // Pass any old data if necessary
-    await seedData(); // Seed initial data
+    await migrateData([]);
+    await seedData();
     logStartup(config);
 
     app.get('/prices', async (req, res, next) => {
@@ -58,10 +62,32 @@ const startApp = async () => {
         }
     });
 
+    app.get('/ready', async (req, res) => {
+        // Implement readiness check based on the app state
+        const isReady = await priceAggregator.isReady();
+        if (isReady) {
+            return res.status(200).json({ status: 'ready' });
+        }
+        res.status(503).json({ status: 'not ready' });
+    });
+
     app.use(errorMiddleware);
+
+    const shutdown = async () => {
+        console.log('Shutting down gracefully...');
+        await connectionPool.drain(); // Drain connections
+        httpServer.close(() => {
+            console.log('HTTP server closed');
+            process.exit(0);
+        });
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 
     httpServer.listen(config.port, () => {
         console.log(`Price aggregator service running on port ${config.port}`);
+        setInterval(() => memoryMonitor.logMemoryUsage(), 60000); // Log memory usage every minute
     });
 };
 
