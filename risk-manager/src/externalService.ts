@@ -13,7 +13,10 @@ const fetchWithRetry = async (url: string, retries: number = 5): Promise<any> =>
             return response.data;
         } catch (error) {
             logger.warn(`Attempt ${i + 1} failed: ${error.message}`);
-            if (i === retries - 1) throw error;
+            if (i === retries - 1) {
+                logger.error('Final attempt failed:', error);
+                throw error;
+            }
             await exponentialBackoff(i);
         }
     }
@@ -43,13 +46,4 @@ export const fetchEventBusData = async () => {
 export const fetchAnotherServiceData = async () => {
     const url = `${config.ANOTHER_SERVICE_URL}/data`;
     return await fetchWithRetry(url);
-};
-
-export const performHealthChecks = async () => {
-    try {
-        const healthStatus = await healthCheckServices();
-        logger.info('Health status checked successfully', healthStatus);
-    } catch (error) {
-        logger.error('Error performing health checks', error);
-    }
 };
