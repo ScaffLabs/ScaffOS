@@ -10,6 +10,7 @@ const envSchema = z.object({
   ANOTHER_SERVICE_URL: z.string().url().nonempty(),
   ORDER_SERVICE_URL: z.string().url().nonempty(),
   MEMORY_LIMIT: z.string().default('80%'),
+  LOG_LEVEL: z.string().default('info'),
 });
 
 const env = envSchema.safeParse(process.env);

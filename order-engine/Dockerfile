@@ -12,4 +12,5 @@ WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/package*.json ./
 RUN npm install --production
+
 CMD [ "node", "dist/index.js" ]
