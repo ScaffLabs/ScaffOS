@@ -1,7 +1,7 @@
 # Admin Console
 
 ## Project Description
-The Admin Console is a web application designed for managing system health and configurations. It offers a user-friendly interface to monitor various services and manage their settings effectively.
+The Admin Console is a web application designed for managing system health and configurations. It provides a user-friendly interface to monitor various services and manage their settings effectively.
 
 ## Architecture Overview
 The application is built using React for the frontend and Express for the backend. It follows a modular architecture, using RESTful APIs to communicate between the frontend and backend, ensuring scalability and maintainability.
@@ -37,12 +37,12 @@ The application is built using React for the frontend and Express for the backen
 - **Method**: POST
 - **Path**: `/api/config`
 - **Request Body**:
-```json
-{
-  "key": "string",
-  "value": "string"
-}
-```
+  ```json
+  {
+    "key": "string",
+    "value": "string"
+  }
+  ```
 - **Response**:
   - **201 Created**: Configuration created successfully.
   - **400 Bad Request**: If the request body is invalid.
@@ -65,12 +65,12 @@ The application is built using React for the frontend and Express for the backen
 - **Method**: PUT
 - **Path**: `/api/config`
 - **Request Body**:
-```json
-{
-  "key": "string",
-  "value": "string"
-}
-```
+  ```json
+  {
+    "key": "string",
+    "value": "string"
+  }
+  ```
 - **Response**:
   - **200 OK**: Configuration updated successfully.
   - **404 Not Found**: If the configuration does not exist.
@@ -108,20 +108,16 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 ### [Unreleased]
 - Comprehensive documentation for project setup and usage in README.md.
 - Inline comments in Configuration component for clarity on complex logic.
-
 ### [1.0.0] - 2023-10-01
 - Implemented Admin Dashboard and Configuration Management components.
 - Service Health status fetching with mock data.
 - Notification context for managing notifications across the application.
-
 ### [1.0.1] - 2023-10-15
 - Added detailed API reference with all endpoints in README.md.
 - Improved setup instructions for environment variables.
-
 ### [1.0.2] - 2023-10-20
 - Added comprehensive README.md with setup, deployment, and API reference.
 - Improved inline documentation for better clarity.
-
 ### [1.0.3] - 2023-10-25
 - Enhanced error handling for API requests with clear messages.
 - Added tests for new features and improved coverage.
