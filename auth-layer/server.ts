@@ -1,5 +1,8 @@
 import express from 'express';
 import http from 'http';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import healthRouter from './health';
 import userRoutes from './userRoutes';
 import errorMiddleware from './errorMiddleware';
@@ -11,6 +14,23 @@ const app = express();
 const server = http.createServer(app);
 const connectionPool = createConnectionPool();
 const PORT = process.env.PORT || 3000;
+
+// CORS configuration
+app.use(cors({
+    origin: ['https://your-allowed-origin.com'], // Replace with your allowed origin(s)
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+}));
+
+// Security headers with helmet
+app.use(helmet());
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
 
 app.use(express.json());
 app.use(logRequest);
