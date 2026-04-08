@@ -1,20 +1,24 @@
 # Admin Console
 
 ## Project Description
-The Admin Console is a web application for managing system health and configurations. It provides a user-friendly interface to monitor various services and manage their settings.
+The Admin Console is a web application designed for managing system health and configurations. It offers a user-friendly interface to monitor various services and manage their settings effectively.
 
 ## Architecture Overview
-The application is built using React and uses React Router for navigation. It communicates with backend services via RESTful APIs, ensuring a modular and scalable architecture.
+The application is built using React for the frontend and Express for the backend. It follows a modular architecture, using RESTful APIs to communicate between the frontend and backend, ensuring scalability and maintainability.
 
 ## Setup Instructions
 ### Prerequisites
 - Node.js (v16 or higher)
 - npm (v6 or higher)
+- PostgreSQL or SQLite for database storage
 
 ### Install
-1. Clone the repository.
-2. Navigate to the project directory.
-3. Run `npm install` to install dependencies.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/admin-console.git
+   cd admin-console
+   ```
+2. Run `npm install` to install dependencies.
 
 ### Run
 - To start the application, run `npm start`. It will run on `http://localhost:3000`.
