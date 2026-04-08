@@ -22,6 +22,12 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual({ VWAP: 100, exchange1: 50 });
     });
 
+    test('GET /prices should return 204 for no prices', async () => {
+        (priceAggregator.getCurrentPrices as jest.Mock).mockReturnValueOnce({});
+        const response = await request(app).get('/prices');
+        expect(response.status).toBe(204);
+    });
+
     test('GET /health should return healthy status', async () => {
         (priceAggregator.checkDependencies as jest.Mock).mockResolvedValueOnce({ exchange1: 'healthy' });
         const response = await request(app).get('/health');
@@ -34,5 +40,12 @@ describe('API Endpoints', () => {
         const response = await request(app).get('/health');
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 'unhealthy', error: 'Service down' });
+    });
+
+    test('GET /prices should return 500 on error fetching prices', async () => {
+        (priceAggregator.getCurrentPrices as jest.Mock).mockImplementationOnce(() => { throw new Error('Failed to fetch prices'); });
+        const response = await request(app).get('/prices');
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: 'Failed to fetch prices' });
     });
 });

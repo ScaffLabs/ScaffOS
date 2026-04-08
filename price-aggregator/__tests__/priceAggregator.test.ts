@@ -29,9 +29,9 @@ describe('PriceAggregator', () => {
         expect(priceAggregator.getCurrentPrices()).toHaveProperty('VWAP');
     });
 
-    test('should handle empty price data', () => {
-        (priceAggregator as any).prices = [];
-        priceAggregator['calculateVWAP']();
+    test('should handle empty price data gracefully', async () => {
+        priceAggregator['prices'] = [];
+        await expect(priceAggregator['calculateVWAP']()).resolves.not.toThrow();
         expect(priceAggregator.getCurrentPrices()).toHaveProperty('VWAP', 0);
     });
 
@@ -52,5 +52,9 @@ describe('PriceAggregator', () => {
         jest.spyOn(priceAggregator as any, 'checkDependencies').mockResolvedValueOnce({ exchange1: 'healthy', exchange2: 'unhealthy' });
         const health = await priceAggregator.checkDependencies();
         expect(health).toEqual({ exchange1: 'healthy', exchange2: 'unhealthy' });
+    });
+
+    test('should throw error if price not found during deletion', async () => {
+        await expect(priceAggregator.deletePrice('nonexistent')).rejects.toThrow('Price not found');
     });
 });

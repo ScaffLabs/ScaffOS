@@ -28,11 +28,22 @@ To start the application:
 npm start
 ```
 
+### Testing
+To run the tests:
+```bash
+npm test
+```
+To run tests in watch mode:
+```bash
+npm run test:watch
+```
+
 ## API Reference
 ### GET /prices
 - **Request Body**: None
 - **Response**: Returns current prices and VWAP.
   - **200 OK**: Successful retrieval of prices.
+  - **204 No Content**: No prices available.
   - **500 Internal Server Error**: Failed to fetch prices.
 
 ### GET /health
