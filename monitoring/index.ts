@@ -57,10 +57,9 @@ server.listen(PORT, () => {
     logStartup();
     console.log(`Monitoring service running on port ${PORT}`);
     setInterval(() => {
-        // Memory monitoring function 
         const memoryUsage = process.memoryUsage();
         const totalMemory = memoryUsage.rss / (1024 * 1024);
         const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
         console.log(`Memory Usage: Total - ${totalMemory.toFixed(2)} MB, Used - ${usedMemory.toFixed(2)} MB`);
-    }, 60000); // Log memory usage every minute
+    }, 60000);
 });
