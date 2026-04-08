@@ -2,9 +2,7 @@ import { InMemoryStore } from './InMemoryStore';
 import { Position } from '../types';
 
 export const migrateData = (store: InMemoryStore<Position>, data: Position[]) => {
-    data.forEach(item => {
-        store.create(item);
-    });
+    store.migrateData(data);
 };
 
 export const seedData = (): Position[] => {

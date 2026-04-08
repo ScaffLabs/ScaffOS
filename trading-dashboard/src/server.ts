@@ -14,13 +14,8 @@ migrateData(positionStore, seedData());
 
 app.get('/api/health', healthCheck);
 app.get('/api/positions', async (req, res) => {
-    try {
-        const positions = Object.values(positionStore.data);
-        res.status(200).json(positions);
-    } catch (error) {
-        logger.error(error.message);
-        res.status(500).json({ message: 'Error fetching positions', error: error.message });
-    }
+    const positions = Object.values(positionStore.data);
+    res.status(200).json(positions);
 });
 
 app.post('/api/positions', async (req, res) => {
