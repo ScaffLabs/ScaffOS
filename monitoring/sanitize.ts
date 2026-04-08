@@ -12,6 +12,11 @@ const bodySchema = z.object({
     value: z.number().int().nonnegative(),
 });
 
+const sanitizeOutput = (data: any) => {
+    // Simple output sanitization function to prevent XSS
+    return JSON.parse(JSON.stringify(data).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+};
+
 const sanitize = (req: Request, res: Response, next: NextFunction) => {
     try {
         // Sanitize body input
@@ -30,6 +35,16 @@ const sanitize = (req: Request, res: Response, next: NextFunction) => {
         const parsedQuery = querySchema.parse(req.query);
         req.query.limit = parsedQuery.limit;
         req.query.offset = parsedQuery.offset;
+
+        // Sanitize output for response
+        res.send = ((send) => {
+            return function (data) {
+                if (data) {
+                    data = sanitizeOutput(data);
+                }
+                return send.call(this, data);
+            };
+        })(res.send);
 
         next();
     } catch (error) {
