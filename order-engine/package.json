@@ -7,8 +7,8 @@
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:integration": "jest --testPathPattern=integration",
-    "test:unit": "jest --testPathPattern=unit"
+    "test:unit": "jest --testPathPattern=unit",
+    "test:integration": "jest --testPathPattern=integration"
   },
   "dependencies": {
     "express": "^4.17.1",
