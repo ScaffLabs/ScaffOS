@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  alert-system:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      WEBHOOK_URL: http://your-webhook-url
+      EMAIL_SERVICE_URL: http://your-email-service-url
+
+  # Additional services can be added here
