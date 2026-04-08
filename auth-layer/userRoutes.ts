@@ -17,7 +17,7 @@ router.post('/users', authMiddleware,
         }
         const { username, email } = req.body;
         try {
-            const user = await createUser(username, email);
+            const user = createUser(username, email);
             res.status(201).json(user);
         } catch (error) {
             if (error.message === 'Email already in use') {
