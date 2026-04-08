@@ -1,4 +1,3 @@
-// health.ts
 import { Request, Response } from 'express';
 import { fetchData } from './axiosClient';
 import { performance } from 'perf_hooks';
