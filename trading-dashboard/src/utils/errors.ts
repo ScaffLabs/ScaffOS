@@ -54,4 +54,4 @@ const validateArray = (arr: any[]) => {
     }
 };
 
-export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, validateInput, validateQuantity, validateArray }; 
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, validateInput, validateQuantity, validateArray };
