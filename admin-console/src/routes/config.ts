@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Database from '../storage/Database';
 import { ConfigurationItem } from '../types';
-import { NotFoundError } from '../errors/CustomErrors';
+import { NotFoundError, ValidationError } from '../errors/CustomErrors';
 import rateLimit from 'express-rate-limit';
 import { logAudit } from '../middleware/auditLogger';
 
@@ -27,9 +27,13 @@ router.post('/', [
     }
     try {
         const { key, value } = req.body;
-        await db.createConfiguration({ key, value });
+        const configItem: ConfigurationItem = { key, value };
+        await db.createConfiguration(configItem);
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
+        }
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -44,12 +48,13 @@ router.get('/', async (req, res) => {
         }
         res.status(200).json(configurations);
     } catch (error) {
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
         console.error(error);
         res.status(500).json({ error: 'Failed to retrieve configurations' });
     }
 });
-
-router.use(logAudit);
 
 router.get('/:key', async (req, res) => {
     const { key } = req.params;
@@ -60,7 +65,12 @@ router.get('/:key', async (req, res) => {
         }
         res.status(200).json(configuration);
     } catch (error) {
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+export default router;

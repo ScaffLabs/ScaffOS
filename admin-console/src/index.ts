@@ -10,8 +10,8 @@ import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { logRequest } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
-import { logAudit } from './middleware/auditLogger';
 import { body, validationResult } from 'express-validator';
+import { ServiceError } from './errors/CustomErrors';
 
 dotenv.config();
 const app = express();
@@ -56,6 +56,6 @@ app.use('/api/config', [
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        logAudit(req, res, next);
+        next();
     }
 ]);
