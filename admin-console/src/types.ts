@@ -34,34 +34,29 @@ export interface HealthCheckResponse {
 }
 
 /**
- * Represents a database migration with up and down methods.
- * @property {string} id - Unique identifier for the migration.
- * @property {function} up - Function to apply the migration.
- * @property {function} down - Function to revert the migration.
+ * Represents an event in the application.
+ * This can be used to manage different types of application events.
  */
-export interface Migration {
-    id: string;
-    up: () => Promise<void>;
-    down: () => Promise<void>;
-}
+export type AppEvent = 
+    | { type: 'CONFIGURATION_CREATED'; payload: ConfigurationItem }
+    | { type: 'SERVICE_HEALTH_UPDATED'; payload: HealthCheckResponse };
 
 /**
- * Zod schema for validating Migration objects.
+ * Zod schema for validating AppEvent objects.
  */
-export const MigrationSchema = z.object({
-    id: z.string().min(1),
-    up: z.function().args().returns(z.promise(z.void())),
-    down: z.function().args().returns(z.promise(z.void())),
-});
+export const AppEventSchema = z.union([
+    z.object({ type: z.literal('CONFIGURATION_CREATED'), payload: ConfigurationItemSchema }),
+    z.object({ type: z.literal('SERVICE_HEALTH_UPDATED'), payload: z.object({ serviceHealth: z.record(z.string()), database: z.enum(['up', 'down']) }) }),
+]);
 
 /**
- * Validates a migration object against the MigrationSchema.
- * @param migration - The migration object to validate.
+ * Validates an event object against the AppEventSchema.
+ * @param event - The event object to validate.
  * @throws {Error} Throws an error if validation fails.
- * @returns {Migration} Returns the validated Migration object.
+ * @returns {AppEvent} Returns the validated AppEvent object.
  */
-export const validateMigration = (migration: unknown): Migration => {
-    const result = MigrationSchema.safeParse(migration);
+export const validateAppEvent = (event: unknown): AppEvent => {
+    const result = AppEventSchema.safeParse(event);
     if (!result.success) {
         throw new Error(result.error.errors.map(err => err.message).join(', '));
     }
