@@ -25,4 +25,10 @@ describe('Chart Component', () => {
         render(<Chart />);
         await waitFor(() => expect(screen.queryByText('Price')).not.toBeInTheDocument());
     });
+
+    it('handles invalid data structure gracefully', async () => {
+        (fetchChartData as jest.Mock).mockResolvedValue({ invalid: true });
+        render(<Chart />);
+        await waitFor(() => expect(screen.getByText('An unexpected error occurred.')).toBeInTheDocument());
+    });
 });
