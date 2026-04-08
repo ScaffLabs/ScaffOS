@@ -25,9 +25,15 @@ export const clearData = async () => {
 };
 
 export const migrateToSQLite = async (sqliteData: PriceData[]) => {
-    // Logic for migrating data to SQLite
+    const sqliteStorage = new SQLiteStorage<PriceData>();
+    for (const data of sqliteData) {
+        await sqliteStorage.create(data);
+    }
 };
 
 export const migrateToPostgreSQL = async (postgresData: PriceData[]) => {
-    // Logic for migrating data to PostgreSQL
+    const postgresStorage = new PostgreSQLStorage<PriceData>();
+    for (const data of postgresData) {
+        await postgresStorage.create(data);
+    }
 };
