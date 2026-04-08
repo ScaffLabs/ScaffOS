@@ -10,7 +10,10 @@ router.get('/health', async (req, res) => {
         const userServiceHealthy = await checkServiceHealth(`${config.USER_SERVICE_URL}/health`);
         const orderServiceHealthy = await checkServiceHealth(`${config.ORDER_SERVICE_URL}/health`);
         const status = userServiceHealthy && orderServiceHealthy ? 'healthy' : 'unhealthy';
-        res.status(200).json({ status, services: [{ service: 'User Service', status: userServiceHealthy ? 'healthy' : 'unhealthy' }, { service: 'Order Service', status: orderServiceHealthy ? 'healthy' : 'unhealthy' }] });
+        res.status(200).json({
+            status,
+            services: [{ service: 'User Service', status: userServiceHealthy ? 'healthy' : 'unhealthy' }, { service: 'Order Service', status: orderServiceHealthy ? 'healthy' : 'unhealthy' }],
+        });
     } catch (error) {
         logger.error('Health check error', { error: error.message });
         res.status(500).json({ status: 'unhealthy', error: error.message });
