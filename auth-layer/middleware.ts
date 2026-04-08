@@ -9,8 +9,15 @@ export const sanitizeInput = (input: string) => {
 };
 
 export const validateAndSanitizeUserInput = (req: Request, res: Response, next: NextFunction) => {
-    body('username').isString().trim().notEmpty().customSanitizer(value => sanitizeInput(value));
-    body('email').isEmail().customSanitizer(value => sanitizeInput(value));
+    body('username')
+        .isString()
+        .trim()
+        .notEmpty()
+        .customSanitizer(value => sanitizeInput(value));
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .customSanitizer(value => sanitizeInput(value));
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -40,12 +47,4 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         logError(error, req);
         return res.status(401).json({ error: error.message });
     }
-};
-
-export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const apiKey = req.headers['x-api-key'];
-    if (!rateLimit(apiKey)) {
-        return res.status(429).json({ error: 'Rate limit exceeded' });
-    }
-    next();
 };
