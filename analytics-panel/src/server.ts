@@ -5,10 +5,9 @@ import healthRoutes from './routes/healthRoutes';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { logWithRequestId } from './logger';
+import { logWithRequestId, logStartup } from './logger';
 import errorHandler from './middleware/errorHandler';
-import { monitorMemoryUsage } from './utils/monitor';
-import { gracefulShutdown } from './utils/shutdown';
+import config from './config';
 
 const app = express();
 const server = createServer(app);
@@ -28,19 +27,14 @@ app.use('/api/', limiter);
 
 app.use('/api/strategies', strategyRoutes);
 app.use('/api', healthRoutes);
-
 app.use(errorHandler);
 
 const startServer = async () => {
     const PORT = process.env.PORT || 3000;
+    logStartup(config);
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
 };
-
-const monitorInterval = setInterval(monitorMemoryUsage, 60000);
-
-process.on('SIGTERM', () => gracefulShutdown(server, monitorInterval));
-process.on('SIGINT', () => gracefulShutdown(server, monitorInterval));
 
 startServer();
