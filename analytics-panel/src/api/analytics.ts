@@ -5,9 +5,21 @@ import { PerformanceMetrics, PerformanceMetricsSchema, Strategy, StrategySchema 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 const axiosInstance = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
 
+const fetchWithRetry = async (url: string, options: any, retries: number = 3) => {
+    try {
+        return await axiosInstance(url, options);
+    } catch (error) {
+        if (retries > 0) {
+            console.log(`Retrying ${url}, attempts left: ${retries}`);
+            return fetchWithRetry(url, options, retries - 1);
+        }
+        throw error;
+    }
+};
+
 const fetchPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
     try {
-        const response = await axiosInstance.get('/api/performance');
+        const response = await fetchWithRetry('/api/performance', { method: 'GET' });
         const validationResult = PerformanceMetricsSchema.safeParse(response.data);
         if (!validationResult.success) {
             throw new ServiceError('Invalid performance metrics data');
@@ -20,7 +32,7 @@ const fetchPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
 
 const getStrategies = async (): Promise<Strategy[]> => {
     try {
-        const response = await axiosInstance.get('/api/strategies');
+        const response = await fetchWithRetry('/api/strategies', { method: 'GET' });
         const strategies = response.data;
         strategies.forEach(strategy => {
             const validationResult = StrategySchema.safeParse(strategy);
