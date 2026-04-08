@@ -16,7 +16,7 @@ const envSchema = z.object({
   EVENT_BUS_URL: z.string().url(),
   ANOTHER_SERVICE_URL: z.string().url(),
   NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
-  PORT: z.coerce.number().default(3000)
+  PORT: z.coerce.number().default(3000),
 });
 
 const parseEnv = () => {
