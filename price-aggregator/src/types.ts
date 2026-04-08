@@ -6,9 +6,9 @@ export type TradeId = string & { readonly brand: unique symbol };
 
 /**
  * Represents price data for an exchange.
- * @property exchange - The name of the exchange.
- * @property price - The price in USD.
- * @property volume - The traded volume.
+ * @property exchange - The name of the exchange, must be a non-empty string.
+ * @property price - The price in USD, must be a positive number.
+ * @property volume - The traded volume, must be a positive number.
  */
 export interface PriceData {
   exchange: string;
@@ -18,6 +18,7 @@ export interface PriceData {
 
 /**
  * Represents the current prices from various exchanges.
+ * This is a mapping of exchange names to their respective prices.
  */
 export interface CurrentPrices {
   [key: string]: number;
@@ -32,3 +33,22 @@ export const PriceDataSchema = z.object({
 
 // Zod schema for CurrentPrices validation
 export const CurrentPricesSchema = z.record(z.number().positive());
+
+/**
+ * Represents the event types for price updates.
+ * @property type - The event type, can be 'PRICE_ADDED', 'PRICE_UPDATED', or 'PRICE_DELETED'.
+ * @property data - The price data associated with the event.
+ */
+export type PriceEvent = 
+  | { type: 'PRICE_ADDED'; data: PriceData }
+  | { type: 'PRICE_UPDATED'; data: PriceData }
+  | { type: 'PRICE_DELETED'; exchange: string }; 
+
+/**
+ * Zod schema for validating PriceEvent objects.
+ */
+export const PriceEventSchema = z.union([
+  z.object({ type: z.literal('PRICE_ADDED'), data: PriceDataSchema }),
+  z.object({ type: z.literal('PRICE_UPDATED'), data: PriceDataSchema }),
+  z.object({ type: z.literal('PRICE_DELETED'), exchange: z.string().nonempty() }),
+]);

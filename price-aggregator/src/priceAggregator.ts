@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices, PriceDataSchema } from './types';
+import { PriceData, CurrentPrices, PriceDataSchema, PriceEvent, PriceEventSchema } from './types';
 import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
@@ -22,11 +22,19 @@ export class PriceAggregator extends EventEmitter {
         }
     }
 
+    private validatePriceEvent(priceEvent: PriceEvent): void {
+        const result = PriceEventSchema.safeParse(priceEvent);
+        if (!result.success) {
+            throw new ValidationError(result.error.errors.map(e => e.message).join(', '));
+        }
+    }
+
     public async addPrice(priceData: PriceData) {
         this.validatePriceData(priceData);
         try {
             const newPrice = await storage.create(priceData);
             await this.updateCurrentPrices();
+            this.emit('PRICE_ADDED', newPrice);
             return newPrice;
         } catch (error) {
             logError(error, 'Error adding price data');
@@ -39,6 +47,7 @@ export class PriceAggregator extends EventEmitter {
         if (prices.length === 0) throw new NotFoundError('Price not found');
         await Promise.all(prices.map(price => storage.delete(price.id)));
         await this.updateCurrentPrices();
+        this.emit('PRICE_DELETED', { exchange });
     }
 
     private async updateCurrentPrices() {
