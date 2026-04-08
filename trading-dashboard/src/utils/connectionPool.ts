@@ -1,6 +1,6 @@
-import { Pool } from 'mysql2/promise';
+import { createPool } from 'mysql2/promise';
 
-const pool = Pool.createPool({
+const pool = createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,

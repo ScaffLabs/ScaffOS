@@ -2,7 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { healthCheck } from './utils/healthCheck';
+import { healthCheck, gracefulShutdown, registerShutdownHandlers } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
@@ -35,5 +35,7 @@ const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
 });
+
+registerShutdownHandlers(server);
 
 export default app;
