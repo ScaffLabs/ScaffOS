@@ -4,7 +4,9 @@
     "main": "index.js",
     "scripts": {
         "start": "ts-node src/server.ts",
-        "test": "jest --config jest.config.ts"
+        "test": "jest --config jest.config.ts",
+        "test:watch": "jest --watch --config jest.config.ts",
+        "test:coverage": "jest --coverage --config jest.config.ts"
     },
     "dependencies": {
         "express": "^4.17.1",

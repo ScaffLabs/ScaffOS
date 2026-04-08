@@ -1,5 +1,5 @@
 module.exports = {
-    testEnvironment: 'jsdom',
+    testEnvironment: 'node',
     transform: {
         '^.+\.tsx?$': 'ts-jest',
     },
@@ -15,4 +15,5 @@ module.exports = {
             statements: 80,
         },
     },
+    setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
 };

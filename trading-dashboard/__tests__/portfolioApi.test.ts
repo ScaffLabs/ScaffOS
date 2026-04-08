@@ -1,5 +1,6 @@
-import { fetchPositions, updatePosition, deletePosition } from '../src/api/portfolioApi';
+import { fetchPositions, updatePosition, deletePosition, handleDivision } from '../src/api/portfolioApi';
 import axios from 'axios';
+import { ServiceError } from '../src/utils/errors';
 
 jest.mock('axios');
 
@@ -39,5 +40,14 @@ describe('portfolioApi', () => {
     it('deletePosition should throw error on delete failure', async () => {
         (axios.delete as jest.Mock).mockRejectedValue(new Error('Network Error'));
         await expect(deletePosition('1')).rejects.toThrow('Error deleting position');
+    });
+
+    it('handleDivision should return correct division result', () => {
+        expect(handleDivision(10, 2)).toBe(5);
+    });
+
+    it('handleDivision should throw error on division by zero', () => {
+        expect(() => handleDivision(10, 0)).toThrow(ServiceError);
+        expect(() => handleDivision(10, 0)).toThrow('Division by zero is not allowed.');
     });
 });
