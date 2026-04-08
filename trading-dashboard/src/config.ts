@@ -12,6 +12,7 @@ const envSchema = Joi.object({
     DB_PASSWORD: Joi.string().required(),
     DB_NAME: Joi.string().required(),
     EXTERNAL_API_URL: Joi.string().uri().required(),
+    LOG_LEVEL: Joi.string().valid('debug', 'info', 'warn', 'error').default('info'),
 }).unknown();
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -30,6 +31,7 @@ const config = {
         name: envVars.DB_NAME,
     },
     externalApiUrl: envVars.EXTERNAL_API_URL,
+    logLevel: envVars.LOG_LEVEL,
 };
 
 export default config;
