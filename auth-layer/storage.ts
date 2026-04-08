@@ -21,7 +21,11 @@ export const createUser = async (username: string, email: string): Promise<User>
 };
 
 export const findUserById = async (id: UserId): Promise<User | null> => {
-    return userStore.findById(id);
+    const user = userStore.findById(id);
+    if (!user) {
+        throw new NotFoundError('User not found.');
+    }
+    return user;
 };
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
@@ -31,13 +35,11 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
 
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
     const user = await findUserById(id);
-    if (!user) {
-        throw new NotFoundError('User not found.');
-    }
     return userStore.update(id, userData);
 };
 
 export const deleteUser = async (id: UserId): Promise<boolean> => {
+    const user = await findUserById(id);
     return userStore.delete(id);
 };
 

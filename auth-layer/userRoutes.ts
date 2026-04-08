@@ -4,12 +4,14 @@ import { validateAndSanitizeUserInput, authMiddleware } from './middleware';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
 import { emitUserCreated } from './eventBus';
+import { validateUser } from './userValidation';
 
 const router = express.Router();
 
 router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
     const { username, email } = req.body;
     try {
+        validateUser({ username, email }); // Validate user input
         const user = await createUser(username, email);
         emitUserCreated(user);
         logger.info('User created', { userId: user.id, username: user.username });
@@ -39,6 +41,7 @@ router.get('/users', authMiddleware, async (req, res) => {
 router.put('/users/:id', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
     const userId = req.params.id;
     try {
+        validateUser(req.body); // Validate user input
         const updatedUser = await updateUser(userId, req.body);
         if (!updatedUser) throw new NotFoundError('User not found for update');
         logger.info('User updated', { userId });
