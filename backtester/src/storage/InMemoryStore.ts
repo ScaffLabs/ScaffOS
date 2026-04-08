@@ -38,10 +38,19 @@ export class InMemoryStore<T> implements StorageInterface<T> {
         return this.store.delete(id);
     }
 
-    async findAll(limit?: number, offset?: number, filterFn?: (entity: Entity<T>) => boolean): Promise<Entity<T>[]> {
-        const entities = Array.from(this.store.values()).filter(filterFn || (() => true));
-        logger.debug({ message: 'Finding all entities', count: entities.length });
-        const start = offset || 0;
-        return entities.slice(start, start + (limit || entities.length));
+    async findAll(): Promise<Entity<T>[]> {
+        return Array.from(this.store.values());
+    }
+
+    async transaction(operations: Array<() => Promise<void>>): Promise<void> {
+        const results = [];
+        for (const operation of operations) {
+            results.push(await operation());
+        }
+        return results;
+    }
+
+    async migrate(data: T[]): Promise<void> {
+        await Promise.all(data.map(item => this.create(item)));
     }
 }
