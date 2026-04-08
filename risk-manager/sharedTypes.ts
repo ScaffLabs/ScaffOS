@@ -48,4 +48,4 @@ export const RiskEventSchema = z.union([
 ]);  
 
 // Export schemas for other services to use
-export { RiskPositionSchema, RiskEventSchema };  
+export { RiskPositionSchema, RiskEventSchema };
