@@ -1,37 +1,30 @@
 import { Document, Schema } from 'mongoose';
 import logger from './logger';
-
-export interface AlertMessage {
-    id: string;
-    type: 'price' | 'risk';
-    threshold: number;
-    currentValue: number;
-    createdAt: Date;
-}
+import { AlertMessage, OrderId } from './alert.schema';
 
 export interface AlertStoreInterface {
     create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage>;
-    read(id: string): Promise<AlertMessage | null>;
-    update(id: string, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null>;
-    delete(id: string): Promise<boolean>;
+    read(id: OrderId): Promise<AlertMessage | null>;
+    update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null>;
+    delete(id: OrderId): Promise<boolean>;
     findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]>;
 }
 
 export class InMemoryAlertStore implements AlertStoreInterface {
-    private alerts: Map<string, AlertMessage> = new Map();
+    private alerts: Map<OrderId, AlertMessage> = new Map();
 
     async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
-        const id = (Math.random() * 10000).toString();
+        const id: OrderId = (Math.random() * 10000).toString() as OrderId;
         const newAlert = { id, ...alert, createdAt: new Date() };
         this.alerts.set(id, newAlert);
         return newAlert;
     }
 
-    async read(id: string): Promise<AlertMessage | null> {
+    async read(id: OrderId): Promise<AlertMessage | null> {
         return this.alerts.get(id) || null;
     }
 
-    async update(id: string, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
+    async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
         const existingAlert = this.alerts.get(id);
         if (!existingAlert) return null;
         const updatedAlert = { ...existingAlert, ...alert };
@@ -39,7 +32,7 @@ export class InMemoryAlertStore implements AlertStoreInterface {
         return updatedAlert;
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: OrderId): Promise<boolean> {
         return this.alerts.delete(id);
     }
 
@@ -61,15 +54,15 @@ export class AlertStore {
         return this.alertStore.create(alert);
     }
 
-    async read(id: string): Promise<AlertMessage | null> {
+    async read(id: OrderId): Promise<AlertMessage | null> {
         return this.alertStore.read(id);
     }
 
-    async update(id: string, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
+    async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
         return this.alertStore.update(id, alert);
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: OrderId): Promise<boolean> {
         return this.alertStore.delete(id);
     }
 

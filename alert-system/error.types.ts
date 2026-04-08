@@ -44,4 +44,24 @@ export interface ErrorResponse {
 /**
  * Types for common application errors.
  */
-export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError;
+export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError; 
+
+/**
+ * Represents a custom error with additional details.
+ * @property {string} message - The error message.
+ * @property {string} type - The type of error.
+ * @property {number} [code] - Optional error code.
+ */
+export interface CustomError extends ErrorResponse {
+    type: 'CustomError';
+} 
+
+/**
+ * Creates a custom error.
+ * @param message - The error message.
+ * @param code - Optional error code.
+ * @returns {CustomError} - The created custom error.
+ */
+export const createCustomError = (message: string, code?: number): CustomError => {
+    return { message, code, type: 'CustomError' };
+};
