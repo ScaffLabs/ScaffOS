@@ -60,7 +60,6 @@ class InMemoryStore<T> {
     }
 
     private indexEntity(entity: T, id: string): void {
-        // Example indexing logic; modify as needed based on entity properties
         const key = (entity as any).someProperty;
         if (!this.index.has(key)) {
             this.index.set(key, new Set());
