@@ -7,6 +7,8 @@ services:
     environment:
       - ORDER_SERVICE_URL=http://order_service:4000
       - DATA_SERVICE_URL=http://data_service:5000
+      - DATABASE_URL=sqlite://:memory:
+      - LOG_LEVEL=info
     depends_on:
       - order_service
       - data_service
