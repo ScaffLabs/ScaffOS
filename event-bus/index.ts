@@ -4,24 +4,29 @@ import { errorHandler } from './middleware/errorHandler';
 import eventRoutes from './api/eventRoutes';
 import logger from './logger';
 import { config } from './config';
-import { v4 as uuidv4 } from 'uuid';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import csurf from 'csurf';
+import cors from 'cors';
 
 const app = express();
+
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 100,
+    message: { message: 'Too many requests, please try again later.' }
+});
+
+app.use(helmet());
+app.use(cors({ origin: ['http://your-allowed-origin.com'], methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
+app.use(limiter);
+app.use(express.json());
+app.use(csurf({ cookie: true }));
 
 const main = async () => {
     await initializeRedis();
     logger.info(`Configuration: ${JSON.stringify(config)}`);
-    app.use(express.json());
-    app.use((req, res, next) => {
-        const reqId = uuidv4();
-        const start = Date.now();
-        res.on('finish', () => {
-            const duration = Date.now() - start;
-            logger.info({ method: req.method, path: req.path, status: res.statusCode, duration, reqId });
-        });
-        next();
-    });
-    app.use('/events', eventRoutes);
+    app.use('/events', eventRoutes());
     app.use(errorHandler);
     const server = app.listen(config.port, () => {
         logger.info(`Server is running on port ${config.port}`);
