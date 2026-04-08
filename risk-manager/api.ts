@@ -5,11 +5,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
-import csrf from 'csurf';
 import { NotFoundError, ValidationError } from './errors';
 import { RiskPositionSchema } from './sharedTypes';
-
-const csrfProtection = csrf({ cookie: true });
 
 const router = express.Router();
 
@@ -25,19 +22,20 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again later.'
 });
 router.use(limiter);
-router.use(csrfProtection);
 
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
+    query('sort').optional().isString(),
+    query('filter').optional().isString()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { limit = 10, offset = 0 } = req.query;
-        const positions = await riskManager.getRiskPositions(limit, offset);
+        const { limit = 10, offset = 0, sort, filter } = req.query;
+        const positions = await riskManager.getRiskPositions(limit, offset, sort, filter);
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
@@ -114,4 +112,4 @@ router.delete('/risk/:id', [
     }
 });
 
-export default router;
+export default router; 
