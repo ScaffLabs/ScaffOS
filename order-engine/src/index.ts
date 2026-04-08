@@ -6,6 +6,8 @@ import { migrateData } from './migrations';
 import { setupGracefulShutdown } from './shutdown';
 import { setupRequestQueue } from './requestQueue';
 import { monitorMemoryUsage } from './memoryMonitor';
+import { setupConnectionPooling } from './db';
+import { errorHandlingMiddleware } from './middleware';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,9 +23,11 @@ app.delete('/orders/:id', deleteOrder);
 
 const startServer = async () => {
     await migrateData();
+    await setupConnectionPooling();
     setupRequestQueue(app);
     setupGracefulShutdown();
     monitorMemoryUsage();
+    app.use(errorHandlingMiddleware);
     app.listen(PORT, () => {
         console.log(`Order Engine listening on port ${PORT}`);
     });
