@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices } from './types';
+import { PriceData, CurrentPrices, PriceDataSchema } from './types';
 import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
@@ -16,11 +16,9 @@ export class PriceAggregator extends EventEmitter {
     }
 
     private validatePriceData(priceData: PriceData): void {
-        if (!priceData.exchange || !priceData.price || !priceData.volume) {
-            throw new ValidationError('Invalid price data. Exchange, price and volume are required.');
-        }
-        if (typeof priceData.price !== 'number' || typeof priceData.volume !== 'number') {
-            throw new ValidationError('Price and volume must be numbers.');
+        const result = PriceDataSchema.safeParse(priceData);
+        if (!result.success) {
+            throw new ValidationError(result.error.errors.map(e => e.message).join(', '));
         }
     }
 
@@ -31,6 +29,7 @@ export class PriceAggregator extends EventEmitter {
             await this.updateCurrentPrices();
             return newPrice;
         } catch (error) {
+            logError(error, 'Error adding price data');
             throw new ServiceError('Failed to add price.');
         }
     }
