@@ -1,0 +1,85 @@
+# Order Engine
+
+## Project Description
+The Order Engine is a microservice responsible for managing orders in a trading system. It allows users to create, retrieve, update, and delete orders while providing health and readiness checks.
+
+## Architecture Overview
+The service uses a simple REST API built with Express.js, with an in-memory storage mechanism for orders. It handles requests through a queue system to ensure reliability and scalability.
+
+## Setup Instructions
+### Prerequisites
+- Node.js (v14 or higher)
+- PostgreSQL (if using persistent storage)
+
+### Install
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your/repo.git
+   cd order-engine
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Run
+1. Set environment variables (create a `.env` file):
+   ```bash
+   PORT=3000
+   BASE_URL=http://localhost:3000
+   ```
+2. Start the server:
+   ```bash
+   npm start
+   ```
+
+## API Reference
+### Health Check
+- **GET** `/health`
+  - Returns the health status of the service.
+  - **Response:** `200 OK` if healthy.
+
+### Readiness Check
+- **GET** `/ready`
+  - Returns readiness status.
+  - **Response:** `200 OK` if ready.
+
+### Orders
+- **POST** `/orders`
+  - Create a new order.
+  - **Request Body:** `{ id: string, type: string, price: number, quantity: number, status: string }`
+  - **Response:** `201 Created` with the created order.
+
+- **GET** `/orders`
+  - Retrieve all orders.
+  - **Response:** `200 OK` with an array of orders.
+
+- **PUT** `/orders/:id`
+  - Update an existing order.
+  - **Request Body:** `{ type?: string, price?: number, quantity?: number, status?: string }`
+  - **Response:** `200 OK` with the updated order.
+
+- **DELETE** `/orders/:id`
+  - Delete an order.
+  - **Response:** `204 No Content` if successful.
+
+## Environment Variables
+| Variable    | Description                       |
+|-------------|-----------------------------------|
+| PORT        | Port for the server to listen on  |
+| BASE_URL    | Base URL for external API calls    |
+
+## Development Guide
+- Ensure you have the necessary environment set up.
+- Use `npm test` to run the test suite.
+
+## Deployment Guide
+- Build the application using `npm run build`.
+- Deploy to your preferred cloud provider.
+
+## Contributing
+Contributions are welcome! Please open an issue or submit a pull request.
+
+## CHANGELOG
+### [1.0.0] - 2023-10-01
+- Initial release of the Order Engine service.
