@@ -16,30 +16,79 @@ class InMemoryStore<T> implements DataStore<T> {
     private index: Map<string, Map<string, Set<UserId>>> = new Map();
 
     create(item: T): T {
-        // Generate a unique ID for the new user using UUID.
         const id = crypto.randomUUID() as UserId;
-        // Create a new item with the generated ID.
         const newItem = { ...item, id };
-        // Store the new item in the in-memory store.
         this.store.set(id, newItem);
-        // Index the new item for efficient searches.
         this.indexItem(id, newItem);
         return newItem;
     }
 
-    // Other methods...
+    read(id: UserId): T | undefined {
+        return this.store.get(id);
+    }
+
+    update(id: UserId, item: T): T | null {
+        const existingItem = this.store.get(id);
+        if (!existingItem) return null;
+        const updatedItem = { ...existingItem, ...item };
+        this.store.set(id, updatedItem);
+        return updatedItem;
+    }
+
+    delete(id: UserId): boolean {
+        return this.store.delete(id);
+    }
+
+    findAll(): T[] {
+        return Array.from(this.store.values());
+    }
+
+    findByIndex(index: string, value: string): T[] {
+        const indexMap = this.index.get(index);
+        if (!indexMap) return [];
+        const ids = indexMap.get(value);
+        return ids ? Array.from(ids).map(id => this.store.get(id)).filter(Boolean) as T[] : [];
+    }
+
+    transaction(operations: (store: this) => void): void {
+        const originalStore = new Map(this.store);
+        try {
+            operations(this);
+        } catch (error) {
+            this.store = originalStore; // Rollback on error
+            throw error;
+        }
+    }
+
+    private indexItem(id: UserId, item: T) {
+        // Indexing logic here (for example, based on username or email)
+    }
 }
 
 const userStore = new InMemoryStore<User>();
 
 export const createUser = (username: string, email: string): User => {
-    // Check if the email is already in use before creating a new user.
-    if (findUserByEmail(email)) {
+    if (userStore.findByIndex('email', email).length > 0) {
         throw new Error('Email already in use');
     }
-    // Create a new user object with a unique ID.
     const user: User = { id: crypto.randomUUID() as UserId, username, email };
     return userStore.create(user);
 };
 
-// Other storage functions...
+export const findUserById = (id: UserId): User | undefined => {
+    return userStore.read(id);
+};
+
+export const updateUser = (id: UserId, userData: Partial<User>): User | null => {
+    return userStore.update(id, userData);
+};
+
+export const deleteUser = (id: UserId): boolean => {
+    return userStore.delete(id);
+};
+
+export const getAllUsers = (): User[] => {
+    return userStore.findAll();
+};
+
+export default userStore;

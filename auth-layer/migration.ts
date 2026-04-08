@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { User } from './user';
+import { User } from './types';
 import userStore from './storage';
 
 const SEED_DATA_PATH = path.join(__dirname, 'seed.json');
@@ -13,7 +13,11 @@ const readSeedData = (): User[] => {
 export const migrateData = async () => {
     const seedData = readSeedData();
     for (const user of seedData) {
-        userStore.create(user);
+        try {
+            userStore.create(user);
+        } catch (error) {
+            console.warn(`Failed to create user ${user.email}: ${error.message}`);
+        }
     }
 };
 
