@@ -1,21 +1,12 @@
 import { Request, Response } from 'express';
-import { findStrategies, createStrategy, updateStrategy, deleteStrategy } from '../services/strategyService';
+import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, initializeStore } from '../services/strategyService';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
-import logger from '../logger';
 
 export const getStrategiesHandler = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, name, sort } = req.query;
+    const { name } = req.query;
     try {
-        const query: any = {};
-        if (name) query.name = { $regex: name, $options: 'i' };
-        const strategies = await findStrategies(query);
-        const sortedStrategies = strategies.sort((a, b) => {
-            if (sort === 'asc') return a.name.localeCompare(b.name);
-            if (sort === 'desc') return b.name.localeCompare(a.name);
-            return 0;
-        });
-        const paginatedStrategies = sortedStrategies.slice(Number(offset), Number(offset) + Number(limit));
-        res.status(200).json(paginatedStrategies);
+        const strategies = await findStrategies({ name });
+        res.status(200).json(strategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -37,39 +28,12 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
     }
 };
 
-export const updateStrategyHandler = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { name, parameters } = req.body;
+export const initializeHandler = async (req: Request, res: Response) => {
     try {
-        const updatedStrategy = await updateStrategy(id, { name, parameters });
-        if (!updatedStrategy) {
-            throw new NotFoundError('Strategy not found.');
-        }
-        res.status(200).json(updatedStrategy);
+        await initializeStore();
+        res.status(200).json({ message: 'Store initialized successfully.' });
     } catch (error) {
-        if (error instanceof NotFoundError) {
-            res.status(404).json({ error: error.message });
-        } else {
-            console.error('Error updating strategy:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
-};
-
-export const deleteStrategyHandler = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    try {
-        const deleted = await deleteStrategy(id);
-        if (!deleted) {
-            throw new NotFoundError('Strategy not found.');
-        }
-        res.status(204).send();
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            res.status(404).json({ error: error.message });
-        } else {
-            console.error('Error deleting strategy:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
+        console.error('Error initializing store:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
