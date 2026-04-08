@@ -4,7 +4,7 @@ import { healthCheck, readyCheck, memoryHealthCheck } from './healthCheck';
 import errorMiddleware from './errorMiddleware';
 import { createConnectionPool } from './connectionPool';
 import { auditLogger } from './auditLogger';
-import { logRequest, logError, logStartup } from './logger';
+import { logRequest } from './logger';
 import { latencyTracker } from './latencyTracker';
 import { limiter } from './rateLimiter';
 import { sanitize } from './sanitize';
@@ -54,7 +54,6 @@ process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 server.listen(PORT, () => {
-    logStartup();
     console.log(`Monitoring service running on port ${PORT}`);
     setInterval(() => {
         const memoryUsage = process.memoryUsage();
