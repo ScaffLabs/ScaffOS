@@ -1,4 +1,4 @@
-import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
+import { HistoricalData, StrategyParameters, BacktestResult, OrderId } from '../types';
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { logger } from '../utils/logger';
