@@ -45,4 +45,16 @@ describe('API Endpoints Integration Tests', () => {
         const response = await request(app).delete('/api/positions/99');
         expect(response.status).toBe(404);
     });
+
+    it('POST /api/positions without required fields should return 400', async () => {
+        const response = await request(app).post('/api/positions').send({ symbol: 'TSLA' });
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('Invalid position data');
+    });
+
+    it('PUT /api/positions/:id with invalid quantity should return 400', async () => {
+        const response = await request(app).put('/api/positions/1').send({ quantity: -1 });
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('Invalid quantity');
+    });
 });

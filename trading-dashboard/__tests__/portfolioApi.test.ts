@@ -31,6 +31,10 @@ describe('portfolioApi', () => {
         expect(axios.post).toHaveBeenCalledWith(expect.any(String), newPosition);
     });
 
+    it('createPosition should throw ValidationError for invalid position data', async () => {
+        await expect(createPosition({ id: '3', symbol: 'MSFT', quantity: -5 })).rejects.toThrow(ValidationError);
+    });
+
     it('updatePosition should update an existing position', async () => {
         (axios.put as jest.Mock).mockResolvedValue({});
         await updatePosition('1', 150);
@@ -41,10 +45,6 @@ describe('portfolioApi', () => {
         (axios.delete as jest.Mock).mockResolvedValue({});
         await deletePosition('1');
         expect(axios.delete).toHaveBeenCalledWith(expect.any(String));
-    });
-
-    it('should throw ValidationError for invalid position data', async () => {
-        await expect(createPosition({ id: '3', symbol: 'MSFT', quantity: -5 })).rejects.toThrow(ValidationError);
     });
 
     it('should throw NotFoundError for non-existing position', async () => {
