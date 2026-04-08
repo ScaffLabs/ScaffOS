@@ -67,6 +67,13 @@ This service is built using Express.js and connects to Redis for event publishin
 - **Response**:
   - **204**: Event deleted successfully
 
+### Health Check
+- **Method**: GET
+- **Path**: /events/health
+- **Response**:
+  - **200**: Service is healthy
+  - **503**: Service is unhealthy
+
 ## Environment Variables
 | Variable         | Description                       |
 |------------------|-----------------------------------|
@@ -74,6 +81,7 @@ This service is built using Express.js and connects to Redis for event publishin
 | PORT             | Port number for the service       |
 | LOG_LEVEL        | Log level for Winston             |
 | REDIS_URL        | URL for the Redis server          |
+| OTHER_SERVICE_URL| URL for external service to check health |
 
 ## Development Guide
 - Ensure all tests are passing before submitting changes.

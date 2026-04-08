@@ -13,9 +13,11 @@ Thank you for considering contributing to the Event Bus service! We appreciate y
 ## Code Style
 - Follow the existing code style and structure.
 - Write meaningful commit messages that describe the changes made.
+- Ensure consistent use of semicolons and indentation.
 
 ## Testing
 - Ensure all new features and bug fixes are covered by tests. Use Jest for unit testing.
+- Run `npm test` to verify that all tests pass before creating a pull request.
 
 ## Issues
 - If you encounter any issues, please report them through the GitHub issues page.
