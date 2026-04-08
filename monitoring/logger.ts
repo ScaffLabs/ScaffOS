@@ -4,12 +4,7 @@ import config from './config';
 const logFormat = config.NODE_ENV === 'production' ? 'json' : 'pretty';
 const logger = pino({
     level: 'info',
-    transport: {
-        target: 'pino-pretty',
-        options: {
-            colorize: true,
-        },
-    },
+    transport: logFormat === 'json' ? undefined : { target: 'pino-pretty', options: { colorize: true } },
 });
 
 export const logRequest = (req, res, next) => {
@@ -29,10 +24,7 @@ export const logError = (error, req) => {
 };
 
 export const logStartup = () => {
-    logger.info({
-        message: 'Monitoring service starting up...',
-        config,
-    });
+    logger.info({ message: 'Monitoring service starting up...', config });
 };
 
 export const logServiceHealth = (service, status) => {
@@ -41,6 +33,11 @@ export const logServiceHealth = (service, status) => {
 
 export const logDatabaseQuery = (query, duration) => {
     logger.debug({ query, duration }, 'Database query executed');
+};
+
+export const logRequestId = (req) => {
+    const requestId = req.headers['x-request-id'] || 'unknown';
+    logger.info({ requestId }, 'Request ID logged');
 };
 
 export default logger;
