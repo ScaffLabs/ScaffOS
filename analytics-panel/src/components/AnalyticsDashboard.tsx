@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { fetchPerformanceMetrics } from '../api/analytics';
 import { DrawdownChart } from './DrawdownChart';
-import { subscribeToEvent, unsubscribeFromEvent } from '../api/eventBus';
+import { PerformanceMetrics } from '../types';
+import { ServiceError } from '../errors/customErrors';
 
 export const AnalyticsDashboard: React.FC = () => {
-    const [metrics, setMetrics] = useState<any>(null);
+    const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -15,19 +16,17 @@ export const AnalyticsDashboard: React.FC = () => {
                 const data = await fetchPerformanceMetrics();
                 setMetrics(data);
             } catch (err) {
-                setError('Failed to load metrics: ' + err.message);
+                if (err instanceof ServiceError) {
+                    setError('Error fetching metrics: ' + err.message);
+                } else {
+                    setError('Unexpected error: ' + err);
+                }
             } finally {
                 setLoading(false);
             }
         };
+
         loadMetrics();
-
-        const handlePerformanceMetricsFetched = (data: any) => setMetrics(data);
-        subscribeToEvent('performanceMetricsFetched', handlePerformanceMetricsFetched);
-
-        return () => {
-            unsubscribeFromEvent('performanceMetricsFetched', handlePerformanceMetricsFetched);
-        };
     }, []);
 
     if (loading) return <div>Loading metrics...</div>;

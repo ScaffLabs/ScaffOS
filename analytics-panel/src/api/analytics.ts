@@ -1,55 +1,37 @@
 import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
-import { emitEvent } from './eventBus';
+import { PerformanceMetrics, PerformanceMetricsSchema, Strategy, StrategySchema } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 const axiosInstance = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
 
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000;
-
-const fetchWithRetry = async (url: string, config?: any, retries: number = 0) => {
+const fetchPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
     try {
-        const response = await axiosInstance.get(url, config);
-        return response.data;
+        const response = await axiosInstance.get('/api/performance');
+        const validationResult = PerformanceMetricsSchema.safeParse(response.data);
+        if (!validationResult.success) {
+            throw new ServiceError('Invalid performance metrics data');
+        }
+        return validationResult.data;
     } catch (error) {
-        if (retries < MAX_RETRIES) {
-            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
-            return fetchWithRetry(url, config, retries + 1);
-        }
-        throw new ServiceError('Failed to fetch data: ' + error.message);
+        throw new ServiceError('Failed to fetch performance metrics: ' + error.message);
     }
 };
 
-// Health check for dependent services
-export const healthCheck = async () => {
-    return await fetchWithRetry('/api/health');
-};
-
-// Example usage of health check
-export const checkDependenciesHealth = async () => {
-    const services = {
-        strategyService: process.env.STRATEGY_SERVICE_URL,
-    };
-    const healthResults = await Promise.all(Object.entries(services).map(async ([name, url]) => {
-        try {
-            const response = await axios.get(url);
-            return { serviceName: name, healthy: response.status === 200 };
-        } catch {
-            return { serviceName: name, healthy: false };
-        }
-    }));
-    return healthResults;
-};
-
-export const getStrategies = async () => {
-    return await fetchWithRetry('/api/strategies');
-};
-
-export const compareStrategies = async (strategyA: string, strategyB: string) => {
-    const data = await fetchComparisonData(strategyA, strategyB);
-    if (!data.betterStrategy) {
-        throw new ServiceError('Unable to determine better strategy');
+const getStrategies = async (): Promise<Strategy[]> => {
+    try {
+        const response = await axiosInstance.get('/api/strategies');
+        const strategies = response.data;
+        strategies.forEach(strategy => {
+            const validationResult = StrategySchema.safeParse(strategy);
+            if (!validationResult.success) {
+                throw new ServiceError('Invalid strategy data');
+            }
+        });
+        return strategies;
+    } catch (error) {
+        throw new ServiceError('Failed to fetch strategies: ' + error.message);
     }
-    return data;
 };
+
+export { fetchPerformanceMetrics, getStrategies };
