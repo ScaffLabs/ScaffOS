@@ -50,7 +50,7 @@ const generateRequestId = () => {
 
 export const logSensitiveOperation = (operation, context) => {
     logger.info({
-        message: 'Sensitive operation',
+        message: 'Sensitive operation logged',
         operation,
         context,
         timestamp: new Date().toISOString(),

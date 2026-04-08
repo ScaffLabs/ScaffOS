@@ -11,6 +11,7 @@ import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import { logRequest, logAudit, logError } from './logger';
 import { ServiceError } from './errors';
+import csrf from 'csurf';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -23,10 +24,13 @@ app.use(helmet());
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
+    message: 'Too many requests from this IP, please try again later.',
 });
 app.use(limiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+const csrfProtection = csrf();
+app.use(csrfProtection);
 
 app.use((req, res, next) => {
     const start = Date.now();
