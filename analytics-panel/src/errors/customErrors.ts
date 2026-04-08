@@ -26,4 +26,18 @@ class DatabaseError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DatabaseError };
+class OverflowError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'OverflowError';
+    }
+}
+
+class DivisionByZeroError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'DivisionByZeroError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DatabaseError, OverflowError, DivisionByZeroError };
