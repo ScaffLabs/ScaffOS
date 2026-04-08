@@ -11,7 +11,7 @@ const Configuration: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form submission behavior
         setError(null);
         setSuccessMessage(null);
 
@@ -19,19 +19,19 @@ const Configuration: React.FC = () => {
             const configItem: ConfigurationItem = { key, value };
             // Validate the item using Zod schema
             ConfigurationItemSchema.parse(configItem);
-            setLoading(true);
+            setLoading(true); // Set loading state
             await postConfiguration(configItem.key, configItem.value);
-            setSuccessMessage('Configuration created successfully!');
-            setKey('');
-            setValue('');
+            setSuccessMessage('Configuration created successfully!'); // Set success message
+            setKey(''); // Reset key input
+            setValue(''); // Reset value input
         } catch (err) {
             if (err instanceof ValidationError) {
-                setError(err.message);
+                setError(err.message); // Set the error message from validation
             } else {
-                setError('Failed to create configuration. Please try again.');
+                setError('Failed to create configuration. Please try again.'); // Set a generic error message
             }
         } finally {
-            setLoading(false);
+            setLoading(false); // Reset loading state
         }
     };
 
