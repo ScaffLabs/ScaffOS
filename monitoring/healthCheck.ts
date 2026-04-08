@@ -19,3 +19,11 @@ export const readyCheck = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+// Additional health check for memory usage
+export const memoryHealthCheck = (req: Request, res: Response) => {
+    const memoryUsage = process.memoryUsage();
+    const totalMemory = memoryUsage.rss / (1024 * 1024);
+    const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
+    res.status(200).json({ status: 'UP', memory: { total: totalMemory, used: usedMemory } });
+};

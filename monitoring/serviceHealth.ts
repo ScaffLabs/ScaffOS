@@ -33,3 +33,12 @@ export const checkServiceHealth = async () => {
         return acc;
     }, {});
 };
+
+export const monitorMemoryUsage = () => {
+    const memoryUsage = process.memoryUsage();
+    const totalMemory = memoryUsage.rss / (1024 * 1024);
+    const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
+    logger.info({ totalMemory, usedMemory }, 'Memory usage monitored');
+};
+
+setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
