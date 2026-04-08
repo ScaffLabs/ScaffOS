@@ -2,8 +2,8 @@
 import { z } from 'zod';
 
 // Branded types for IDs
-export type OrderId = string & { readonly brand: unique symbol };  
-export type TradeId = string & { readonly brand: unique symbol };  
+export type OrderId = string & { readonly brand: unique symbol };
+export type TradeId = string & { readonly brand: unique symbol };
 
 /**
  * Represents a risk position in the trading system.

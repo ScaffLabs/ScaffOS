@@ -35,7 +35,7 @@ export default class RiskManager {
      * @returns The newly created risk position.
      */
     async createRiskPosition(asset: string, position: number) {
-        const newPosition: RiskPosition = { id: this.generateId(), asset, position };
+        const newPosition: RiskPosition = { id: this.generateId() as OrderId, asset, position };
         const validationResult = RiskPositionSchema.safeParse(newPosition);
         if (!validationResult.success) {
             logger.error('Invalid risk position data: ' + validationResult.error);
@@ -76,7 +76,11 @@ export default class RiskManager {
         return this.storage.delete(id);
     }
 
-    private generateId() {
-        return Math.random().toString(36).substr(2, 9);
+    /**
+     * Generates a unique ID for a risk position.
+     * @returns A new unique ID as a string.
+     */
+    private generateId(): OrderId {
+        return Math.random().toString(36).substr(2, 9) as OrderId;
     }
 }
