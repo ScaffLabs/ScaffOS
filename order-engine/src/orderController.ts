@@ -1,3 +1,4 @@
+// orderController.ts
 import { Request, Response } from 'express';
 import { Order, OrderSchema } from './types';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
@@ -20,6 +21,8 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         logger.error('Error creating order', { error: error.message, requestId: req.headers['x-request-id'] });
         if (error instanceof ValidationError) {
             res.status(400).json({ errors: error.errors });
+        } else if (error instanceof NotFoundError) {
+            res.status(404).json({ message: error.message });
         } else {
             res.status(500).json({ message: 'Internal Server Error' });
         }

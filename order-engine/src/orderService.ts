@@ -1,3 +1,4 @@
+// orderService.ts
 import { Order, OrderSchema } from './types';
 import { emitWithRetry } from './eventBus';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
