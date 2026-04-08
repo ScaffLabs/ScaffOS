@@ -1,0 +1,47 @@
+import { Portfolio, PortfolioUpdate } from '../types';
+
+class InMemoryStorage {
+    private portfolios: Portfolio[] = [];
+    private idCounter: number = 1;
+
+    public create(portfolioData: Omit<Portfolio, 'id'>): Portfolio {
+        const newPortfolio: Portfolio = { id: String(this.idCounter++), ...portfolioData };
+        this.portfolios.push(newPortfolio);
+        return newPortfolio;
+    }
+
+    public read(id: string): Portfolio | undefined {
+        return this.portfolios.find(portfolio => portfolio.id === id);
+    }
+
+    public update(id: string, data: PortfolioUpdate): Portfolio | undefined {
+        const portfolio = this.read(id);
+        if (!portfolio) return undefined;
+        Object.assign(portfolio, data);
+        return portfolio;
+    }
+
+    public delete(id: string): boolean {
+        const index = this.portfolios.findIndex(portfolio => portfolio.id === id);
+        if (index === -1) return false;
+        this.portfolios.splice(index, 1);
+        return true;
+    }
+
+    public getAll(): Portfolio[] {
+        return this.portfolios;
+    }
+
+    public clear(): void {
+        this.portfolios = [];
+        this.idCounter = 1;
+    }
+
+    public migrate(data: Portfolio[]): void {
+        this.clear();
+        data.forEach(portfolio => this.create(portfolio));
+    }
+}
+
+const storage = new InMemoryStorage();
+export default storage;
