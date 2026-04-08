@@ -1,18 +1,22 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices, PriceDataSchema, PriceEvent, PriceEventSchema } from './types';
+import { PriceData, CurrentPrices, PriceDataSchema } from './types';
 import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
-import { ServiceError, ValidationError, NotFoundError } from './errors';
+import { ServiceError, ValidationError } from './errors';
 import { EventEmitter } from 'events';
+import { EventBus } from './eventBus';
 
 export class PriceAggregator extends EventEmitter {
     private currentPrices: CurrentPrices = {};
     private clients: WebSocket[] = [];
+    private eventBus: EventBus;
 
-    constructor() {
+    constructor(eventBus: EventBus) {
         super();
+        this.eventBus = eventBus;
         this.startPriceFetch();
+        this.eventBus.on('PRICE_ADDED', (priceData) => this.handlePriceAdded(priceData));
     }
 
     private validatePriceData(priceData: PriceData): void {
@@ -27,7 +31,7 @@ export class PriceAggregator extends EventEmitter {
         try {
             const newPrice = await storage.create(priceData);
             await this.updateCurrentPrices();
-            this.emit('PRICE_ADDED', newPrice);
+            this.eventBus.emit('PRICE_ADDED', newPrice);
             return newPrice;
         } catch (error) {
             logError(error, 'Error adding price data');
@@ -36,7 +40,10 @@ export class PriceAggregator extends EventEmitter {
     }
 
     public async fetchPricesFromExchanges(): Promise<void> {
-        const exchangeUrls = ['/exchange1/prices', '/exchange2/prices'];
+        const exchangeUrls = [
+            '/exchange1/prices',
+            '/exchange2/prices'
+        ];
         const pricePromises = exchangeUrls.map(url => httpClient(url));
         try {
             const prices = await Promise.all(pricePromises);
@@ -57,18 +64,10 @@ export class PriceAggregator extends EventEmitter {
                 acc[priceData.exchange] = priceData.price;
                 return acc;
             }, {} as CurrentPrices);
-            const vwap = this.calculateVWAP(prices);
-            this.currentPrices.VWAP = vwap;
         } catch (error) {
             logError(error, 'Error updating current prices');
             throw new ServiceError('Failed to update current prices.');
         }
-    }
-
-    private calculateVWAP(prices: PriceData[]): number {
-        const totalValue = prices.reduce((acc, { price, volume }) => acc + price * volume, 0);
-        const totalVolume = prices.reduce((acc, { volume }) => acc + volume, 0);
-        return totalVolume > 0 ? totalValue / totalVolume : 0;
     }
 
     public getCurrentPrices(): CurrentPrices {
@@ -79,5 +78,12 @@ export class PriceAggregator extends EventEmitter {
         setInterval(() => {
             this.fetchPricesFromExchanges();
         }, 30000); // Fetch every 30 seconds
+    }
+
+    private handlePriceAdded(priceData: PriceData) {
+        this.emit('PRICE_ADDED', priceData);
+        this.clients.forEach(client => {
+            client.send(JSON.stringify(priceData));
+        });
     }
 }
