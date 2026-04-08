@@ -1,6 +1,5 @@
 import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import axios from 'axios';
-import { healthCheckServices } from './healthCheckService';
 import { EventEmitter } from 'events';
 
 const MAX_RETRIES = 3;
@@ -50,7 +49,6 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
 
   let totalReturns = 0;
   let trades = 0;
-  let winRate = 0;
   let wins = 0;
 
   // Implementing the backtest logic
@@ -66,23 +64,21 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
 
       if (shouldBuy) {
         trades++;
-        // Simulate buying
-        totalReturns -= entryPrice;
+        totalReturns -= entryPrice; // Cost of buying
       } else if (shouldSell) {
         trades++;
-        // Simulate selling
-        totalReturns += entryPrice;
+        totalReturns += entryPrice; // Proceeds from selling
         wins++;
       }
     }
   }
 
-  winRate = trades > 0 ? wins / trades : 0;
+  const winRate = trades > 0 ? (wins / trades) * 100 : 0;
 
   return {
     totalReturns,
     trades,
     winRate,
-    performanceMetrics: `Simulated ${trades} trades with a win rate of ${winRate}`
+    performanceMetrics: `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}%`
   };
 }
