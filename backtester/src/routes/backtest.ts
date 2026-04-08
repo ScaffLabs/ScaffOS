@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { simulateBacktest } from '../services/backtestService';
-import { healthCheckServices, eventEmitter } from '../services/healthCheckService';
+import { healthCheckServices } from '../services/healthCheckService';
 import { StrategyParametersSchema, HistoricalDataSchema } from '../types';
 import { ValidationError } from '../middleware/errorHandler';
 
@@ -11,10 +11,13 @@ backtestRouter.post('/', async (req, res, next) => {
   try {
     // Validate input data
     StrategyParametersSchema.parse(strategyParams);
+    if (!Array.isArray(historicalData) || historicalData.length === 0) {
+      throw new ValidationError('historicalData must be a non-empty array.');
+    }
     historicalData.forEach(data => HistoricalDataSchema.parse(data));
 
     const result = await simulateBacktest(strategyParams, historicalData);
-    res.json(result);
+    res.status(200).json(result);
   } catch (error) {
     if (error instanceof ValidationError) {
       return next(error);
@@ -24,8 +27,12 @@ backtestRouter.post('/', async (req, res, next) => {
 });
 
 backtestRouter.get('/health', async (req, res) => {
-  const healthResults = await healthCheckServices();
-  res.json({ health: healthResults });
+  try {
+    const healthResults = await healthCheckServices();
+    res.status(200).json({ health: healthResults });
+  } catch (error) {
+    next(new Error('Health check failed')); // Handle health check error
+  }
 });
 
 export { backtestRouter };
