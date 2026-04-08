@@ -25,12 +25,14 @@ The service is built using Express.js and follows a modular architecture. The co
 ### Run
 1. Set up environment variables in a `.env` file:
    - `JWT_SECRET`=your_jwt_secret
-   - Other necessary environment variables.
+   - `EVENT_BUS_URL`=http://localhost:4000
+   - `ANOTHER_SERVICE_URL`=http://localhost:4001
+   - `NODE_ENV`=development
 2. Start the server with `npm start`.
 
 ## API Reference
 
-### GET /risk
+### GET /api/risk
 - **Description**: Retrieve risk positions.
 - **Query Parameters**:
   - `limit` (integer): Number of results to return.
@@ -39,8 +41,9 @@ The service is built using Express.js and follows a modular architecture. The co
   - `filter` (string): Field to filter by.
 - **Responses**:
   - `200 OK`: Returns a list of risk positions.
+  - `500 Internal Server Error`: An error occurred while fetching.
 
-### POST /risk
+### POST /api/risk
 - **Description**: Create a new risk position.
 - **Request Body**:
   - `asset` (string): The asset for the risk position.
@@ -48,8 +51,9 @@ The service is built using Express.js and follows a modular architecture. The co
 - **Responses**:
   - `201 Created`: Risk position created.
   - `400 Bad Request`: Invalid input.
+  - `500 Internal Server Error`: An error occurred while creating.
 
-### PUT /risk/{id}
+### PUT /api/risk/{id}
 - **Description**: Update a risk position.
 - **Parameters**:
   - `id` (string): Risk position ID.
@@ -58,19 +62,24 @@ The service is built using Express.js and follows a modular architecture. The co
 - **Responses**:
   - `204 No Content`: Risk position updated.
   - `404 Not Found`: Risk position not found.
+  - `500 Internal Server Error`: An error occurred while updating.
 
-### DELETE /risk/{id}
+### DELETE /api/risk/{id}
 - **Description**: Delete a risk position.
 - **Parameters**:
   - `id` (string): Risk position ID.
 - **Responses**:
   - `204 No Content`: Risk position deleted.
   - `404 Not Found`: Risk position not found.
+  - `500 Internal Server Error`: An error occurred while deleting.
 
 ## Environment Variables
 | Variable       | Description               |
 |----------------|---------------------------|
 | JWT_SECRET     | Secret for JWT signing    |
+| EVENT_BUS_URL  | URL for the event bus     |
+| ANOTHER_SERVICE_URL | URL for another service |
+| NODE_ENV       | Environment type (development, staging, production) |
 
 ## Development Guide
 - Use TypeScript for type safety.

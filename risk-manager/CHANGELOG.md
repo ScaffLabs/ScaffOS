@@ -3,8 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [1.1.0] - 2023-10-15
 ### Added
-- Initial implementation of the Risk Manager service.
+- Comprehensive README.md with setup, API reference, and documentation.
+- CHANGELOG.md for version history tracking.
 
 ## [1.0.0] - 2023-10-01
 ### Added
