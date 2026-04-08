@@ -3,8 +3,8 @@ import validator from 'validator';
 
 export const validateQueryParams = (req: Request, res: Response, next: NextFunction) => {
     const { strategyA, strategyB } = req.query;
-    if (!strategyA || !strategyB || 
-        !validator.isAlphanumeric(strategyA.toString()) || 
+    if (!strategyA || !strategyB ||
+        !validator.isAlphanumeric(strategyA.toString()) ||
         !validator.isAlphanumeric(strategyB.toString())) {
         return res.status(400).json({ error: 'Invalid query parameters. Strategy names must be alphanumeric.' });
     }

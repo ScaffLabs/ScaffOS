@@ -6,21 +6,31 @@ import rateLimit from 'express-rate-limit';
 import { healthCheckHandler } from './handlers/healthCheck';
 import { validateQueryParams } from './middleware/inputValidator';
 import { fetchComparisonData } from './api/analytics';
+import morgan from 'morgan';
+import csrf from 'csurf';
 
 const app = express();
 const server = http.createServer(app);
 
+// Middleware Setup
 app.use(helmet());
 app.use(cors({ origin: ['https://your-allowed-origin.com', 'https://another-allowed-origin.com'] }));
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
 });
 app.use(limiter);
 
 app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' })); // Limit request size
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// CSRF Protection
+const csrfProtection = csrf();
+app.use(csrfProtection);
+
+// Logging Middleware
+app.use(morgan('combined'));
 
 app.get('/api/health', healthCheckHandler);
 app.get('/api/compare', validateQueryParams, async (req, res) => {
@@ -29,6 +39,7 @@ app.get('/api/compare', validateQueryParams, async (req, res) => {
         const result = await fetchComparisonData(strategyA, strategyB);
         res.status(200).json(result);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
