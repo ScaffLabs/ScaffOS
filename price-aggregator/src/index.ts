@@ -3,15 +3,17 @@ import { migrateData, seedData } from './migration';
 import { PriceAggregator } from './priceAggregator';
 import { MemoryMonitor } from './memoryMonitor';
 import http from 'http';
-import { logError } from './logger';
+import errorMiddleware from './errorMiddleware';
 
 const app = express();
 const httpServer = http.createServer(app);
 const priceAggregator = new PriceAggregator();
 const memoryMonitor = new MemoryMonitor();
 
+app.use(express.json());
+
 const startApp = async () => {
-    const oldData = []; // Fetch or define old data here
+    const oldData = [];
     await migrateData(oldData);
     await seedData();
 
@@ -20,15 +22,21 @@ const startApp = async () => {
             const health = await priceAggregator.checkDependencies();
             res.status(200).json({ status: 'healthy', dependencies: health });
         } catch (error) {
-            logError(error, 'Health Check');
-            res.status(500).json({ status: 'unhealthy', error: error.message });
+            next(error);
         }
     });
 
-    app.get('/ready', (req, res) => {
-        // Implement readiness logic if needed
-        res.status(200).json({ status: 'ready' });
+    app.get('/prices', async (req, res, next) => {
+        try {
+            const prices = await priceAggregator.getCurrentPrices();
+            if (Object.keys(prices).length === 0) return res.status(204).send();
+            res.status(200).json(prices);
+        } catch (error) {
+            next(error);
+        }
     });
+
+    app.use(errorMiddleware);
 
     httpServer.listen(3000, () => {
         console.log('Price aggregator service running on port 3000');
@@ -36,7 +44,7 @@ const startApp = async () => {
 
     setInterval(() => {
         memoryMonitor.logMemoryUsage();
-    }, 60000); // Log memory usage every minute
+    }, 60000);
 };
 
 const gracefulShutdown = () => {
