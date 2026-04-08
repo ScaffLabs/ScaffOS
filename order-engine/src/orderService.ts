@@ -1,9 +1,8 @@
 import { Order, OrderSchema } from './types';
 import { emitWithRetry } from './eventBus';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
-import { storage } from './storage';
+import { queryDatabase } from './db';
 import logger from './logger';
-import { fetchData } from './axiosClient';
 
 const ANOTHER_SERVICE_URL = process.env.ANOTHER_SERVICE_URL;
 
@@ -14,11 +13,11 @@ export const createOrderService = async (orderData: unknown) => {
     }
     const order = parsedOrder.data;
     try {
-        const createdOrder = await storage.create(order);
-        await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder });
-        logger.info('Order created successfully', { order: createdOrder });
-        await fetchData(`${ANOTHER_SERVICE_URL}/orders`, createdOrder);
-        return createdOrder;
+        const createdOrder = await queryDatabase('INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5) RETURNING *', [order.id, order.type, order.price, order.quantity, order.status]);
+        await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder.rows[0] });
+        logger.info('Order created successfully', { order: createdOrder.rows[0] });
+        await fetchData(`${ANOTHER_SERVICE_URL}/orders`, createdOrder.rows[0]);
+        return createdOrder.rows[0];
     } catch (error) {
         logger.error('Error creating order:', error);
         throw new ServiceError('Could not create order. Please try again later.');
@@ -30,16 +29,16 @@ export const updateOrderService = async (id: string, updates: unknown) => {
     if (!parsedUpdates.success) {
         throw new ValidationError('Invalid order update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
     }
-    const orderToUpdate = await storage.read(id);
-    if (!orderToUpdate) {
+    const orderToUpdate = await queryDatabase('SELECT * FROM orders WHERE id = $1', [id]);
+    if (orderToUpdate.rowCount === 0) {
         throw new NotFoundError('Order not found.');
     }
     try {
-        const updatedOrder = await storage.update(id, parsedUpdates.data);
-        await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
-        logger.info('Order updated successfully', { order: updatedOrder });
-        await fetchData(`${ANOTHER_SERVICE_URL}/orders/${id}`, updatedOrder);
-        return updatedOrder;
+        const updatedOrder = await queryDatabase('UPDATE orders SET type = COALESCE($1, type), price = COALESCE($2, price), quantity = COALESCE($3, quantity), status = COALESCE($4, status) WHERE id = $5 RETURNING *', [updates.type, updates.price, updates.quantity, updates.status, id]);
+        await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder.rows[0] });
+        logger.info('Order updated successfully', { order: updatedOrder.rows[0] });
+        await fetchData(`${ANOTHER_SERVICE_URL}/orders/${id}`, updatedOrder.rows[0]);
+        return updatedOrder.rows[0];
     } catch (error) {
         logger.error('Error updating order:', error);
         throw new ServiceError('Could not update order. Please try again later.');
@@ -47,12 +46,12 @@ export const updateOrderService = async (id: string, updates: unknown) => {
 };
 
 export const deleteOrderService = async (id: string) => {
-    const orderToDelete = await storage.read(id);
-    if (!orderToDelete) {
+    const orderToDelete = await queryDatabase('SELECT * FROM orders WHERE id = $1', [id]);
+    if (orderToDelete.rowCount === 0) {
         throw new NotFoundError('Order not found.');
     }
     try {
-        await storage.delete(id);
+        await queryDatabase('DELETE FROM orders WHERE id = $1', [id]);
         await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
         logger.info('Order deleted successfully', { id });
         await fetchData(`${ANOTHER_SERVICE_URL}/orders/${id}`, { deleted: true });
@@ -64,21 +63,12 @@ export const deleteOrderService = async (id: string) => {
 
 export const getOrdersService = async ({ limit, offset, status, sortBy, sortOrder }) => {
     try {
-        let orders = await storage.findAll();
+        let orders = await queryDatabase('SELECT * FROM orders ORDER BY $1 $2 LIMIT $3 OFFSET $4', [sortBy || 'price', sortOrder || 'asc', limit, offset]);
         if (status) {
-            orders = orders.filter(order => order.status === status);
+            orders.rows = orders.rows.filter(order => order.status === status);
         }
-        if (sortBy) {
-            orders.sort((a, b) => {
-                if (sortOrder === 'desc') {
-                    return b[sortBy] - a[sortBy];
-                }
-                return a[sortBy] - b[sortBy];
-            });
-        }
-        const paginatedOrders = orders.slice(offset, offset + limit);
-        logger.info('Orders retrieved successfully', { count: paginatedOrders.length });
-        return paginatedOrders;
+        logger.info('Orders retrieved successfully', { count: orders.rowCount });
+        return orders.rows;
     } catch (error) {
         logger.error('Error retrieving orders:', error);
         throw new ServiceError('Could not retrieve orders. Please try again later.');
