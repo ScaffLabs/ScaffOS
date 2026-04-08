@@ -4,9 +4,15 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { healthCheck } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
+import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
+import logger from './utils/logger';
+import config from './config';
 
 const app = express();
+
+// Log startup configuration
+logger.logStartup(config);
 
 // Security middleware
 app.use(helmet());
@@ -21,6 +27,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 app.use(express.json());
+app.use(requestLogger); // Register request logger middleware
 
 app.get('/api/health', healthCheck);
 
