@@ -7,7 +7,6 @@ The Auth Layer Service provides authentication and authorization features for ap
 The service is built on Node.js with Express, utilizing PostgreSQL for data storage. It employs JWT for secure token management and uses bcrypt for password hashing. The service is designed to be modular for easier maintenance and scaling.
 
 ## Setup Instructions
-
 ### Prerequisites
 - Node.js (v14 or greater)
 - PostgreSQL (v12 or greater)

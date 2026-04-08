@@ -17,3 +17,8 @@
 - Added user management features including create, update, delete, and fetch users.
 - Introduced validation for user inputs using express-validator.
 - Improved logging for better traceability of issues.
+
+## [1.2.1] - 2023-10-21
+- Added detailed API documentation in README.md.
+- Updated environment variables section for clarity.
+- Improved error handling in user management routes.
