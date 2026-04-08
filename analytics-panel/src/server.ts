@@ -8,7 +8,6 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import bodyParser from 'body-parser';
 import { healthCheckHandler, readyCheckHandler } from './handlers/healthCheck';
-import { monitorMemoryUsage } from './utils/monitor';
 import logger, { logWithRequestId } from './logger';
 
 const app = express();
@@ -43,10 +42,9 @@ const startServer = async () => {
     await connectToDatabase();
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
+        logger.logStartup({ PORT });
         logger.info(`Server running on port ${PORT}`);
     });
-
-    setInterval(monitorMemoryUsage, 60000);
 };
 
 startServer();
