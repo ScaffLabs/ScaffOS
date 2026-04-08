@@ -2,7 +2,7 @@ import { closeDatabaseConnection } from './db';
 import { server } from './index';
 import { monitorMemoryUsage } from './memoryMonitor';
 
-export const setupGracefulShutdown = () => {
+export const setupGracefulShutdown = (app) => {
     const shutdown = async () => {
         console.log('Initiating graceful shutdown...');
         try {
@@ -11,7 +11,7 @@ export const setupGracefulShutdown = () => {
         } catch (err) {
             console.error('Error closing database connection:', err);
         }
-        server.close(() => {
+        app.close(() => {
             console.log('HTTP server closed. Exiting...');
             process.exit(0);
         });

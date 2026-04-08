@@ -10,7 +10,6 @@ import logger, { logStartup } from './logger';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { validationResult } from 'express-validator';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,19 +19,11 @@ app.use(cors({ origin: ['http://allowed-origin.com'] }));
 app.use(bodyParser.json({ limit: '1mb' }));
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Too many requests from this IP, please try again later'
 });
 app.use(limiter);
-
-app.use((req, res, next) => {
-    // Validate content type
-    if (req.headers['content-type'] !== 'application/json') {
-        return res.status(415).send('Content type must be application/json');
-    }
-    next();
-});
 
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
@@ -41,7 +32,7 @@ orderRouter(app);
 const startServer = async () => {
     await migrateData();
     setupRequestQueue(app);
-    setupGracefulShutdown();
+    setupGracefulShutdown(app);
     monitorMemoryUsage();
     app.listen(PORT, () => {
         logStartup({ PORT, ENV: process.env.NODE_ENV });
@@ -63,15 +54,3 @@ process.on('unhandledRejection', (reason) => {
     logger.error('Unhandled Rejection:', reason);
     process.exit(1);
 });
-
-process.on('SIGTERM', () => {
-    logger.info('SIGTERM received. Shutting down gracefully.');
-    setupGracefulShutdown();
-});
-
-process.on('SIGINT', () => {
-    logger.info('SIGINT received. Shutting down gracefully.');
-    setupGracefulShutdown();
-});
-
-export default app;
