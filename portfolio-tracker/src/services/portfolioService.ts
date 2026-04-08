@@ -42,11 +42,12 @@ export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promis
     return portfolio;
 };
 
-export const fetchPortfolios = async () => {
-    return await retryRequest(async () => {
-        const response = await circuitBreaker.fire(() => axios.get(PORTFOLIO_SERVICE_URL));
-        return response.data;
-    });
+export const fetchPortfolios = async (): Promise<Portfolio[]> => {
+    return portfolios;
+};
+
+export const clearPortfolios = () => {
+    portfolios = [];
 };
 
 export const healthCheckPortfolioService = async (): Promise<boolean> => {
@@ -58,16 +59,8 @@ export const healthCheckPortfolioService = async (): Promise<boolean> => {
     }
 };
 
-export const fetchAllPortfolios = async (): Promise<Portfolio[]> => {
-    return portfolios;
-};
-
-export const clearPortfolios = () => {
-    portfolios = [];
-};
-
 export const healthCheckAllServices = async (): Promise<{ [key: string]: boolean }> => {
-    const status = {};
+    const status: { [key: string]: boolean } = {};
     status.portfolioService = await healthCheckPortfolioService();
     return status;
 };
