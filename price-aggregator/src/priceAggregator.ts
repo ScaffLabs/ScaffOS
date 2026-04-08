@@ -35,6 +35,16 @@ export class PriceAggregator extends EventEmitter {
         this.updateCurrentPrices();
     }
 
+    public async addPrice(priceData: PriceData) {
+        this.prices.push(priceData);
+        this.updateCurrentPrices();
+    }
+
+    public async deletePrice(exchange: string) {
+        this.prices = this.prices.filter(price => price.exchange !== exchange);
+        this.updateCurrentPrices();
+    }
+
     public async fetchExchangePrice(exchange: string): Promise<PriceData | null> {
         try {
             const priceData = await httpClient(`/prices/${encodeURIComponent(exchange)}`);
