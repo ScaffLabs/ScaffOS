@@ -6,7 +6,8 @@
         "start": "ts-node src/server.ts",
         "test": "jest --config jest.config.ts",
         "test:watch": "jest --watch --config jest.config.ts",
-        "test:coverage": "jest --coverage --config jest.config.ts"
+        "test:coverage": "jest --coverage --config jest.config.ts",
+        "lint": "eslint . --ext .ts,.tsx"
     },
     "dependencies": {
         "express": "^4.17.1",
@@ -22,6 +23,7 @@
         "supertest": "^6.1.0",
         "@testing-library/react": "^11.2.7",
         "ts-jest": "^27.0.0",
-        "jest-junit": "^12.0.0"
+        "jest-junit": "^12.0.0",
+        "eslint": "^7.32.0"
     }
 }
