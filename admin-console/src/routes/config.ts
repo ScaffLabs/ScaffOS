@@ -3,9 +3,18 @@ import { body, validationResult } from 'express-validator';
 import Database from '../storage/Database';
 import { ConfigurationItem } from '../types';
 import { NotFoundError } from '../errors/CustomErrors';
+import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
 const db = new Database();
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests, please try again later.'
+});
+
+router.use(limiter);
 
 router.post('/', [
     body('key').trim().escape().notEmpty().withMessage('Key is required'),
@@ -28,7 +37,7 @@ router.post('/', [
 router.get('/', async (req, res) => {
     const { limit = 10, offset = 0, sortBy = 'key', order = 'asc' } = req.query;
     try {
-        const configurations = await db.getConfigurations({ limit, offset, sortBy, order });
+        const configurations = await db.getConfigurations({ limit: Number(limit), offset: Number(offset), sortBy, order });
         res.status(200).json(configurations);
     } catch (error) {
         console.error(error);
