@@ -33,3 +33,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Updated README.md to include additional examples for API endpoints.
 - Clarified environment variables section to provide more context.
+
+## [1.0.5] - 2023-11-01
+### Added
+- Performance monitoring metrics for better service health insights.
+- Documentation for new performance monitoring features in README.md.
+
+### Changed
+- Updated API responses to include more detailed error messages.

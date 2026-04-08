@@ -31,7 +31,6 @@ This service is built with Node.js and Express. It uses an in-memory storage for
 2. The service will be available at `http://localhost:3000/api/portfolios`.
 
 ## API Reference
-
 ### POST /api/portfolios
 - **Request Body:** `{ "name": string, "positions": [{ "symbol": string, "quantity": number, "averagePrice": number }] }`
 - **Response:** `201 Created` with portfolio object
@@ -88,3 +87,6 @@ See the [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+- Thanks to the open-source community for their contributions and support.
