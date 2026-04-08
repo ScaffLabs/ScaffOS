@@ -4,7 +4,7 @@ import logger from '../utils/logger';
 
 const healthCheckRouter = Router();
 
-healthCheckRouter.get('/health', async (req, res) => {
+healthCheckRouter.get('/', async (req, res) => {
   try {
     const results = await checkAllHealth();
     res.status(200).json({ status: results.healthy ? 'healthy' : 'unhealthy', services: results.details });

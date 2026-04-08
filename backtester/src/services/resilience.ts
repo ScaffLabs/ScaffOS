@@ -22,16 +22,6 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
     throw new Error('Max retries exceeded');
 }
 
-async function checkService(url: string): Promise<boolean> {
-    try {
-        await withRetry(() => axios.get(url, { timeout: 5000 }));
-        return true;
-    } catch (error) {
-        logger.error(`Health check failed for ${url}: ${(error as AxiosError).message}`);
-        return false;
-    }
-}
-
 function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallback: T): () => Promise<T> {
     let failureCount = 0;
     return async () => {
@@ -50,4 +40,4 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
     };
 }
 
-export { eventEmitter, checkService, withRetry, circuitBreaker };
+export { eventEmitter, withRetry, circuitBreaker };
