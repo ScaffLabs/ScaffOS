@@ -12,7 +12,8 @@ const auditLogger = winston.createLogger({
 export const logAudit = (req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'POST' && req.path === '/api/config') {
         // Log sensitive operation
-        auditLogger.info(`Configuration created: {key: ${req.body.key}, user: ${req.user?.id}}`);
+        const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(7);
+        auditLogger.info(`Configuration created: {key: ${req.body.key}, user: ${req.user?.id}, requestId: {requestId}}`);
     }
     next();
 };

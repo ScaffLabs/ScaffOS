@@ -18,13 +18,17 @@ app.use(cors({ origin: ['https://your-allowed-origin.com'], credentials: true })
 
 // Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Too many requests, please try again later.',
 });
 app.use(limiter);
 
 app.use(bodyParser.json());
+app.use((req, res, next) => {
+    req.headers['x-request-id'] = Math.random().toString(36).substring(7);
+    next();
+});
 app.use(logRequest);
 app.use(logAudit);
 app.use('/api/health', healthRouter);
