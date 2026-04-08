@@ -90,6 +90,12 @@ The application is built using React for the frontend and Express for the backen
 ```json
 {
     "status": "ok",
+    "uptime": <uptime in seconds>,
+    "memoryUsage": {
+        "rss": <rss memory>,
+        "heapTotal": <total heap>,
+        "heapUsed": <used heap>
+    },
     "timestamp": "2023-10-01T12:00:00Z"
 }
 ```
@@ -100,6 +106,7 @@ The application is built using React for the frontend and Express for the backen
 | REACT_APP_API_BASE_URL      | Base URL for the API                     | `http://localhost:3000`            |
 | PORT                        | Port for the server                      | `3000`                             |
 | NODE_ENV                    | Environment type (development/production)| `development`                      |
+| STRATEGY_SERVICE_URL        | URL for the strategy service health check| `http://localhost:3001/api/health`|
 
 ## Development Guide
 ### Running Tests
