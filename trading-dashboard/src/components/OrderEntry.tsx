@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { submitOrder } from '../api/orderApi';
 import { publishEvent } from '../utils/eventBus';
+import { Order, OrderSchema } from '../types';
 
 const OrderEntry: React.FC = () => {
-    const [orderDetails, setOrderDetails] = useState({ symbol: '', quantity: 0, type: 'buy' });
+    const [orderDetails, setOrderDetails] = useState<Order>({ id: '' as OrderId, symbol: '', quantity: 0, type: 'buy' });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await submitOrder(orderDetails);
-        publishEvent('ORDER_SUBMITTED', orderDetails);
+        const validationResult = OrderSchema.safeParse(orderDetails);
+        if (!validationResult.success) {
+            alert('Invalid order details!');
+            return;
+        }
+        await submitOrder(validationResult.data);
+        publishEvent('ORDER_SUBMITTED', validationResult.data);
         // handle success or error
     };
 
