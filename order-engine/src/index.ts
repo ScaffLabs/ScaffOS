@@ -3,6 +3,9 @@ import bodyParser from 'body-parser';
 import { healthCheck, readyCheck } from './health';
 import { createOrder, getOrders, updateOrder, deleteOrder } from './orderController';
 import { migrateData } from './migrations';
+import { setupGracefulShutdown } from './shutdown';
+import { setupRequestQueue } from './requestQueue';
+import { monitorMemoryUsage } from './memoryMonitor';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +21,9 @@ app.delete('/orders/:id', deleteOrder);
 
 const startServer = async () => {
     await migrateData();
+    setupRequestQueue(app);
+    setupGracefulShutdown();
+    monitorMemoryUsage();
     app.listen(PORT, () => {
         console.log(`Order Engine listening on port ${PORT}`);
     });
