@@ -128,9 +128,3 @@ export const getAllUsers = (): User[] => {
 };
 
 export default userStore;
-
-export const migrateData = async (seedData: User[]) => {
-    for (const user of seedData) {
-        userStore.create(user);
-    }
-};
