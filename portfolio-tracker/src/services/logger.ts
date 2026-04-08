@@ -36,3 +36,6 @@ export const errorLogger = (err: Error, req, res, next) => {
 };
 
 export default logger;
+
+// Initialization logging
+logger.info('Starting Portfolio Tracker service', { environment: process.env.NODE_ENV, port: process.env.PORT, database: process.env.DATABASE_URL });
