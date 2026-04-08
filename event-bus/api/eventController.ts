@@ -10,7 +10,6 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
 import { body, query, validationResult } from 'express-validator';
-import csurf from 'csurf';
 import expressSanitizer from 'express-sanitizer';
 
 const storageManager = new StorageManager<Event>('memory');
@@ -21,8 +20,6 @@ const limiter = rateLimit({
     max: 100,
     message: { message: 'Too many requests, please try again later.' }
 });
-
-const csrfProtection = csurf({ cookie: true });
 
 export const createEvent = async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -114,7 +111,6 @@ export const eventRoutes = () => {
     router.use(cors({ origin: ['http://your-allowed-origin.com'], methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
     router.use(helmet());
     router.use(expressSanitizer());
-    router.use(csrfProtection);
     router.post('/', limiter, [body('title').notEmpty().withMessage('Title is required'), body('type').isIn(['userCreated', 'orderPlaced']).withMessage('Invalid event type')], createEvent);
     router.get('/', getEvents);
     router.put('/:id', [body('title').optional().notEmpty(), body('description').optional().isString()], updateEvent);

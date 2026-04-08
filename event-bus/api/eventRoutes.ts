@@ -1,21 +1,61 @@
 import { Router } from 'express';
-import { createEvent, getEvents, getEventById, updateEvent, deleteEvent, checkExternalServiceHealth } from './eventController';
-import rateLimit from 'express-rate-limit';
+import { createEvent, getEvents, updateEvent, deleteEvent, checkHealthEndpoint } from './eventController';
+import { gracefulShutdown } from './healthCheck';
 
 const router = Router();
 
-// Rate limiting middleware
-const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 100,
-});
+/**
+ * @swagger
+ * /events:
+ *   post:
+ *     description: Create an event
+ *     parameters:
+ *       - in: body
+ *         name: event
+ *         description: Event object
+ *         schema:
+ *           type: object
+ *           properties:
+ *             title:
+ *               type: string
+ *             description:
+ *               type: string
+ *             type:
+ *               type: string
+ *               enum: [userCreated, orderPlaced]
+ *     responses:
+ *       201:
+ *         description: Event created successfully
+ *       400:
+ *         description: Bad input
+ *   get:
+ *     description: Get a list of events
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         type: integer
+ *       - in: query
+ *         name: offset
+ *         type: integer
+ *       - in: query
+ *         name: sortBy
+ *         type: string
+ *       - in: query
+ *         name: order
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: A list of events
+ *       404:
+ *         description: No events found
+ */
+router.post('/', createEvent);
+router.get('/', getEvents);
+router.put('/:id', updateEvent);
+router.delete('/:id', deleteEvent);
+router.get('/health', checkHealthEndpoint);
 
-// Event routes
-router.post('/', limiter, createEvent);
-router.get('/', limiter, getEvents);
-router.get('/:id', limiter, getEventById);
-router.put('/:id', limiter, updateEvent);
-router.delete('/:id', limiter, deleteEvent);
-router.get('/health', limiter, checkExternalServiceHealth);
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 export default router;
