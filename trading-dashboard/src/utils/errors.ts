@@ -19,4 +19,11 @@ class NotFoundError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError };
+class DivisionByZeroError extends Error {
+    constructor() {
+        super('Division by zero is not allowed.');
+        this.name = 'DivisionByZeroError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError };
