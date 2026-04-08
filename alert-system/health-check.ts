@@ -28,4 +28,11 @@ export class HealthCheck {
             free: os.freemem(),
         });
     }
+
+    static async checkHealth(req: Request, res: Response) {
+        const services = ['webhook', 'email', 'websocket'];
+        const health = await this.checkServices(services);
+        const memory = await this.memoryUsage(req, res);
+        return res.json({ services: health, memory });
+    }
 }
