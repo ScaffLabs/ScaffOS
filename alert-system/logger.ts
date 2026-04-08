@@ -1,4 +1,5 @@
 import pino from 'pino';
+import { Request, Response } from 'express';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -17,21 +18,25 @@ const logger = pino({
   }
 });
 
-export const logRequest = (req, res, start) => {
+export const logRequest = (req: Request, res: Response, start: number) => {
   const duration = Date.now() - start;
   logger.info({ method: req.method, path: req.path, status: res.statusCode, duration }, 'Request completed');
 };
 
-export const logError = (error, context) => {
+export const logError = (error: Error, context: any) => {
   logger.error({ error: error.stack, context }, 'An error occurred');
 };
 
-export const logStartup = (config) => {
+export const logStartup = (config: any) => {
   logger.info({ config }, 'Service started with configuration');
 };
 
-export const logPerformance = (operation, duration) => {
+export const logPerformance = (operation: string, duration: number) => {
   logger.debug({ operation, duration }, 'Performance timing');
+};
+
+export const logAudit = (action: string, details: any) => {
+  logger.info({ action, details }, 'Audit log entry');
 };
 
 export default logger;

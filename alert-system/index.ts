@@ -4,7 +4,7 @@ import { AlertProcessor } from './alert.processor';
 import { AlertConfiguration } from './alert.config';
 import { HealthCheck } from './health-check';
 import { AlertStore, IDataStore } from './storage';
-import { logStartup } from './logger';
+import { logStartup, logRequest } from './logger';
 import alertRoutes from './alert.routes';
 
 const app = express();
@@ -14,6 +14,11 @@ const alertConfig = new AlertConfiguration({ thresholds: { price: 100, risk: 50 
 const alertStore: IDataStore<AlertMessage> = new AlertStore();
 
 app.use(express.json());
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => logRequest(req, res, start));
+  next();
+});
 app.use('/api', alertRoutes);
 app.get('/health', HealthCheck.checkHealth);
 app.get('/ready', (req, res) => res.json({ ready: true }));
