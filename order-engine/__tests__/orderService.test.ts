@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { createServer } from '../src/index';
-import { storage } from '../src/storage';
 import { Order } from '../src/types';
+import { storage } from '../src/storage';
 
 describe('Order Service', () => {
     let app: Express.Application;
@@ -84,5 +84,30 @@ describe('Order Service', () => {
 
         const orders = await storage.findAll();
         expect(orders).toHaveLength(0);
+    });
+
+    test('GET /orders/:id - return 404 for non-existent order', async () => {
+        await request(app)
+            .get('/orders/999')
+            .expect(404);
+    });
+
+    test('POST /orders - reject order with empty body', async () => {
+        const response = await request(app)
+            .post('/orders')
+            .send({})
+            .expect(400);
+
+        expect(response.body.errors).toBeDefined();
+    });
+
+    test('PUT /orders/:id - update non-existent order', async () => {
+        const updatedOrder = { price: 110, quantity: 5 };
+        const response = await request(app)
+            .put('/orders/999')
+            .send(updatedOrder)
+            .expect(404);
+
+        expect(response.body.message).toBe('Order not found.');
     });
 });

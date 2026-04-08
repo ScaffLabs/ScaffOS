@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { createServer } from '../src/index';
 import { Order } from '../src/types';
+import { storage } from '../src/storage';
 
 describe('Order API Integration Tests', () => {
     let app: Express.Application;
@@ -15,9 +16,7 @@ describe('Order API Integration Tests', () => {
 
     beforeEach(async () => {
         // Reset the storage before each test
-        await storage.transaction(async (storage) => {
-            storage.items = [];
-        });
+        storage.items = [];
     });
 
     test('POST /orders - create valid order', async () => {
