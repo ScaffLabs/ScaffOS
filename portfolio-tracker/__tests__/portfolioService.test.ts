@@ -1,46 +1,49 @@
 import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, clearPortfolios } from '../src/services/portfolioService';
 import { Portfolio } from '../src/types';
+import { validPortfolio, invalidPortfolio, existingPortfolioId, nonExistentPortfolioId, portfolioWithMultiplePositions } from './fixtures/portfolioFixtures';
 
 let testPortfolio: Portfolio;
 
 beforeEach(() => {
     clearPortfolios(); // Clear portfolios before each test
-    testPortfolio = { id: '1', name: 'Test Portfolio', positions: [] };
+    testPortfolio = { id: existingPortfolioId, name: 'Test Portfolio', positions: [] };
 });
 
 describe('Portfolio Service', () => {
-    test('should create a portfolio', async () => {
-        const portfolio = await createPortfolio({ name: 'New Portfolio', positions: [] });
+    test('should create a valid portfolio', async () => {
+        const portfolio = await createPortfolio(validPortfolio);
         expect(portfolio).toHaveProperty('id');
-        expect(portfolio.name).toBe('New Portfolio');
+        expect(portfolio.name).toBe(validPortfolio.name);
+        expect(portfolio.positions).toEqual(validPortfolio.positions);
+    });
+
+    test('should throw an error when creating a portfolio with invalid data', async () => {
+        await expect(createPortfolio(invalidPortfolio)).rejects.toThrow('Invalid portfolio data');
     });
 
     test('should get a portfolio by id', async () => {
         await createPortfolio(testPortfolio);
-        const portfolio = await getPortfolio('1');
+        const portfolio = await getPortfolio(existingPortfolioId);
         expect(portfolio).toEqual(testPortfolio);
     });
 
     test('should throw an error when getting a non-existent portfolio', async () => {
-        await expect(getPortfolio('999')).rejects.toThrow('Portfolio not found');
+        await expect(getPortfolio(nonExistentPortfolioId)).rejects.toThrow('Portfolio not found');
     });
 
     test('should update a portfolio', async () => {
         await createPortfolio(testPortfolio);
-        const updatedPortfolio = await updatePortfolio('1', { name: 'Updated Name' });
+        const updatedPortfolio = await updatePortfolio(existingPortfolioId, { name: 'Updated Name', positions: portfolioWithMultiplePositions.positions });
         expect(updatedPortfolio.name).toBe('Updated Name');
+        expect(updatedPortfolio.positions).toEqual(portfolioWithMultiplePositions.positions);
     });
 
     test('should throw an error when updating a non-existent portfolio', async () => {
-        await expect(updatePortfolio('999', { name: 'Updated Name' })).rejects.toThrow('Portfolio not found');
-    });
-
-    test('should throw an error on creating portfolio with invalid data', async () => {
-        await expect(createPortfolio({ name: '', positions: [] })).rejects.toThrow('Invalid portfolio data');
+        await expect(updatePortfolio(nonExistentPortfolioId, { name: 'Updated Name' })).rejects.toThrow('Portfolio not found');
     });
 
     test('should return an empty array when fetching portfolios if none exist', async () => {
-        const portfolios = await fetchPortfolios();
+        const portfolios = await fetchPortfolios({ limit: 10, offset: 0, sort: 'name', order: 'asc' });
         expect(portfolios).toEqual([]);
     });
 
@@ -50,7 +53,7 @@ describe('Portfolio Service', () => {
 
     test('should update portfolio with valid positions', async () => {
         await createPortfolio(testPortfolio);
-        const updatedPortfolio = await updatePortfolio('1', { positions: [{ symbol: 'AAPL', quantity: 10, averagePrice: 150 }] });
+        const updatedPortfolio = await updatePortfolio(existingPortfolioId, { positions: [{ symbol: 'AAPL', quantity: 10, averagePrice: 150 }] });
         expect(updatedPortfolio.positions.length).toBe(1);
         expect(updatedPortfolio.positions[0]).toEqual({ symbol: 'AAPL', quantity: 10, averagePrice: 150 });
     });

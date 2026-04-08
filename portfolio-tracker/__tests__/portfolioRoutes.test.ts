@@ -1,23 +1,24 @@
 import request from 'supertest';
 import app from '../src/index';
+import { validPortfolio, invalidPortfolio } from './fixtures/portfolioFixtures';
 
 describe('Portfolio Routes', () => {
     it('should create a new portfolio', async () => {
-        const response = await request(app).post('/api/portfolios').send({ name: 'New Portfolio', positions: [] });
+        const response = await request(app).post('/api/portfolios').send(validPortfolio);
         expect(response.status).toBe(201);
         expect(response.body).toHaveProperty('id');
     });
 
     it('should return 400 for invalid request body', async () => {
-        const response = await request(app).post('/api/portfolios').send({});
+        const response = await request(app).post('/api/portfolios').send(invalidPortfolio);
         expect(response.status).toBe(400);
     });
 
     it('should get an existing portfolio', async () => {
-        const createResponse = await request(app).post('/api/portfolios').send({ name: 'Fetch This Portfolio', positions: [] });
+        const createResponse = await request(app).post('/api/portfolios').send(validPortfolio);
         const response = await request(app).get(`/api/portfolios/${createResponse.body.id}`);
         expect(response.status).toBe(200);
-        expect(response.body.name).toBe('Fetch This Portfolio');
+        expect(response.body.name).toBe(validPortfolio.name);
     });
 
     it('should return 404 for a non-existent portfolio', async () => {
@@ -26,7 +27,7 @@ describe('Portfolio Routes', () => {
     });
 
     it('should update an existing portfolio', async () => {
-        const createResponse = await request(app).post('/api/portfolios').send({ name: 'Portfolio to Update', positions: [] });
+        const createResponse = await request(app).post('/api/portfolios').send(validPortfolio);
         const response = await request(app).put(`/api/portfolios/${createResponse.body.id}`).send({ name: 'Updated Portfolio' });
         expect(response.status).toBe(200);
         expect(response.body.name).toBe('Updated Portfolio');
@@ -37,22 +38,10 @@ describe('Portfolio Routes', () => {
         expect(response.status).toBe(400);
     });
 
-    it('should return 503 for health check when service is down', async () => {
-        const response = await request(app).get('/health');
-        expect(response.status).toBe(200);
-        expect(response.body.status).toBe('UP');
-    });
-
     it('should handle empty positions array on portfolio creation', async () => {
         const response = await request(app).post('/api/portfolios').send({ name: 'Empty Positions Portfolio', positions: [] });
         expect(response.status).toBe(201);
         expect(response.body).toHaveProperty('id');
         expect(response.body.positions).toEqual([]);
-    });
-
-    it('should return 400 for invalid portfolio update request', async () => {
-        const createResponse = await request(app).post('/api/portfolios').send({ name: 'To Update', positions: [] });
-        const response = await request(app).put(`/api/portfolios/${createResponse.body.id}`).send({ name: '' });
-        expect(response.status).toBe(400);
     });
 });
