@@ -1,78 +1,49 @@
 import express from 'express';
+import { body, validationResult } from 'express-validator';
 import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from './storage';
 import { authMiddleware } from './middleware';
-import { body, validationResult } from 'express-validator';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import cors from 'cors';
+import { ValidationError } from './errors';
 
 const router = express.Router();
 
-// CORS configuration
-const allowedOrigins = ['https://example.com', 'https://another-domain.com'];
-router.use(cors({ origin: allowedOrigins }));
-
-// Helmet for security headers
-router.use(helmet());
-
-// Rate limiting middleware
-const limiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 100,
-    message: 'Too many requests, please try again later.'
-});
-router.use(limiter);
-
-// Get all users with pagination
-router.get('/users', authMiddleware, async (req, res) => {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = parseInt(req.query.offset as string) || 0;
-
-    const users = getAllUsers().slice(offset, offset + limit);
-    res.status(200).json(users);
-});
-
-// Create a new user
-router.post('/users', authMiddleware, body('username').isString().trim().escape(), body('email').isEmail().normalizeEmail(), async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+router.post('/users', authMiddleware,
+    body('username').isString().trim().notEmpty().withMessage('Username is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    async (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return next(new ValidationError(errors.array()));
+        }
+        const { username, email } = req.body;
+        const existingUser = await findUserById(email);
+        if (existingUser) {
+            return res.status(409).json({ error: 'Email already in use' });
+        }
+        const user = createUser(username, email);
+        res.status(201).json(user);
     }
+);
 
-    const { username, email } = req.body;
-    const existingUser = findUserById(email);
-    if (existingUser) {
-        return res.status(409).json({ error: 'Email already in use' });
+router.put('/users/:id', authMiddleware,
+    body('username').optional().isString().trim().notEmpty().withMessage('Username must not be empty if provided'),
+    body('email').optional().isEmail().withMessage('Valid email is required if provided'),
+    async (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return next(new ValidationError(errors.array()));
+        }
+        const { id } = req.params;
+        const user = await findUserById(id);
+        if (!user) {
+            return next(new NotFoundError('User not found'));
+        }
+        const { username, email } = req.body;
+        const updatedUser = updateUser(id, { username, email });
+        if (!updatedUser) {
+            return next(new NotFoundError('User not found'));
+        }
+        res.status(204).send();
     }
-
-    const user = createUser(username, email);
-    res.status(201).json(user);
-});
-
-// Update a user
-router.put('/users/:id', authMiddleware, body('username').optional().isString().trim().escape(), body('email').optional().isEmail().normalizeEmail(), async (req, res) => {
-    const { id } = req.params;
-    const user = findUserById(id);
-    if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-    }
-
-    const { username, email } = req.body;
-    const updatedUser = updateUser(id, { username, email });
-    if (!updatedUser) {
-        return res.status(404).json({ error: 'User not found' });
-    }
-    res.status(204).send();
-});
-
-// Delete a user
-router.delete('/users/:id', authMiddleware, async (req, res) => {
-    const { id } = req.params;
-    const success = deleteUser(id);
-    if (!success) {
-        return res.status(404).json({ error: 'User not found' });
-    }
-    res.status(204).send();
-});
+);
 
 export default router;
