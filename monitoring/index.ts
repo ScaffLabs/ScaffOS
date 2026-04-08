@@ -10,14 +10,20 @@ import { logRequest } from './logger';
 import { latencyTracker } from './latencyTracker';
 import { limiter } from './rateLimiter';
 import { sanitize } from './sanitize';
-import { monitorMemoryUsage } from './serviceHealth';
+import helmet from 'helmet';
+import cors from 'cors';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const store = new InMemoryStore<{ value: number }>();
 const connectionPool = createConnectionPool();
 
+// CORS configuration
+const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.com'];
+app.use(cors({ origin: allowedOrigins }));
+
 // Middleware setup
+app.use(helmet()); // Set secure HTTP headers
 app.use(express.json());
 app.use(auditLogger);
 app.use(logRequest);

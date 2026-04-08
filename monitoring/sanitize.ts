@@ -8,12 +8,11 @@ const querySchema = z.object({
 });
 
 const bodySchema = z.object({
-    id: z.string().nonempty(),
+    id: z.string().nonempty().trim(),
     value: z.number().int().nonnegative(),
 });
 
 const sanitizeOutput = (data: any) => {
-    // Simple output sanitization function to prevent XSS
     return JSON.parse(JSON.stringify(data).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 };
 
@@ -25,10 +24,7 @@ const sanitize = (req: Request, res: Response, next: NextFunction) => {
             if (!bodyValidation.success) {
                 throw new ValidationError('Invalid body data.');
             }
-            req.body = {
-                id: bodyValidation.data.id.trim(),
-                value: bodyValidation.data.value,
-            };
+            req.body = bodyValidation.data;
         }
 
         // Validate and sanitize query parameters
