@@ -22,8 +22,13 @@ app.use(csrfProtection);
 
 app.use(express.json());
 app.use('/api', alertRoutes);
-app.use('/health', (req, res) => new AlertController().healthCheck(req, res));
-app.use('/ready', (req, res) => new AlertController().readyCheck(req, res));
+app.use('/health', async (req, res) => {
+    const health = await HealthCheck.checkServices(['webhook', 'email', 'websocket']);
+    return res.json(health);
+});
+app.use('/ready', (req, res) => {
+    return res.json({ ready: true });
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -39,17 +44,14 @@ const server = app.listen(3000, () => {
     console.log('Alert system running on port 3000');
 });
 
-HealthCheck.checkServices(['webhook', 'email', 'websocket']);
-MigrationUtil.seedData(alertStore);
-
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received: closing HTTP server');
     await alertStore.transaction([]); // Drain connections
-    process.exit(0);
+    server.close(() => process.exit(0));
 });
 
 process.on('SIGINT', async () => {
     console.log('SIGINT received: closing HTTP server');
     await alertStore.transaction([]); // Drain connections
-    process.exit(0);
+    server.close(() => process.exit(0));
 });
