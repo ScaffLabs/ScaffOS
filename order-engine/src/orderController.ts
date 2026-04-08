@@ -20,8 +20,6 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         logger.error('Error creating order', { error: error.message, requestId: req.headers['x-request-id'] });
         if (error instanceof ValidationError) {
             res.status(400).json({ errors: error.errors });
-        } else if (error instanceof NotFoundError) {
-            res.status(404).json({ message: error.message });
         } else {
             res.status(500).json({ message: 'Internal Server Error' });
         }
@@ -71,7 +69,7 @@ export const deleteOrder = async (req: Request, res: Response): Promise<void> =>
 export const getOrders = async (req: Request, res: Response): Promise<void> => {
     const { limit = 10, offset = 0, status, sortBy = 'price', sortOrder = 'asc' } = req.query;
     try {
-        const orders = await getOrdersService({ limit, offset, status, sortBy, sortOrder });
+        const orders = await getOrdersService({ limit: parseInt(limit as string), offset: parseInt(offset as string), status, sortBy, sortOrder });
         if (orders.length === 0) {
             return res.status(404).json({ message: 'No orders found.' });
         }
