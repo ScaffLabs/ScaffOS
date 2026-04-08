@@ -20,7 +20,7 @@ describe('User Routes', () => {
 
     it('should create a user', async () => {
         const res = await request(app)
-            .post('/users')
+            .post('/api/users')
             .set('x-api-key', apiKey)
             .send({ username: 'newuser', email: 'new@example.com' });
         expect(res.status).toBe(201);
@@ -29,7 +29,7 @@ describe('User Routes', () => {
 
     it('should not create a user with existing email', async () => {
         const res = await request(app)
-            .post('/users')
+            .post('/api/users')
             .set('x-api-key', apiKey)
             .send({ username: 'duplicateuser', email: 'test@example.com' });
         expect(res.status).toBe(409);
@@ -38,7 +38,7 @@ describe('User Routes', () => {
 
     it('should get all users', async () => {
         const res = await request(app)
-            .get('/users')
+            .get('/api/users')
             .set('x-api-key', apiKey);
         expect(res.status).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
@@ -46,7 +46,7 @@ describe('User Routes', () => {
 
     it('should update a user', async () => {
         const updatedRes = await request(app)
-            .put(`/users/${createdUser.id}`)
+            .put(`/api/users/${createdUser.id}`)
             .set('x-api-key', apiKey)
             .send({ username: 'updatedName' });
         expect(updatedRes.status).toBe(204);
@@ -54,14 +54,14 @@ describe('User Routes', () => {
 
     it('should delete a user', async () => {
         const deleteRes = await request(app)
-            .delete(`/users/${createdUser.id}`)
+            .delete(`/api/users/${createdUser.id}`)
             .set('x-api-key', apiKey);
         expect(deleteRes.status).toBe(204);
     });
 
     it('should return 404 for non-existent user', async () => {
         const res = await request(app)
-            .get('/users/nonexistentId')
+            .get('/api/users/nonexistentId')
             .set('x-api-key', apiKey);
         expect(res.status).toBe(404);
         expect(res.body).toEqual({ error: 'User not found' });
@@ -69,7 +69,7 @@ describe('User Routes', () => {
 
     it('should return 400 for invalid user data', async () => {
         const res = await request(app)
-            .post('/users')
+            .post('/api/users')
             .set('x-api-key', apiKey)
             .send({ username: '', email: 'invalidEmail' });
         expect(res.status).toBe(400);
@@ -78,7 +78,7 @@ describe('User Routes', () => {
 
     it('should handle empty username or email on create', async () => {
         const res = await request(app)
-            .post('/users')
+            .post('/api/users')
             .set('x-api-key', apiKey)
             .send({ username: '', email: '' });
         expect(res.status).toBe(400);
@@ -87,7 +87,7 @@ describe('User Routes', () => {
 
     it('should return 400 for invalid API key', async () => {
         const res = await request(app)
-            .post('/users')
+            .post('/api/users')
             .set('x-api-key', 'invalid_key')
             .send({ username: 'user', email: 'user@example.com' });
         expect(res.status).toBe(401);

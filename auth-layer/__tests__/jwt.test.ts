@@ -26,4 +26,15 @@ describe('JWT Functions', () => {
         const decoded = decodeToken(token);
         expect(decoded).toHaveProperty('userId', userId);
     });
+
+    it('should handle empty token on verification', () => {
+        expect(() => verifyToken('')).toThrow('Invalid token');
+    });
+
+    it('should handle expired token', () => {
+        jest.spyOn(Date, 'now').mockImplementationOnce(() => 0);
+        const token = jwt.sign({ userId }, secret, { expiresIn: -1 }); // Expired token
+        expect(() => verifyToken(token)).toThrow('Invalid token');
+        jest.restoreAllMocks();
+    });
 });
