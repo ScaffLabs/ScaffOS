@@ -49,4 +49,13 @@ describe('Configuration Component', () => {
         fireEvent.click(screen.getByText(/Create Configuration/i));
         expect(await screen.findByText(/Configuration created successfully!/i)).not.toBeInTheDocument();
     });
+
+    test('handles invalid input', async () => {
+        render(<Configuration />);
+        fireEvent.change(screen.getByLabelText(/Key/i), { target: { value: '' } });
+        fireEvent.change(screen.getByLabelText(/Value/i), { target: { value: 'validValue' } });
+        fireEvent.click(screen.getByText(/Create Configuration/i));
+
+        expect(await screen.findByText(/Key cannot be empty/i)).toBeInTheDocument();
+    });
 });

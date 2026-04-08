@@ -7,7 +7,8 @@
         "test": "jest",
         "build": "tsc",
         "dev": "ts-node-dev src/index.ts",
-        "test:watch": "jest --watch"
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage"
     },
     "dependencies": {
         "express": "^4.17.1",

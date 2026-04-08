@@ -1,24 +1,25 @@
 import request from 'supertest';
 import express from 'express';
 import bodyParser from 'body-parser';
-import config from '../src/config';
 import healthRouter from '../src/routes/health';
+import configRouter from '../src/routes/config';
 
 const app = express();
 app.use(bodyParser.json());
 app.use('/api/health', healthRouter);
+app.use('/api/config', configRouter);
 
 describe('API Endpoints', () => {
     it('GET /api/health returns health status', async () => {
         const response = await request(app).get('/api/health');
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ service: 'running' });
+        expect(response.body).toEqual({ application: 'running', database: 'up', externalService: 'up' });
     });
 
     it('POST /api/config creates a configuration', async () => {
         const response = await request(app).post('/api/config').send({ key: 'testKey', value: 'testValue' });
         expect(response.status).toBe(201);
-        expect(response.text).toBe('Configuration created');
+        expect(response.body).toEqual({ message: 'Configuration created successfully!' });
     });
 
     it('POST /api/config returns 400 for invalid body', async () => {
@@ -26,13 +27,28 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(400);
     });
 
-    it('GET /api/health returns 500 on failure', async () => {
-        // Mocking behavior to simulate a server failure
-        jest.spyOn(healthRouter, 'get').mockImplementationOnce((req, res) => {
-            res.status(500).send();
-        });
+    it('GET /api/config/:key returns 200 for existing configuration', async () => {
+        await request(app).post('/api/config').send({ key: 'testKey', value: 'testValue' });
+        const response = await request(app).get('/api/config/testKey');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ key: 'testKey', value: 'testValue' });
+    });
 
-        const response = await request(app).get('/api/health');
-        expect(response.status).toBe(500);
+    it('GET /api/config/:key returns 404 for non-existing configuration', async () => {
+        const response = await request(app).get('/api/config/nonExistingKey');
+        expect(response.status).toBe(404);
+    });
+
+    it('PUT /api/config updates an existing configuration', async () => {
+        await request(app).post('/api/config').send({ key: 'testKey', value: 'testValue' });
+        const response = await request(app).put('/api/config').send({ key: 'testKey', value: 'newValue' });
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ message: 'Configuration updated successfully!' });
+    });
+
+    it('DELETE /api/config deletes an existing configuration', async () => {
+        await request(app).post('/api/config').send({ key: 'testKey', value: 'testValue' });
+        const response = await request(app).delete('/api/config/testKey');
+        expect(response.status).toBe(204);
     });
 });
