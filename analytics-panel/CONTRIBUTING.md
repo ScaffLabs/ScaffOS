@@ -28,3 +28,8 @@ Please adhere to the [Code of Conduct](./CODE_OF_CONDUCT.md) in all interactions
 
 ## Additional Information
 For any questions, feel free to open an issue on GitHub or contact the maintainers.
+
+## Submission Guidelines
+- Ensure your code is properly formatted and follows the project's coding standards.
+- Include tests for any new features or bug fixes.
+- Document any changes in the README or relevant files.
