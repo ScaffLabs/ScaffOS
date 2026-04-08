@@ -87,6 +87,8 @@ npm start
 | `NODE_ENV`            | Environment (development/production) |
 | `ORDER_SERVICE_URL`   | URL for the order service.          |
 | `DATA_SERVICE_URL`    | URL for the data service.           |
+| `DATABASE_URL`        | Database connection string.         |
+| `LOG_LEVEL`           | Logging level (info, warn, error). |
 
 ## Development Guide
 - Use `npm run test` to run tests.
@@ -107,4 +109,4 @@ npm start
 
 ## Changelog
 - **1.0.0** - Initial release.
-- **1.0.1** - Added comprehensive documentation.
+- **1.0.1** - Added comprehensive documentation including API reference, development and deployment guides.

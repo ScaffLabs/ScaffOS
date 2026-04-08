@@ -20,3 +20,6 @@ All notable changes to this project will be documented in this file.
 ## [1.1.0] - 2023-10-15
 - Added comprehensive documentation including API reference, development and deployment guides.
 - Enhanced error handling and logging for better tracking of issues.
+
+## [1.1.1] - 2023-10-20
+- Updated documentation to include detailed contribution guidelines.
