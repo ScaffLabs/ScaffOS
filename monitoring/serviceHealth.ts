@@ -40,5 +40,3 @@ export const monitorMemoryUsage = () => {
     const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
     logger.info({ totalMemory, usedMemory }, 'Memory usage monitored');
 };
-
-setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute

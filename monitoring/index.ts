@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import InMemoryStore from './dataStore';
 import { seedData } from './seedData';
-import { healthCheck, readyCheck } from './healthCheck';
+import { healthCheck, readyCheck, memoryHealthCheck } from './healthCheck';
 import errorMiddleware from './errorMiddleware';
 import { createConnectionPool } from './connectionPool';
 import { auditLogger } from './auditLogger';
@@ -10,6 +10,7 @@ import { logRequest } from './logger';
 import { latencyTracker } from './latencyTracker';
 import { limiter } from './rateLimiter';
 import { sanitize } from './sanitize';
+import { monitorMemoryUsage } from './serviceHealth';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ seedData(store);
 // Health Check Endpoints
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
+app.get('/memory-health', memoryHealthCheck);
 
 // Error handling middleware
 app.use(errorMiddleware);
@@ -54,3 +56,6 @@ process.on('SIGINT', gracefulShutdown);
 server.listen(PORT, () => {
     console.log(`Monitoring service running on port ${PORT}`);
 });
+
+// Start monitoring memory usage every minute
+setInterval(monitorMemoryUsage, 60000);
