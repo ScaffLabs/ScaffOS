@@ -2,8 +2,18 @@ import { Router } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios } from '../services/portfolioService';
 import logger from '../services/logger';
+import { auditLog } from '../services/auditService';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests, please try again later.'
+});
+
+router.use(limiter);
 
 router.post('/', [
     body('name').isString().notEmpty().trim().escape(),
@@ -19,6 +29,7 @@ router.post('/', [
         const portfolio = await createPortfolio(req.body);
         const duration = Date.now() - startTime;
         logger.info('Portfolio created', { portfolio, duration, requestId: req.id });
+        await auditLog('CREATE_PORTFOLIO', portfolio);
         res.status(201).json(portfolio);
     } catch (error) {
         logger.error('Error creating portfolio', { error: error.message, requestId: req.id });
@@ -61,6 +72,7 @@ router.put('/:id', [
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
         const duration = Date.now() - startTime;
         logger.info('Portfolio updated', { updatedPortfolio, duration, requestId: req.id });
+        await auditLog('UPDATE_PORTFOLIO', updatedPortfolio);
         res.json(updatedPortfolio);
     } catch (error) {
         logger.error('Error updating portfolio', { error: error.message, requestId: req.id });

@@ -13,9 +13,13 @@ import { register, collectDefaultMetrics } from 'prom-client';
 import { setInterval } from 'timers';
 
 const app = express();
-app.use(json());
+app.use(json({ limit: '1mb' })); // Limit request size to 1MB
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+    origin: ['https://yourdomain.com', 'http://localhost:3000'], // Allowed origins
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true
+}));
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100
@@ -26,7 +30,6 @@ app.use('/api/portfolios', portfolioRoutes);
 
 const pool = createPool({
     create: async () => {
-        // Replace with your actual connection creation logic
         const client = await someAsyncConnectionFunction();
         return client;
     },
@@ -54,8 +57,8 @@ const server = http.createServer(app);
 
 const onShutdown = async () => {
     logger.info('Shutting down gracefully...');
-    await pool.drain(); // Wait for connections to finish
-    await pool.clear(); // Clear the pool
+    await pool.drain();
+    await pool.clear();
     server.close(() => {
         logger.info('Server closed');
     });
