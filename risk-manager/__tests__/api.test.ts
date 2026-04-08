@@ -26,7 +26,7 @@ describe('Risk Manager API', () => {
       .send({ asset: '', position: -10 })
       .set('Authorization', validToken);
     expect(response.status).toBe(400);
-    expect(response.body.error).toBeDefined();
+    expect(response.body.errors).toBeDefined();
   });
 
   it('should retrieve risk positions', async () => {
@@ -89,5 +89,32 @@ describe('Risk Manager API', () => {
       .set('Authorization', validToken);
     expect(response.status).toBe(500);
     expect(response.body.error).toBe('Internal Server Error');
+  });
+
+  it('should return 400 for empty request body', async () => {
+    const response = await request(app)
+      .post('/api/risk')
+      .send({})
+      .set('Authorization', validToken);
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toBeDefined();
+  });
+
+  it('should return 400 for invalid position (negative)', async () => {
+    const response = await request(app)
+      .post('/api/risk')
+      .send({ asset: 'AAPL', position: -5 })
+      .set('Authorization', validToken);
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toBeDefined();
+  });
+
+  it('should return 400 for invalid position (non-numeric)', async () => {
+    const response = await request(app)
+      .post('/api/risk')
+      .send({ asset: 'AAPL', position: 'not-a-number' })
+      .set('Authorization', validToken);
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toBeDefined();
   });
 });
