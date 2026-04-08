@@ -1,6 +1,5 @@
 import express from 'express';
 import { logger } from '../middleware/logger';
-import { fetchHealthStatus } from '../services/ServiceClient';
 import { healthCheck, readinessCheck } from '../services/HealthService';
 
 const router = express.Router();

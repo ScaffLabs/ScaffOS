@@ -15,7 +15,7 @@ const circuitBreaker = new CircuitBreaker({
 
 const fetchHealthStatus = async () => {
     try {
-        const response = await circuitBreaker.fire(axios.get, `${BASE_URL}/health`);
+        const response = await axios.get(`${BASE_URL}/health`);
         emitEvent('SERVICE_HEALTH_UPDATED', response.data);
         return response.data;
     } catch (error) {
@@ -25,7 +25,7 @@ const fetchHealthStatus = async () => {
 
 const postConfiguration = async (key: string, value: string): Promise<ConfigurationItem> => {
     const configItem: ConfigurationItem = { key, value };
-    ConfigurationItemSchema.parse(configItem); // Validate configuration item against schema
+    ConfigurationItemSchema.parse(configItem);
     try {
         const response = await circuitBreaker.fire(axios.post, `${BASE_URL}/config`, configItem);
         emitEvent('CONFIGURATION_CREATED', configItem);
