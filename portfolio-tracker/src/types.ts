@@ -1,3 +1,4 @@
+// src/types.ts
 import { z } from 'zod';
 
 /**

@@ -1,5 +1,6 @@
+// src/services/portfolioService.ts
 import storage from './storage';
-import { Portfolio, PortfolioUpdate } from '../types';
+import { Portfolio, PortfolioUpdate, PortfolioSchema } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import logger from './logger';
 import { ValidationError, NotFoundError } from '../errors';
@@ -15,18 +16,15 @@ const circuitBreakerOptions = {
 const serviceCircuit = new CircuitBreaker(createPortfolioInternal, circuitBreakerOptions);
 
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
+    // Validate data against schema
+    const validationResult = PortfolioSchema.safeParse(data);
+    if (!validationResult.success) {
+        throw new ValidationError(validationResult.error.errors.map(e => e.message).join(', '));
+    }
     return await serviceCircuit.fire(data);
 };
 
 const createPortfolioInternal = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-    if (!data.name || !Array.isArray(data.positions) || data.positions.length === 0) {
-        throw new ValidationError('Invalid portfolio data. Name and positions are required.');
-    }
-    for (const position of data.positions) {
-        if (!position.symbol || position.quantity < 0 || position.averagePrice < 0) {
-            throw new ValidationError('Each position must have a valid symbol, non-negative quantity, and non-negative average price.');
-        }
-    }
     const newPortfolio = storage.create(data);
     await publishPortfolioUpdate(newPortfolio);
     logger.info('Created portfolio', { id: newPortfolio.id });
