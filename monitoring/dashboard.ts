@@ -6,6 +6,11 @@ import { LatencyDataSchema } from './types';
 
 const store = new InMemoryStore<{ value: number }>();
 
+/**
+ * List all dashboard entries with optional pagination, filtering, and sorting.
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ */
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
         const { limit = 10, offset = 0, sort, filter } = req.query;
@@ -47,6 +52,11 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Create a new dashboard entry.
+ * @param {Request} req - The request object containing the entry details.
+ * @param {Response} res - The response object.
+ */
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const bodyValidation = LatencyDataSchema.safeParse(req.body);
@@ -60,50 +70,6 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     } catch (error) {
         if (error instanceof ValidationError) {
             res.status(400).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
-};
-
-export const updateDashboardEntry = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const bodyValidation = LatencyDataSchema.safeParse(req.body);
-        if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data. Value must be a non-negative number.');
-        }
-
-        const { value } = bodyValidation.data;
-        const existingEntry = store.read(id);
-        if (!existingEntry) {
-            throw new NotFoundError('Entry not found.');
-        }
-        store.update(id, { value });
-        res.status(204).send();
-    } catch (error) {
-        if (error instanceof ValidationError) {
-            res.status(400).json({ error: error.message });
-        } else if (error instanceof NotFoundError) {
-            res.status(404).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
-};
-
-export const deleteDashboardEntry = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const existingEntry = store.read(id);
-        if (!existingEntry) {
-            throw new NotFoundError('Entry not found.');
-        }
-        store.delete(id);
-        res.status(204).send();
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            res.status(404).json({ error: error.message });
         } else {
             res.status(500).json({ error: 'Internal Server Error' });
         }
