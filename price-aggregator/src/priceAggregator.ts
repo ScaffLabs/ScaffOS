@@ -1,3 +1,4 @@
+// priceAggregator.ts
 import WebSocket from 'ws';
 import { PriceData, CurrentPrices, PriceEvent, PriceDataSchema } from './types';
 import { httpClient, postHttpClient } from './httpClient';
@@ -48,19 +49,23 @@ export class PriceAggregator {
     }
 
     public async getCurrentPrices(): Promise<CurrentPrices> {
-        const allPrices = await storage.findAll();
-        this.currentPrices = {};
-        let totalValue = 0;
-        let totalVolume = 0;
+        try {
+            const allPrices = await storage.findAll();
+            this.currentPrices = {};
+            let totalValue = 0;
+            let totalVolume = 0;
 
-        allPrices.forEach(price => {
-            this.currentPrices[price.exchange] = price.price;
-            totalValue += price.price * price.volume;
-            totalVolume += price.volume;
-        });
+            allPrices.forEach(price => {
+                this.currentPrices[price.exchange] = price.price;
+                totalValue += price.price * price.volume;
+                totalVolume += price.volume;
+            });
 
-        this.currentPrices.VWAP = totalVolume ? totalValue / totalVolume : 0;
-        return this.currentPrices;
+            this.currentPrices.VWAP = totalVolume ? totalValue / totalVolume : 0;
+            return this.currentPrices;
+        } catch (error) {
+            throw new ServiceError('Failed to retrieve current prices.');
+        }
     }
 
     private async updateCurrentPrices(): Promise<void> {
