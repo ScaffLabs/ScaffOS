@@ -1,11 +1,13 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import RateLimit from 'express-rate-limit';
+import cors from 'cors';
+import helmet from 'helmet';
 import RiskManager from './riskManager';
 import authMiddleware from './authMiddleware';
 import axios from 'axios';
 import { setReady } from './healthCheck';
-import logger from './logger'; // Importing logger
+import logger from './logger';
 
 const router = express.Router();
 const riskManager = new RiskManager();
@@ -13,16 +15,13 @@ const riskManager = new RiskManager();
 const limiter = RateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  message: 'Too many requests, please try again later.'
 });
 
-const checkServiceHealth = async (url: string) => {
-  try {
-    const response = await axios.get(url);
-    return response.status === 200;
-  } catch (error) {
-    return false;
-  }
-};
+router.use(cors({ origin: ['http://allowed-origin.com'], credentials: true }));
+router.use(helmet());
+router.use(express.json({ limit: '1mb' }));
+router.use(limiter);
 
 router.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
@@ -43,7 +42,7 @@ router.get('/health', async (req: Request, res: Response) => {
   res.status(200).json({ status: isHealthy ? 'healthy' : 'unhealthy' });
 });
 
-router.get('/risk', limiter, async (req: Request, res: Response) => {
+router.get('/risk', async (req: Request, res: Response) => {
   const { limit = 10, offset = 0, sort, filter } = req.query;
   try {
     const positions = await riskManager.getRiskPositions(Number(limit), Number(offset), sort, filter);
@@ -54,7 +53,7 @@ router.get('/risk', limiter, async (req: Request, res: Response) => {
   }
 });
 
-router.post('/risk', limiter, authMiddleware, body('asset').isString(), body('position').isNumeric(), async (req: Request, res: Response) => {
+router.post('/risk', authMiddleware, body('asset').isString().trim().escape(), body('position').isNumeric(), async (req: Request, res: Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -62,6 +61,7 @@ router.post('/risk', limiter, authMiddleware, body('asset').isString(), body('po
   const { asset, position } = req.body;
   try {
     const newPosition = await riskManager.createRiskPosition(asset, position);
+    logger.info(`Risk position created: ${newPosition.id}`);
     res.status(201).json(newPosition);
   } catch (error) {
     logger.error(`Error creating risk position: ${error.message}`);
@@ -69,7 +69,7 @@ router.post('/risk', limiter, authMiddleware, body('asset').isString(), body('po
   }
 });
 
-router.put('/risk/:id', limiter, authMiddleware, body('position').isNumeric(), async (req: Request, res: Response) => {
+router.put('/risk/:id', authMiddleware, body('position').isNumeric(), async (req: Request, res: Response) => {
   const { id } = req.params;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -81,6 +81,7 @@ router.put('/risk/:id', limiter, authMiddleware, body('position').isNumeric(), a
     if (!updated) {
       return res.status(404).send('Risk position not found');
     }
+    logger.info(`Risk position updated: ${id}`);
     res.status(204).send();
   } catch (error) {
     logger.error(`Error updating risk position: ${error.message}`);
@@ -88,13 +89,14 @@ router.put('/risk/:id', limiter, authMiddleware, body('position').isNumeric(), a
   }
 });
 
-router.delete('/risk/:id', limiter, authMiddleware, async (req: Request, res: Response) => {
+router.delete('/risk/:id', authMiddleware, async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const deleted = await riskManager.deleteRiskPosition(id);
     if (!deleted) {
       return res.status(404).send('Risk position not found');
     }
+    logger.info(`Risk position deleted: ${id}`);
     res.status(204).send();
   } catch (error) {
     logger.error(`Error deleting risk position: ${error.message}`);
