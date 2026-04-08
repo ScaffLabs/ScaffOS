@@ -9,6 +9,7 @@ import config from './config';
 import Database from './storage/Database';
 import http from 'http';
 import { exit } from 'process';
+import errorHandler from './middleware/errorHandler';
 
 dotenv.config();
 const app = express();
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
     next();
 });
 app.use('/api/health', healthRouter);
+app.use(errorHandler);
 
 const startServer = async () => {
     await db.connect(config.databaseUrl);
