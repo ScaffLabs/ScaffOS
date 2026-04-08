@@ -8,8 +8,8 @@ import { config } from './config';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { body, query, validationResult } from 'express-validator';
-import { logRequest } from './logger';
+import { body, validationResult } from 'express-validator';
+import { logRequest, logAudit } from './logger';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -20,18 +20,18 @@ app.use(cors({ origin: ['https://allowed-origin.com'] }));
 app.use(helmet());
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
 });
 app.use(limiter);
-
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const startApp = async () => {
     await migrateData([]);
     await seedData();
 
-    app.get('/health', async (req, res) => {
+    app.get('/health', async (req, res, next) => {
         try {
             const health = await priceAggregator.checkDependencies();
             res.status(200).json({ status: 'healthy', dependencies: health });
@@ -55,7 +55,7 @@ const startApp = async () => {
     });
 
     app.post('/prices', [
-        body('exchange').isString().notEmpty(),
+        body('exchange').isString().notEmpty().escape(),
         body('price').isFloat({ gt: 0 }),
         body('volume').isFloat({ gt: 0 }),
     ], async (req, res, next) => {
@@ -66,6 +66,7 @@ const startApp = async () => {
         try {
             const newPriceData = req.body;
             const createdPrice = await priceAggregator.addPrice(newPriceData);
+            logAudit('Price added', newPriceData);
             res.status(201).json(createdPrice);
         } catch (error) {
             next(error);
