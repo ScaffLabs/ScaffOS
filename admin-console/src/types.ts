@@ -30,7 +30,7 @@ export const ConfigurationItemSchema = z.object({
  */
 export type EventType =
     | { type: 'CONFIGURATION_CREATED'; payload: ConfigurationItem }
-    | { type: 'SERVICE_HEALTH_UPDATED'; payload: { [service: string]: string } };
+    | { type: 'SERVICE_HEALTH_UPDATED'; payload: { [service: string]: string } }; 
 
 /**
  * Zod schema for validating events.
@@ -53,3 +53,13 @@ export const validateEvent = (event: unknown): EventType => {
     }
     return result.data;
 };
+
+/**
+ * Interface representing a service health check response.
+ * @property serviceHealth - The health status of services.
+ * @property database - The status of the database connection ('up' or 'down').
+ */
+export interface HealthCheckResponse {
+    serviceHealth: { [service: string]: string };
+    database: 'up' | 'down';
+}
