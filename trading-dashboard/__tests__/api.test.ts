@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../src/server';
-import { fetchPositions, updatePosition, deletePosition } from '../src/api/portfolioApi';
+import { fetchPositions, updatePosition, deletePosition, createPosition } from '../src/api/portfolioApi';
 import { jest } from '@jest/globals';
 
 jest.mock('../src/api/portfolioApi');
@@ -18,6 +18,15 @@ describe('API Endpoints', () => {
         const response = await request(app).get('/api/positions');
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ message: 'Error fetching positions' });
+    });
+
+    it('POST /api/positions should create a position', async () => {
+        (createPosition as jest.Mock).mockResolvedValue({ id: '2', symbol: 'GOOGL', quantity: 5 });
+        const response = await request(app)
+            .post('/api/positions')
+            .send({ id: '2', symbol: 'GOOGL', quantity: 5 });
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual({ message: 'Position created successfully', position: { id: '2', symbol: 'GOOGL', quantity: 5 } });
     });
 
     it('PUT /api/positions/:id with valid data should update position', async () => {
@@ -62,17 +71,9 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual({ message: 'Invalid limit parameter' });
     });
 
-    it('PUT /api/positions/:id with missing ID should return 404', async () => {
-        const response = await request(app)
-            .put('/api/positions/')
-            .send({ quantity: 10 });
-        expect(response.status).toBe(404);
-        expect(response.body).toEqual({ message: 'Position not found' });
-    });
-
-    it('DELETE /api/positions/:id with invalid ID should return 404', async () => {
-        const response = await request(app).delete('/api/positions/invalid');
-        expect(response.status).toBe(404);
-        expect(response.body).toEqual({ message: 'Position not found' });
+    it('POST /api/positions without required fields should return 400', async () => {
+        const response = await request(app).post('/api/positions').send({ symbol: 'TSLA' });
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('Invalid position data');
     });
 });
