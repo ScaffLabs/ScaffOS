@@ -80,3 +80,6 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing to 
 
 ## Changelog
 See [CHANGELOG.md](CHANGELOG.md) for a list of changes and updates.
+
+## License
+This project is licensed under the MIT License.
