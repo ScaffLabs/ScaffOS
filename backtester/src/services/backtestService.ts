@@ -18,7 +18,6 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
             position = 0;
         }
     }
-
     return totalReturns + position; // Add any open position at the end.
 }
 
@@ -29,7 +28,12 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
         if (!Array.isArray(historicalData) || historicalData.length === 0) {
             throw new ServiceError('Invalid input: historicalData must be a non-empty array.');
         }
-        historicalData.forEach(data => HistoricalDataSchema.parse(data));
+        historicalData.forEach(data => {
+            if (typeof data.timestamp !== 'number' || typeof data.price !== 'number') {
+                throw new ServiceError('Each historical data entry must have a numeric timestamp and price.');
+            }
+            HistoricalDataSchema.parse(data);
+        });
 
         const startTime = Date.now();
         const totalReturns = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);

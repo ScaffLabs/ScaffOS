@@ -14,7 +14,12 @@ backtestRouter.post('/', async (req, res, next) => {
         if (!Array.isArray(historicalData) || historicalData.length === 0) {
             throw new ValidationError('historicalData must be a non-empty array.');
         }
-        historicalData.forEach(data => HistoricalDataSchema.parse(data));
+        historicalData.forEach(data => {
+            HistoricalDataSchema.parse(data);
+            if (typeof data.timestamp !== 'number' || typeof data.price !== 'number') {
+                throw new ValidationError('Each historical data entry must have a numeric timestamp and price.');
+            }
+        });
 
         const result = await simulateBacktest(strategyParams, historicalData);
         const entity = await store.create({ strategyParams, historicalData, result });
