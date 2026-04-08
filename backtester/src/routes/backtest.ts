@@ -19,8 +19,10 @@ backtestRouter.post('/', async (req, res, next) => {
             HistoricalDataSchema.parse(data);
         });
 
-        const result = await simulateBacktest(strategyParams, historicalData);
-        const entity = await store.create({ strategyParams, historicalData, result });
+        const sanitizedHistoricalData = historicalData.map(data => req.sanitize(data)); // Sanitize input
+
+        const result = await simulateBacktest(strategyParams, sanitizedHistoricalData);
+        const entity = await store.create({ strategyParams, historicalData: sanitizedHistoricalData, result });
         logger.info({ message: 'Backtest created', id: entity.id }); // Audit log for creation
         res.status(201).json({ id: entity.id, result });
     } catch (error) {
