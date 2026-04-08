@@ -5,12 +5,6 @@ export type TradeId = string & { readonly brand: unique symbol };
 // Discriminated union for event types
 export type EventType = 'userCreated' | 'orderPlaced';
 
-/**
- * Represents an Event with a unique identifier and details.
- * @property {OrderId} id - The unique identifier for the event.
- * @property {string} title - The title of the event.
- * @property {string} [description] - A brief description of the event.
- */
 export interface Event {
     id: OrderId;
     title: string;
@@ -37,30 +31,10 @@ export const updateEventSchema = z.object({
     description: z.string().optional(),
 });
 
-// Event Messages Types
-export interface UserCreated {
-    userId: string;
-    username: string;
-}
-
-export type EventMessages = UserCreated;
-
-/**
- * Represents a message sent over the event bus.
- * @property {string} topic - The topic of the message.
- * @property {T} data - The data payload of the message.
- * @property {number} timestamp - The timestamp when the message was created.
- */
-export interface Message<T> {
-    topic: string;
-    data: T;
-    timestamp: number;
-}
-
-/**
- * Represents a specific event message for user creation.
- * @property {string} topic - The topic of the message.
- * @property {UserCreated} data - The data payload containing user details.
- * @property {number} timestamp - The timestamp when the message was created.
- */
-export type UserCreatedMessage = Message<UserCreated>;
+// Additional types for query parameters
+export type GetEventsQuery = {
+    limit?: number;
+    offset?: number;
+    sortBy?: keyof Event;
+    order?: 'asc' | 'desc';
+};

@@ -6,8 +6,8 @@ const router = Router();
 
 // Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 1 * 60 * 1000,
+    max: 100,
 });
 
 // Event routes

@@ -24,8 +24,13 @@ export const createEvent = async (req: Request, res: Response) => {
 
 export const getEvents = async (req: Request, res: Response) => {
     try {
-        const events = await storage.findAll();
-        res.status(200).json(events);
+        const { limit = 10, offset = 0, sortBy = 'title', order = 'asc' } = req.query;
+        const events = await storage.findAll(Number(limit), Number(offset));
+        const sortedEvents = events.sort((a, b) => {
+            if (order === 'asc') return a[sortBy].localeCompare(b[sortBy]);
+            return b[sortBy].localeCompare(a[sortBy]);
+        });
+        res.status(200).json(sortedEvents);
     } catch (error) {
         res.status(500).json({ message: 'Failed to retrieve events' });
     }
