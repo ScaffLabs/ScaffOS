@@ -113,3 +113,9 @@ The service is built using Node.js and Express, using an in-memory data store fo
   docker run -p 3000:3000 monitoring-service
   ```
 - Use a process manager like PM2 for production deployments.
+
+## Contribution Guidelines
+We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
+
+## Changelog
+See [CHANGELOG.md](./CHANGELOG.md) for version history and updates.

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0] - 2023-10-21
+### Added
+- Comprehensive README.md documentation with detailed API reference and setup instructions.
+- Inline comments in dashboard.ts explaining complex logic.
+- Environment variables table for clarity.
+
 ## [1.2.0] - 2023-10-20
 ### Added
 - Comprehensive README.md documentation with detailed API reference.
