@@ -15,6 +15,7 @@ export class AlertController {
             const alerts = await this.alertStore.findIndex({});
             return res.json(alerts);
         } catch (error) {
+            console.error(error);
             throw new ServiceError('Failed to fetch active alerts.');
         }
     }
@@ -28,6 +29,7 @@ export class AlertController {
             if (error instanceof ValidationError) {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
             }
+            console.error(error);
             throw new ServiceError('Failed to add alert.');
         }
     }
@@ -44,6 +46,7 @@ export class AlertController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
+            console.error(error);
             throw new ServiceError('Failed to update alert.');
         }
     }
@@ -60,6 +63,7 @@ export class AlertController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
+            console.error(error);
             throw new ServiceError('Failed to delete alert.');
         }
     }
