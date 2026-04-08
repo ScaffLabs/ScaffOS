@@ -44,37 +44,37 @@ export interface BacktestResult {
  * Zod schema for validating historical data.
  */
 export const HistoricalDataSchema = z.object({
-    timestamp: z.number().nonnegative(),
-    price: z.number().positive(),
+    timestamp: z.number().nonnegative().describe('Unix timestamp in seconds.'),
+    price: z.number().positive().describe('Price at the given timestamp.'),
 });
 
 /**
  * Zod schema for validating strategy parameters.
  */
 export const StrategyParametersSchema = z.object({
-    slippage: z.number().nonnegative(),
-    buyThreshold: z.number().min(0).max(1),
-    sellThreshold: z.number().min(0).max(1),
+    slippage: z.number().nonnegative().describe('Slippage percentage as a decimal.'),
+    buyThreshold: z.number().min(0).max(1).describe('Threshold for buying as a decimal between 0 and 1.'),
+    sellThreshold: z.number().min(0).max(1).describe('Threshold for selling as a decimal between 0 and 1.'),
 });
 
 /**
  * Zod schema for validating backtest results.
  */
 export const BacktestResultSchema = z.object({
-    totalReturns: z.number(),
-    trades: z.number().int().nonnegative(),
-    winRate: z.number().min(0).max(100),
-    performanceMetrics: z.string(),
+    totalReturns: z.number().describe('Total returns from the backtest.'),
+    trades: z.number().int().nonnegative().describe('Total number of trades executed.'),
+    winRate: z.number().min(0).max(100).describe('Win rate as a percentage.'),
+    performanceMetrics: z.string().describe('Summary of performance metrics.'),
 });
 
 /**
  * Zod schema for pagination parameters.
  */
 export const PaginationSchema = z.object({
-    limit: z.number().int().min(1).max(100).default(10),
-    offset: z.number().int().min(0).default(0),
-    sort: z.string().default('createdAt'),
-    order: z.enum(['asc', 'desc']).default('asc'),
+    limit: z.number().int().min(1).max(100).default(10).describe('Number of results to return per page.'),
+    offset: z.number().int().min(0).default(0).describe('Number of results to skip before starting to collect the result set.'),
+    sort: z.string().default('createdAt').describe('Field by which to sort the results.'),
+    order: z.enum(['asc', 'desc']).default('asc').describe('Order in which to sort the results.'),
 });
 
 export { HistoricalDataSchema, StrategyParametersSchema, BacktestResultSchema, PaginationSchema };
