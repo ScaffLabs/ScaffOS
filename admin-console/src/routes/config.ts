@@ -4,6 +4,7 @@ import Database from '../storage/Database';
 import { ConfigurationItem } from '../types';
 import { logAudit } from '../middleware/auditLogger';
 import { ValidationError } from '../errors/CustomErrors';
+import { sanitize } from 'dompurify';
 
 const router = express.Router();
 const db = new Database();
@@ -18,7 +19,7 @@ router.post('/', [
     }
     try {
         const { key, value }: ConfigurationItem = req.body;
-        await db.createConfiguration({ key, value });
+        await db.createConfiguration({ key: sanitize(key), value: sanitize(value) });
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
         console.error('Create Configuration Error:', error);
@@ -50,7 +51,7 @@ router.put('/', [
     }
     try {
         const { key, value }: ConfigurationItem = req.body;
-        await db.updateConfiguration({ key, value });
+        await db.updateConfiguration({ key: sanitize(key), value: sanitize(value) });
         res.status(200).json({ message: 'Configuration updated successfully!' });
     } catch (error) {
         console.error('Update Configuration Error:', error);
