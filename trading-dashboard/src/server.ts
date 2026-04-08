@@ -6,7 +6,7 @@ import bodyParser from 'body-parser';
 import { fetchPositions, createPosition, updatePosition, deletePosition } from './api/portfolioApi';
 import { validateInput, validatePositionId } from './middleware/inputValidation';
 import errorHandler from './middleware/errorHandler';
-import logger from './utils/logger';
+import logger, { logRequest, generateRequestId } from './utils/logger';
 import { gracefulShutdown, registerShutdownHandlers } from './utils/healthCheck';
 
 const app = express();
@@ -17,6 +17,17 @@ app.use(helmet());
 app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+
+app.use((req, res, next) => {
+    const requestId = generateRequestId();
+    res.setHeader('X-Request-Id', requestId);
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        logRequest(req.method, req.path, res.statusCode, duration, requestId);
+    });
+    next();
+});
 
 app.get('/api/positions', async (req, res) => {
     const { limit = 10, offset = 0, sortBy = 'id', order = 'asc' } = req.query;
