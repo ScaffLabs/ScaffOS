@@ -7,13 +7,14 @@ import eventBus from '../eventBus';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../logger';
 import rateLimit from 'express-rate-limit';
+import { checkHealthEndpoint } from './healthCheck';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
 const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 1 * 60 * 1000,
+    max: 100,
     message: { message: 'Too many requests, please try again later.' }
 });
 
@@ -116,8 +117,13 @@ export const deleteEvent = async (req: Request<{ id: string }>, res: Response) =
     }
 };
 
-export const checkHealthEndpoint = async (req: Request, res: Response) => {
-    res.status(200).json({ status: 'UP' });
+export const healthCheck = async (req: Request, res: Response) => {
+    try {
+        const health = await checkHealthEndpoint();
+        res.status(200).json(health);
+    } catch (error) {
+        res.status(503).json({ message: 'Service Unavailable', error: error.message });
+    }
 };
 
 export const eventRoutes = () => {
@@ -126,6 +132,6 @@ export const eventRoutes = () => {
     router.get('/', getEvents);
     router.put('/:id', updateEvent);
     router.delete('/:id', deleteEvent);
-    router.get('/health', checkHealthEndpoint);
+    router.get('/health', healthCheck);
     return router;
 };
