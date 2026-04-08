@@ -1,9 +1,8 @@
 import { Request, Response, Router } from 'express';
 import { StorageManager } from '../storage/storageManager';
-import { Event, createEventSchema, updateEventSchema } from '../types';
+import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../types';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
-import { ServiceError } from '../errors/serviceError';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -21,19 +20,46 @@ export const createEvent = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-export const seedData = async (req: Request, res: Response): Promise<void> => {
+export const getEvents = async (req: Request<{}, {}, {}, GetEventsQuery>, res: Response): Promise<void> => {
     try {
-        await storageManager.seedData();
-        res.status(200).json({ message: 'Data seeded successfully' });
+        const { limit = 10, offset = 0, sortBy = 'createdAt', order = 'asc' } = req.query;
+        const events = await storage.findAll(Number(limit), Number(offset));
+        if (events.length === 0) {
+            throw new NotFoundError('No events found');
+        }
+        const sortedEvents = events.sort((a, b) => {
+            if (order === 'asc') return a[sortBy] > b[sortBy] ? 1 : -1;
+            return a[sortBy] < b[sortBy] ? 1 : -1;
+        });
+        res.status(200).json(sortedEvents);
     } catch (error) {
         handleError(error, res);
     }
 };
 
-export const migrateData = async (req: Request, res: Response): Promise<void> => {
+export const updateEvent = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
     try {
-        await storageManager.migrate();
-        res.status(200).json({ message: 'Migration performed successfully' });
+        const validation = updateEventSchema.safeParse(req.body);
+        if (!validation.success) {
+            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+        }
+        const event = await storage.update(req.params.id, validation.data);
+        if (!event) {
+            throw new NotFoundError('Event not found');
+        }
+        res.status(200).json(event);
+    } catch (error) {
+        handleError(error, res);
+    }
+};
+
+export const deleteEvent = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+    try {
+        const deleted = await storage.delete(req.params.id);
+        if (!deleted) {
+            throw new NotFoundError('Event not found');
+        }
+        res.status(204).send();
     } catch (error) {
         handleError(error, res);
     }
@@ -44,8 +70,6 @@ const handleError = (error: Error, res: Response) => {
         res.status(400).json({ message: error.message });
     } else if (error instanceof NotFoundError) {
         res.status(404).json({ message: error.message });
-    } else if (error instanceof ServiceError) {
-        res.status(500).json({ message: error.message });
     } else {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
@@ -54,6 +78,7 @@ const handleError = (error: Error, res: Response) => {
 
 const router = Router();
 router.post('/', createEvent);
-router.post('/seed', seedData);
-router.post('/migrate', migrateData);
+router.get('/', getEvents);
+router.put('/:id', updateEvent);
+router.delete('/:id', deleteEvent);
 export default router;
