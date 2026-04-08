@@ -10,7 +10,7 @@ export const auditLogger = (req: Request, res: Response, next: NextFunction) => 
         // Log sensitive data only if necessary, avoid logging sensitive information
         if (method === 'POST' && url.includes('/api/strategies')) {
             const { name } = req.body;
-            logger.info(`Strategy created: ${name}`);
+            logger.info(`Sensitive operation: Strategy created or updated: ${name}`);
         }
     });
     next();

@@ -3,40 +3,50 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { connectToDatabase } from './database';
 import { gracefulShutdown } from './utils/shutdown';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import bodyParser from 'body-parser';
 import { healthCheckHandler, readyCheckHandler } from './handlers/healthCheck';
 import { monitorMemoryUsage } from './utils/monitor';
-import axios from 'axios';
+import logger from './logger';
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
-app.use(express.json());
+// CORS configuration
+app.use(cors({
+    origin: ['http://localhost:3000'], // Allowed origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
+
+// Security headers
+app.use(helmet());
+
+// Rate limiting per IP and API key
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests, please try again later.',
+});
+app.use(apiLimiter);
+
+// Body parsing and request size limits
+app.use(bodyParser.json({ limit: '1mb' }));
 
 // Health check endpoints
 app.get('/api/health', healthCheckHandler);
 app.get('/api/ready', readyCheckHandler);
 
-// Adding a middleware to handle timeouts for all requests
+// Middleware for input validation
 app.use((req, res, next) => {
-    res.setTimeout(5000, () => {
-        console.error('Request has timed out.');
-        res.status(503).send('Service Unavailable');
-    });
+    const contentType = req.headers['content-type'];
+    if (contentType && contentType !== 'application/json') {
+        return res.status(415).json({ error: 'Unsupported Media Type. Only application/json is allowed.' });
+    }
     next();
 });
-
-// Implementing retry logic for external API calls
-const fetchWithRetry = async (url, options, retries = 3, backoff = 300) => {
-    try {
-        return await axios(url, options);
-    } catch (error) {
-        if (retries === 0) throw error;
-        console.log(`Retrying... attempts left: ${retries}`);
-        await new Promise(res => setTimeout(res, backoff));
-        return fetchWithRetry(url, options, retries - 1, backoff * 2);
-    }
-};
 
 process.on('SIGTERM', () => gracefulShutdown(server));
 process.on('SIGINT', () => gracefulShutdown(server));
