@@ -1,4 +1,3 @@
-// Import necessary packages
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -20,12 +19,13 @@ import { setTimeout } from 'timers/promises';
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
+
 const mongoClient = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
 
 // Middleware configurations
 app.use(cors({ origin: ['http://localhost:3000', 'https://yourdomain.com'] }));
 app.use(helmet());
-app.use(express.json({ limit: '1mb' })); // Set request body size limit
+app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 app.use(auditLogger);
 
