@@ -1,0 +1,18 @@
+import dotenv from 'dotenv';
+import Joi from 'joi';
+
+dotenv.config();
+
+const schema = Joi.object({
+    REACT_APP_API_BASE_URL: Joi.string().uri().default('http://localhost:3000'),
+    PORT: Joi.number().default(3000),
+    NODE_ENV: Joi.string().valid('development', 'staging', 'production').default('development'),
+}).unknown();
+
+const { error, value: config } = schema.validate(process.env);
+
+if (error) {
+    throw new Error(`Config validation error: ${error.message}`);
+}
+
+export default config;
