@@ -10,7 +10,7 @@ export const createOrderService = async (orderData: unknown) => {
     if (!parsedOrder.success) {
         throw new ServiceError('Invalid order data.');
     }
-    const order: Order = parsedOrder.data;
+    const order = parsedOrder.data;
     try {
         const response = await postData(`${ORDER_SERVICE_URL}/orders`, order);
         await emitWithRetry({ type: 'ORDER_CREATED', payload: response.data });
