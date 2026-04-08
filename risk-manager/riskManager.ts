@@ -18,7 +18,7 @@ export default class RiskManager {
         const newPosition: RiskPosition = { id: this.generateId() as OrderId, asset, position };
         const validationResult = RiskPositionSchema.safeParse(newPosition);
         if (!validationResult.success) {
-            logger.error('Invalid risk position data: ' + JSON.stringify(validationResult.error));
+            logger.error('Invalid risk position data: ' + JSON.stringify(validationResult.error.errors));
             throw new ValidationError('Invalid risk position data: ' + validationResult.error.errors);
         }
         return this.storage.create(newPosition);
@@ -34,7 +34,7 @@ export default class RiskManager {
         const updatedPosition: RiskPosition = { ...existingPosition, position };
         const validationResult = RiskPositionSchema.safeParse(updatedPosition);
         if (!validationResult.success) {
-            logger.error('Invalid risk position data for update: ' + JSON.stringify(validationResult.error));
+            logger.error('Invalid risk position data for update: ' + JSON.stringify(validationResult.error.errors));
             throw new ValidationError('Invalid risk position data: ' + validationResult.error.errors);
         }
 
@@ -49,7 +49,7 @@ export default class RiskManager {
         return true;
     }
 
-    private generateId(): string {
-        return Math.random().toString(36).substr(2, 9);
+    private generateId(): OrderId {
+        return Math.random().toString(36).substr(2, 9) as OrderId;
     }
 }
