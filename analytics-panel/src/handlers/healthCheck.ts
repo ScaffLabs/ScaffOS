@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import os from 'os';
-import { dependentHealthCheck } from '../api/analytics';
+import axios from 'axios';
+import { dependentHealthCheck } from '../api/dependentHealthCheck';
 
 export const healthCheckHandler = async (req: Request, res: Response) => {
     try {
