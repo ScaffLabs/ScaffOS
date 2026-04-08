@@ -16,20 +16,15 @@ services:
       - .:/app
 
   strategy-service:
-    image: strategy-service:latest
+    build:
+      context: ./strategy-service
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
     environment:
       - NODE_ENV=development
-    depends_on:
-      - analytics-panel
 
   mongo:
     image: mongo:latest
     ports:
       - '27017:27017'
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - '80:80'
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
