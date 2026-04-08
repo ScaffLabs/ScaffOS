@@ -51,7 +51,7 @@ export const updateOrderService = async (id: string, updates: any) => {
 
 export const deleteOrderService = async (id: string) => {
     try {
-        await postData(`${ORDER_SERVICE_URL}/orders/${id}`);
+        await postData(`${ORDER_SERVICE_URL}/orders/${id}`, {});
         await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
     } catch (error) {
         console.error('Error deleting order:', error);
