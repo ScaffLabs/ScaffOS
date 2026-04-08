@@ -41,3 +41,13 @@ const fetchWithRetry = async (url: string) => {
 export const fetchUserData = async (userId: string) => {
     return await fetchWithRetry(`${config.USER_SERVICE_URL}/users/${userId}`);
 };
+
+export const healthCheckService = async (serviceUrl: string) => {
+    try {
+        await axios.get(serviceUrl);
+        return { status: 'healthy' };
+    } catch (error) {
+        logger.error(`Health check failed for ${serviceUrl}`, { error: error.message });
+        return { status: 'unhealthy' };
+    }
+};
