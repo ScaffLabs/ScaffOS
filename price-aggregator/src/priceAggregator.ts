@@ -46,6 +46,19 @@ export class PriceAggregator extends EventEmitter {
         this.updateCurrentPrices();
     }
 
+    public async addPrice(priceData: PriceData) {
+        this.prices.push(priceData);
+        this.updateCurrentPrices();
+        return priceData;
+    }
+
+    public async deletePrice(exchange: string) {
+        const index = this.prices.findIndex(p => p.exchange === exchange);
+        if (index === -1) throw new Error('Price not found');
+        this.prices.splice(index, 1);
+        this.updateCurrentPrices();
+    }
+
     public async fetchExchangePrice(exchange: string): Promise<PriceData | null> {
         try {
             const priceData = await httpClient(`/prices/${encodeURIComponent(exchange)}`);
@@ -74,5 +87,25 @@ export class PriceAggregator extends EventEmitter {
             clearInterval(this.intervalId);
         }
         this.clients.forEach(client => client.close());
+    }
+
+    private updateCurrentPrices() {
+        this.currentPrices = {};
+        this.prices.forEach(priceData => {
+            this.currentPrices[priceData.exchange] = priceData.price;
+        });
+    }
+
+    private calculateVWAP() {
+        if (this.prices.length === 0) return;
+        const totalValue = this.prices.reduce((acc, priceData) => acc + (priceData.price * priceData.volume), 0);
+        const totalVolume = this.prices.reduce((acc, priceData) => acc + priceData.volume, 0);
+        this.currentPrices['VWAP'] = totalValue / totalVolume;
+    }
+
+    private broadcastPrices() {
+        this.clients.forEach(client => {
+            client.send(JSON.stringify(this.currentPrices));
+        });
     }
 }

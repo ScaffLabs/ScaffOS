@@ -5,7 +5,7 @@ import { PriceAggregator } from './priceAggregator';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { body, validationResult } from 'express-validator';
+import { body, validationResult, query } from 'express-validator';
 import morgan from 'morgan';
 import { MemoryMonitor } from './memoryMonitor';
 import { logRequest, logError } from './logger';
@@ -36,28 +36,58 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/prices', async (req, res) => {
-    const { limit = 10, offset = 0, sort = 'price', order = 'asc' } = req.query;
-
+app.get('/prices', [
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('offset').optional().isInt({ min: 0 }).toInt(),
+    query('sort').optional().isIn(['price', 'volume']),
+    query('order').optional().isIn(['asc', 'desc']),
+], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-
-    const sanitizedLimit = Math.min(Number(limit), 100);
-    const sanitizedOffset = Math.max(Number(offset), 0);
-
+    const { limit = 10, offset = 0, sort = 'price', order = 'asc' } = req.query;
     try {
         const prices = priceAggregator.getCurrentPrices();
-        let sortedPrices = Object.entries(prices).sort((a, b) => {
+        const sortedPrices = Object.entries(prices).sort((a, b) => {
             const comparison = order === 'asc' ? a[1] - b[1] : b[1] - a[1];
             return comparison;
         });
-        const paginatedPrices = sortedPrices.slice(sanitizedOffset, sanitizedOffset + sanitizedLimit);
+        const paginatedPrices = sortedPrices.slice(offset, offset + limit);
         res.json(paginatedPrices);
     } catch (error) {
         logError(error, { path: req.path, method: req.method });
         res.status(500).json({ error: 'Failed to fetch prices' });
+    }
+});
+
+app.post('/prices', [
+    body('exchange').isString().notEmpty(),
+    body('price').isNumeric().not().isEmpty(),
+    body('volume').isNumeric().not().isEmpty(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    const { exchange, price, volume } = req.body;
+    try {
+        const newPrice = await priceAggregator.addPrice({ exchange, price, volume });
+        res.status(201).json(newPrice);
+    } catch (error) {
+        logError(error, { path: req.path, method: req.method });
+        res.status(409).json({ error: 'Conflict while adding price.' });
+    }
+});
+
+app.delete('/prices/:exchange', async (req, res) => {
+    const { exchange } = req.params;
+    try {
+        await priceAggregator.deletePrice(exchange);
+        res.status(204).send();
+    } catch (error) {
+        logError(error, { path: req.path, method: req.method });
+        res.status(404).json({ error: 'Price not found' });
     }
 });
 
