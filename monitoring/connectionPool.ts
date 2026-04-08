@@ -17,7 +17,7 @@ const createConnectionPool = () => {
         if (!connections[service]) {
             connections[service] = axios.create({
                 baseURL: config[`${service.toUpperCase()}_SERVICE_URL`],
-                timeout: TIMEOUT
+                timeout: TIMEOUT,
             });
         }
         return connections[service];

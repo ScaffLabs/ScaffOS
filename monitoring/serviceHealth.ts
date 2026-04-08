@@ -1,13 +1,14 @@
-import { Request, Response } from 'express';
-import axios from 'axios';
-import EventEmitter from 'eventemitter3';
-import config from './config';
+import { createConnectionPool } from './connectionPool';
+import { serviceEmitter } from './connectionPool';
 import logger from './logger';
+import config from './config';
+import axios from 'axios';
 
-const serviceEmitter = new EventEmitter();
+const connectionPool = createConnectionPool();
+
 const SERVICE_URLS = {
     orderService: config.ORDER_SERVICE_URL,
-    userService: config.USER_SERVICE_URL
+    userService: config.USER_SERVICE_URL,
 };
 
 const MAX_RETRIES = 3;
@@ -38,11 +39,4 @@ export const emitHealthCheckEvent = async () => {
     const healthStatus = await checkServiceHealth();
     const event = { type: 'SERVICE_HEALTH_CHECK', status: healthStatus };
     serviceEmitter.emit('healthCheck', event);
-};
-
-export const monitorMemoryUsage = () => {
-    const memoryUsage = process.memoryUsage();
-    const totalMemory = memoryUsage.rss / (1024 * 1024);
-    const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
-    logger.info({ totalMemory, usedMemory }, 'Memory usage monitored');
 };
