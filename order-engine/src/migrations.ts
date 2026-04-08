@@ -17,3 +17,7 @@ export const migrateData = async () => {
   await seedData();
   console.log('Seeding complete!');
 };
+
+export const migrateOrders = async () => {
+  // Logic for migrating orders from one storage to another
+};
