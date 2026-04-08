@@ -39,17 +39,14 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
         throw new ServiceError('Invalid input: Parameters and historicalData must be provided and historicalData cannot be empty.');
     }
 
-    await Promise.all([
-        fetchOrders(),
-        fetchHistoricalData() // Fetch historical data once
-    ]);
+    const orders = await fetchOrders();
 
     let totalReturns = 0;
     let trades = 0;
     let wins = 0;
 
     for (const currentData of historicalData) {
-        const order = await fetchOrders().find(o => o.timestamp === currentData.timestamp);
+        const order = orders.find(o => o.timestamp === currentData.timestamp);
         if (order) {
             const entryPrice = currentData.price;
             const slippageAdjustedPrice = entryPrice * (1 + params.slippage);
@@ -58,10 +55,10 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
 
             if (shouldBuy) {
                 trades++;
-                totalReturns -= entryPrice;
+                totalReturns -= entryPrice; // Cost of buying
             } else if (shouldSell) {
                 trades++;
-                totalReturns += entryPrice;
+                totalReturns += entryPrice; // Revenue from selling
                 wins++;
             }
         }
