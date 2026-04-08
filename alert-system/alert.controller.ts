@@ -17,7 +17,7 @@ export class AlertController {
             return res.json(alerts);
         } catch (error) {
             console.error(error);
-            throw new ServiceError('Failed to fetch active alerts.');
+            return res.status(500).json({ message: 'Failed to fetch active alerts.' });
         }
     }
 
@@ -31,7 +31,7 @@ export class AlertController {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
             }
             console.error(error);
-            throw new ServiceError('Failed to add alert.');
+            return res.status(500).json({ message: 'Failed to add alert.' });
         }
     }
 
@@ -48,7 +48,7 @@ export class AlertController {
                 return res.status(404).json({ message: error.message });
             }
             console.error(error);
-            throw new ServiceError('Failed to update alert.');
+            return res.status(500).json({ message: 'Failed to update alert.' });
         }
     }
 
@@ -65,7 +65,7 @@ export class AlertController {
                 return res.status(404).json({ message: error.message });
             }
             console.error(error);
-            throw new ServiceError('Failed to delete alert.');
+            return res.status(500).json({ message: 'Failed to delete alert.' });
         }
     }
-}
+} 
