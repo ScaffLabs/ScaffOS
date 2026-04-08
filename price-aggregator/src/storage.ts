@@ -58,11 +58,75 @@ class InMemoryStorage<T> implements Storage<T> {
 }
 
 class SQLiteStorage<T> implements Storage<T> {
-    // SQLite implementation will go here
+    private db: any; // Placeholder for SQLite database connection
+
+    constructor() {
+        this.initialize();
+    }
+
+    private async initialize() {
+        // Initialize SQLite connection and create necessary tables
+    }
+
+    async create(item: T): Promise<T> {
+        // Implement create logic using SQLite
+    }
+
+    async read(id: string): Promise<T | null> {
+        // Implement read logic using SQLite
+    }
+
+    async update(id: string, item: T): Promise<T | null> {
+        // Implement update logic using SQLite
+    }
+
+    async delete(id: string): Promise<void> {
+        // Implement delete logic using SQLite
+    }
+
+    async findAll(query?: Partial<T>): Promise<T[]> {
+        // Implement findAll logic using SQLite
+    }
+
+    async transaction(operations: () => Promise<void>): Promise<void> {
+        // Implement transaction logic using SQLite
+    }
 }
 
 class PostgreSQLStorage<T> implements Storage<T> {
-    // PostgreSQL implementation will go here
+    private db: any; // Placeholder for PostgreSQL database connection
+
+    constructor() {
+        this.initialize();
+    }
+
+    private async initialize() {
+        // Initialize PostgreSQL connection and create necessary tables
+    }
+
+    async create(item: T): Promise<T> {
+        // Implement create logic using PostgreSQL
+    }
+
+    async read(id: string): Promise<T | null> {
+        // Implement read logic using PostgreSQL
+    }
+
+    async update(id: string, item: T): Promise<T | null> {
+        // Implement update logic using PostgreSQL
+    }
+
+    async delete(id: string): Promise<void> {
+        // Implement delete logic using PostgreSQL
+    }
+
+    async findAll(query?: Partial<T>): Promise<T[]> {
+        // Implement findAll logic using PostgreSQL
+    }
+
+    async transaction(operations: () => Promise<void>): Promise<void> {
+        // Implement transaction logic using PostgreSQL
+    }
 }
 
 export const storage = new InMemoryStorage<PriceData>();
