@@ -4,7 +4,7 @@
     "main": "index.js",
     "scripts": {
         "start": "ts-node src/server.ts",
-        "test": "jest"
+        "test": "jest --config jest.config.ts"
     },
     "dependencies": {
         "express": "^4.17.1",
@@ -17,6 +17,8 @@
         "typescript": "^4.3.2",
         "ts-node": "^10.0.0",
         "jest": "^27.0.0",
-        "supertest": "^6.1.0"
+        "supertest": "^6.1.0",
+        "@testing-library/react": "^11.2.7",
+        "ts-jest": "^27.0.0"
     }
 }
