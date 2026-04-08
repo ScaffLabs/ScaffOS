@@ -3,6 +3,7 @@ import { ValidationError, NotFoundError } from './errorClasses';
 import { LatencyData, LatencyDataSchema } from './types';
 import logger from './logger';
 import { createConnectionPool } from './connectionPool';
+import { serviceEmitter } from './connectionPool';
 
 const connectionPool = createConnectionPool();
 
@@ -25,8 +26,10 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data. Both id and value are required.');
         }
-        const { path, duration, timestamp } = bodyValidation.data;
+        const { path, duration } = bodyValidation.data;
+        const timestamp = new Date();
         const response = await connectionPool.requestWithRetry('order', 'post', '/dashboard', { path, duration, timestamp });
+        serviceEmitter.emit('latency_record', { path, duration, timestamp });
         res.status(201).json({ message: 'Entry created', id: response.id });
     } catch (error) {
         logger.error(error, req);

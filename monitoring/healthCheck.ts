@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { checkServiceHealth } from './serviceHealth';
 import logger from './logger';
+import config from './config';
 
 const getMemoryUsage = () => {
     const memoryUsage = process.memoryUsage();
