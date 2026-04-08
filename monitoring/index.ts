@@ -34,6 +34,14 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', healthCheck);
+app.get('/ready', async (req, res) => {
+    try {
+        const serviceStatus = await connectionPool.requestWithRetry('order', 'get', '/health');
+        res.status(serviceStatus.status === 'UP' ? 200 : 503).json(serviceStatus);
+    } catch (error) {
+        res.status(503).json({ error: 'Service Unavailable' });
+    }
+});
 app.use(errorMiddleware);
 
 process.on('uncaughtException', (error) => {
