@@ -48,8 +48,27 @@ setInterval(async () => {
     }
 }, 60000);
 
-// Graceful Shutdown
-process.on('SIGTERM', async () => await gracefulShutdown(dbPool));
-process.on('SIGINT', async () => await gracefulShutdown(dbPool));
+// Graceful Shutdown with memory queue
+process.on('SIGTERM', async () => {
+    await gracefulShutdown(dbPool);
+});
+process.on('SIGINT', async () => {
+    await gracefulShutdown(dbPool);
+});
 
 startServer();
+
+process.on('uncaughtException', (err) => {
+   logger.error('Uncaught Exception: ', err);
+   gracefulShutdown(dbPool);
+});
+
+process.on('unhandledRejection', (reason) => {
+   logger.error('Unhandled Rejection: ', reason);
+});
+
+const healthCheckMiddleware = (req, res, next) => {
+    logger.info('Health check endpoint hit');
+    next();
+};
+app.use('/health', healthCheckMiddleware);
