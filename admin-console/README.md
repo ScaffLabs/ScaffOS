@@ -119,4 +119,5 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - Improved inline documentation for better clarity.
 
 ### [1.0.3] - 2023-10-25
-- Added detailed environment variable descriptions and guide for setting up the application.
+- Enhanced error handling for API requests with clear messages.
+- Added tests for new features and improved coverage.
