@@ -3,6 +3,7 @@ import { PriceData, CurrentPrices } from './types';
 import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
+import { EventEmitter } from 'events';
 
 const CONNECTION_POOL_LIMIT = 5;
 const connectionPool: WebSocket[] = [];
@@ -16,14 +17,22 @@ export class PriceAggregator extends EventEmitter {
         this.startPriceFetch();
     }
 
-    private createWebSocketConnection(url: string) {
-        const ws = new WebSocket(url);
-        connectionPool.push(ws);
-        ws.on('close', () => {
-            const index = connectionPool.indexOf(ws);
-            if (index !== -1) connectionPool.splice(index, 1);
-        });
-        return ws;
+    private async checkServiceHealth(url: string): Promise<string> {
+        try {
+            const response = await httpClient(url);
+            return response.status === 200 ? 'healthy' : 'unhealthy';
+        } catch (error) {
+            logError(error, 'Service Health Check');
+            return 'unhealthy';
+        }
+    }
+
+    public async checkDependencies(): Promise<{ [key: string]: string }> {
+        const dependencies = {
+            exchange1: await this.checkServiceHealth(process.env.EXCHANGE1_URL || ''),
+            exchange2: await this.checkServiceHealth(process.env.EXCHANGE2_URL || ''),
+        };
+        return dependencies;
     }
 
     private async fetchPricesWithRetries(retries: number = 3): Promise<void> {
