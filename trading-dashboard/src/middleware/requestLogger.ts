@@ -8,6 +8,7 @@ const requestLogger = (req: Request, res: Response, next: NextFunction) => {
         const duration = Date.now() - start;
         logRequest(req.method, req.originalUrl, res.statusCode, duration, requestId);
     });
+    req.headers['x-request-id'] = requestId; // Attach request ID to the request
     next();
 };
 
