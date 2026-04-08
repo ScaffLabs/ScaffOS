@@ -17,3 +17,13 @@ export const healthCheckHandler = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Health check failed.' });
     }
 };
+
+export const readyCheckHandler = async (req: Request, res: Response) => {
+    try {
+        // Additional checks can be added here (database connections, etc.)
+        res.status(200).json({ status: 'ready' });
+    } catch (error) {
+        console.error('Ready check failed:', error);
+        res.status(500).json({ error: 'Ready check failed.' });
+    }
+};

@@ -8,8 +8,12 @@ import { auditLogger } from './middleware/auditLogger';
 import { validateQueryParams } from './middleware/inputValidator';
 import { validateStrategy } from './middleware/strategyValidator';
 import logger, { logStartup } from './logger';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server);
 
 // CORS configuration
 app.use(cors({
@@ -34,8 +38,20 @@ app.use(auditLogger);
 app.get('/api/health', healthCheckHandler);
 app.get('/api/dependent-health', dependentHealthCheckHandler);
 
+// Graceful shutdown logic
+const shutdown = async () => {
+    console.log('Shutting down gracefully...');
+    await new Promise(resolve => {
+        server.close(resolve);
+    });
+    console.log('Closed all connections.');
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     logStartup({ PORT });
     console.log(`Server is running on port ${PORT}`);
 });
