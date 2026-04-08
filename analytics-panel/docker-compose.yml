@@ -13,6 +13,13 @@ services:
     volumes:
       - .:/app
 
+  strategy-service:
+    image: strategy-service:latest
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - analytics-panel
+
   nginx:
     image: nginx:latest
     ports:
