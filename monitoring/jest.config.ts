@@ -9,4 +9,4 @@ const config: Config = {
     collectCoverageFrom: ['**/*.ts', '!**/node_modules/**'],
 };
 
-export default config; 
+export default config;
