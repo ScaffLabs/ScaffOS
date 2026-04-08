@@ -6,7 +6,6 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
-import requestIdMiddleware from './middleware/requestIdMiddleware';
 
 const router = express.Router();
 
@@ -23,8 +22,6 @@ const limiter = rateLimit({
 });
 router.use(limiter);
 
-router.use(requestIdMiddleware);
-
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
@@ -36,8 +33,8 @@ router.get('/risk', [
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { limit = 10, offset = 0, sort, filter } = req.query;
-        const positions = await riskManager.getRiskPositions(Number(limit), Number(offset), sort, filter);
+        const { limit = 10, offset = 0 } = req.query;
+        const positions = await riskManager.getRiskPositions(Number(limit), Number(offset));
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
@@ -59,7 +56,10 @@ router.post('/risk', [
         res.status(201).json(newPosition);
     } catch (error) {
         logger.error('Error creating risk position: ', error);
-        res.status(400).json({ error: error.message });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -74,14 +74,14 @@ router.put('/risk/:id', [
     try {
         const { id } = req.params;
         const { position } = req.body;
-        const updatedPosition = await riskManager.updateRiskPosition(id, position);
-        if (!updatedPosition) {
-            return res.status(404).send();
-        }
+        await riskManager.updateRiskPosition(id, position);
         res.status(204).send();
     } catch (error) {
         logger.error('Error updating risk position: ', error);
-        res.status(400).json({ error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).send();
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -94,13 +94,13 @@ router.delete('/risk/:id', [
     }
     try {
         const { id } = req.params;
-        const deleted = await riskManager.deleteRiskPosition(id);
-        if (!deleted) {
-            return res.status(404).send();
-        }
+        await riskManager.deleteRiskPosition(id);
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting risk position: ', error);
+        if (error instanceof NotFoundError) {
+            return res.status(404).send();
+        }
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });

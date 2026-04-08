@@ -6,7 +6,6 @@ export interface Storage<T> {
     update(id: string, item: T): Promise<T | null>;
     delete(id: string): Promise<boolean>;
     findAll(limit?: number, offset?: number): Promise<T[]>;
-    transaction(operations: Array<() => Promise<any>>): Promise<void>;
     reset(): Promise<void>;
 }
 
@@ -41,17 +40,6 @@ export class InMemoryStorage<T> implements Storage<T> {
 
     private generateId(): string {
         return Math.random().toString(36).substr(2, 9);
-    }
-
-    async transaction(operations: Array<() => Promise<any>>): Promise<void> {
-        const results: any[] = [];
-        try {
-            for (const operation of operations) {
-                results.push(await operation());
-            }
-        } catch (error) {
-            throw new Error('Transaction failed: ' + error);
-        }
     }
 
     async reset() {
