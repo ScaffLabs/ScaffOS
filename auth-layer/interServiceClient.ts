@@ -61,3 +61,13 @@ export const emitUserCreated = (user: any) => {
     const eventBus = require('./eventBus').default;
     eventBus.emit('userCreated', user);
 };
+
+export const checkServiceHealth = async (serviceUrl: string) => {
+    try {
+        const response = await axios.get(serviceUrl);
+        return response.data.status === 'healthy';
+    } catch (error) {
+        logger.error(`Service health check failed for ${serviceUrl}`, { error: error.message });
+        return false;
+    }
+};

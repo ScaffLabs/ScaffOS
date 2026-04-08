@@ -1,19 +1,9 @@
 import express from 'express';
-import { healthCheckService } from './interServiceClient';
+import { healthCheckService, checkServiceHealth } from './interServiceClient';
 import config from './config';
 import logger from './logger';
 
 const router = express.Router();
-
-const checkServiceHealth = async (serviceUrl: string) => {
-    try {
-        const response = await healthCheckService(serviceUrl);
-        return response.status === 'healthy';
-    } catch (error) {
-        logger.error(`Service health check failed for ${serviceUrl}`, { error: error.message });
-        return false;
-    }
-};
 
 router.get('/health', async (req, res) => {
     const userServiceHealthy = await checkServiceHealth(`${config.USER_SERVICE_URL}/health`);
@@ -26,6 +16,15 @@ router.get('/ready', async (req, res) => {
         return res.status(200).json({ status: 'ready' });
     }
     res.status(503).json({ status: 'unhealthy' });
+});
+
+router.get('/service-health', async (req, res) => {
+    const services = ['User Service', 'Order Service'];
+    const healthChecks = await Promise.all(services.map(async (service) => {
+        const isHealthy = await checkServiceHealth(`${config[`${service.replace(/ /g, '_').toUpperCase()}_SERVICE_URL`]}/health`);
+        return { service, status: isHealthy ? 'healthy' : 'unhealthy' };
+    }));
+    res.status(200).json({ healthChecks });
 });
 
 export default router;
