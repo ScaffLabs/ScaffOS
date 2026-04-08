@@ -1,10 +1,10 @@
 // Branded types for IDs
 import { z } from 'zod';
 
-export type UserId = string & { readonly brand: unique symbol }; // Example for UserId
-export type ApiKeyId = string & { readonly brand: unique symbol }; // Example for ApiKey
-export type OrderId = string & { readonly brand: unique symbol }; // Example for OrderId
-export type TradeId = string & { readonly brand: unique symbol }; // Example for TradeId
+export type UserId = string & { readonly brand: unique symbol }; // Unique identifier for User
+export type ApiKeyId = string & { readonly brand: unique symbol }; // Unique identifier for API Key
+export type OrderId = string & { readonly brand: unique symbol }; // Unique identifier for Order
+export type TradeId = string & { readonly brand: unique symbol }; // Unique identifier for Trade
 
 // User interface with detailed type definitions
 export interface User {
@@ -44,8 +44,6 @@ export type UserCreatedEvent = {
     payload: User;
 };
 
-export type Event = UserCreatedEvent;
-
 // Zod schema for event validation
 export const EventSchema = z.union([
     z.object({
@@ -55,4 +53,4 @@ export const EventSchema = z.union([
 ]);
 
 // Exporting types for other services to use
-export type { UserId, ApiKeyId, OrderId, TradeId, User, ApiKey, Event };
+export type { UserId, ApiKeyId, OrderId, TradeId, User, ApiKey, UserCreatedEvent };

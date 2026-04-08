@@ -1,4 +1,4 @@
-import { User, UserId } from './types';
+import { User, UserId, UserSchema } from './types';
 import { ValidationError, NotFoundError } from './errors';
 import userStore from './inMemoryStore';
 import { createConnectionPool } from './database';
@@ -7,9 +7,8 @@ import crypto from 'crypto';
 const pool = createConnectionPool();
 
 export const createUser = async (username: string, email: string): Promise<User> => {
-    if (!username || !email) {
-        throw new ValidationError(['Username and email are required.']);
-    }
+    const userInput = { username, email };
+    UserSchema.parse(userInput); // Validate user input
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
         throw new ValidationError(['Email already in use.']);
@@ -35,7 +34,9 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
 
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
     const user = await findUserById(id);
-    return userStore.update(id, userData);
+    const updatedUserData = { ...user, ...userData };
+    UserSchema.parse(updatedUserData); // Validate updated user data
+    return userStore.update(id, updatedUserData);
 };
 
 export const deleteUser = async (id: UserId): Promise<boolean> => {
