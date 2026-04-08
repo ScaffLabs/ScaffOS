@@ -4,7 +4,8 @@ import { checkServiceHealth } from './serviceHealth';
 export const healthCheck = async (req: Request, res: Response) => {
     try {
         const healthStatus = await checkServiceHealth();
-        res.status(200).json({ status: 'UP', services: healthStatus });
+        const allServicesUp = Object.values(healthStatus).every(status => status);
+        res.status(allServicesUp ? 200 : 503).json({ status: allServicesUp ? 'UP' : 'DOWN', services: healthStatus });
     } catch (error) {
         console.error('Health check failed:', error);
         res.status(500).json({ error: 'Internal Server Error', message: error.message });

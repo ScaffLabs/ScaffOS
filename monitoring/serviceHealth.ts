@@ -40,3 +40,8 @@ export const monitorMemoryUsage = () => {
     const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
     logger.info({ totalMemory, usedMemory }, 'Memory usage monitored');
 };
+
+export const healthCheckServices = async () => {
+    const healthStatus = await checkServiceHealth();
+    return Object.values(healthStatus).every(status => status);
+};
