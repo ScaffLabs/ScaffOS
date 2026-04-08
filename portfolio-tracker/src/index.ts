@@ -11,12 +11,13 @@ import logger from './services/logger';
 import { createPool } from 'generic-pool';
 import { register, collectDefaultMetrics } from 'prom-client';
 import { setInterval } from 'timers';
+import CircuitBreaker from 'circuit-breaker-js';
 
 const app = express();
-app.use(json({ limit: '1mb' })); // Limit request size to 1MB
+app.use(json({ limit: '1mb' }));
 app.use(helmet());
 app.use(cors({
-    origin: ['https://yourdomain.com', 'http://localhost:3000'], // Allowed origins
+    origin: ['https://yourdomain.com', 'http://localhost:3000'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true
 }));
@@ -39,6 +40,12 @@ const pool = createPool({
 }, {
     min: 2,
     max: 10
+});
+
+const circuitBreaker = new CircuitBreaker({
+    timeout: 3000,
+    errorsThreshold: 2,
+    resetTimeout: 10000
 });
 
 app.get('/health', async (req, res) => {
@@ -80,3 +87,16 @@ collectDefaultMetrics();
 setInterval(() => {
     logger.info('Memory Usage:', { memoryUsage: process.memoryUsage() });
 }, 60000);
+
+const requestQueue = [];
+app.use((req, res, next) => {
+    // Add request to queue
+    requestQueue.push(req);
+    // Process request immediately if queue is below allowed limit
+    if (requestQueue.length <= 100) {
+        next();
+    } else {
+        res.status(503).json({ error: 'Server busy, please retry later.' });
+    }
+});
+

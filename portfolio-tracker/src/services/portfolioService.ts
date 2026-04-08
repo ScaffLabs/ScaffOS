@@ -4,9 +4,11 @@ import { publishPortfolioUpdate } from '../eventBus';
 import CircuitBreaker from 'circuit-breaker-js';
 
 const PORTFOLIO_SERVICE_URL = process.env.PORTFOLIO_SERVICE_URL || 'http://localhost:3001/api/portfolios';
-const circuitBreaker = new CircuitBreaker({ timeout: 3000, errorsThreshold: 2, resetTimeout: 10000 });
-
-let portfolios: Portfolio[] = [];
+const circuitBreaker = new CircuitBreaker({
+    timeout: 3000,
+    errorsThreshold: 2,
+    resetTimeout: 10000
+});
 
 const retryRequest = async (fn: Function, retries: number = 3, delay: number = 1000) => {
     try {
