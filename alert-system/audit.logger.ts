@@ -12,3 +12,7 @@ export const logAudit = (action: string, details: any) => {
         }
     });
 };
+
+export const logSensitiveAction = (action: string, details: any) => {
+    console.warn('Sensitive action logged:', action, details);
+};

@@ -5,12 +5,13 @@ import { AlertProcessor } from './alert.processor';
 import { HealthCheck } from './health-check';
 import { config } from './config';
 import logger, { logStartup } from './logger';
+import bodyParser from 'body-parser';
 
 const app = express();
 const eventBus = new EventBus();
 const alertProcessor = new AlertProcessor(eventBus);
 
-app.use(express.json());
+app.use(bodyParser.json({ limit: '1mb' })); // Limit request size
 
 app.get('/health', HealthCheck.checkHealth);
 app.get('/ready', HealthCheck.checkReady);
