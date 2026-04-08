@@ -6,6 +6,7 @@ import { ValidationError, NotFoundError } from './errors';
 
 const router = express.Router();
 
+// Create user
 router.post('/users', authMiddleware,
     body('username').isString().trim().notEmpty().withMessage('Username is required'),
     body('email').isEmail().withMessage('Valid email is required'),
@@ -27,6 +28,7 @@ router.post('/users', authMiddleware,
     }
 );
 
+// Update user
 router.put('/users/:id', authMiddleware,
     body('username').optional().isString().trim().notEmpty().withMessage('Username must not be empty if provided'),
     body('email').optional().isEmail().withMessage('Valid email is required if provided'),
@@ -49,6 +51,7 @@ router.put('/users/:id', authMiddleware,
     }
 );
 
+// Delete user
 router.delete('/users/:id', authMiddleware, async (req, res, next) => {
     const { id } = req.params;
     const deleted = deleteUser(id);
@@ -58,10 +61,16 @@ router.delete('/users/:id', authMiddleware, async (req, res, next) => {
     res.status(204).send();
 });
 
+// Get all users with pagination, filtering, and sorting
 router.get('/users', authMiddleware, async (req, res) => {
-    const { limit = 10, offset = 0 } = req.query;
-    const users = getAllUsers().slice(offset, offset + limit);
-    res.status(200).json(users);
+    const { limit = 10, offset = 0, sortBy = 'username', order = 'asc' } = req.query;
+    const users = getAllUsers();
+    const sortedUsers = users.sort((a, b) => {
+        if (order === 'asc') return a[sortBy].localeCompare(b[sortBy]);
+        return b[sortBy].localeCompare(a[sortBy]);
+    });
+    const paginatedUsers = sortedUsers.slice(Number(offset), Number(offset) + Number(limit));
+    res.status(200).json(paginatedUsers);
 });
 
 export default router;
