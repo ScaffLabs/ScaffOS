@@ -1,15 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { body, validationResult } from 'express-validator';
 import { verifyToken } from './jwt';
-import { validateApiKey, getUserIdFromApiKey } from './apiKey';
-import { rateLimit } from './rateLimit';
-import { findUserById } from './user';
+import { validateApiKey } from './apiKey';
 import logger, { logError } from './logger';
 
-export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const requestId = uuidv4();
-    req.headers['x-request-id'] = requestId;
-    logger.info(`New request started`, { requestId });
+export const sanitizeInput = (input: string) => {
+    return input.replace(/<[^>]*>/g, ''); // Basic XSS prevention by stripping HTML tags
+};
+
+export const validateAndSanitizeUserInput = (req: Request, res: Response, next: NextFunction) => {
+    body('username').isString().trim().notEmpty().customSanitizer(value => sanitizeInput(value));
+    body('email').isEmail().customSanitizer(value => sanitizeInput(value));
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     next();
 };
 
@@ -22,11 +27,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         return res.status(401).json({ error: 'Invalid API key' });
     }
 
-    if (!rateLimit(apiKey)) {
-        logger.warn(`Rate limit exceeded`, { requestId: req.headers['x-request-id'] });
-        return res.status(429).json({ error: 'Rate limit exceeded' });
-    }
-
     if (!token) {
         logger.error(`Token required`, { requestId: req.headers['x-request-id'] });
         return res.status(401).json({ error: 'Token required' });
@@ -34,12 +34,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
     try {
         const { userId } = verifyToken(token);
-        const user = findUserById(userId);
-        if (!user) {
-            logger.error(`User not found`, { requestId: req.headers['x-request-id'] });
-            return res.status(401).json({ error: 'User not found' });
-        }
-        req.user = user;
+        req.userId = userId;
         next();
     } catch (error) {
         logError(error, req);

@@ -12,10 +12,22 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
+// CORS configuration
+const allowedOrigins = ['http://example.com', 'http://anotherdomain.com'];
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
+}));
+
 // Middleware setup
-app.use(cors());
 app.use(helmet());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 app.use('/health', healthRouter);
 app.use('/api', userRoutes);
 app.use(errorMiddleware);
