@@ -2,23 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import { migrateData, seedData } from './migration';
 import { PriceAggregator } from './priceAggregator';
 import http from 'http';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
-import { logRequest, logError, logStartup } from './logger';
-import { MemoryMonitor } from './memoryMonitor';
-import { createConnectionPool } from './dbConnection';
-import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
-import { ValidationError, ServiceError } from './errors';
-import { performance } from 'perf_hooks';
+import { logRequest } from './logger';
+import { validatePriceData, handleValidationErrors, validatePriceUpdate } from './middleware/validationMiddleware';
 
 const app = express();
 const httpServer = http.createServer(app);
 const priceAggregator = new PriceAggregator();
-const memoryMonitor = new MemoryMonitor();
-const connectionPool = createConnectionPool();
 
 app.use(helmet());
 app.use(cors({ origin: ['https://allowed-origin.com'], credentials: true }));
@@ -31,45 +24,50 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-app.get('/health', async (req, res, next) => {
+app.get('/prices', async (req, res, next) => {
+    const { limit, offset } = req.query;
     try {
-        const health = await priceAggregator.checkDependencies();
-        res.status(200).json({ status: 'healthy', dependencies: health });
+        const prices = await priceAggregator.getPrices({ limit: Number(limit) || 10, offset: Number(offset) || 0 });
+        if (prices.length === 0) return res.status(204).send();
+        res.status(200).json(prices);
     } catch (error) {
-        logError(error, 'Health check failed');
-        res.status(500).json({ status: 'unhealthy', error: error.message });
+        next(error);
     }
 });
 
-app.get('/ready', async (req, res) => {
-    // Check readiness logic, e.g., DB connection check
-    res.status(200).json({ status: 'ready' });
+app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, next) => {
+    try {
+        const newPrice = await priceAggregator.addPrice(req.body);
+        res.status(201).json(newPrice);
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.put('/prices/:id', validatePriceUpdate, handleValidationErrors, async (req, res, next) => {
+    try {
+        const updatedPrice = await priceAggregator.updatePrice(req.params.id, req.body);
+        if (!updatedPrice) return res.status(404).send();
+        res.status(204).send();
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.delete('/prices/:id', async (req, res, next) => {
+    try {
+        await priceAggregator.deletePrice(req.params.id);
+        res.status(204).send();
+    } catch (error) {
+        next(error);
+    }
 });
 
 app.use(errorMiddleware);
 
-let shutdownInitiated = false;
-
-const gracefulShutdown = async () => {
-    if (shutdownInitiated) return;
-    shutdownInitiated = true;
-    console.log('Shutting down gracefully...');
-    await connectionPool.drain();
-    httpServer.close();
-    console.log('Closed all connections.');
-};
-
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
-
 const startApp = async () => {
-    await migrateData([]);
-    await seedData();
-    logStartup(config);
-
     httpServer.listen(config.port, () => {
         console.log(`Price aggregator service running on port ${config.port}`);
-        setInterval(() => memoryMonitor.logMemoryUsage(), 60000);
     });
 };
 
