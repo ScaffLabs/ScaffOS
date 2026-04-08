@@ -33,4 +33,10 @@ class OverflowError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError };
+const validateInput = (input: any) => {
+    if (input == null || (Array.isArray(input) && input.length === 0)) {
+        throw new ValidationError('Input cannot be null or an empty array.');
+    }
+};
+
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, validateInput };
