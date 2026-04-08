@@ -1,15 +1,16 @@
 # Portfolio Tracker
 
 ## Project Description
-The Portfolio Tracker is a service that allows users to create, retrieve, and update their investment portfolios. It provides a simple API for managing portfolios and their positions.
+The Portfolio Tracker service allows users to create, retrieve, and update their investment portfolios through a RESTful API. It manages portfolios and their positions, providing essential features for tracking investments.
 
 ## Architecture Overview
-This service is built with Node.js and Express. It uses an in-memory storage for portfolios and handles requests with middleware for validation and error handling. The service also includes features like health checks, logging, and an event bus for handling updates.
+The service is built using Node.js and Express, utilizing an in-memory storage system for portfolios. The architecture includes middleware for validation, error handling, and logging, alongside an event bus for handling portfolio updates. The service is designed to be robust, scalable, and easy to maintain.
 
 ## Setup Instructions
 ### Prerequisites
 - Node.js (version 14 or higher)
 - NPM (Node Package Manager)
+- MongoDB (for persistent storage)
 - Docker (optional, for containerization)
 
 ### Install
