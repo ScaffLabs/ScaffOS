@@ -70,7 +70,6 @@ app.post('/api/config', [
     }
     try {
         const { key, value } = req.body;
-        // Assume a function to save the configuration
         await db.createConfiguration({ key, value });
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {

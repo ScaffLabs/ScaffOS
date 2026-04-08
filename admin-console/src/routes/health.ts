@@ -4,7 +4,6 @@ import { healthCheck, readinessCheck } from '../services/HealthService';
 
 const router = express.Router();
 
-// Health check endpoint
 router.get('/', async (req, res) => {
     try {
         const healthStatus = await healthCheck();
@@ -15,7 +14,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Readiness check endpoint
 router.get('/ready', async (req, res) => {
     try {
         const readiness = await readinessCheck();
