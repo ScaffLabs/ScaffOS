@@ -3,19 +3,13 @@ import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
 import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../types';
 import { StorageManager } from '../storage/storageManager';
-import { publish } from '../publisher';
+import eventBus from '../eventBus';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../logger';
-import { config } from '../config';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
-/**
- * Create a new event.
- * @param req - Express request object.
- * @param res - Express response object.
- */
 export const createEvent = async (req: Request, res: Response) => {
     const reqId = req.headers['x-request-id'] || uuidv4();
     const start = Date.now();
@@ -26,7 +20,7 @@ export const createEvent = async (req: Request, res: Response) => {
         }
         const newEvent: Event = { id: uuidv4() as OrderId, ...parsed.data };
         const createdEvent = await storage.create(newEvent);
-        await publish({ topic: 'eventCreated', data: createdEvent, timestamp: Date.now() });
+        eventBus.publish('eventCreated', createdEvent);
         res.status(201).json(createdEvent);
         logger.logRequest(req.method, req.path, res.statusCode, Date.now() - start, reqId);
     } catch (error) {
@@ -41,11 +35,6 @@ export const createEvent = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * Get all events with optional query parameters.
- * @param req - Express request object.
- * @param res - Express response object.
- */
 export const getEvents = async (req: Request<{}, {}, {}, GetEventsQuery>, res: Response) => {
     const reqId = req.headers['x-request-id'] || uuidv4();
     const start = Date.now();

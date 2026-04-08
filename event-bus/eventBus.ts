@@ -8,7 +8,7 @@ interface Message<T> {
 
 class EventBus {
     private emitter: EventEmitter;
-    private subscriptions: Record<string, Function[]>;
+    private subscriptions: Record<string, Array<(message: Message<any>) => void>>;
 
     constructor() {
         this.emitter = new EventEmitter();
@@ -38,6 +38,10 @@ class EventBus {
             });
             delete this.subscriptions[topic];
         }
+    }
+
+    public getSubscriptionCount(topic: string): number {
+        return this.subscriptions[topic] ? this.subscriptions[topic].length : 0;
     }
 }
 
