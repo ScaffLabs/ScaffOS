@@ -46,6 +46,13 @@ npm run test:watch
   - **204 No Content**: No prices available.
   - **500 Internal Server Error**: Failed to fetch prices.
 
+### POST /prices
+- **Request Body**: { "exchange": "string", "price": number, "volume": number }
+- **Response**: Returns the added price data.
+  - **201 Created**: Successfully added price.
+  - **400 Bad Request**: Validation errors occurred.
+  - **500 Internal Server Error**: Failed to add price.
+
 ### GET /health
 - **Request Body**: None
 - **Response**: Returns the health status of the service.

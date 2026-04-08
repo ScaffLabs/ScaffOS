@@ -16,3 +16,8 @@
 - Established a memory monitoring system to log memory usage periodically.
 - Implemented additional error types for better error categorization.
 - Updated API reference in README.md for clarity.
+
+## [1.3.0] - 2023-10-30
+- Refined validation logic in endpoints to ensure robust input handling.
+- Improved performance of price fetching and VWAP calculation.
+- Added unit tests for edge cases and error scenarios.
