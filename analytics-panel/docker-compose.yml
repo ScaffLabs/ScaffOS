@@ -9,6 +9,7 @@ services:
     environment:
       - NODE_ENV=development
       - REACT_APP_API_BASE_URL=http://localhost:3000
+      - STRATEGY_SERVICE_URL=http://localhost:3001/api/health
     volumes:
       - .:/app
 
