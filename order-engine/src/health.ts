@@ -14,8 +14,9 @@ const checkDependentService = async (url: string) => {
 export const healthCheck = async (req: Request, res: Response): Promise<void> => {
     const isDatabaseHealthy = await checkDependentService(process.env.DATABASE_URL + '/health-check');
     const isAnotherServiceHealthy = await checkDependentService(process.env.ANOTHER_SERVICE_URL + '/health-check');
+    const isOrderServiceHealthy = await checkDependentService(process.env.ORDER_SERVICE_URL + '/health-check');
 
-    if (isDatabaseHealthy && isAnotherServiceHealthy) {
+    if (isDatabaseHealthy && isAnotherServiceHealthy && isOrderServiceHealthy) {
         res.status(200).send('Order Engine is healthy!');
     } else {
         res.status(500).send('Dependent services are down.');
@@ -25,8 +26,9 @@ export const healthCheck = async (req: Request, res: Response): Promise<void> =>
 export const readyCheck = async (req: Request, res: Response): Promise<void> => {
     const isDatabaseReady = await checkDependentService(process.env.DATABASE_URL + '/ready-check');
     const isAnotherServiceReady = await checkDependentService(process.env.ANOTHER_SERVICE_URL + '/ready-check');
+    const isOrderServiceReady = await checkDependentService(process.env.ORDER_SERVICE_URL + '/ready-check');
 
-    if (isDatabaseReady && isAnotherServiceReady) {
+    if (isDatabaseReady && isAnotherServiceReady && isOrderServiceReady) {
         res.status(200).send('Order Engine is ready!');
     } else {
         res.status(500).send('Dependent services are not ready.');
