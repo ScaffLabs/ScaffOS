@@ -3,24 +3,16 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
 import { body, param, query, validationResult } from 'express-validator';
-import { alertStore } from './index';
+import { AlertStore } from './storage';
 import { AlertMessage } from './alert.schema';
 import { ValidationError, NotFoundError } from './error.types';
 import { logError } from './logger';
-import csurf from 'csurf';
 
 const router = express.Router();
 
 // CORS configuration
-const allowedOrigins = ['http://example.com', 'http://another-domain.com'];
-router.use(cors({ origin: allowedOrigins }));
-
-// Helmet middleware for security headers
+router.use(cors());
 router.use(helmet());
-
-// CSRF protection middleware
-const csrfProtection = csurf();
-router.use(csrfProtection);
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -29,11 +21,12 @@ const limiter = rateLimit({
     message: 'Too many requests, please try again later.'
 });
 
-// Request size limit
 router.use(express.json({ limit: '1mb' }));
 
+const alertStore = new AlertStore();
+
 // Create alert
-router.post('/alerts', limiter, body('type').isString().notEmpty().escape(), body('threshold').isNumeric(), body('currentValue').isNumeric(), async (req: Request, res: Response) => {
+router.post('/alerts', limiter, body('type').isString().notEmpty().escape(), body('threshold').isNumeric().not().isEmpty(), body('currentValue').isNumeric().not().isEmpty(), async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -67,7 +60,7 @@ router.get('/alerts/:id', param('id').isString(), async (req: Request, res: Resp
 });
 
 // Update alert
-router.put('/alerts/:id', limiter, param('id').isString(), body('threshold').isNumeric(), async (req: Request, res: Response) => {
+router.put('/alerts/:id', limiter, param('id').isString(), body('threshold').isNumeric().not().isEmpty(), async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });

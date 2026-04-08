@@ -27,6 +27,16 @@ export class AlertProcessor {
         this.eventBus = eventBus;
     }
 
+    public async processAlert(alert: AlertMessage) {
+        try {
+            await this.sendAlertToServices(alert);
+            this.eventBus.publish('alert.processed', alert);
+        } catch (error) {
+            console.error('Error processing alert:', error);
+            throw new ServiceError('Failed to process alert.');
+        }
+    }
+
     private async sendAlertToServices(alert: AlertMessage) {
         const sendAlert = async (attempt = 0) => {
             try {
