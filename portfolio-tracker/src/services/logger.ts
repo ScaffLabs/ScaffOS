@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { format } from 'logform';
 
 const { combine, timestamp, json, printf } = winston.format;
 
@@ -7,7 +8,7 @@ const logFormat = printf(({ level, message, timestamp, ...meta }) => {
 });
 
 const logger = winston.createLogger({
-    level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+    level: process.env.LOG_LEVEL || 'info',
     format: process.env.NODE_ENV === 'development' ? combine(timestamp(), logFormat) : json(),
     transports: [
         new winston.transports.Console(),
@@ -15,5 +16,16 @@ const logger = winston.createLogger({
         new winston.transports.File({ filename: 'logs/all.log' })
     ],
 });
+
+// Middleware to log all requests
+export const requestLogger = (req, res, next) => {
+    const start = process.hrtime();
+    res.on('finish', () => {
+        const duration = process.hrtime(start);
+        const ms = (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3);
+        logger.info(`Request: ${req.method} ${req.originalUrl} - ${res.statusCode} - ${ms}ms`, { method: req.method, path: req.originalUrl, status: res.statusCode, duration: ms });
+    });
+    next();
+};
 
 export default logger;
