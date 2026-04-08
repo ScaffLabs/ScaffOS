@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ValidationError, NotFoundError } from './errorClasses';
+import { ValidationError, NotFoundError, ServiceError } from './errorClasses';
 import { LatencyData, LatencyDataSchema } from './types';
 import logger from './logger';
 import { createConnectionPool } from './connectionPool';
@@ -9,13 +9,16 @@ const connectionPool = createConnectionPool();
 
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
-        const entries = await connectionPool.requestWithRetry('order', 'get', '/dashboard');
-        if (!entries || entries.length === 0) {
-            return res.status(204).json([]);
+        const response = await connectionPool.requestWithRetry('order', 'get', '/dashboard');
+        if (!response || response.length === 0) {
+            return res.status(204).json({ message: 'No entries available.' });
         }
-        res.status(200).json(entries);
+        res.status(200).json(response);
     } catch (error) {
         logger.error(error, req);
+        if (error instanceof ServiceError) {
+            return res.status(500).json({ error: 'Service unavailable.' });
+        }
         res.status(500).json({ error: 'Failed to fetch entries.' });
     }
 };
@@ -34,10 +37,12 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     } catch (error) {
         logger.error(error, req);
         if (error instanceof ValidationError) {
-            res.status(400).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Internal Server Error' });
+            return res.status(400).json({ error: error.message });
         }
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
@@ -53,12 +58,12 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
     } catch (error) {
         logger.error(error, req);
         if (error instanceof ValidationError) {
-            res.status(400).json({ error: error.message });
-        } else if (error instanceof NotFoundError) {
-            res.status(404).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Internal Server Error' });
+            return res.status(400).json({ error: error.message });
         }
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
@@ -70,9 +75,8 @@ export const deleteDashboardEntry = async (req: Request, res: Response) => {
     } catch (error) {
         logger.error(error, req);
         if (error instanceof NotFoundError) {
-            res.status(404).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Internal Server Error' });
+            return res.status(404).json({ error: error.message });
         }
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
