@@ -3,9 +3,17 @@ import { StorageManager } from '../storage/storageManager';
 import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../types';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
+import rateLimit from 'express-rate-limit';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
+
+// Rate limiting middleware for event creation
+const createEventLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Too many event creation requests, please try again later.',
+});
 
 export const createEvent = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -77,7 +85,7 @@ const handleError = (error: Error, res: Response) => {
 };
 
 const router = Router();
-router.post('/', createEvent);
+router.post('/', createEventLimiter, createEvent);
 router.get('/', getEvents);
 router.put('/:id', updateEvent);
 router.delete('/:id', deleteEvent);
