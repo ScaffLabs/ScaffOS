@@ -8,6 +8,16 @@ const circuitBreaker = new CircuitBreaker({ timeout: 3000, errorsThreshold: 2, r
 
 let portfolios: Portfolio[] = [];
 
+const retryRequest = async (fn: Function, retries: number = 3, delay: number = 1000) => {
+    try {
+        return await fn();
+    } catch (error) {
+        if (retries === 0) throw error;
+        await new Promise(res => setTimeout(res, delay));
+        return await retryRequest(fn, retries - 1, delay * 2);
+    }
+};
+
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     if (!data.name || !Array.isArray(data.positions)) {
         throw new Error('Invalid portfolio data');
@@ -32,16 +42,6 @@ export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promis
     return portfolio;
 };
 
-const retryRequest = async (fn: Function) => {
-    for (let i = 0; i < 3; i++) {
-        try {
-            return await fn();
-        } catch (error) {
-            if (i === 2) throw error;
-        }
-    }
-};
-
 export const fetchPortfolios = async () => {
     return await retryRequest(async () => {
         const response = await circuitBreaker.fire(() => axios.get(PORTFOLIO_SERVICE_URL));
@@ -51,7 +51,7 @@ export const fetchPortfolios = async () => {
 
 export const healthCheckPortfolioService = async (): Promise<boolean> => {
     try {
-        await axios.get(PORTFOLIO_SERVICE_URL);
+        await retryRequest(() => axios.get(PORTFOLIO_SERVICE_URL));
         return true;
     } catch (error) {
         return false;
@@ -69,6 +69,5 @@ export const clearPortfolios = () => {
 export const healthCheckAllServices = async (): Promise<{ [key: string]: boolean }> => {
     const status = {};
     status.portfolioService = await healthCheckPortfolioService();
-    // Add more health checks for other services here
     return status;
 };

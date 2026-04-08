@@ -8,7 +8,9 @@ import portfolioRoutes from './routes/portfolioRoutes';
 import { healthCheckAllServices } from './services/portfolioService';
 import http from 'http';
 import logger from './services/logger';
-import { v4 as uuidv4 } from 'uuid';
+import { createPool } from 'generic-pool';
+import { register, collectDefaultMetrics } from 'prom-client';
+import { setInterval } from 'timers';
 
 const app = express();
 app.use(json());
@@ -20,23 +22,27 @@ app.use(rateLimit({
 }));
 
 connectToEventBus();
-
-// Middleware to generate request ID
-app.use((req, res, next) => {
-    req.id = uuidv4();
-    next();
-});
-
 app.use('/api/portfolios', portfolioRoutes);
+
+const pool = createPool({
+    create: async () => {
+        return await someAsyncConnectionFunction(); // Replace with your connection logic
+    },
+    destroy: async (client) => {
+        await client.close();
+    }
+}, {
+    min: 2,
+    max: 10
+});
 
 app.get('/health', async (req, res) => {
     try {
-        logger.info('Health check initiated', { requestId: req.id });
         const serviceStatus = await healthCheckAllServices();
-        logger.info('Health check successful', { services: serviceStatus, requestId: req.id });
+        logger.info('Health check successful', { services: serviceStatus });
         res.json({ status: 'UP', services: serviceStatus });
     } catch (error) {
-        logger.error('Health check failed', { error: error.message, requestId: req.id });
+        logger.error('Health check failed', { error: error.message });
         res.status(503).json({ status: 'DOWN', error: error.message });
     }
 });
@@ -46,6 +52,11 @@ const server = http.createServer(app);
 
 const onShutdown = async () => {
     logger.info('Shutting down gracefully...');
+    await pool.drain(); // Wait for connections to finish
+    await pool.clear(); // Clear the pool
+    server.close(() => {
+        logger.info('Server closed');
+    });
 };
 
 process.on('SIGTERM', onShutdown);
@@ -59,3 +70,8 @@ app.get('/metrics', async (req, res) => {
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
 });
+
+collectDefaultMetrics();
+setInterval(() => {
+    logger.info('Memory Usage:', { memoryUsage: process.memoryUsage() });
+}, 60000);
