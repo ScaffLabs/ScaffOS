@@ -21,3 +21,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Bug fixes in portfolio update logic.
+
+## [1.0.3] - 2023-10-23
+### Added
+- Comprehensive documentation in README.md including setup instructions, API reference, environment variables, development and deployment guides.
+- Inline code comments explaining complex logic for better understanding.
+- Detailed information in CONTRIBUTING.md for contributors.
+- Version history updates in CHANGELOG.md.
