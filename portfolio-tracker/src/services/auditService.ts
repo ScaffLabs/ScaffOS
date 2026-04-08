@@ -11,3 +11,15 @@ export const auditLog = async (action: string, data: any) => {
         }
     });
 };
+
+export const logPortfolioCreation = async (portfolio) => {
+    await auditLog('Portfolio Created', { id: portfolio.id, name: portfolio.name });
+};
+
+export const logPortfolioUpdate = async (portfolioId, update) => {
+    await auditLog('Portfolio Updated', { id: portfolioId, changes: update });
+};
+
+export const logPortfolioDeletion = async (portfolioId) => {
+    await auditLog('Portfolio Deleted', { id: portfolioId });
+};
