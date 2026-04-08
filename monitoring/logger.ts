@@ -3,7 +3,10 @@ import config from './config';
 
 const logFormat = config.NODE_ENV === 'production' ? winston.format.json() : winston.format.combine(
     winston.format.colorize(),
-    winston.format.simple()
+    winston.format.timestamp(),
+    winston.format.printf(({ timestamp, level, message }) => {
+        return `${timestamp} [${level}]: ${message}`;
+    })
 );
 
 const logger = winston.createLogger({

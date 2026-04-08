@@ -8,7 +8,6 @@ import { LatencyData, LatencyDataSchema } from './types';
 const connectionPool = createConnectionPool();
 const store = new InMemoryStore<LatencyData>();
 
-// List Dashboard Entries with pagination and filtering
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
         const { limit = 10, offset = 0 } = req.query;
@@ -23,7 +22,6 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
     }
 };
 
-// Create Dashboard Entry with validation
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const bodyValidation = LatencyDataSchema.safeParse(req.body);
@@ -43,7 +41,6 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
-// Update Dashboard Entry
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -57,21 +54,6 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         }
         const updatedData = { ...existingEntry, ...bodyValidation.data };
         store.update(id, updatedData);
-        res.status(204).send();
-    } catch (error) {
-        logger.error(error, req);
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-};
-
-// Delete Dashboard Entry
-export const deleteDashboardEntry = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        store.delete(id);
         res.status(204).send();
     } catch (error) {
         logger.error(error, req);

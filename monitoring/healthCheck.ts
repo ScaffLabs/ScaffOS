@@ -2,9 +2,6 @@ import { Request, Response } from 'express';
 import { checkServiceHealth } from './serviceHealth';
 import logger from './logger';
 import config from './config';
-import { createConnectionPool } from './connectionPool';
-
-const connectionPool = createConnectionPool();
 
 const getMemoryUsage = () => {
     const memoryUsage = process.memoryUsage();
@@ -41,18 +38,4 @@ export const readyCheck = async (req: Request, res: Response) => {
         logger.error('Ready check failed:', error);
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
-};
-
-export const checkServiceHealth = async () => {
-    const services = ['order', 'user'];
-    const results = await Promise.all(services.map(async (service) => {
-        try {
-            const response = await connectionPool.requestWithRetry(service, 'get', '/health');
-            return { service, status: response.status === 'UP' };
-        } catch (err) {
-            logger.error(`Failed to check health for ${service}: ${err.message}`);
-            return { service, status: false };
-        }
-    }));
-    return results.reduce((acc, { service, status }) => ({ ...acc, [service]: status }), {});
 };
