@@ -8,34 +8,40 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
     }
-    // Dummy implementation that simulates return calculation
-    let totalReturns = 0; // Placeholder for actual calculations
-    historicalData.forEach(data => {
-        if (data.price <= 0) throw new ValidationError('Price must be positive.');
-        totalReturns += data.price * (1 - slippage);
-    });
+    let totalReturns = 0;
+    let trades = 0;
+
+    for (let i = 1; i < historicalData.length; i++) {
+        const previousPrice = historicalData[i - 1].price;
+        const currentPrice = historicalData[i].price;
+
+        if (currentPrice <= 0) throw new ValidationError('Price must be positive.');
+
+        if (currentPrice > previousPrice * (1 + buyThreshold)) { // Buy Condition
+            trades++;
+            totalReturns += currentPrice * (1 - slippage) - previousPrice; // Calculate profit after slippage
+        } else if (currentPrice < previousPrice * (1 - sellThreshold)) { // Sell Condition
+            trades++;
+            totalReturns += previousPrice * (1 - slippage) - currentPrice; // Calculate profit after slippage
+        }
+    }
+
     return totalReturns;
 }
 
-async function fetchOrderData(orderId: string): Promise<any> {
-    const url = `${process.env.ORDER_SERVICE_URL}/api/orders/${orderId}`;
-    return await withRetry(async () => {
-        const response = await axios.get(url);
-        return response.data;
-    });
-}
-
-const simulateWithRetry = withRetry(async (params: StrategyParameters, historicalData: HistoricalData[]) => {
-    return await simulateBacktest(params, historicalData);
-});
-
-export const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
+const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     try {
         const totalReturns = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+        const trades = historicalData.length; // Total trades simulated
+        const winRate = trades > 0 ? (totalReturns > 0 ? 100 : 0) : 0; // Simple win rate calculation
+        const performanceMetrics = `Simulated ${trades} trades with ${winRate}% win rate`;
+
         logger.info({ message: 'Backtest simulation completed', params, totalReturns });
-        return { totalReturns, trades: historicalData.length, winRate: Math.random() * 100, performanceMetrics: 'Simulated trades' };
+        return { totalReturns, trades, winRate, performanceMetrics };
     } catch (error) {
         logger.error({ message: 'Backtest simulation error', error: error.message });
         throw new ServiceError('An error occurred during backtesting: ' + error.message);
     }
 }, 3, { totalReturns: 0, trades: 0, winRate: 0, performanceMetrics: 'No trades simulated' });
+
+export { simulateBacktest };
