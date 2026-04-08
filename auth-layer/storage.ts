@@ -12,11 +12,14 @@ interface DataStore<T> {
     read(id: UserId): T | undefined;
     update(id: UserId, item: Partial<T>): T | null;
     delete(id: UserId): boolean;
-    findAll(limit?: number, offset?: number, sortBy?: keyof T, order?: 'asc' | 'desc'): T[];
+    findAll(): T[];
+    findByIndex(index: keyof T, value: any): T[];
+    transaction(actions: () => void): void;
 }
 
 class InMemoryStore<T> implements DataStore<T> {
     private store: Map<UserId, T> = new Map();
+    private transactions: Array<() => void> = [];
 
     create(item: T): T {
         const id = crypto.randomUUID() as UserId;
@@ -40,13 +43,22 @@ class InMemoryStore<T> implements DataStore<T> {
         return this.store.delete(id);
     }
 
-    findAll(limit = 10, offset = 0, sortBy: keyof T = 'username', order: 'asc' | 'desc' = 'asc'): T[] {
-        const items = Array.from(this.store.values());
-        const sortedItems = items.sort((a, b) => {
-            if (order === 'asc') return a[sortBy] > b[sortBy] ? 1 : -1;
-            return a[sortBy] < b[sortBy] ? 1 : -1;
-        });
-        return sortedItems.slice(offset, offset + limit);
+    findAll(): T[] {
+        return Array.from(this.store.values());
+    }
+
+    findByIndex(index: keyof T, value: any): T[] {
+        return Array.from(this.store.values()).filter(item => item[index] === value);
+    }
+
+    transaction(actions: () => void): void {
+        this.transactions.push(actions);
+        actions();
+    }
+
+    commitTransactions(): void {
+        this.transactions.forEach(action => action());
+        this.transactions = [];
     }
 }
 
@@ -81,8 +93,8 @@ export const findUserById = (id: UserId): User | undefined => {
     return userStore.read(id);
 };
 
-export const getAllUsers = (limit?: number, offset?: number, sortBy?: keyof User, order?: 'asc' | 'desc'): User[] => {
-    return userStore.findAll(limit, offset, sortBy, order);
+export const getAllUsers = (): User[] => {
+    return userStore.findAll();
 };
 
 export default userStore;

@@ -12,17 +12,21 @@ const readSeedData = (): User[] => {
 
 export const migrateData = async () => {
     const seedData = readSeedData();
-    for (const user of seedData) {
-        try {
-            userStore.create(user);
-        } catch (error) {
-            console.warn(`Failed to create user ${user.email}: ${error.message}`);
+    userStore.transaction(() => {
+        for (const user of seedData) {
+            try {
+                userStore.create(user);
+            } catch (error) {
+                console.warn(`Failed to create user ${user.email}: ${error.message}`);
+            }
         }
-    }
+    });
 };
 
 export const clearData = () => {
-    userStore.findAll().forEach(user => userStore.delete(user.id));
+    userStore.transaction(() => {
+        userStore.findAll().forEach(user => userStore.delete(user.id));
+    });
 };
 
 export const seedData = async () => {
