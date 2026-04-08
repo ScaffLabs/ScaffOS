@@ -13,12 +13,10 @@ const SERVICE_URLS = {
 const MAX_RETRIES = 3;
 const TIMEOUT = 5000;
 
-const checkService = async (service: string, retries = MAX_RETRIES): Promise<boolean> => {
+const checkService = async (service, retries = MAX_RETRIES) => {
     try {
         const response = await axios.get(`${SERVICE_URLS[service]}/health`, { timeout: TIMEOUT });
-        const status = response.data.status === 'UP';
-        logger.logServiceHealth(service, status);
-        return status;
+        return response.data.status === 'UP';
     } catch (error) {
         logger.error({ error: error.message }, `Error checking ${service}`);
         if (retries > 0) {
@@ -28,23 +26,10 @@ const checkService = async (service: string, retries = MAX_RETRIES): Promise<boo
     }
 };
 
-export const checkServiceHealth = async (req: Request, res: Response) => {
-    try {
-        const results = await Promise.all(Object.keys(SERVICE_URLS).map(service => checkService(service)));
-        const servicesStatus = Object.keys(SERVICE_URLS).reduce((acc, service, index) => {
-            acc[service] = results[index];
-            return acc;
-        }, {});
-        serviceEmitter.emit('serviceStatus', servicesStatus);
-        res.status(200).json(servicesStatus);
-    } catch (error) {
-        logger.error({ error: error.message }, 'Health check failed');
-        res.status(500).json({ error: 'Health check failed' });
-    }
+export const checkServiceHealth = async () => {
+    const results = await Promise.all(Object.keys(SERVICE_URLS).map(service => checkService(service)));
+    return Object.keys(SERVICE_URLS).reduce((acc, service, index) => {
+        acc[service] = results[index];
+        return acc;
+    }, {});
 };
-
-serviceEmitter.on('serviceStatus', (status) => {
-    logger.info('Service status updated:', status);
-});
-
-export default serviceEmitter;
