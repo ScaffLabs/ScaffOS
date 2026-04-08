@@ -1,8 +1,16 @@
 import redisClient from './redisClient';
 import { Message } from './messageSchema';
 import { cacheMessage, isMessageCached } from './cache';
+import { z } from 'zod';
+import { createEventSchema } from './types';
 
 export const publish = async <T>(message: Message<T>): Promise<void> => {
+    // Validate message using Zod schema
+    const validation = createEventSchema.safeParse(message.data);
+    if (!validation.success) {
+        throw new Error('Invalid message data: ' + validation.error.errors.map(err => err.message).join(', '));
+    }
+
     const { topic, data } = message;
     if (!topic || typeof topic !== 'string') {
         throw new Error('Invalid topic');
