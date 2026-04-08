@@ -7,6 +7,9 @@
 /___/\__/\_,_/_/ /_/ \____/___/
 ```
 
+```
+CA: AZdAxdrzan6dQLqrd4UijsptUUz5YrycekhbvWFkWgiy
+```
 **Ecosystem generation framework. One prompt, every tool a domain needs, all interoperable.**
 
 ScaffOS takes a single natural-language prompt and autonomously builds an entire interconnected software ecosystem — not one application, but every application a domain requires, all wired together and deployed.
