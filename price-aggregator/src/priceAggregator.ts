@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import { PriceData, CurrentPrices, PriceEvent, PriceDataSchema } from './types';
-import { httpClient } from './httpClient';
+import { httpClient, postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
 import { EventBus } from './eventBus';
@@ -13,15 +13,23 @@ export class PriceAggregator {
 
     constructor() {
         this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
+        this.fetchPricesFromExchanges(); // Start fetching prices on initialization
     }
 
-    /**
-     * Adds a new price data entry to the system.
-     * @param priceData - The price data to be added.
-     * @returns The newly added price data with an ID.
-     * @throws ValidationError if the priceData is invalid.
-     * @throws ServiceError if there is an issue adding the price data.
-     */
+    private async fetchPricesFromExchanges() {
+        try {
+            const exchanges = ['exchange1', 'exchange2']; // Replace with actual exchange names
+            const promises = exchanges.map(async (exchange) => {
+                const priceData = await httpClient(`/prices/${exchange}`);
+                return this.addPrice(priceData);
+            });
+            await Promise.all(promises);
+        } catch (error) {
+            logError(error, 'Error fetching prices from exchanges');
+            throw new ServiceError('Failed to fetch prices from exchanges.');
+        }
+    }
+
     public async addPrice(priceData: PriceData): Promise<PriceData> {
         const validation = PriceDataSchema.safeParse(priceData);
         if (!validation.success) {
@@ -39,10 +47,6 @@ export class PriceAggregator {
         }
     }
 
-    /**
-     * Retrieves the current prices and calculates VWAP.
-     * @returns An object containing the current prices and VWAP.
-     */
     public async getCurrentPrices(): Promise<CurrentPrices> {
         const allPrices = await storage.findAll();
         this.currentPrices = {};
@@ -59,17 +63,10 @@ export class PriceAggregator {
         return this.currentPrices;
     }
 
-    /**
-     * Updates the current prices based on the latest data in storage.
-     */
     private async updateCurrentPrices(): Promise<void> {
         await this.getCurrentPrices();
     }
 
-    /**
-     * Handles price events and broadcasts them to connected clients.
-     * @param event - The price event to handle.
-     */
     private handlePriceEvent(event: PriceEvent): void {
         this.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {

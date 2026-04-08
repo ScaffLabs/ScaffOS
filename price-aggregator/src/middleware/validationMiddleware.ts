@@ -23,3 +23,14 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
     }
     next();
 };
+
+export const validatePriceUpdate = [
+    body('price')
+        .optional()
+        .isFloat({ gt: 0 })
+        .withMessage('If provided, price must be a positive number'),
+    body('volume')
+        .optional()
+        .isFloat({ gt: 0 })
+        .withMessage('If provided, volume must be a positive number'),
+];
