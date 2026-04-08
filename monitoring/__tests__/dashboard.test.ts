@@ -67,4 +67,17 @@ describe('Dashboard Endpoint', () => {
         const getResponse = await request(app).get('/dashboard');
         expect(getResponse.body).toEqual([]);
     });
+
+    it('should handle deletion of non-existent entry', async () => {
+        const response = await request(app).delete('/dashboard/99');
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Entry not found.');
+    });
+
+    it('should handle invalid update data', async () => {
+        await request(app).post('/dashboard').send({ id: '5', value: 500 });
+        const response = await request(app).put('/dashboard/5').send({});
+        expect(response.status).toBe(400);
+        expect(response.body.error).toBe('Invalid input data.');
+    });
 });

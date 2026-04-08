@@ -23,4 +23,15 @@ describe('Health Check Endpoint', () => {
         expect(response.status).toBe(500);
         expect(response.body.error).toBe('Internal Server Error');
     });
+
+    it('should handle health check with service down', async () => {
+        const faultyHealthCheck = (req, res) => {
+            res.status(500).json({ error: 'Service Unavailable' });
+        };
+        app.get('/health', faultyHealthCheck);
+
+        const response = await request(app).get('/health');
+        expect(response.status).toBe(500);
+        expect(response.body.error).toBe('Service Unavailable');
+    });
 });
