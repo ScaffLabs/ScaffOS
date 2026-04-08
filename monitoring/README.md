@@ -37,10 +37,34 @@ npm start
   - **Body**: Aggregated monitoring data
   - **Status Codes**: 200, 500
 
+### Create Dashboard Entry
+- **Method**: POST
+- **Path**: /dashboard
+- **Request Body**: `{ "id": "string", "value": number }`
+- **Response**:
+  - **Body**: `{ "message": "Entry created", "id": "string" }`
+  - **Status Codes**: 201, 400
+
+### Update Dashboard Entry
+- **Method**: PUT
+- **Path**: /dashboard/:id
+- **Request Body**: `{ "value": number }`
+- **Response**:
+  - **Status Codes**: 204, 400, 404
+
+### Delete Dashboard Entry
+- **Method**: DELETE
+- **Path**: /dashboard/:id
+- **Response**:
+  - **Status Codes**: 204, 404
+
 ## Environment Variables
 | Variable Name | Description |
 |----------------|-------------|
 | PORT           | Port for the server to listen on (default: 3000) |
+| ORDER_SERVICE_URL | URL of the order service |
+| USER_SERVICE_URL | URL of the user service |
+| NODE_ENV | Environment mode (development/staging/production) |
 
 ## Development Guide
 1. Make sure to follow the coding standards and conventions.
