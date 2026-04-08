@@ -10,6 +10,9 @@ import Database from './storage/Database';
 import http from 'http';
 import { exit } from 'process';
 import errorHandler from './middleware/errorHandler';
+import { logRequest } from './middleware/logger';
+import { logAudit } from './middleware/auditLogger';
+import { body, validationResult } from 'express-validator';
 
 dotenv.config();
 const app = express();
@@ -26,6 +29,7 @@ app.use(helmet());
 app.use(cors({ origin: ['http://your-allowed-origin.com'], credentials: true }));
 app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' }));
+app.use(logRequest);
 app.use((req, res, next) => {
     if (!req.is('application/json')) {
         return res.status(415).send({ error: 'Content type must be application/json' });
@@ -55,3 +59,25 @@ process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 startServer();
+
+app.post('/api/config', [
+    body('key').trim().escape().notEmpty().withMessage('Key is required'),
+    body('value').trim().escape().notEmpty().withMessage('Value is required'),
+], logAudit, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    // Handle the creation of configuration... 
+});
+
+app.use((req, res, next) => {
+    const auditData = {
+        method: req.method,
+        path: req.path,
+        body: req.body,
+        userId: req.user ? req.user.id : null
+    };
+    console.log('Audit Log:', auditData);
+    next();
+});
