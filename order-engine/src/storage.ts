@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { Order } from './types';
+import { Order, OrderId } from './types';
 
 class InMemoryStorage<T extends { id: string }> {
     private items: T[] = [];
