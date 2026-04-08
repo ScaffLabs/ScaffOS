@@ -55,6 +55,11 @@ const startApp = async () => {
         }
     });
 
+    app.get('/ready', async (req, res) => {
+        // Here you can add logic to check if the service is ready to handle requests
+        res.status(200).json({ status: 'ready' });
+    });
+
     app.get('/prices', async (req, res, next) => {
         try {
             const prices = await priceAggregator.getCurrentPrices();
