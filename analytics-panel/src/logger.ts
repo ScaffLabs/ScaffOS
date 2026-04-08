@@ -1,18 +1,20 @@
-import pino from 'pino';
+import winston from 'winston';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-const logger = pino({
+const logger = winston.createLogger({
     level: isProduction ? 'info' : 'debug',
-    transport: isProduction ? undefined : { 
-        target: 'pino-pretty',
-        options: { colorize: true }
-    },
-    prettyPrint: !isProduction,
+    format: isProduction ? winston.format.json() : winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+    ),
+    transports: [
+        new winston.transports.Console(),
+    ],
 });
 
-export const logRequest = (method: string, path: string, status: number, duration: number) => {
-    logger.info({ method, path, status, duration }, 'Request completed');
+export const logRequest = (method: string, path: string, status: number, duration: number, requestId: string) => {
+    logger.info({ method, path, status, duration, requestId }, 'Request completed');
 };
 
 export const logError = (error: Error, context: string) => {
