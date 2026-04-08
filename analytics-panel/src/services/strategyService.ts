@@ -44,4 +44,8 @@ const findStrategies = async (query: Partial<Strategy>) => {
     return await strategyStore.find(query);
 };
 
-export { initializeStore, createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies };
+const performTransaction = async (operations: Array<() => Promise<any>>) => {
+    return await strategyStore.transaction(operations);
+};
+
+export { initializeStore, createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, performTransaction };
