@@ -3,17 +3,17 @@ import { StorageManager } from '../storage/storageManager';
 import { Event, createEventSchema, updateEventSchema } from '../types';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
+import sanitizer from 'express-sanitizer';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
-/**
- * Create a new event.
- * @param req - Express request object.
- * @param res - Express response object.
- * @throws {ValidationError} If validation of the request body fails.
- * @returns {Promise<void>} A promise that resolves when the event is created.
- */
+// Middleware for sanitizing inputs
+export const sanitizeInputs = (req: Request, res: Response, next: Function) => {
+    req.body = req.sanitize(req.body);
+    next();
+};
+
 export const createEvent = async (req: Request, res: Response): Promise<void> => {
     try {
         const validation = createEventSchema.safeParse(req.body);
@@ -21,6 +21,7 @@ export const createEvent = async (req: Request, res: Response): Promise<void> =>
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
         }
         const event = await storage.create(validation.data);
+        logger.logSensitiveOperation('createEvent', { data: event }); // Log the operation
         res.status(201).json(event);
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -31,13 +32,6 @@ export const createEvent = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-/**
- * Get all events.
- * @param req - Express request object.
- * @param res - Express response object.
- * @throws {NotFoundError} If no events are found.
- * @returns {Promise<void>} A promise that resolves with the events.
- */
 export const getEvents = async (req: Request, res: Response): Promise<void> => {
     try {
         const events = await storage.findAll();
@@ -51,3 +45,10 @@ export const getEvents = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 };
+
+// Add sanitizeInputs middleware to routes
+const router = Router();
+router.post('/', sanitizeInputs, createEvent);
+router.get('/', sanitizeInputs, getEvents);
+
+export default router;
