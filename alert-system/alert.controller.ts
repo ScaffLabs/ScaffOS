@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { AlertMessage, validateAlertMessage } from './alert.schema';
 import { AlertStore } from './storage';
-import { ValidationError, ServiceError, NotFoundError, DivisionByZeroError } from './error.types';
+import { ValidationError, ServiceError, NotFoundError } from './error.types';
 import logger, { logRequest, logError } from './logger';
 
 export class AlertController {
@@ -28,14 +28,15 @@ export class AlertController {
     async addAlert(req: Request, res: Response) {
         const start = Date.now();
         try {
+            if (!req.body) throw new ValidationError('Request body cannot be null.');
             const alert = validateAlertMessage(req.body);
             const createdAlert = await this.alertStore.create(alert);
             return res.status(201).json(createdAlert);
         } catch (error) {
             if (error instanceof ValidationError) {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
-            } else if (error instanceof DivisionByZeroError) {
-                return res.status(400).json({ message: 'Cannot divide by zero.' });
+            } else if (error instanceof ServiceError) {
+                return res.status(500).json({ message: 'Service error occurred.' });
             }
             logError(error, { method: req.method, path: req.path });
             return res.status(500).json({ message: 'Failed to add alert.' });
