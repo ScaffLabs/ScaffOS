@@ -64,4 +64,11 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ error: 'Validation Error' });
     });
+
+    test('POST /prices should return 400 on missing fields', async () => {
+        const missingFieldData = { exchange: 'exchange1' }; // Missing price and volume
+        const response = await request(app).post('/prices').send(missingFieldData);
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: 'Price must be a positive number, Volume must be a positive number' });
+    });
 });

@@ -69,4 +69,14 @@ describe('PriceAggregator', () => {
         jest.spyOn(priceAggregator as any, 'validatePriceData').mockImplementationOnce(() => { throw new Error('Validation Error'); });
         await expect(priceAggregator.addPrice({ exchange: 'exchange1', price: 100, volume: 10 })).rejects.toThrow('Validation Error');
     });
+
+    test('should calculate VWAP correctly with varying volumes', async () => {
+        jest.spyOn(priceAggregator as any, 'fetchPrices').mockResolvedValueOnce([
+            { exchange: 'exchange1', price: 100, volume: 10 },
+            { exchange: 'exchange2', price: 200, volume: 30 }
+        ]);
+        await priceAggregator.fetchPrices();
+        const currentPrices = priceAggregator.getCurrentPrices();
+        expect(currentPrices.VWAP).toBeCloseTo(166.67, 2);
+    });
 });
