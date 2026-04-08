@@ -9,19 +9,18 @@ import logger, { requestLogger } from './services/logger';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { healthCheck } from './services/healthService';
-import { csrfMiddleware } from './middleware/csrfProtection';
+import { createClient } from 'redis';
+import { Pool } from 'pg';
 
 const app = express();
+const redisClient = createClient();
+const dbPool = new Pool({ connectionString: process.env.DATABASE_URL });
+
 app.use(json({ limit: '1mb' }));
 app.use(helmet());
-app.use(cors({ origin: ['https://yourdomain.com'], credentials: true }));
-app.use(rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    keyGenerator: (req) => req.headers['x-api-key'] || req.ip,
-}));
+app.use(cors());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use(requestLogger);
-app.use(csrfMiddleware);
 connectToEventBus();
 app.use('/api/portfolios', portfolioRoutes);
 app.get('/health', healthCheck);
@@ -34,10 +33,12 @@ server.listen(PORT, () => {
     logger.info(`Portfolio Tracker service running on port ${PORT}`);
 });
 
-const shutdown = (signal: string) => {
+const shutdown = (signal) => {
     logger.info(`Received ${signal}, shutting down gracefully...`);
     server.close(() => {
         logger.info('Closed HTTP server.');
+        redisClient.quit();
+        dbPool.end();
         process.exit(0);
     });
 };
@@ -52,3 +53,8 @@ process.on('unhandledRejection', (reason) => {
     logger.error('Unhandled Rejection:', reason);
     shutdown('Unhandled Rejection');
 });
+
+setInterval(async () => {
+    const memoryUsage = process.memoryUsage();
+    logger.info('Memory Usage', memoryUsage);
+}, 60000);
