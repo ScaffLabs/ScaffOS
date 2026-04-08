@@ -31,7 +31,7 @@ router.post('/', [
     }
 });
 
-// Endpoint to retrieve all configurations with pagination
+// Endpoint to retrieve all configurations with pagination and sorting
 router.get('/', async (req, res) => {
     const { limit = '10', offset = '0', sortBy = 'key', order = 'asc' } = req.query;
     const parsedLimit = parseInt(limit as string);
