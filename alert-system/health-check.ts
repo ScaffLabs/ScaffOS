@@ -37,8 +37,12 @@ export class HealthCheck {
     }
 
     static async checkReady(req: Request, res: Response) {
-        // Implement readiness check logic here (e.g., check DB connectivity)
-        const dbStatus = await mongoose.connection.readyState === 1;
+        // Check if database is connected
+        const dbStatus = mongoose.connection.readyState === 1;
         return res.json({ ready: dbStatus });
     }
 }
+
+// Add a health check route in index.ts
+app.get('/health', HealthCheck.checkHealth);
+app.get('/ready', HealthCheck.checkReady);
