@@ -25,7 +25,7 @@ class MemoryQueue {
     dequeue(timeout: number = TIMEOUT_DURATION): Promise<any> {
         return new Promise((resolve, reject) => {
             const timeoutId = setTimeout(() => {
-                reject(new Error('Request timed out')); 
+                reject(new Error('Request timed out'));
             }, timeout);
 
             const item = this.queue.shift();
