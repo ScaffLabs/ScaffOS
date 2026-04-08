@@ -90,4 +90,11 @@ export class PriceAggregator {
             throw new ServiceError('Dependencies are unhealthy.');
         }
     }
+
+    public subscribe(client: WebSocket): void {
+        this.clients.push(client);
+        client.on('close', () => {
+            this.clients = this.clients.filter(c => c !== client);
+        });
+    }
 }
