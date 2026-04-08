@@ -3,6 +3,8 @@ import { z } from 'zod';
 // Branded types for IDs
 export type UserId = string & { readonly brand: unique symbol }; // Example for UserId
 export type ApiKeyId = string & { readonly brand: unique symbol }; // Example for ApiKey
+export type OrderId = string & { readonly brand: unique symbol }; // Example for OrderId
+export type TradeId = string & { readonly brand: unique symbol }; // Example for TradeId
 
 // User interface with detailed type definitions
 export interface User {
@@ -30,5 +32,21 @@ export const ApiKeySchema = z.object({
     userId: z.string().refine((id) => id.length > 0, { message: 'User ID must not be empty' }).transform((id) => id as UserId),
 });
 
+// Event interface
+export type UserCreatedEvent = {
+    type: 'UserCreated';
+    payload: User;
+};
+
+export type Event = UserCreatedEvent;
+
+// Zod schema for event validation
+export const EventSchema = z.union([
+    z.object({
+        type: z.literal('UserCreated'),
+        payload: UserSchema,
+    }),
+]);
+
 // Exporting types for other services to use
-export type { UserId, ApiKeyId, User, ApiKey };
+export type { UserId, ApiKeyId, OrderId, TradeId, User, ApiKey, Event };
