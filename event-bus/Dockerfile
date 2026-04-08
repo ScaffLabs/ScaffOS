@@ -7,13 +7,10 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --production
 
 # Copy the rest of the application code
 COPY . .
-
-# Build the application (if necessary) - uncomment if there's a build step
-# RUN npm run build
 
 # Expose the port the app runs on
 EXPOSE 3000

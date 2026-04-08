@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  event-bus:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - '6379:6379'
