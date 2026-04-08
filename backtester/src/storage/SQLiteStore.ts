@@ -4,28 +4,34 @@ import { v4 as uuidv4 } from 'uuid';
 import { StorageInterface } from './StorageInterface';
 
 export class SQLiteStore<T> implements StorageInterface<T> {
-    private db: sqlite3.Database;
+    private dbPromise: Promise<sqlite3.Database>;
 
     constructor(dbFile: string) {
-        this.db = new sqlite3.Database(dbFile);
+        this.dbPromise = open({
+            filename: dbFile,
+            driver: sqlite3.Database
+        });
     }
 
     async init(): Promise<void> {
-        await this.run(`CREATE TABLE IF NOT EXISTS records (id TEXT PRIMARY KEY, data TEXT)`);
+        const db = await this.dbPromise;
+        await db.run(`CREATE TABLE IF NOT EXISTS records (id TEXT PRIMARY KEY, data TEXT)`);
     }
 
-    private run(query: string, params: any[] = []): Promise<void> {
+    private async run(query: string, params: any[] = []): Promise<void> {
+        const db = await this.dbPromise;
         return new Promise((resolve, reject) => {
-            this.db.run(query, params, function(err) {
+            db.run(query, params, function(err) {
                 if (err) reject(err);
                 else resolve();
             });
         });
     }
 
-    private get(query: string, params: any[] = []): Promise<T | undefined> {
+    private async get(query: string, params: any[] = []): Promise<T | undefined> {
+        const db = await this.dbPromise;
         return new Promise((resolve, reject) => {
-            this.db.get(query, params, (err, row) => {
+            db.get(query, params, (err, row) => {
                 if (err) reject(err);
                 else resolve(row ? JSON.parse(row.data) : undefined);
             });
@@ -53,15 +59,17 @@ export class SQLiteStore<T> implements StorageInterface<T> {
     }
 
     async findAll(): Promise<any[]> {
+        const db = await this.dbPromise;
         return new Promise((resolve, reject) => {
-            this.db.all(`SELECT * FROM records`, (err, rows) => {
+            db.all(`SELECT * FROM records`, (err, rows) => {
                 if (err) reject(err);
-                else resolve(rows.map(row => ({ id: row.id, data: JSON.parse(row.data) })) );
+                else resolve(rows.map(row => ({ id: row.id, data: JSON.parse(row.data) })));
             });
         });
     }
 
     async transaction(operations: Array<() => Promise<void>>): Promise<void> {
+        const db = await this.dbPromise;
         await this.run(`BEGIN TRANSACTION`);
         for (const operation of operations) {
             await operation();

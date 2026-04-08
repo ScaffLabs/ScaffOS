@@ -9,4 +9,5 @@ const seedData: HistoricalData[] = [
 export async function migrateDatabase(store: SQLiteStore<HistoricalData>): Promise<void> {
     await store.init();
     await store.migrate(seedData);
+    console.log('Database seeded with initial data.');
 }

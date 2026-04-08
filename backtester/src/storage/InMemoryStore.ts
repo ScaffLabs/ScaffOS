@@ -47,10 +47,12 @@ export class InMemoryStore<T> implements StorageInterface<T> {
     }
 
     async transaction(operations: Array<() => Promise<void>>): Promise<void> {
-        // This is a dummy implementation for in-memory store
+        const results: Array<any> = [];
         for (const operation of operations) {
-            await operation();
+            const result = await operation();
+            results.push(result);
         }
+        return results;
     }
 
     async migrate(data: T[]): Promise<void> {
