@@ -13,6 +13,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { validateQueryParams } from './middleware/inputValidator';
 import { validateStrategy } from './middleware/strategyValidator';
+import errorHandler from './middleware/errorHandler';
 
 const app = express();
 const server = createServer(app);
@@ -45,6 +46,9 @@ app.get('/api/strategies', validateQueryParams, getStrategiesHandler);
 app.post('/api/strategies', validateStrategy, createStrategyHandler);
 app.put('/api/strategies/:id', validateStrategy, updateStrategyHandler);
 app.delete('/api/strategies/:id', deleteStrategyHandler);
+
+// Error handling middleware
+app.use(errorHandler);
 
 // Graceful shutdown mechanism
 const shutdown = async () => {
