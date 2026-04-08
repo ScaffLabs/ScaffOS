@@ -26,11 +26,15 @@ const main = async () => {
         logger.info('Server is running on port 3000');
     });
 
-    process.on('SIGTERM', async () => {
+    // Graceful shutdown handling
+    const shutdown = async () => {
         logger.info('Shutting down gracefully...');
-        await server.close();
+        await new Promise(resolve => server.close(resolve));
         process.exit(0);
-    });
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 };
 
 main();
