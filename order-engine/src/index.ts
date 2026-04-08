@@ -8,6 +8,7 @@ import { setupRequestQueue } from './requestQueue';
 import { monitorMemoryUsage } from './memoryMonitor';
 import { setupConnectionPooling } from './db';
 import { errorHandlingMiddleware } from './middleware';
+import { connectToDatabase } from './db';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
