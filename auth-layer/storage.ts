@@ -17,9 +17,10 @@ class InMemoryStore<T> implements DataStore<T> {
 
     create(item: T): T {
         const id = crypto.randomUUID() as UserId;
-        this.store.set(id, { ...item, id });
-        this.indexItem(id, item);
-        return this.store.get(id)!;
+        const newItem = { ...item, id };
+        this.store.set(id, newItem);
+        this.indexItem(id, newItem);
+        return newItem;
     }
 
     read(id: UserId): T | undefined {
@@ -28,9 +29,10 @@ class InMemoryStore<T> implements DataStore<T> {
 
     update(id: UserId, item: T): T | null {
         if (!this.store.has(id)) return null;
-        this.store.set(id, { ...item, id });
-        this.reindexItem(id, item);
-        return this.store.get(id)!;
+        const updatedItem = { ...item, id };
+        this.store.set(id, updatedItem);
+        this.reindexItem(id, updatedItem);
+        return updatedItem;
     }
 
     delete(id: UserId): boolean {
@@ -107,12 +109,19 @@ class InMemoryStore<T> implements DataStore<T> {
 const userStore = new InMemoryStore<User>();
 
 export const createUser = (username: string, email: string): User => {
+    if (findUserByEmail(email)) {
+        throw new Error('Email already in use');
+    }
     const user: User = { id: crypto.randomUUID() as UserId, username, email };
     return userStore.create(user);
 };
 
 export const findUserById = (id: UserId): User | undefined => {
     return userStore.read(id);
+};
+
+export const findUserByEmail = (email: string): User | undefined => {
+    return userStore.findByIndex('email', email)[0];
 };
 
 export const updateUser = (id: UserId, userData: Partial<User>): User | null => {
