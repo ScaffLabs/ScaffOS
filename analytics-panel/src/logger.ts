@@ -41,4 +41,8 @@ export const logWithRequestId = (req: Request, res: Response, next: NextFunction
     next();
 };
 
+export const logServiceHealth = (serviceName: string, healthy: boolean) => {
+    logger.info({ serviceName, healthy }, 'Service health check');
+};
+
 export default logger;
