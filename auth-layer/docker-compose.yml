@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  auth-layer:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - JWT_SECRET=your_jwt_secret
+      - API_KEY_SECRET=your_api_key_secret
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - other_service # Add other services as needed
