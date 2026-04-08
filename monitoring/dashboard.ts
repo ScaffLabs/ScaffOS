@@ -45,10 +45,7 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data.');
         }
-        const response = await connectionPool.requestWithRetry('order', 'put', `/dashboard/${id}`, bodyValidation.data);
-        if (!response) {
-            throw new NotFoundError('Entry not found.');
-        }
+        await connectionPool.requestWithRetry('order', 'put', `/dashboard/${id}`, bodyValidation.data);
         res.status(204).send();
     } catch (error) {
         logger.error(error, req);
@@ -65,10 +62,7 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const response = await connectionPool.requestWithRetry('order', 'delete', `/dashboard/${id}`);
-        if (!response) {
-            throw new NotFoundError('Entry not found.');
-        }
+        await connectionPool.requestWithRetry('order', 'delete', `/dashboard/${id}`);
         res.status(204).send();
     } catch (error) {
         logger.error(error, req);
