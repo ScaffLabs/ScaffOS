@@ -10,8 +10,6 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
 import { body, validationResult } from 'express-validator';
-import expressSanitizer from 'express-sanitizer';
-import csurf from 'csurf';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -113,8 +111,6 @@ export const eventRoutes = () => {
     const router = Router();
     router.use(cors({ origin: ['http://your-allowed-origin.com'], methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
     router.use(helmet());
-    router.use(expressSanitizer());
-    router.use(csrfProtection);
     router.use(limiter);
     router.post('/', [
         body('title').notEmpty().withMessage('Title is required'),
