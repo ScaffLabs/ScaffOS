@@ -1,8 +1,13 @@
 import request from 'supertest';
 import { createServer } from '../src/index';
+import { simulateBacktest } from '../src/services/backtestService';
 import { HistoricalData, StrategyParameters } from '../src/types';
+import InMemoryStore from '../src/storage/InMemoryStore';
 
 const app = createServer();
+const store = new InMemoryStore();
+
+jest.mock('../src/services/backtestService');
 
 describe('Backtest API', () => {
   it('should perform a backtest successfully', async () => {
@@ -12,25 +17,41 @@ describe('Backtest API', () => {
       { timestamp: 1620000060, price: 101 },
     ];
 
+    (simulateBacktest as jest.Mock).mockResolvedValue({ totalReturns: 1, trades: 1, winRate: 100, performanceMetrics: 'Simulated 1 trades with a win rate of 100' });
+
     const response = await request(app)
       .post('/api/backtest')
       .send({ strategyParams, historicalData });
 
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('totalReturns');
-    expect(response.body).toHaveProperty('trades');
-    expect(response.body).toHaveProperty('winRate');
-    expect(response.body).toHaveProperty('performanceMetrics');
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty('id');
+    expect(response.body.result).toHaveProperty('totalReturns', 1);
+    expect(response.body.result).toHaveProperty('trades', 1);
+    expect(response.body.result).toHaveProperty('winRate', 100);
+    expect(response.body.result).toHaveProperty('performanceMetrics', 'Simulated 1 trades with a win rate of 100');
   });
 
-  it('should return 500 on error', async () => {
+  it('should return 400 for invalid input', async () => {
     const response = await request(app)
       .post('/api/backtest')
       .send({}); // No body
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
+  });
+
+  it('should return 404 for non-existing backtest result', async () => {
+    const response = await request(app)
+      .get('/api/backtest/non-existing-id');
+    expect(response.status).toBe(404);
+  });
+
+  it('should handle edge cases with empty historical data', async () => {
+    const strategyParams: StrategyParameters = { slippage: 0.01, buyThreshold: 0.5, sellThreshold: 0.5 };
+    const response = await request(app)
+      .post('/api/backtest')
+      .send({ strategyParams, historicalData: [] });
+    expect(response.status).toBe(400);
   });
 });
-
 
 describe('simulateBacktest function', () => {
   it('should return correct backtest results', () => {
@@ -60,4 +81,3 @@ describe('simulateBacktest function', () => {
     });
   });
 });
-
