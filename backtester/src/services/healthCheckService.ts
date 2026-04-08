@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { EventEmitter } from 'events';
 import logger from '../utils/logger';
+import { circuitBreaker } from './resilience';
 
 const eventEmitter = new EventEmitter();
 
@@ -19,16 +20,18 @@ async function checkService(url: string): Promise<boolean> {
   }
 }
 
+const checkServiceWithCircuitBreaker = circuitBreaker(checkService, 5, false);
+
 export async function healthCheckServices() {
   const results = await Promise.all(Object.entries(serviceUrls).map(async ([key, url]) => {
-    const isHealthy = await checkService(url);
+    const isHealthy = await checkServiceWithCircuitBreaker(url);
     eventEmitter.emit('healthCheck', { service: key, healthy: isHealthy });
     return { service: key, healthy: isHealthy };
   }));
   return results;
 }
 
-export { eventEmitter }; 
+export { eventEmitter };
 
 export async function checkAllHealth() {
   const servicesHealth = await healthCheckServices();
