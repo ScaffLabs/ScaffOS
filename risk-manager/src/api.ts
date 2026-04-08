@@ -35,7 +35,7 @@ router.get('/risk', [
     }
     try {
         const { limit = 10, offset = 0, sort, filter } = req.query;
-        const positions = await riskManager.getRiskPositions(Number(limit), Number(offset), sort, filter);
+        const positions = await riskManager.getRiskPositions(Number(limit), Number(offset));
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
