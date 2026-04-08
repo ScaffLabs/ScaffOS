@@ -1,83 +1,41 @@
-import { AlertMessage } from './alert.schema';
+import mongoose, { Document, Schema } from 'mongoose';
 
-interface IDataStore<T> {
-    create(item: T): Promise<T>;
-    read(id: string): Promise<T | null>;
-    update(id: string, item: Partial<T>): Promise<T | null>;
-    delete(id: string): Promise<boolean>;
-    findIndex(query: Partial<T>): Promise<T[]>;
-    transaction(operations: (() => Promise<void>)[]): Promise<void>;
+export interface AlertMessage extends Document {
+    type: 'price' | 'risk';
+    threshold: number;
+    currentValue: number;
+    createdAt: Date;
 }
 
-class InMemoryStore<T> implements IDataStore<T> {
-    private data: Map<string, T> = new Map();
-    private nextId = 1;
+const alertSchema = new Schema<AlertMessage>({
+    type: { type: String, required: true },
+    threshold: { type: Number, required: true },
+    currentValue: { type: Number, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
 
-    async create(item: T): Promise<T> {
-        const id = this.nextId++.toString();
-        this.data.set(id, { ...item, id } as any);
-        return { ...item, id } as any;
+const AlertModel = mongoose.model<AlertMessage>('Alert', alertSchema);
+
+export class AlertStore {
+    async create(alert: Omit<AlertMessage, '_id'>): Promise<AlertMessage> {
+        const newAlert = new AlertModel(alert);
+        return await newAlert.save();
     }
 
-    async read(id: string): Promise<T | null> {
-        return this.data.get(id) || null;
+    async read(id: string): Promise<AlertMessage | null> {
+        return await AlertModel.findById(id).exec();
     }
 
-    async update(id: string, item: Partial<T>): Promise<T | null> {
-        if (!this.data.has(id)) return null;
-        const existing = this.data.get(id)!;
-        const updated = { ...existing, ...item };
-        this.data.set(id, updated);
-        return updated;
+    async update(id: string, alert: Partial<Omit<AlertMessage, '_id'>>): Promise<AlertMessage | null> {
+        return await AlertModel.findByIdAndUpdate(id, alert, { new: true }).exec();
     }
 
     async delete(id: string): Promise<boolean> {
-        return this.data.delete(id);
+        const result = await AlertModel.findByIdAndDelete(id).exec();
+        return result !== null;
     }
 
-    async findIndex(query: Partial<T>): Promise<T[]> {
-        return Array.from(this.data.values()).filter(item => Object.keys(query).every(key => item[key] === query[key]));
-    }
-
-    async transaction(operations: (() => Promise<void>)[]): Promise<void> {
-        const results = [];
-        for (const operation of operations) {
-            results.push(await operation());
-        }
-        return results;
-    }
-}
-
-export class AlertStore extends InMemoryStore<AlertMessage> {
-    private index: Map<string, Map<string, AlertMessage>> = new Map();
-
-    async create(item: AlertMessage): Promise<AlertMessage> {
-        const createdItem = await super.create(item);
-        this.indexItem(createdItem);
-        return createdItem;
-    }
-
-    async update(id: string, item: Partial<AlertMessage>): Promise<AlertMessage | null> {
-        const updatedItem = await super.update(id, item);
-        if (updatedItem) this.indexItem(updatedItem);
-        return updatedItem;
-    }
-
-    private indexItem(item: AlertMessage) {
-        if (!this.index.has(item.type)) {
-            this.index.set(item.type, new Map());
-        }
-        this.index.get(item.type)!.set(item.id, item);
-    }
-
-    async findByType(type: string): Promise<AlertMessage[]> {
-        return Array.from(this.index.get(type)?.values() || []);
-    }
-
-    async migrateToNewVersion(newSchema: any) {
-        const allAlerts = await this.findIndex({});
-        for (const alert of allAlerts) {
-            await this.update(alert.id, { ...alert, migrated: true });
-        }
+    async findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]> {
+        return await AlertModel.find(query).exec();
     }
 }

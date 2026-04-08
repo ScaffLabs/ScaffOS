@@ -11,17 +11,10 @@ export class AlertController {
     }
 
     async getActiveAlerts(req: Request, res: Response) {
-        const { limit = 10, offset = 0, type, sortBy = 'createdAt', order = 'asc' } = req.query;
         try {
-            const query: any = {};
-            if (type) query.type = type;
-            const alerts = await this.alertStore.findIndex(query);
-            const sortedAlerts = alerts.sort((a, b) => {
-                const modifier = order === 'asc' ? 1 : -1;
-                return (a[sortBy] > b[sortBy] ? 1 : -1) * modifier;
-            });
-            const paginatedAlerts = sortedAlerts.slice(Number(offset), Number(offset) + Number(limit));
-            return res.json(paginatedAlerts);
+            const alerts = await this.alertStore.findIndex({});
+            if (!alerts.length) return res.status(204).send();
+            return res.json(alerts);
         } catch (error) {
             console.error(error);
             throw new ServiceError('Failed to fetch active alerts.');
