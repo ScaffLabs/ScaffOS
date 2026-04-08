@@ -26,7 +26,9 @@ app.use('/api/portfolios', portfolioRoutes);
 
 const pool = createPool({
     create: async () => {
-        return await someAsyncConnectionFunction(); // Replace with your connection logic
+        // Replace with your actual connection creation logic
+        const client = await someAsyncConnectionFunction();
+        return client;
     },
     destroy: async (client) => {
         await client.close();
