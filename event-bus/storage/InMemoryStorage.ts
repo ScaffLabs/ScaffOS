@@ -3,10 +3,12 @@ import { IStorage } from './IStorage';
 export class InMemoryStorage<T> implements IStorage<T> {
     private storage: Record<string, T> = {};
     private currentId = 0;
+    private index: Record<string, Record<string, T>> = {};
 
     async create(item: T): Promise<T> {
         const id = String(++this.currentId);
         this.storage[id] = { ...item, id } as T;
+        this.indexItem(id, item);
         return this.storage[id];
     }
 
@@ -17,11 +19,13 @@ export class InMemoryStorage<T> implements IStorage<T> {
     async update(id: string, item: T): Promise<T | null> {
         if (!this.storage[id]) return null;
         this.storage[id] = { ...this.storage[id], ...item };
+        this.indexItem(id, this.storage[id]);
         return this.storage[id];
     }
 
     async delete(id: string): Promise<boolean> {
         if (!this.storage[id]) return false;
+        this.removeFromIndex(id);
         delete this.storage[id];
         return true;
     }
@@ -30,8 +34,37 @@ export class InMemoryStorage<T> implements IStorage<T> {
         return Object.values(this.storage).slice(offset, offset + limit);
     }
 
+    private indexItem(id: string, item: T): void {
+        const keys = Object.keys(item);
+        keys.forEach(key => {
+            if (!this.index[key]) {
+                this.index[key] = {};
+            }
+            this.index[key][id] = item;
+        });
+    }
+
+    private removeFromIndex(id: string): void {
+        const keys = Object.keys(this.index);
+        keys.forEach(key => {
+            if (this.index[key][id]) {
+                delete this.index[key][id];
+            }
+        });
+    }
+
     async transaction(operations: (() => Promise<void>)[]): Promise<void> {
         const results: Promise<void>[] = operations.map(op => op());
         await Promise.all(results);
+    }
+
+    async migrate(): Promise<void> {
+        console.log('Performing migration...');
+        // Implement migration logic if needed
+    }
+
+    async seedData(): Promise<void> {
+        console.log('Seeding data...');
+        // Implement seeding logic if needed
     }
 }
