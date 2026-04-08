@@ -4,7 +4,7 @@
 The Admin Console is a web application designed for managing system health and configurations. It provides a user-friendly interface to monitor various services and manage their settings effectively.
 
 ## Architecture Overview
-The application is built using React for the frontend and Express for the backend. It follows a modular architecture, using RESTful APIs to communicate between the frontend and backend, ensuring scalability and maintainability.
+The application is built using React for the frontend and Express for the backend, following a modular architecture using RESTful APIs to communicate between the frontend and backend, ensuring scalability and maintainability.
 
 ## Setup Instructions
 ### Prerequisites
