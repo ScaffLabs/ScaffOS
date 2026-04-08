@@ -8,10 +8,10 @@ import { config } from './config';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { body, validationResult } from 'express-validator';
 import { logRequest, logAudit, logError } from './logger';
 import { ServiceError } from './errors';
 import csrf from 'csurf';
+import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -66,15 +66,7 @@ const startApp = async () => {
         }
     });
 
-    app.post('/prices', [
-        body('exchange').isString().notEmpty().escape(),
-        body('price').isFloat({ gt: 0 }),
-        body('volume').isFloat({ gt: 0 }),
-    ], async (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
+    app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, next) => {
         try {
             const newPriceData = req.body;
             const createdPrice = await priceAggregator.addPrice(newPriceData);
