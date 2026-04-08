@@ -3,8 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
+import csurf from 'csurf';
 import { healthCheckHandler, readyCheckHandler } from './handlers/healthCheck';
-import { dependentHealthCheckHandler } from './handlers/dependentHealthCheck';
 import { auditLogger } from './middleware/auditLogger';
 import { getStrategiesHandler, createStrategyHandler, updateStrategyHandler, deleteStrategyHandler } from './handlers/strategyHandler';
 import logger, { logStartup } from './logger';
@@ -21,7 +22,12 @@ const io = new Server(server);
 app.use(cors({ origin: ['http://localhost:3000', 'https://yourdomain.com'] }));
 app.use(helmet());
 app.use(express.json({ limit: '1mb' })); // Set request body size limit
+app.use(cookieParser());
 app.use(auditLogger);
+
+// CSRF Protection
+const csrfProtection = csurf({ cookie: true });
+app.use(csrfProtection);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -33,7 +39,6 @@ app.use(limiter);
 // Health check endpoints
 app.get('/api/health', healthCheckHandler);
 app.get('/api/ready', readyCheckHandler);
-app.get('/api/dependent-health', dependentHealthCheckHandler);
 
 // Strategy management endpoints
 app.get('/api/strategies', validateQueryParams, getStrategiesHandler);
