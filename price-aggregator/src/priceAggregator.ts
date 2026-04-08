@@ -1,18 +1,7 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices } from './types';
+import { PriceData, CurrentPrices, PriceDataSchema, PriceAggregatorEvent } from './types';
 import { httpClient } from './httpClient';
 import { EventEmitter } from 'events';
-import { createPool } from 'generic-pool';
-
-const pool = createPool({
-    create: async () => {
-        const connection = await newConnection();
-        return connection;
-    },
-    destroy: async (connection) => {
-        await connection.close();
-    },
-}, { min: 2, max: 10 });
 
 export class PriceAggregator extends EventEmitter {
     private prices: PriceData[] = [];
@@ -47,9 +36,11 @@ export class PriceAggregator extends EventEmitter {
     }
 
     public async addPrice(priceData: PriceData) {
-        this.prices.push(priceData);
+        // Validate priceData against schema
+        const parsedData = PriceDataSchema.parse(priceData);
+        this.prices.push(parsedData);
         this.updateCurrentPrices();
-        return priceData;
+        return parsedData;
     }
 
     public async deletePrice(exchange: string) {
@@ -62,31 +53,12 @@ export class PriceAggregator extends EventEmitter {
     public async fetchExchangePrice(exchange: string): Promise<PriceData | null> {
         try {
             const priceData = await httpClient(`/prices/${encodeURIComponent(exchange)}`);
-            return { exchange, price: priceData.price, volume: priceData.volume };
+            const validatedPriceData = PriceDataSchema.parse({ exchange, ...priceData });
+            return validatedPriceData;
         } catch (error) {
             console.error(`Error fetching price for ${exchange}:`, error);
             return null;
         }
-    }
-
-    public async checkDependencies() {
-        const dependencies = ['exchange1', 'exchange2'];
-        const results = await Promise.all(dependencies.map(async (dep) => {
-            try {
-                await httpClient(`/health/${encodeURIComponent(dep)}`);
-                return { [dep]: 'healthy' };
-            } catch {
-                return { [dep]: 'unhealthy' };
-            }
-        }));
-        return results.reduce((acc, curr) => ({ ...acc, ...curr }), {});
-    }
-
-    public async shutdown() {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-        }
-        this.clients.forEach(client => client.close());
     }
 
     private updateCurrentPrices() {
