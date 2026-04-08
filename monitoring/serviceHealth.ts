@@ -9,12 +9,19 @@ const SERVICE_URLS = {
     userService: config.USER_SERVICE_URL
 };
 
-const checkService = async (service: string) => {
+const MAX_RETRIES = 3;
+const TIMEOUT = 5000;
+
+const checkService = async (service: string, retries = MAX_RETRIES): Promise<boolean> => {
     try {
-        const response = await axios.get(`${SERVICE_URLS[service]}/health`, { timeout: 5000 });
+        const response = await axios.get(`${SERVICE_URLS[service]}/health`, { timeout: TIMEOUT });
         return response.data.status === 'UP';
     } catch (error) {
         console.error(`Error checking ${service}:`, error.message);
+        if (retries > 0) {
+            console.log(`Retrying ${service} health check... (${MAX_RETRIES - retries + 1})`);
+            return checkService(service, retries - 1);
+        }
         return false;
     }
 };
