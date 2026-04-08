@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 
 const MAX_QUEUE_SIZE = 100;
 const QUEUE_CHECK_INTERVAL = 5000;
+const TIMEOUT_DURATION = 5000; // 5 seconds
 
 class MemoryQueue {
     private queue: any[] = [];
@@ -21,8 +22,16 @@ class MemoryQueue {
         this.eventEmitter.emit('itemAdded', item);
     }
 
-    dequeue() {
-        return this.queue.shift();
+    dequeue(timeout: number = TIMEOUT_DURATION): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                reject(new Error('Request timed out')); 
+            }, timeout);
+
+            const item = this.queue.shift();
+            clearTimeout(timeoutId);
+            resolve(item);
+        });
     }
 
     private monitorMemoryUsage() {
