@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { User } from './types';
 import userStore from './storage';
+import { User } from './types';
 
 const SEED_DATA_PATH = path.join(__dirname, 'seed.json');
 

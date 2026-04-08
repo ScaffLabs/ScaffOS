@@ -1,5 +1,10 @@
 import { User, UserId } from './types';
 import crypto from 'crypto';
+import sanitizeHtml from 'sanitize-html';
+
+const sanitizeInput = (input: string) => {
+    return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} });
+};
 
 interface DataStore<T> {
     create(item: T): T;
@@ -7,19 +12,16 @@ interface DataStore<T> {
     update(id: UserId, item: Partial<T>): T | null;
     delete(id: UserId): boolean;
     findAll(): T[];
-    findByIndex(index: string, value: string): T[];
+    findByIndex(index: keyof T, value: any): T[];
 }
 
 class InMemoryStore<T> implements DataStore<T> {
     private store: Map<UserId, T> = new Map();
-    private index: Map<string, Map<string, Set<UserId>>> = new Map();
 
     create(item: T): T {
         const id = crypto.randomUUID() as UserId;
-        const newItem = { ...item, id };
-        this.store.set(id, newItem);
-        this.indexItem(id, newItem);
-        return newItem;
+        this.store.set(id, item);
+        return { ...item, id };
     }
 
     read(id: UserId): T | undefined {
@@ -42,46 +44,35 @@ class InMemoryStore<T> implements DataStore<T> {
         return Array.from(this.store.values());
     }
 
-    findByIndex(index: string, value: string): T[] {
-        const indexMap = this.index.get(index);
-        if (!indexMap) return [];
-        const ids = indexMap.get(value);
-        return ids ? Array.from(ids).map(id => this.store.get(id)).filter(Boolean) as T[] : [];
-    }
-
-    private indexItem(id: UserId, item: T) {
-        // Example indexing logic based on User's email field
-        if ('email' in item) {
-            const emailIndex = this.index.get('email') || new Map();
-            const emailValue = (item as any).email;
-            const ids = emailIndex.get(emailValue) || new Set();
-            ids.add(id);
-            emailIndex.set(emailValue, ids);
-            this.index.set('email', emailIndex);
-        }
+    findByIndex(index: keyof T, value: any): T[] {
+        return Array.from(this.store.values()).filter(item => item[index] === value);
     }
 }
 
 const userStore = new InMemoryStore<User>();
 
 export const createUser = (username: string, email: string): User => {
-    if (userStore.findByIndex('email', email).length > 0) {
+    const sanitizedUsername = sanitizeInput(username);
+    const sanitizedEmail = sanitizeInput(email);
+    if (userStore.findByIndex('email', sanitizedEmail).length > 0) {
         throw new Error('Email already in use');
     }
-    const user: User = { id: crypto.randomUUID() as UserId, username, email };
+    const user: User = { id: crypto.randomUUID() as UserId, username: sanitizedUsername, email: sanitizedEmail };
     return userStore.create(user);
 };
 
-export const findUserById = (id: UserId): User | undefined => {
-    return userStore.read(id);
-};
-
 export const updateUser = (id: UserId, userData: Partial<User>): User | null => {
+    if (userData.username) userData.username = sanitizeInput(userData.username);
+    if (userData.email) userData.email = sanitizeInput(userData.email);
     return userStore.update(id, userData);
 };
 
 export const deleteUser = (id: UserId): boolean => {
     return userStore.delete(id);
+};
+
+export const findUserById = (id: UserId): User | undefined => {
+    return userStore.read(id);
 };
 
 export const getAllUsers = (): User[] => {
