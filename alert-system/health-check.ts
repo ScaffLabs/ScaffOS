@@ -18,22 +18,22 @@ export class HealthCheck {
         return results;
     }
 
-    static async memoryUsage(req: Request, res: Response) {
+    static async memoryUsage() {
         const memoryUsage = process.memoryUsage();
-        return res.json({
+        return {
             rss: memoryUsage.rss,
             heapTotal: memoryUsage.heapTotal,
             heapUsed: memoryUsage.heapUsed,
             external: memoryUsage.external,
             total: os.totalmem(),
             free: os.freemem(),
-        });
+        };
     }
 
     static async checkHealth(req: Request, res: Response) {
-        const services = ['webhook', 'email', 'websocket'];
+        const services = ['webhook', 'email'];
         const health = await this.checkServices(services);
-        const memory = await this.memoryUsage(req, res);
+        const memory = this.memoryUsage();
         return res.json({ services: health, memory });
     }
 
