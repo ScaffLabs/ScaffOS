@@ -1,70 +1,18 @@
 import { User, UserId, UserSchema } from './types';
+import { Pool } from 'pg';
 import crypto from 'crypto';
-import sanitizeHtml from 'sanitize-html';
 import { ValidationError } from './errors';
+import config from './config';
+
+const pool = new Pool({
+    connectionString: config.DATABASE_URL,
+});
 
 const sanitizeInput = (input: string) => {
-    return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} });
+    return input.replace(/<[^>]*>/g, ''); // Basic XSS prevention
 };
 
-interface DataStore<T> {
-    create(item: T): T;
-    read(id: UserId): T | undefined;
-    update(id: UserId, item: Partial<T>): T | null;
-    delete(id: UserId): boolean;
-    findAll(): T[];
-    findByIndex(index: keyof T, value: any): T[];
-    transaction(actions: () => void): void;
-}
-
-class InMemoryStore<T> implements DataStore<T> {
-    private store: Map<UserId, T> = new Map();
-    private transactions: Array<() => void> = [];
-
-    create(item: T): T {
-        const id = crypto.randomUUID() as UserId;
-        this.store.set(id, item);
-        return { ...item, id };
-    }
-
-    read(id: UserId): T | undefined {
-        return this.store.get(id);
-    }
-
-    update(id: UserId, item: Partial<T>): T | null {
-        const existingItem = this.store.get(id);
-        if (!existingItem) return null;
-        const updatedItem = { ...existingItem, ...item };
-        this.store.set(id, updatedItem);
-        return updatedItem;
-    }
-
-    delete(id: UserId): boolean {
-        return this.store.delete(id);
-    }
-
-    findAll(): T[] {
-        return Array.from(this.store.values());
-    }
-
-    findByIndex(index: keyof T, value: any): T[] {
-        return Array.from(this.store.values()).filter(item => item[index] === value);
-    }
-
-    transaction(actions: () => void): void {
-        this.transactions.push(actions);
-        actions();
-    }
-
-    commitTransactions(): void {
-        this.transactions.forEach(action => action());
-        this.transactions = [];
-    }
-}
-
-const userStore = new InMemoryStore<User>();
-
-export const createUser = (username: string, email: string): User => {
+export const createUser = async (username: string, email: string): Promise<User> => {
     const sanitizedUsername = sanitizeInput(username);
     const sanitizedEmail = sanitizeInput(email);
     try {
@@ -72,29 +20,40 @@ export const createUser = (username: string, email: string): User => {
     } catch (error) {
         throw new ValidationError(error.errors.map((err: any) => err.message));
     }
-    if (userStore.findByIndex('email', sanitizedEmail).length > 0) {
+    const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [sanitizedEmail]);
+    if (existingUser.rowCount > 0) {
         throw new Error('Email already in use');
     }
-    const user: User = { id: crypto.randomUUID() as UserId, username: sanitizedUsername, email: sanitizedEmail };
-    return userStore.create(user);
+    const id = crypto.randomUUID() as UserId;
+    await pool.query('INSERT INTO users (id, username, email) VALUES ($1, $2, $3)', [id, sanitizedUsername, sanitizedEmail]);
+    return { id, username: sanitizedUsername, email: sanitizedEmail };
 };
 
-export const updateUser = (id: UserId, userData: Partial<User>): User | null => {
-    if (userData.username) userData.username = sanitizeInput(userData.username);
-    if (userData.email) userData.email = sanitizeInput(userData.email);
-    return userStore.update(id, userData);
+export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
+    const { username, email } = userData;
+    if (username) {
+        userData.username = sanitizeInput(username);
+    }
+    if (email) {
+        userData.email = sanitizeInput(email);
+    }
+    const result = await pool.query('UPDATE users SET username = $1, email = $2 WHERE id = $3 RETURNING *', [userData.username, userData.email, id]);
+    return result.rows[0] || null;
 };
 
-export const deleteUser = (id: UserId): boolean => {
-    return userStore.delete(id);
+export const deleteUser = async (id: UserId): Promise<boolean> => {
+    const result = await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    return result.rowCount > 0;
 };
 
-export const findUserById = (id: UserId): User | undefined => {
-    return userStore.read(id);
+export const findUserById = async (id: UserId): Promise<User | undefined> => {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    return result.rows[0];
 };
 
-export const getAllUsers = (): User[] => {
-    return userStore.findAll();
+export const getAllUsers = async (): Promise<User[]> => {
+    const result = await pool.query('SELECT * FROM users');
+    return result.rows;
 };
 
-export default userStore;
+export default { createUser, updateUser, deleteUser, findUserById, getAllUsers };
