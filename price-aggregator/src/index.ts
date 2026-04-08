@@ -20,14 +20,14 @@ const memoryMonitor = new MemoryMonitor();
 const connectionPool = createConnectionPool();
 
 // Security middleware setup
-app.use(helmet()); // Set security HTTP headers
-app.use(cors({ origin: ['https://allowed-origin.com'], credentials: true })); // CORS configuration
-app.use(express.json({ limit: '1mb' })); // Request size limit
+app.use(helmet());
+app.use(cors({ origin: ['https://allowed-origin.com'], credentials: true }));
+app.use(express.json({ limit: '1mb' }));
 
 // Rate limit middleware
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
@@ -60,12 +60,11 @@ const startApp = async () => {
     });
 
     app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, next) => {
-        const requestId = req.headers['x-request-id'] || generateRequestId();
         try {
             const newPrice = await priceAggregator.addPrice(req.body);
             res.status(201).json(newPrice);
         } catch (error) {
-            logError(error, 'Error adding price', requestId);
+            logError(error, 'Error adding price');
             next(error);
         }
     });
@@ -109,7 +108,3 @@ const startApp = async () => {
 };
 
 startApp();
-
-const generateRequestId = () => {
-    return 'req-' + Math.random().toString(36).substr(2, 9);
-};

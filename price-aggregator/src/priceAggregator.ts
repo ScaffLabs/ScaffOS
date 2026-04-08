@@ -1,10 +1,11 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices, PriceDataSchema, PriceEvent } from './types';
+import { PriceData, CurrentPrices, PriceEvent } from './types';
 import { httpClient, postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
 import { EventBus } from './eventBus';
 import { ServiceError, ValidationError, NullValueError } from './errors';
+import { config } from './config';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -28,13 +29,28 @@ export class PriceAggregator {
         }
     }
 
+    public async checkDependencies(): Promise<{ [key: string]: string }> {
+        const dependencies = {};
+        try {
+            const response = await httpClient('/service-health');
+            dependencies['service1'] = response.status;
+        } catch (error) {
+            dependencies['service1'] = 'unhealthy';
+        }
+
+        try {
+            const response = await httpClient('/another-service-health');
+            dependencies['service2'] = response.status;
+        } catch (error) {
+            dependencies['service2'] = 'unhealthy';
+        }
+
+        return dependencies;
+    }
+
     private validatePriceData(priceData: PriceData): void {
         if (!priceData.exchange || priceData.price == null || priceData.volume == null) {
             throw new NullValueError('Price data contains null or empty values.');
-        }
-        const validation = PriceDataSchema.safeParse(priceData);
-        if (!validation.success) {
-            throw new ValidationError(JSON.stringify(validation.error.errors));
         }
     }
 
@@ -51,7 +67,7 @@ export class PriceAggregator {
         });
 
         if (totalVolume === 0) {
-            throw new DivisionByZeroError('Total volume cannot be zero when calculating VWAP.');
+            throw new Error('Total volume cannot be zero when calculating VWAP.');
         }
 
         this.currentPrices.VWAP = totalValue / totalVolume;
