@@ -15,4 +15,14 @@ export class StorageManager<T> {
     getStorage(): IStorage<T> {
         return this.storage;
     }
+
+    async migrate(): Promise<void> {
+        // Placeholder for data migration logic
+        console.log('Migration utility called.');
+    }
+
+    async seedData(): Promise<void> {
+        // Placeholder for data seeding logic
+        console.log('Seeding data called.');
+    }
 }
