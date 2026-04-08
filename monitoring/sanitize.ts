@@ -13,7 +13,10 @@ const bodySchema = z.object({
 });
 
 const sanitizeOutput = (data: any) => {
-    return JSON.parse(JSON.stringify(data).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+    if (data) {
+        return JSON.parse(JSON.stringify(data).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+    }
+    return data;
 };
 
 const sanitize = (req: Request, res: Response, next: NextFunction) => {

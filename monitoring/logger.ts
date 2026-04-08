@@ -30,7 +30,7 @@ export const logRequest = (req, res, next) => {
 
 export const logError = (error, req) => {
     const requestId = req.headers['x-request-id'] || 'unknown';
-    logger.error({ error: error.stack, message: error.message, path: req.path, requestId }, 'Error occurred');
+    logger.error({ message: error.message, path: req.path, requestId }, 'Error occurred');
 };
 
 export const logStartup = () => {
