@@ -1,6 +1,6 @@
 import axios from 'axios';
 import config from '../config';
-import { ServiceError, ValidationError } from '../utils/errors';
+import { ServiceError, ValidationError, NotFoundError } from '../utils/errors';
 import { Position, PositionSchema } from '../types';
 
 export const fetchPositions = async (): Promise<Position[]> => {
@@ -9,6 +9,9 @@ export const fetchPositions = async (): Promise<Position[]> => {
         if (!Array.isArray(response.data)) throw new ServiceError('Invalid data structure');
         return response.data;
     } catch (error) {
+        if (error.response && error.response.status === 404) {
+            throw new NotFoundError('Positions not found');
+        }
         throw new ServiceError('Error fetching positions: ' + error.message);
     }
 };
@@ -23,6 +26,9 @@ export const updatePosition = async (positionId: Position['id'], quantity: numbe
         }
         await axios.put(`${config.API_URL}/positions/${positionId}`, { quantity });
     } catch (error) {
+        if (error.response && error.response.status === 404) {
+            throw new NotFoundError('Position not found');
+        }
         throw new ServiceError('Error updating position: ' + error.message);
     }
 };
@@ -31,6 +37,9 @@ export const deletePosition = async (positionId: Position['id']) => {
     try {
         await axios.delete(`${config.API_URL}/positions/${positionId}`);
     } catch (error) {
+        if (error.response && error.response.status === 404) {
+            throw new NotFoundError('Position not found');
+        }
         throw new ServiceError('Error deleting position: ' + error.message);
     }
 };
