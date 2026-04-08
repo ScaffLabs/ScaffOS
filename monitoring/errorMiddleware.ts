@@ -3,8 +3,9 @@ import { ServiceError, ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
 
 const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    const requestId = req.headers['x-request-id'] || 'unknown';
     console.error(err);
-    logger.error({ error: err.message, path: req.path }, 'Error occurred');
+    logger.error({ error: err.message, path: req.path, requestId }, 'Error occurred');
 
     if (err instanceof ValidationError) {
         return res.status(400).json({ error: err.message });

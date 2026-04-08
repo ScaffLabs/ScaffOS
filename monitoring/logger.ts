@@ -5,7 +5,7 @@ const logFormat = config.NODE_ENV === 'production' ? 'json' : 'pretty';
 const logger = pino({
     level: 'info',
     transport: {
-        target: `pino-pretty`,
+        target: 'pino-pretty',
         options: {
             colorize: true,
         },

@@ -23,7 +23,11 @@ app.use(helmet());
 app.use(cors({ origin: ['https://example.com', 'https://another-domain.com'] }));
 app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' }));
-app.use(logRequest);
+
+app.use((req, res, next) => {
+    req.headers['x-request-id'] = Math.random().toString(36).substring(2, 15);
+    logRequest(req, res, next);
+});
 
 app.get('/health', healthCheck);
 app.use(errorMiddleware);
