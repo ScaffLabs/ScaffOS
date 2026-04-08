@@ -3,6 +3,9 @@ import { json } from 'body-parser';
 import { connectToEventBus } from './eventBus';
 import portfolioRoutes from './routes/portfolioRoutes';
 import { healthCheckPortfolioService } from './services/portfolioService';
+import { createPool } from 'generic-pool';
+import http from 'http';
+import { register } from 'prom-client';
 
 const app = express();
 app.use(json());
@@ -21,6 +24,41 @@ app.get('/health', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+const onShutdown = async () => {
+    console.log('Shutting down gracefully...');
+    // Close any open connections here if needed
+};
+
+process.on('SIGTERM', onShutdown);
+process.on('SIGINT', onShutdown);
+
+server.listen(PORT, () => {
     console.log(`Portfolio Tracker service running on port ${PORT}`);
+});
+
+// Health monitoring
+const collectDefaultMetrics = require('prom-client').collectDefaultMetrics;
+collectDefaultMetrics();
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+});
+
+// Connection Pooling example
+const pool = createPool({
+    create: async () => {
+        // Create a connection to your database or service
+    },
+    destroy: async (client) => {
+        // Cleanup connection
+    },
+    max: 10,
+    min: 2,
+    idleTimeoutMillis: 30000,
+    evictionRunIntervalMillis: 15000,
+    testOnBorrow: true,
+    validate: async (client) => true
 });
