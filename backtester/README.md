@@ -1,10 +1,10 @@
 # Backtester Service
 
 ## Project Description
-The Backtester service allows users to simulate trading strategies based on historical data. It performs backtests by analyzing trades and generating performance metrics.
+The Backtester service allows users to simulate trading strategies based on historical data. It performs backtests by analyzing trades and generating performance metrics, enabling users to evaluate their trading strategies' effectiveness before committing real capital.
 
 ## Architecture Overview
-The service is built using Node.js and Express, structured to handle API requests for backtesting strategies. It utilizes an in-memory store for quick data access and supports external service calls for fetching orders and historical data.
+The service is built using Node.js and Express, structured to handle API requests for backtesting strategies. It utilizes an in-memory store for quick data access and supports external service calls for fetching orders and historical data. The service is designed with scalability and reliability in mind, employing patterns such as circuit breakers and retries for external service calls.
 
 ## Setup Instructions
 ### Prerequisites
@@ -107,3 +107,4 @@ npm start
 
 ## Changelog
 - **1.0.0** - Initial release.
+- **1.0.1** - Added comprehensive documentation.

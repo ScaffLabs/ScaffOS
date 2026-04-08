@@ -16,3 +16,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.2] - 2023-10-10
 - Added health check endpoints to monitor service status.
 - Refactored code for better readability and maintainability.
+
+## [1.1.0] - 2023-10-15
+- Added comprehensive documentation including API reference, development and deployment guides.
+- Enhanced error handling and logging for better tracking of issues.
