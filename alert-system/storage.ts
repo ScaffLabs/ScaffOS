@@ -15,8 +15,8 @@ class InMemoryStore<T> implements IDataStore<T> {
 
     async create(item: T): Promise<T> {
         const id = this.nextId++.toString();
-        this.data.set(id, { ...item, id });
-        return { ...item, id };
+        this.data.set(id, { ...item, id } as any);
+        return { ...item, id } as any;
     }
 
     async read(id: string): Promise<T | null> {
@@ -73,23 +73,11 @@ export class AlertStore extends InMemoryStore<AlertMessage> {
     async findByType(type: string): Promise<AlertMessage[]> {
         return Array.from(this.index.get(type)?.values() || []);
     }
-}
 
-export class MigrationUtil {
-    static async seedData(store: AlertStore) {
-        const seedData: AlertMessage[] = [
-            { id: '1', type: 'price', threshold: 100, currentValue: 90, createdAt: new Date() },
-            { id: '2', type: 'risk', threshold: 50, currentValue: 30, createdAt: new Date() }
-        ];
-        for (const item of seedData) {
-            await store.create(item);
-        }
-    }
-
-    static async migrateToNewVersion(store: AlertStore, newSchema: any) {
-        const allAlerts = await store.findIndex({});
+    async migrateToNewVersion(newSchema: any) {
+        const allAlerts = await this.findIndex({});
         for (const alert of allAlerts) {
-            await store.update(alert.id, { ...alert, migrated: true });
+            await this.update(alert.id, { ...alert, migrated: true });
         }
     }
 }
