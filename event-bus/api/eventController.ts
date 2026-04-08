@@ -7,7 +7,14 @@ import { NotFoundError } from '../errors/notFoundError';
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
-export const createEvent = async (req: Request, res: Response) => {
+/**
+ * Create a new event.
+ * @param req - Express request object.
+ * @param res - Express response object.
+ * @throws {ValidationError} If validation of the request body fails.
+ * @returns {Promise<void>} A promise that resolves when the event is created.
+ */
+export const createEvent = async (req: Request, res: Response): Promise<void> => {
     try {
         const validation = createEventSchema.safeParse(req.body);
         if (!validation.success) {
@@ -24,7 +31,14 @@ export const createEvent = async (req: Request, res: Response) => {
     }
 };
 
-export const getEvents = async (req: Request, res: Response) => {
+/**
+ * Get all events.
+ * @param req - Express request object.
+ * @param res - Express response object.
+ * @throws {NotFoundError} If no events are found.
+ * @returns {Promise<void>} A promise that resolves with the events.
+ */
+export const getEvents = async (req: Request, res: Response): Promise<void> => {
     try {
         const events = await storage.findAll();
         if (!events.length) throw new NotFoundError('No events found');
@@ -36,30 +50,4 @@ export const getEvents = async (req: Request, res: Response) => {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
-};
-
-export const seedData = async (req: Request, res: Response) => {
-    try {
-        await storageManager.seedData();
-        res.status(200).json({ message: 'Seed data created successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error seeding data', error: error.message });
-    }
-};
-
-export const updateEvent = async (req: Request, res: Response) => {
-    // Implementation omitted for brevity
-};
-
-export const deleteEvent = async (req: Request, res: Response) => {
-    // Implementation omitted for brevity
-};
-
-export const eventRoutes = () => {
-    const router = Router();
-    router.post('/', createEvent);
-    router.get('/', getEvents);
-    router.post('/seed', seedData);
-    return router;
 };
