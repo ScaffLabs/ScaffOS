@@ -42,6 +42,41 @@ The application is built using React and uses React Router for navigation. It co
   - **201 Created**: Configuration created successfully.
   - **400 Bad Request**: If the request body is invalid.
 
+### Get All Configurations Endpoint
+- **Method**: GET
+- **Path**: `/api/config`
+- **Query Parameters**: `limit`, `offset`, `sortBy`, `order`
+- **Response**:
+  - **200 OK**: Returns a list of configurations.
+
+### Get Configuration by Key Endpoint
+- **Method**: GET
+- **Path**: `/api/config/:key`
+- **Response**:
+  - **200 OK**: Returns the requested configuration.
+  - **404 Not Found**: If the configuration does not exist.
+
+### Update Configuration Endpoint
+- **Method**: PUT
+- **Path**: `/api/config`
+- **Request Body**:
+  ```json
+  {
+    "key": "string",
+    "value": "string"
+  }
+  ```
+- **Response**:
+  - **200 OK**: Configuration updated successfully.
+  - **404 Not Found**: If the configuration does not exist.
+
+### Delete Configuration Endpoint
+- **Method**: DELETE
+- **Path**: `/api/config/:key`
+- **Response**:
+  - **204 No Content**: Configuration deleted successfully.
+  - **404 Not Found**: If the configuration does not exist.
+
 ## Environment Variables Table
 | Variable        | Description                      | Default Value         |
 |------------------|----------------------------------|-----------------------|
@@ -63,3 +98,17 @@ Please read the [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of 
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## Changelog
+### [Unreleased]
+- Comprehensive documentation for project setup and usage in README.md.
+- Inline comments in Configuration component for clarity on complex logic.
+
+### [1.0.0] - 2023-10-01
+- Implemented Admin Dashboard and Configuration Management components.
+- Service Health status fetching with mock data.
+- Notification context for managing notifications across the application.
+
+### [1.0.1] - 2023-10-15
+- Added detailed API reference with all endpoints.
+- Improved setup instructions for environment variables.

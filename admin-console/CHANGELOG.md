@@ -16,5 +16,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Updated README with project description and setup instructions.
 
-### Fixed
-- Resolved minor bugs in routing logic.
+## [1.0.1] - 2023-10-15
+### Added
+- Detailed API reference with all endpoints in README.md.
+- Improved setup instructions for environment variables.
