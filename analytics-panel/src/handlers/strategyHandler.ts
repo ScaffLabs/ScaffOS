@@ -1,34 +1,78 @@
+// Import necessary modules and types
 import { Request, Response } from 'express';
-import { findStrategies } from '../services/strategyService';
-import { ValidationError } from '../errors/customErrors';
+import { findStrategies, createStrategy, updateStrategy, deleteStrategy } from '../services/strategyService';
+import { ValidationError, NotFoundError } from '../errors/customErrors';
 
+// Handler to get strategies with pagination and filtering
 export const getStrategiesHandler = async (req: Request, res: Response) => {
+    const { limit = 10, offset = 0, name } = req.query;
     try {
-        const strategies = await findStrategies({});
-        res.status(200).json(strategies.map(strategy => strategy.data.name));
+        const query = name ? { name: name.toString() } : {};
+        const strategies = await findStrategies(query);
+        const paginatedStrategies = strategies.slice(offset, offset + limit);
+        res.status(200).json(paginatedStrategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
-export const compareStrategiesHandler = async (req: Request, res: Response) => {
-    const { strategyA, strategyB } = req.query;
+// Handler to create a new strategy
+export const createStrategyHandler = async (req: Request, res: Response) => {
+    const { name, parameters } = req.body;
     try {
-        if (!strategyA || !strategyB) {
-            throw new ValidationError('Both strategies must be provided.');
+        if (!name || !parameters) {
+            throw new ValidationError('Name and parameters are required.');
         }
-        // Validate and sanitize inputs
-        const sanitizedStrategyA = validator.escape(strategyA.toString());
-        const sanitizedStrategyB = validator.escape(strategyB.toString());
-        // Perform comparison logic here (mocked)
-        const result = { betterStrategy: Math.random() > 0.5 ? sanitizedStrategyA : sanitizedStrategyB };
-        res.status(200).json(result);
+        const newStrategy = await createStrategy({ name, parameters });
+        res.status(201).json(newStrategy);
     } catch (error) {
         if (error instanceof ValidationError) {
             res.status(400).json({ error: error.message });
         } else {
-            console.error('Error comparing strategies:', error);
+            console.error('Error creating strategy:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+};
+
+// Handler to update an existing strategy
+export const updateStrategyHandler = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { name, parameters } = req.body;
+    try {
+        if (!name || !parameters) {
+            throw new ValidationError('Name and parameters are required.');
+        }
+        const updatedStrategy = await updateStrategy(id, { name, parameters });
+        if (!updatedStrategy) {
+            throw new NotFoundError('Strategy not found.');
+        }
+        res.status(200).json(updatedStrategy);
+    } catch (error) {
+        if (error instanceof ValidationError || error instanceof NotFoundError) {
+            res.status(400).json({ error: error.message });
+        } else {
+            console.error('Error updating strategy:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+};
+
+// Handler to delete a strategy
+export const deleteStrategyHandler = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const deleted = await deleteStrategy(id);
+        if (!deleted) {
+            throw new NotFoundError('Strategy not found.');
+        }
+        res.status(204).send();
+    } catch (error) {
+        if (error instanceof NotFoundError) {
+            res.status(404).json({ error: error.message });
+        } else {
+            console.error('Error deleting strategy:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
