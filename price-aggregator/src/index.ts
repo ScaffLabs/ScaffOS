@@ -37,8 +37,13 @@ const startApp = async () => {
             const health = await priceAggregator.checkDependencies();
             res.status(200).json({ status: 'healthy', dependencies: health });
         } catch (error) {
-            next(new ServiceError('Health check failed.')); // Improved error handling
+            next(new ServiceError('Health check failed.'));
         }
+    });
+
+    app.get('/ready', (req, res) => {
+        // Assuming service is ready if it can respond to health checks
+        res.status(200).json({ status: 'ready' });
     });
 
     app.get('/prices', async (req, res, next) => {
