@@ -28,49 +28,50 @@ The application is built using React and uses React Router for navigation. It co
   - **200 OK**: Returns the health status of services.
   - **500 Internal Server Error**: If there's an issue fetching the status.
 
-### Configuration Management Endpoint
+### Configuration Management Endpoints
+#### Create Configuration
 - **Method**: POST
 - **Path**: `/api/config`
 - **Request Body**:
-  ```json
-  {
-    "key": "string",
-    "value": "string"
-  }
-  ```
+```json
+{
+  "key": "string",
+  "value": "string"
+}
+```
 - **Response**:
   - **201 Created**: Configuration created successfully.
   - **400 Bad Request**: If the request body is invalid.
 
-### Get All Configurations Endpoint
+#### Get All Configurations
 - **Method**: GET
 - **Path**: `/api/config`
 - **Query Parameters**: `limit`, `offset`, `sortBy`, `order`
 - **Response**:
   - **200 OK**: Returns a list of configurations.
 
-### Get Configuration by Key Endpoint
+#### Get Configuration by Key
 - **Method**: GET
 - **Path**: `/api/config/:key`
 - **Response**:
   - **200 OK**: Returns the requested configuration.
   - **404 Not Found**: If the configuration does not exist.
 
-### Update Configuration Endpoint
+#### Update Configuration
 - **Method**: PUT
 - **Path**: `/api/config`
 - **Request Body**:
-  ```json
-  {
-    "key": "string",
-    "value": "string"
-  }
-  ```
+```json
+{
+  "key": "string",
+  "value": "string"
+}
+```
 - **Response**:
   - **200 OK**: Configuration updated successfully.
   - **404 Not Found**: If the configuration does not exist.
 
-### Delete Configuration Endpoint
+#### Delete Configuration
 - **Method**: DELETE
 - **Path**: `/api/config/:key`
 - **Response**:
@@ -112,3 +113,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 ### [1.0.1] - 2023-10-15
 - Added detailed API reference with all endpoints.
 - Improved setup instructions for environment variables.
+
+### [1.0.2] - 2023-10-20
+- Added comprehensive README.md with setup, deployment, and API reference.
+- Improved inline documentation for better clarity.

@@ -20,3 +20,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Detailed API reference with all endpoints in README.md.
 - Improved setup instructions for environment variables.
+
+## [1.0.2] - 2023-10-20
+### Added
+- Added comprehensive README.md with setup, deployment, and API reference.
+- Improved inline documentation for better clarity.
