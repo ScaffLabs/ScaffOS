@@ -1,5 +1,5 @@
-import { Order } from './types';
 import { EventEmitter } from 'events';
+import { Order } from './types';
 
 class InMemoryStorage<T extends { id: string }> {
     private items: T[] = [];
@@ -17,15 +17,12 @@ class InMemoryStorage<T extends { id: string }> {
 
     public read(id: string): Promise<T | null> {
         const item = this.items.find(i => i.id === id);
-        if (!item) {
-            throw new Error('Order not found.');
-        }
-        return Promise.resolve(item);
+        return Promise.resolve(item || null);
     }
 
     public update(id: string, updates: Partial<T>): Promise<T | null> {
         const index = this.items.findIndex(i => i.id === id);
-        if (index === -1) throw new Error('Order not found.');
+        if (index === -1) return Promise.resolve(null);
 
         const updatedItem = { ...this.items[index], ...updates };
         this.items[index] = updatedItem;
@@ -35,7 +32,7 @@ class InMemoryStorage<T extends { id: string }> {
 
     public delete(id: string): Promise<void> {
         const index = this.items.findIndex(i => i.id === id);
-        if (index === -1) throw new Error('Order not found.');
+        if (index === -1) return Promise.reject(new Error('Order not found.'));
         this.items.splice(index, 1);
         this.eventEmitter.emit('ORDER_DELETED', id);
         return Promise.resolve();
@@ -43,6 +40,10 @@ class InMemoryStorage<T extends { id: string }> {
 
     public findAll(): Promise<T[]> {
         return Promise.resolve(this.items);
+    }
+
+    public transaction(callback: (storage: this) => Promise<void>): Promise<void> {
+        return callback(this);
     }
 
     public onOrderCreated(listener: (order: T) => void): void {
@@ -59,3 +60,17 @@ class InMemoryStorage<T extends { id: string }> {
 }
 
 export const storage = new InMemoryStorage<Order>();
+
+export const migrateOrders = async (data: Order[]): Promise<void> => {
+    for (const order of data) {
+        await storage.create(order);
+    }
+};
+
+export const seedData = async (): Promise<void> => {
+    const initialOrders: Order[] = [
+        { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' },
+        { id: '2' as OrderId, type: 'market', price: 0, quantity: 5, status: 'open' }
+    ];
+    await migrateOrders(initialOrders);
+};
