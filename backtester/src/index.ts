@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { backtestRouter } from './routes/backtest';
 import { errorHandler } from './middleware/errorHandler';
-import logger from './utils/logger';
+import { logger, requestLogger } from './utils/logger';
 import rateLimit from 'express-rate-limit';
 import { config } from '../config';
 import healthCheckRouter from './routes/healthCheck';
@@ -21,29 +21,16 @@ app.use(helmet());
 // Limit request size
 app.use(express.json({ limit: '1mb' }));
 
+// Logging middleware
+app.use(requestLogger);
+
 // Rate limiting middleware
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
+  windowMs: 1 * 60 * 1000,
   max: 100,
   message: 'Too many requests, please try again later.',
 });
 app.use(limiter);
-
-// Logging middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    logger.info({
-      method: req.method,
-      path: req.path,
-      status: res.statusCode,
-      duration,
-      requestId: req.headers['x-request-id'] || 'N/A',
-    });
-  });
-  next();
-});
 
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);

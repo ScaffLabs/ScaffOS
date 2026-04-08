@@ -34,4 +34,12 @@ const requestLogger = (req, res, next) => {
   next();
 };
 
-export { logger, requestLogger };
+const logError = (err, req) => {
+  logger.error({
+    message: err instanceof Error ? err.message : 'Unknown error',
+    stack: err instanceof Error ? err.stack : 'No stack trace',
+    requestId: req.headers['x-request-id'] || 'N/A',
+  });
+};
+
+export { logger, requestLogger, logError };
