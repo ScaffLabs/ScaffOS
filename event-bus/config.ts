@@ -8,6 +8,7 @@ const envSchema = z.object({
     PORT: z.number().default(3000),
     LOG_LEVEL: z.string().default('info'),
     REDIS_URL: z.string().url().default('redis://localhost:6379'),
+    OTHER_SERVICE_URL: z.string().url().default('http://localhost:4000'),
 });
 
 const env = envSchema.parse(process.env);
@@ -17,6 +18,7 @@ export const config = {
     port: env.PORT,
     logLevel: env.LOG_LEVEL,
     redisUrl: env.REDIS_URL,
+    otherServiceUrl: env.OTHER_SERVICE_URL,
 };
 
 export const isProduction = () => env.NODE_ENV === 'production';
