@@ -18,62 +18,44 @@ export default class RiskManager {
     }
 
     async createRiskPosition(asset: string, position: number): Promise<RiskPosition> {
-        try {
-            if (!this.positionLimits.checkLimit(asset, position)) {
-                throw new ValidationError('Position exceeds limit for asset: ' + asset);
-            }
-            const newPosition: RiskPosition = { id: this.generateId(), asset, position };
-            const validationResult = RiskPositionSchema.safeParse(newPosition);
-            if (!validationResult.success) {
-                throw new ValidationError('Invalid risk position data: ' + validationResult.error.errors);
-            }
-            const createdPosition = await this.storage.create(newPosition);
-            logger.info('Created new risk position', createdPosition);
-            return createdPosition;
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                throw error;
-            }
-            logger.error('Error creating risk position: ', error);
-            throw new ServiceError('Error creating risk position.');
+        if (!this.positionLimits.checkLimit(asset, position)) {
+            throw new ValidationError('Position exceeds limit for asset: ' + asset);
         }
+        const newPosition: RiskPosition = { id: this.generateId(), asset, position };
+        const validationResult = RiskPositionSchema.safeParse(newPosition);
+        if (!validationResult.success) {
+            throw new ValidationError('Invalid risk position data: ' + validationResult.error.errors);
+        }
+        const createdPosition = await this.storage.create(newPosition);
+        logger.info('Created new risk position', createdPosition);
+        return createdPosition;
     }
 
-    async updateRiskPosition(id: string, position: number): Promise<RiskPosition | null> {
-        try {
-            const existingPosition = await this.storage.read(id);
-            if (!existingPosition) {
-                throw new NotFoundError('Risk position not found.');
-            }
-            if (!this.positionLimits.checkLimit(existingPosition.asset, position)) {
-                throw new ValidationError('Position exceeds limit for asset: ' + existingPosition.asset);
-            }
-            const updatedPosition: RiskPosition = { ...existingPosition, position };
-            const validationResult = RiskPositionSchema.safeParse(updatedPosition);
-            if (!validationResult.success) {
-                throw new ValidationError('Invalid risk position data: ' + validationResult.error.errors);
-            }
-            const result = await this.storage.update(id, updatedPosition);
-            logger.info('Updated risk position', result);
-            return result;
-        } catch (error) {
-            logger.error('Error updating risk position: ', error);
-            throw error;
+    async updateRiskPosition(id: OrderId, position: number): Promise<RiskPosition | null> {
+        const existingPosition = await this.storage.read(id);
+        if (!existingPosition) {
+            throw new NotFoundError('Risk position not found.');
         }
+        if (!this.positionLimits.checkLimit(existingPosition.asset, position)) {
+            throw new ValidationError('Position exceeds limit for asset: ' + existingPosition.asset);
+        }
+        const updatedPosition: RiskPosition = { ...existingPosition, position };
+        const validationResult = RiskPositionSchema.safeParse(updatedPosition);
+        if (!validationResult.success) {
+            throw new ValidationError('Invalid risk position data: ' + validationResult.error.errors);
+        }
+        const result = await this.storage.update(id, updatedPosition);
+        logger.info('Updated risk position', result);
+        return result;
     }
 
     async deleteRiskPosition(id: OrderId): Promise<boolean> {
-        try {
-            const deleted = await this.storage.delete(id);
-            if (!deleted) {
-                throw new NotFoundError('Risk position not found.');
-            }
-            logger.info('Deleted risk position with id:', id);
-            return true;
-        } catch (error) {
-            logger.error('Error deleting risk position: ', error);
-            throw new ServiceError('Error deleting risk position.');
+        const deleted = await this.storage.delete(id);
+        if (!deleted) {
+            throw new NotFoundError('Risk position not found.');
         }
+        logger.info('Deleted risk position with id:', id);
+        return true;
     }
 
     private generateId(): OrderId {
