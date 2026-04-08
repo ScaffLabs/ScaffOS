@@ -4,7 +4,7 @@ import apiRouter from './api';
 import healthRouter from './healthCheck';
 import { setReady } from './healthCheck';
 import logger from './logger';
-import { RiskPositionStorage, seedData } from './storage';
+import { RiskPositionStorage, seedData, runMigrations } from './migrations';
 
 const app = express();
 const server = http.createServer(app);
@@ -13,7 +13,7 @@ const storage = new RiskPositionStorage();
 
 // Initialize the database with seed data for testing and initial setup
 const initializeDatabase = async () => {
-    await seedData(storage);
+    await runMigrations(storage);
 };
 
 // Start the server and listen for incoming requests

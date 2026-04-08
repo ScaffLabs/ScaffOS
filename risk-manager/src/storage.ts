@@ -82,4 +82,9 @@ export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
             throw new Error('Transaction failed: ' + error);
         }
     }
-}
+    
+    async reset(): Promise<void> {
+        this.items.clear();
+        this.indexByAsset.clear();
+    }
+} 

@@ -2,7 +2,9 @@ import { RiskPosition } from './sharedTypes';
 import { RiskPositionStorage } from './storage';
 
 export const migrateData = async (storage: RiskPositionStorage) => {
-    // Example migration logic - ensure the database is ready
+    // Migration logic can be implemented here
+    console.log('Migrating data...');
+    // Example: Adjust schema if necessary
 };
 
 export const seedData = async (storage: RiskPositionStorage) => {
@@ -16,14 +18,11 @@ export const seedData = async (storage: RiskPositionStorage) => {
 };
 
 export const runMigrations = async (storage: RiskPositionStorage) => {
-    // Implement data migration logic here
     console.log('Running migrations...');
-    // Example migration adjustment if the schema changes
-    // Adjust the logic as per schema updates
+    await migrateData(storage);
 };
 
 export const resetData = async (storage: RiskPositionStorage) => {
-    // Reset the storage to initial state
-    await storage.deleteAll();
+    await storage.reset();
     await seedData(storage);
 };
