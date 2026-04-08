@@ -12,7 +12,7 @@ import { errorHandler } from './middleware/errorHandler';
 const app = express();
 
 // Security middleware
-app.use(cors({ origin: ['http://example.com', 'http://anotherdomain.com'] })); // Change to allowed origins
+app.use(cors({ origin: ['http://example.com', 'http://anotherdomain.com'] }));
 app.use(helmet());
 
 // Rate limiting middleware

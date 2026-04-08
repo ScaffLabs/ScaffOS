@@ -13,9 +13,6 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 
 export const errorLogger = (err: Error, req: Request, res: Response, next: NextFunction) => {
     const reqId = req.headers['x-request-id'] || 'unknown';
-    // Avoid logging sensitive data
-    if (!(err instanceof ValidationError || err instanceof NotFoundError)) {
-        logError(err, reqId);
-    }
+    logError(err, reqId);
     next(err);
 };
