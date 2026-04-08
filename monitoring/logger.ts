@@ -17,35 +17,24 @@ const logger = winston.createLogger({
 
 export const logRequest = (req, res, next) => {
     const { method, path } = req;
+    const requestId = req.headers['x-request-id'] || 'unknown';
     const start = Date.now();
 
     res.on('finish', () => {
         const duration = Date.now() - start;
-        logger.info({ method, path, status: res.statusCode, duration }, 'Request logged');
+        logger.info({ method, path, status: res.statusCode, duration, requestId }, 'Request completed');
     });
 
     next();
 };
 
 export const logError = (error, req) => {
-    logger.error({ error: error.stack, message: error.message, path: req.path }, 'Error occurred');
+    const requestId = req.headers['x-request-id'] || 'unknown';
+    logger.error({ error: error.stack, message: error.message, path: req.path, requestId }, 'Error occurred');
 };
 
 export const logStartup = () => {
     logger.info({ message: 'Monitoring service starting up...', config });
-};
-
-export const logServiceHealth = (service, status) => {
-    logger.info({ service, status }, 'Service health checked');
-};
-
-export const logDatabaseQuery = (query, duration) => {
-    logger.debug({ query, duration }, 'Database query executed');
-};
-
-export const logRequestId = (req) => {
-    const requestId = req.headers['x-request-id'] || 'unknown';
-    logger.info({ requestId }, 'Request ID logged');
 };
 
 export default logger;

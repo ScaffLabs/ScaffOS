@@ -37,30 +37,10 @@ app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 app.get('/memory-health', memoryHealthCheck);
 
-// Event emitter for health checks
-setInterval(async () => {
-    const allServicesUp = await healthCheckServices();
-    if (!allServicesUp) {
-        console.warn('One or more services are down.');
-    }
-}, 60000);
-
 // Error handling middleware
 app.use(errorMiddleware);
 
 const server = createServer(app);
-
-const gracefulShutdown = async () => {
-    console.log('Shutting down gracefully...');
-    connectionPool.close();
-    server.close(() => {
-        console.log('Closed all connections.');
-        process.exit(0);
-    });
-};
-
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
 
 server.listen(PORT, () => {
     console.log(`Monitoring service running on port ${PORT}`);

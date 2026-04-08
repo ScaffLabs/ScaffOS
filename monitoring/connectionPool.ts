@@ -20,9 +20,12 @@ const createConnectionPool = () => {
     };
 
     const requestWithRetry = async (service, method, url, data = null, retries = MAX_RETRIES) => {
+        const start = Date.now();
         try {
             const connection = getConnection(service);
             const response = await connection[method](url, data);
+            const duration = Date.now() - start;
+            logger.debug({ service, method, url, duration }, 'External API call');
             return response.data;
         } catch (error) {
             logger.error({ error: error.message }, `Error in ${service} connection`);
