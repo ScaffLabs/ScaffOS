@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
+import { ServiceError } from '../errors/serviceError';
 import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../types';
 import { StorageManager } from '../storage/storageManager';
 import { publish } from '../publisher';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../logger';
-import axios from 'axios';
 import { config } from '../config';
 
 const storageManager = new StorageManager<Event>('memory');
@@ -20,14 +20,20 @@ export const createEvent = async (req: Request, res: Response) => {
         if (!parsed.success) {
             throw new ValidationError(parsed.error.errors.map(err => err.message).join(', '));
         }
-        const newEvent: Event = { id: uuidv4() as OrderId, ...parsed.data };
+        const newEvent: Event = { id: uuidv4(), ...parsed.data };
         const createdEvent = await storage.create(newEvent);
         await publish({ topic: 'eventCreated', data: createdEvent, timestamp: Date.now() });
         res.status(201).json(createdEvent);
         logger.logRequest(req.method, req.path, res.statusCode, Date.now() - start, reqId);
     } catch (error) {
         logger.logError(error, reqId);
-        res.status(error instanceof ValidationError ? 400 : 500).json({ message: error.message });
+        if (error instanceof ValidationError) {
+            res.status(400).json({ message: error.message });
+        } else if (error instanceof NotFoundError) {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: 'Internal Server Error', error: error.message });
+        }
     }
 };
 
@@ -37,6 +43,9 @@ export const getEvents = async (req: Request<{}, {}, {}, GetEventsQuery>, res: R
     const { limit = 10, offset = 0, sortBy = 'createdAt', order = 'asc' } = req.query;
     try {
         const events = await storage.findAll(Number(limit), Number(offset));
+        if (!events || events.length === 0) {
+            throw new NotFoundError('No events found');
+        }
         const sortedEvents = events.sort((a, b) => {
             const compare = a[sortBy] > b[sortBy] ? 1 : -1;
             return order === 'asc' ? compare : -compare;
@@ -45,7 +54,11 @@ export const getEvents = async (req: Request<{}, {}, {}, GetEventsQuery>, res: R
         logger.logRequest(req.method, req.path, res.statusCode, Date.now() - start, reqId);
     } catch (error) {
         logger.logError(error, reqId);
-        res.status(500).json({ message: error.message });
+        if (error instanceof NotFoundError) {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: 'Internal Server Error', error: error.message });
+        }
     }
 };
 
@@ -61,7 +74,11 @@ export const getEventById = async (req: Request, res: Response) => {
         logger.logRequest(req.method, req.path, res.statusCode, Date.now() - start, reqId);
     } catch (error) {
         logger.logError(error, reqId);
-        res.status(error instanceof NotFoundError ? 404 : 500).json({ message: error.message });
+        if (error instanceof NotFoundError) {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: 'Internal Server Error', error: error.message });
+        }
     }
 };
 
@@ -81,7 +98,11 @@ export const updateEvent = async (req: Request, res: Response) => {
         logger.logRequest(req.method, req.path, res.statusCode, Date.now() - start, reqId);
     } catch (error) {
         logger.logError(error, reqId);
-        res.status(error instanceof NotFoundError ? 404 : 500).json({ message: error.message });
+        if (error instanceof NotFoundError) {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: 'Internal Server Error', error: error.message });
+        }
     }
 };
 
@@ -97,6 +118,10 @@ export const deleteEvent = async (req: Request, res: Response) => {
         logger.logRequest(req.method, req.path, res.statusCode, Date.now() - start, reqId);
     } catch (error) {
         logger.logError(error, reqId);
-        res.status(error instanceof NotFoundError ? 404 : 500).json({ message: error.message });
+        if (error instanceof NotFoundError) {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: 'Internal Server Error', error: error.message });
+        }
     }
 };
