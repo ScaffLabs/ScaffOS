@@ -12,8 +12,7 @@ interface DataStore<T> {
     read(id: UserId): T | undefined;
     update(id: UserId, item: Partial<T>): T | null;
     delete(id: UserId): boolean;
-    findAll(): T[];
-    findByIndex(index: keyof T, value: any): T[];
+    findAll(limit?: number, offset?: number, sortBy?: keyof T, order?: 'asc' | 'desc'): T[];
 }
 
 class InMemoryStore<T> implements DataStore<T> {
@@ -41,12 +40,13 @@ class InMemoryStore<T> implements DataStore<T> {
         return this.store.delete(id);
     }
 
-    findAll(): T[] {
-        return Array.from(this.store.values());
-    }
-
-    findByIndex(index: keyof T, value: any): T[] {
-        return Array.from(this.store.values()).filter(item => item[index] === value);
+    findAll(limit = 10, offset = 0, sortBy: keyof T = 'username', order: 'asc' | 'desc' = 'asc'): T[] {
+        const items = Array.from(this.store.values());
+        const sortedItems = items.sort((a, b) => {
+            if (order === 'asc') return a[sortBy] > b[sortBy] ? 1 : -1;
+            return a[sortBy] < b[sortBy] ? 1 : -1;
+        });
+        return sortedItems.slice(offset, offset + limit);
     }
 }
 
@@ -81,8 +81,8 @@ export const findUserById = (id: UserId): User | undefined => {
     return userStore.read(id);
 };
 
-export const getAllUsers = (): User[] => {
-    return userStore.findAll();
+export const getAllUsers = (limit?: number, offset?: number, sortBy?: keyof User, order?: 'asc' | 'desc'): User[] => {
+    return userStore.findAll(limit, offset, sortBy, order);
 };
 
 export default userStore;

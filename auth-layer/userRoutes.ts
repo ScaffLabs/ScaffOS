@@ -23,7 +23,7 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
 });
 
 router.get('/users', authMiddleware, async (req, res) => {
-    const { limit = 10, offset = 0, sortBy = 'createdAt', order = 'asc' } = req.query;
+    const { limit = 10, offset = 0, sortBy = 'username', order = 'asc' } = req.query;
     const users = getAllUsers();
     const sortedUsers = users.sort((a, b) => {
         if (order === 'asc') return a[sortBy] > b[sortBy] ? 1 : -1;
