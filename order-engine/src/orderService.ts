@@ -12,6 +12,7 @@ export const createOrderService = async (orderData: unknown) => {
     const order = parsedOrder.data;
     try {
         const createdOrder = await storage.create(order);
+        await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder });
         logger.info('Order created successfully', { order: createdOrder });
         return createdOrder;
     } catch (error) {
@@ -31,6 +32,7 @@ export const updateOrderService = async (id: string, updates: unknown) => {
     }
     try {
         const updatedOrder = await storage.update(id, parsedUpdates.data);
+        await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
         logger.info('Order updated successfully', { order: updatedOrder });
         return updatedOrder;
     } catch (error) {
@@ -46,6 +48,7 @@ export const deleteOrderService = async (id: string) => {
     }
     try {
         await storage.delete(id);
+        await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
         logger.info('Order deleted successfully', { id });
     } catch (error) {
         logger.error('Error deleting order:', error);
