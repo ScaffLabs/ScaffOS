@@ -29,4 +29,10 @@ export const requestLogger = (req, res, next) => {
     next();
 };
 
+// Error logging
+export const errorLogger = (err: Error, req, res, next) => {
+    logger.error('Error occurred', { message: err.message, stack: err.stack, path: req.originalUrl });
+    next(err);
+};
+
 export default logger;

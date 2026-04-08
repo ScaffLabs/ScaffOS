@@ -5,13 +5,12 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { connectToEventBus } from './eventBus';
 import portfolioRoutes from './routes/portfolioRoutes';
-import logger, { requestLogger } from './services/logger';
+import logger, { requestLogger, errorLogger } from './services/logger';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { healthCheck } from './services/healthService';
 import { Pool } from 'pg';
-import { setTimeout } from 'timers/promises';
-import CircuitBreaker from 'opossum';
+import env from './config';
 
 const app = express();
 const dbPool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -21,6 +20,7 @@ app.use(helmet());
 app.use(cors());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use(requestLogger);
+app.use(errorLogger);
 connectToEventBus();
 app.use('/api/portfolios', portfolioRoutes);
 app.get('/health', healthCheck);
@@ -29,6 +29,7 @@ app.get('/ready', async (req, res) => {
         await dbPool.query('SELECT 1');
         res.status(200).json({ status: 'READY' });
     } catch (err) {
+        logger.error('Health check failed', { error: err.message });
         res.status(503).json({ status: 'NOT READY', error: err.message });
     }
 });
