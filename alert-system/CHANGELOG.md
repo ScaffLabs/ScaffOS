@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2023-10-20
+### Added
+- Comprehensive README documentation detailing project description, architecture overview, setup instructions, API reference, and guides for development and deployment.
+- Detailed logging for API requests and errors.
+
 ## [1.0.2] - 2023-10-15
 ### Added
 - Comprehensive README documentation including project description, architecture overview, setup instructions, API reference, and guides for development and deployment.
