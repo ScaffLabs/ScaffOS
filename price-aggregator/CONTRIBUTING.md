@@ -30,4 +30,7 @@ Thank you for your interest in contributing to the Price Aggregator project! Her
 - Write clear, informative commit messages that describe the purpose of your changes.
 - Document your code and changes appropriately to help other developers understand your work.
 
+## Code of Conduct
+By participating in this project, you agree to abide by our Code of Conduct. Please read it before contributing!
+
 Thank you for contributing!

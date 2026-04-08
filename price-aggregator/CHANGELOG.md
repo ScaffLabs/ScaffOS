@@ -21,3 +21,8 @@
 - Refined validation logic in endpoints to ensure robust input handling.
 - Improved performance of price fetching and VWAP calculation.
 - Added unit tests for edge cases and error scenarios.
+
+## [1.4.0] - 2023-11-01
+- Added comprehensive inline documentation for complex logic to enhance maintainability.
+- Implemented user authentication for API access control.
+- Refactored error handling middleware to support new error types.
