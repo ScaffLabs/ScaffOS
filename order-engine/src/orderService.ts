@@ -34,5 +34,11 @@ export const deleteOrderService = async (id: string) => {
 };
 
 export const getOrdersService = async ({ limit, offset }: { limit: number; offset: number; }) => {
-    return storage.findAll();
+    const orders = await storage.findAll();
+    return orders.slice(offset, offset + limit);
+};
+
+export const getOrdersByStatusService = async (status: string) => {
+    const orders = await storage.indexByStatus();
+    return orders[status] || [];
 };

@@ -57,6 +57,16 @@ class InMemoryStorage<T extends { id: string }> {
     public onOrderDeleted(listener: (id: string) => void): void {
         this.eventEmitter.on('ORDER_DELETED', listener);
     }
+
+    public indexByStatus(): Record<string, T[]> {
+        return this.items.reduce((acc, item) => {
+            if (!acc[item.status]) {
+                acc[item.status] = [];
+            }
+            acc[item.status].push(item);
+            return acc;
+        }, {} as Record<string, T[]>);
+    }
 }
 
 export const storage = new InMemoryStorage<Order>();
