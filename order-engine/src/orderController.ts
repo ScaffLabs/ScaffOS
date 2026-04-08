@@ -6,6 +6,10 @@ import logger from './logger';
 import { validationResult } from 'express-validator';
 
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        return res.status(400).json({ errors: validationErrors.array() });
+    }
     await OrderSchema.parseAsync(req.body);
     const order: Order = req.body;
     try {
