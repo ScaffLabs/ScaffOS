@@ -1,6 +1,7 @@
 // health.ts
 import { Request, Response } from 'express';
 import { fetchData } from './axiosClient';
+import { performance } from 'perf_hooks';
 
 const checkServiceHealth = async (url: string) => {
     try {
@@ -15,9 +16,9 @@ const checkServiceHealth = async (url: string) => {
 export const healthCheck = async (req: Request, res: Response): Promise<void> => {
     try {
         const checks = await Promise.all([
-            checkServiceHealth(`${process.env.DATABASE_URL}/health`),
-            checkServiceHealth(`${process.env.ANOTHER_SERVICE_URL}/health`),
-            checkServiceHealth(`${process.env.ORDER_SERVICE_URL}/health`)
+            checkServiceHealth(process.env.DATABASE_URL + '/health'),
+            checkServiceHealth(process.env.ANOTHER_SERVICE_URL + '/health'),
+            checkServiceHealth(process.env.ORDER_SERVICE_URL + '/health')
         ]);
         if (checks.every(status => status)) {
             res.status(200).send('Order Engine is healthy!');
@@ -31,12 +32,15 @@ export const healthCheck = async (req: Request, res: Response): Promise<void> =>
 };
 
 export const readyCheck = async (req: Request, res: Response): Promise<void> => {
+    const start = performance.now();
     try {
         const readinessChecks = await Promise.all([
-            checkServiceHealth(`${process.env.DATABASE_URL}/ready`),
-            checkServiceHealth(`${process.env.ANOTHER_SERVICE_URL}/ready`),
-            checkServiceHealth(`${process.env.ORDER_SERVICE_URL}/ready`)
+            checkServiceHealth(process.env.DATABASE_URL + '/ready'),
+            checkServiceHealth(process.env.ANOTHER_SERVICE_URL + '/ready'),
+            checkServiceHealth(process.env.ORDER_SERVICE_URL + '/ready')
         ]);
+        const duration = performance.now() - start;
+        console.log(`Readiness check duration: ${duration}ms`);
         if (readinessChecks.every(status => status)) {
             res.status(200).send('Order Engine is ready!');
         } else {

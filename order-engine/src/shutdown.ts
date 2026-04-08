@@ -1,6 +1,6 @@
 import { closeDatabaseConnection } from './db';
+import logger from './logger';
 import { server } from './index';
-import { monitorMemoryUsage } from './memoryMonitor';
 
 export const setupGracefulShutdown = (app) => {
     const shutdown = async () => {
@@ -28,5 +28,3 @@ export const setupGracefulShutdown = (app) => {
         shutdown();
     });
 };
-
-monitorMemoryUsage();
