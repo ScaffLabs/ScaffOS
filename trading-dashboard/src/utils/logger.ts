@@ -25,8 +25,12 @@ export const logError = (error: Error, requestId: string) => {
     logger.error(error.message, { stack: error.stack, requestId });
 };
 
-export const logAudit = (action: string, details: any) => {
-    logger.info(`Audit - Action: ${action}`, { details });
+export const logStartup = (config: any) => {
+    logger.info('Startup configuration:', config);
+};
+
+export const logServiceConnection = (service: string, status: string) => {
+    logger.info(`Service ${service} is ${status}`);
 };
 
 export default logger;
