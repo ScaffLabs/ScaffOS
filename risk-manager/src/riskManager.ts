@@ -31,7 +31,7 @@ export default class RiskManager {
             return null;
         }
 
-        const updatedPosition = { ...existingPosition, position };
+        const updatedPosition: RiskPosition = { ...existingPosition, position };
         const validationResult = RiskPositionSchema.safeParse(updatedPosition);
         if (!validationResult.success) {
             logger.error('Invalid risk position data for update: ' + validationResult.error);
@@ -43,6 +43,10 @@ export default class RiskManager {
 
     async deleteRiskPosition(id: string) {
         return this.storage.delete(id);
+    }
+
+    async findPositionsByAsset(asset: string) {
+        return this.storage.findByAsset(asset);
     }
 
     private generateId() {

@@ -47,4 +47,28 @@ export class InMemoryStorage<T> implements Storage<T> {
     }
 }
 
-export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {}
+export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
+    private indexByAsset: Map<string, Set<RiskPosition>> = new Map();
+
+    async create(item: RiskPosition): Promise<RiskPosition> {
+        const createdItem = await super.create(item);
+        this.indexByAsset.set(createdItem.asset, (this.indexByAsset.get(createdItem.asset) || new Set()).add(createdItem));
+        return createdItem;
+    }
+
+    async delete(id: string): Promise<boolean> {
+        const position = await this.read(id);
+        if (position) {
+            const assetSet = this.indexByAsset.get(position.asset);
+            assetSet?.delete(position);
+            if (assetSet?.size === 0) {
+                this.indexByAsset.delete(position.asset);
+            }
+        }
+        return super.delete(id);
+    }
+
+    async findByAsset(asset: string): Promise<RiskPosition[]> {
+        return Array.from(this.indexByAsset.get(asset) || []);
+    }
+}
