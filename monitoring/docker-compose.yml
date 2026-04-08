@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  monitoring:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=${PORT}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL}
+      - USER_SERVICE_URL=${USER_SERVICE_URL}
+      - NODE_ENV=${NODE_ENV}
+  order_service:
+    image: your_order_service_image
+    ports:
+      - '4000:4000'
+  user_service:
+    image: your_user_service_image
+    ports:
+      - '5000:5000'
