@@ -9,6 +9,9 @@ const circuitBreaker = new CircuitBreaker({ timeout: 3000, errorsThreshold: 2, r
 let portfolios: Portfolio[] = [];
 
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
+    if (!data.name || !Array.isArray(data.positions)) {
+        throw new Error('Invalid portfolio data');
+    }
     const newPortfolio: Portfolio = { id: String(portfolios.length + 1), ...data };
     portfolios.push(newPortfolio);
     await publishPortfolioUpdate(newPortfolio);
@@ -16,7 +19,9 @@ export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Port
 };
 
 export const getPortfolio = async (id: string): Promise<Portfolio | undefined> => {
-    return portfolios.find(portfolio => portfolio.id === id);
+    const portfolio = portfolios.find(portfolio => portfolio.id === id);
+    if (!portfolio) throw new Error('Portfolio not found');
+    return portfolio;
 };
 
 export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promise<Portfolio | undefined> => {
@@ -51,4 +56,12 @@ export const healthCheckPortfolioService = async (): Promise<boolean> => {
     } catch (error) {
         return false;
     }
+};
+
+export const fetchAllPortfolios = async (): Promise<Portfolio[]> => {
+    return portfolios;
+};
+
+export const clearPortfolios = () => {
+    portfolios = [];
 };
