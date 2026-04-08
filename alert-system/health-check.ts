@@ -35,4 +35,10 @@ export class HealthCheck {
         const memory = await this.memoryUsage(req, res);
         return res.json({ services: health, memory });
     }
+
+    static async checkReady(req: Request, res: Response) {
+        // Implement readiness check logic here (e.g., check DB connectivity)
+        const dbStatus = await mongoose.connection.readyState === 1;
+        return res.json({ ready: dbStatus });
+    }
 }
