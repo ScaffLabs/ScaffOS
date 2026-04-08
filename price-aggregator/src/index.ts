@@ -1,4 +1,7 @@
 import express from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import { migrateData, seedData } from './migration';
 import { PriceAggregator } from './priceAggregator';
 import http from 'http';
@@ -14,7 +17,18 @@ const priceAggregator = new PriceAggregator();
 const memoryMonitor = new MemoryMonitor();
 const connectionPool = createConnectionPool();
 
-app.use(express.json());
+app.use(helmet()); // Set security HTTP headers
+app.use(cors({ origin: ['https://allowed-origin.com'], credentials: true })); // CORS configuration
+app.use(express.json({ limit: '1mb' })); // Request size limit
+
+// Rate limit middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+app.use(limiter);
+
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
@@ -61,14 +75,6 @@ const startApp = async () => {
             logError(error, 'Health check failed');
             res.status(500).json({ status: 'unhealthy', error: error.message });
         }
-    });
-
-    app.get('/ready', async (req, res) => {
-        const isReady = await priceAggregator.isReady();
-        if (isReady) {
-            return res.status(200).json({ status: 'ready' });
-        }
-        res.status(503).json({ status: 'not ready' });
     });
 
     app.use(errorMiddleware);
