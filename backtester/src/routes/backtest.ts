@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { simulateBacktest } from '../services/backtestService';
-import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
+import { HistoricalDataSchema, StrategyParametersSchema, PaginationSchema } from '../types';
 import { ValidationError, NotFoundError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 
@@ -29,6 +29,23 @@ backtestRouter.post('/', async (req, res, next) => {
             return next(error);
         }
         next(new ServiceError('Error during backtest: ' + error.message));
+    }
+});
+
+backtestRouter.get('/', async (req, res, next) => {
+    const { limit, offset, sort, order } = req.query;
+    try {
+        const pagination = PaginationSchema.parse({ limit, offset, sort, order });
+        const results = await store.findAll();
+        const sortedResults = results.sort((a, b) => {
+            const aValue = a.data[pagination.sort];
+            const bValue = b.data[pagination.sort];
+            return pagination.order === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
+        });
+        const paginatedResults = sortedResults.slice(pagination.offset, pagination.offset + pagination.limit);
+        res.status(200).json(paginatedResults);
+    } catch (error) {
+        next(new ServiceError('Error fetching backtest results: ' + error.message));
     }
 });
 
