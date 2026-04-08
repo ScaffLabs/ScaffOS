@@ -4,7 +4,6 @@ import { createEventSchema } from '../types';
 
 describe('Event API Integration Tests', () => {
     beforeEach(async () => {
-        // Clean up and set up the in-memory storage before each test
         await request(app).delete('/events'); // Assuming a reset endpoint exists
     });
 

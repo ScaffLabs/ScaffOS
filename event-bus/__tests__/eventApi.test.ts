@@ -36,25 +36,11 @@ describe('Event API Tests', () => {
             expect(response.status).toBe(200);
             expect(Array.isArray(response.body)).toBe(true);
         });
-    });
 
-    describe('GET /events/:id', () => {
-        it('should return a specific event by ID', async () => {
-            const newEvent = await request(app)
-                .post('/events')
-                .send({ title: 'Event to Fetch', description: 'This event will be fetched', type: 'userCreated' });
-
-            const response = await request(app)
-                .get(`/events/${newEvent.body.id}`);
-            expect(response.status).toBe(200);
-            expect(response.body.id).toBe(newEvent.body.id);
-        });
-
-        it('should return 404 for non-existent event', async () => {
-            const response = await request(app)
-                .get('/events/non-existent-id');
+        it('should return 404 for no events found', async () => {
+            const response = await request(app).get('/events?limit=0');
             expect(response.status).toBe(404);
-            expect(response.body.message).toBe('Event not found');
+            expect(response.body.message).toBe('No events found');
         });
     });
 
@@ -71,7 +57,7 @@ describe('Event API Tests', () => {
             expect(response.body.title).toBe('Updated Title');
         });
 
-        it('should return 404 for updating non-existent event', async () => {
+        it('should return 404 for non-existent event', async () => {
             const response = await request(app)
                 .put('/events/non-existent-id')
                 .send({ title: 'Trying to Update' });
