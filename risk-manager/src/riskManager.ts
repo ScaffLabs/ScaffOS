@@ -1,55 +1,39 @@
-import { RiskPosition, RiskPositionSchema } from './sharedTypes';
-import { RiskPositionStorage } from './storage';
-import logger from './logger';
+import { ServiceError, ValidationError, NotFoundError } from './errors';
 
 export default class RiskManager {
-    private storage: RiskPositionStorage;
-
-    constructor(storage: RiskPositionStorage) {
-        this.storage = storage;
-    }
-
-    async getRiskPositions(limit: number, offset: number) {
-        return this.storage.findAll(limit, offset);
-    }
-
+    // ... other methods 
     async createRiskPosition(asset: string, position: number) {
-        const newPosition: RiskPosition = { id: this.generateId(), asset, position };
-        const validationResult = RiskPositionSchema.safeParse(newPosition);
-        if (!validationResult.success) {
-            logger.error('Invalid risk position data: ' + validationResult.error);
-            throw new Error('Invalid risk position data: ' + validationResult.error);
+        try {
+            const newPosition: RiskPosition = { id: this.generateId(), asset, position };
+            const validationResult = RiskPositionSchema.safeParse(newPosition);
+            if (!validationResult.success) {
+                throw new ValidationError('Invalid risk position data: ' + validationResult.error);
+            }
+            return await this.storage.create(newPosition);
+        } catch (error) {
+            if (error instanceof ValidationError) {
+                throw error; // Re-throw for API error handling
+            }
+            throw new ServiceError('Error creating risk position.');
         }
-
-        return this.storage.create(newPosition);
     }
-
     async updateRiskPosition(id: string, position: number) {
-        const existingPosition = await this.storage.read(id);
-        if (!existingPosition) {
-            logger.warn(`Risk position not found for update: ${id}`);
-            return null;
+        try {
+            const existingPosition = await this.storage.read(id);
+            if (!existingPosition) {
+                throw new NotFoundError('Risk position not found.');
+            }
+            const updatedPosition: RiskPosition = { ...existingPosition, position };
+            const validationResult = RiskPositionSchema.safeParse(updatedPosition);
+            if (!validationResult.success) {
+                throw new ValidationError('Invalid risk position data: ' + validationResult.error);
+            }
+            return await this.storage.update(id, updatedPosition);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                throw error; // Re-throw for API error handling
+            }
+            throw new ServiceError('Error updating risk position.');
         }
-
-        const updatedPosition: RiskPosition = { ...existingPosition, position };
-        const validationResult = RiskPositionSchema.safeParse(updatedPosition);
-        if (!validationResult.success) {
-            logger.error('Invalid risk position data for update: ' + validationResult.error);
-            throw new Error('Invalid risk position data: ' + validationResult.error);
-        }
-
-        return this.storage.update(id, updatedPosition);
-    }
-
-    async deleteRiskPosition(id: string) {
-        return this.storage.delete(id);
-    }
-
-    async findPositionsByAsset(asset: string) {
-        return this.storage.findByAsset(asset);
-    }
-
-    private generateId() {
-        return Math.random().toString(36).substr(2, 9);
     }
 }
