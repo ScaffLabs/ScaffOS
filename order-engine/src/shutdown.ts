@@ -4,10 +4,14 @@ import { server } from './index';
 export const setupGracefulShutdown = () => {
     const shutdown = async () => {
         console.log('Initiating graceful shutdown...');
-        await closeDatabaseConnection();
-        console.log('Database connection closed. Exiting...');
+        try {
+            await closeDatabaseConnection();
+            console.log('Database connection closed.');
+        } catch (err) {
+            console.error('Error closing database connection:', err);
+        }
         server.close(() => {
-            console.log('HTTP server closed.');
+            console.log('HTTP server closed. Exiting...');
             process.exit(0);
         });
     };
