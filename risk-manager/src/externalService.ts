@@ -42,7 +42,6 @@ export const fetchAnotherServiceData = async () => {
 export const healthCheckServices = async () => {
     const eventBusHealth = await checkServiceHealth(config.EVENT_BUS_URL);
     const anotherServiceHealth = await checkServiceHealth(config.ANOTHER_SERVICE_URL);
-
     return { eventBus: eventBusHealth, anotherService: anotherServiceHealth };
 };
 
