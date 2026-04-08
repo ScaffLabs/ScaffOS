@@ -7,6 +7,7 @@ import http from 'http';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
+import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -33,10 +34,9 @@ app.use((req, res, next) => {
 });
 
 app.get('/prices', async (req, res, next) => {
-    const { limit, offset } = req.query;
     try {
         const prices = await priceAggregator.getCurrentPrices();
-        if (prices.length === 0) return res.status(204).send();
+        if (Object.keys(prices).length === 0) return res.status(204).send();
         res.status(200).json(prices);
     } catch (error) {
         logError(error, { method: req.method, path: req.path });
@@ -44,7 +44,7 @@ app.get('/prices', async (req, res, next) => {
     }
 });
 
-app.post('/prices', async (req, res, next) => {
+app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, next) => {
     try {
         const newPrice = await priceAggregator.addPrice(req.body);
         res.status(201).json(newPrice);
