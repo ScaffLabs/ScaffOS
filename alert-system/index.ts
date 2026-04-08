@@ -52,3 +52,25 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+
+process.on('uncaughtException', (err) => {
+    logError(err, 'Uncaught Exception');
+    shutdown();
+});
+
+process.on('unhandledRejection', (reason) => {
+    logError(new Error(String(reason)), 'Unhandled Rejection');
+    shutdown();
+});
+
+app.use((err, req, res, next) => {
+    logger.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+});
+
+const memoryUsage = () => {
+    const memoryUsage = process.memoryUsage();
+    logger.info({ memoryUsage }, 'Memory usage statistics');
+};
+
+setInterval(memoryUsage, 60000); // Log memory usage every minute
