@@ -16,3 +16,8 @@ All notable changes to this project will be documented in this file.
 - Included environment variables table for better configuration clarity.
 - Updated error handling middleware for improved logging.
 - Fixed bugs in strategy management endpoints.
+
+## [1.2.0] - 2023-10-20
+- Added CONTRIBUTING.md for developer guidelines.
+- Updated README.md with detailed setup instructions.
+- Improved error messages for user feedback in API responses.
