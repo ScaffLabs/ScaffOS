@@ -24,6 +24,7 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 
 export async function simulateBacktest(params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> {
     try {
+        if (!params || typeof params !== 'object') throw new ServiceError('Invalid parameters.');
         StrategyParametersSchema.parse(params);
         if (!Array.isArray(historicalData) || historicalData.length === 0) {
             throw new ServiceError('Invalid input: historicalData must be a non-empty array.');
