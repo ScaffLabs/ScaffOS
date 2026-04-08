@@ -10,9 +10,9 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     if (!validationErrors.isEmpty()) {
         return res.status(400).json({ errors: validationErrors.array() });
     }
-    await OrderSchema.parseAsync(req.body);
-    const order: Order = req.body;
     try {
+        await OrderSchema.parseAsync(req.body);
+        const order: Order = req.body;
         const createdOrder = await createOrderService(order);
         res.status(201).json(createdOrder);
         logger.info('Order created successfully', { order: createdOrder, requestId: req.headers['x-request-id'] });
@@ -20,8 +20,6 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         logger.error('Error creating order', { error: error.message, requestId: req.headers['x-request-id'] });
         if (error instanceof ValidationError) {
             res.status(400).json({ errors: error.errors });
-        } else if (error instanceof NotFoundError) {
-            res.status(404).json({ message: error.message });
         } else {
             res.status(500).json({ message: 'Internal Server Error' });
         }
@@ -30,9 +28,12 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
 
 export const updateOrder = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    await OrderSchema.partial().parseAsync(req.body);
     try {
+        await OrderSchema.partial().parseAsync(req.body);
         const updatedOrder = await updateOrderService(id, req.body);
+        if (!updatedOrder) {
+            return res.status(404).json({ message: 'Order not found.' });
+        }
         res.status(200).json(updatedOrder);
         logger.info('Order updated successfully', { order: updatedOrder, requestId: req.headers['x-request-id'] });
     } catch (error) {
