@@ -2,7 +2,7 @@ import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import axios from 'axios';
 import { EventEmitter } from 'events';
 import logger from '../utils/logger';
-import { healthCheckServices } from './healthCheckService';
+import { ServiceError } from '../middleware/errorHandler';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
@@ -20,7 +20,7 @@ async function fetchDataFromService(url: string, retries: number = MAX_RETRIES):
       return fetchDataFromService(url, retries - 1);
     }
     logger.error(`Failed to fetch from ${url}: ${error.message}`);
-    throw new Error('Service unavailable');
+    throw new ServiceError('Service unavailable');
   }
 }
 
@@ -35,24 +35,21 @@ async function fetchHistoricalData() {
 }
 
 export async function simulateBacktest(params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> {
-  await healthCheckServices(); // Check health before proceeding
-  if (historicalData.length === 0) {
-    throw new Error('historicalData cannot be empty.');
+  if (!params || !historicalData || !Array.isArray(historicalData) || historicalData.length === 0) {
+    throw new ServiceError('Invalid input: Parameters and historicalData must be provided and historicalData cannot be empty.');
   }
 
-  const [orders, historicalDataResponse] = await Promise.all([
+  await Promise.all([
     fetchOrders(),
-    fetchHistoricalData()
+    fetchHistoricalData() // Fetch historical data once
   ]);
 
   let totalReturns = 0;
   let trades = 0;
   let wins = 0;
 
-  for (let i = 0; i < historicalData.length; i++) {
-    const currentData = historicalData[i];
-    const order = orders.find(o => o.timestamp === currentData.timestamp);
-
+  for (const currentData of historicalData) {
+    const order = await fetchOrders().find(o => o.timestamp === currentData.timestamp);
     if (order) {
       const entryPrice = currentData.price;
       const slippageAdjustedPrice = entryPrice * (1 + params.slippage);
@@ -71,7 +68,6 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
   }
 
   const winRate = trades > 0 ? (wins / trades) * 100 : 0;
-
   return {
     totalReturns,
     trades,
@@ -80,7 +76,6 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
   };
 }
 
-// Event emission for backtest completion
 export function emitBacktestComplete(result: BacktestResult) {
   eventEmitter.emit('backtestComplete', result);
 }

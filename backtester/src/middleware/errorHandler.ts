@@ -35,6 +35,9 @@ const errorHandler = (err: any, req: Request, res: Response, next: NextFunction)
   if (err instanceof NotFoundError) {
     return res.status(404).json({ error: err.message });
   }
+  if (err instanceof ServiceError) {
+    return res.status(503).json({ error: err.message });
+  }
   return res.status(500).json({ error: 'Internal Server Error' });
 };
 
