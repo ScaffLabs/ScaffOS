@@ -15,13 +15,14 @@ import { exit } from 'process';
 import csurf from 'csurf';
 import { body, validationResult } from 'express-validator';
 import winston from 'winston';
+import { fetchHealthStatus } from './services/ServiceClient';
+import { ServiceError } from './errors/CustomErrors';
 
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Graceful shutdown
 const shutdown = async () => {
     console.log('Shutting down gracefully...');
     await mongoose.connection.close();
@@ -34,11 +35,9 @@ const shutdown = async () => {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
-// Security middleware
 app.use(helmet());
 app.use(cors({ origin: ['https://your-allowed-origin.com'], credentials: true }));
 
-// Rate limiting middleware
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -52,38 +51,25 @@ app.use(logAudit);
 app.use(csurf());
 app.use('/api/health', healthRouter);
 
-// Health check route
 app.get('/health', async (req, res) => {
     try {
-        const healthStatus = { service: 'running', uptime: process.uptime(), memory: process.memoryUsage() };
-        res.status(200).json(healthStatus);
+        const healthStatus = await fetchHealthStatus();
+        const serviceHealth = {
+            application: 'running',
+            database: healthStatus.database === 'up' ? 'up' : 'down',
+            externalService: healthStatus.externalService === 'up' ? 'up' : 'down',
+        };
+        res.status(200).json(serviceHealth);
     } catch (error) {
         logError(error, req, res);
+        res.status(500).json({ error: 'Health check failed' });
     }
 });
-
-// Configuration endpoint with validation and sanitization
-app.post('/api/config', [
-    body('key').trim().escape().notEmpty().withMessage('Key is required'),
-    body('value').trim().escape().notEmpty().withMessage('Value is required'),
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-        const { key, value } = req.body;
-        // Assuming a function saveConfiguration exists
-        await saveConfiguration(key, value);
-        res.status(201).json({ message: 'Configuration created successfully!' });
-    } catch (error) {
-        logError(error, req, res);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.use(logError);
 
 server.listen(config.port, () => {
     console.log(`Server running on http://localhost:${config.port}`);
 });
+
+// Graceful shutdown implementation
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
