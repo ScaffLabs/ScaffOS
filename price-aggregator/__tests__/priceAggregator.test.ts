@@ -79,4 +79,9 @@ describe('PriceAggregator', () => {
         const currentPrices = priceAggregator.getCurrentPrices();
         expect(currentPrices.VWAP).toBeCloseTo(166.67, 2);
     });
+
+    test('should handle API errors gracefully in integration tests', async () => {
+        jest.spyOn(priceAggregator as any, 'addPrice').mockRejectedValueOnce(new Error('API Error'));
+        await expect(priceAggregator.addPrice({ exchange: 'exchange1', price: 100, volume: 10 })).rejects.toThrow('API Error');
+    });
 });

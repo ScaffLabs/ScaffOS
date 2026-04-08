@@ -71,4 +71,12 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ error: 'Price must be a positive number, Volume must be a positive number' });
     });
+
+    test('POST /prices should handle API errors gracefully', async () => {
+        const errorPriceData = { exchange: 'exchange1', price: 100, volume: 10 };
+        (priceAggregator.addPrice as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+        const response = await request(app).post('/prices').send(errorPriceData);
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: 'API Error' });
+    });
 });
