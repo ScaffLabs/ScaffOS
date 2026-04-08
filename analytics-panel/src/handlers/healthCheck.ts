@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import os from 'os';
-import { dependentHealthCheck } from '../api/dependentHealthCheck';
 import { logPerformance } from '../logger';
 
 export const healthCheckHandler = async (req: Request, res: Response) => {
@@ -12,6 +11,7 @@ export const healthCheckHandler = async (req: Request, res: Response) => {
             cpuUsage: os.cpus(),
             timestamp: new Date(),
         };
+        logPerformance('Health Check', 0);
         res.status(200).json(healthStatus);
     } catch (error) {
         console.error('Health check failed:', error);

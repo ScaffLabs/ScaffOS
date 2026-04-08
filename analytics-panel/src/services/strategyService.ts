@@ -1,6 +1,6 @@
 import { InMemoryStore } from '../storage/inMemoryStore';
 import { Strategy } from '../types';
-import { ValidationError } from '../errors/customErrors';
+import { ValidationError, NotFoundError } from '../errors/customErrors';
 
 const strategyStore = new InMemoryStore<Strategy>();
 
@@ -14,7 +14,7 @@ export const createStrategy = async (strategy: Strategy) => {
 export const getStrategy = async (id: string) => {
     const strategy = await strategyStore.read(id);
     if (!strategy) {
-        throw new ValidationError('Strategy not found.');
+        throw new NotFoundError('Strategy not found.');
     }
     return strategy;
 };
@@ -22,7 +22,7 @@ export const getStrategy = async (id: string) => {
 export const updateStrategy = async (id: string, strategy: Strategy) => {
     const existingStrategy = await strategyStore.read(id);
     if (!existingStrategy) {
-        throw new ValidationError('Strategy not found.');
+        throw new NotFoundError('Strategy not found.');
     }
     return await strategyStore.update(id, strategy);
 };
@@ -30,7 +30,7 @@ export const updateStrategy = async (id: string, strategy: Strategy) => {
 export const deleteStrategy = async (id: string) => {
     const deleted = await strategyStore.delete(id);
     if (!deleted) {
-        throw new ValidationError('Strategy not found.');
+        throw new NotFoundError('Strategy not found.');
     }
     return;
 };
