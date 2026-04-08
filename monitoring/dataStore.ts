@@ -41,8 +41,26 @@ class InMemoryStore<T> {
         return Array.from(ids).map(id => this.read(id)).filter((data): data is T => data !== null);
     }
 
+    public transaction(operations: Array<{ type: 'create' | 'update' | 'delete'; entity: T; id?: string }>): void {
+        const snapshots = new Map(this.storage); // Create a snapshot of current state
+        try {
+            operations.forEach(op => {
+                if (op.type === 'create') {
+                    this.create(op.entity, op.id!);
+                } else if (op.type === 'update') {
+                    this.update(op.id!, op.entity);
+                } else if (op.type === 'delete') {
+                    this.delete(op.id!);
+                }
+            });
+        } catch (error) {
+            this.storage = snapshots; // Revert to previous state on error
+            throw error;
+        }
+    }
+
     private indexEntity(entity: T, id: string): void {
-        // Example of indexing by a property
+        // Example indexing logic; modify as needed based on entity properties
         const key = (entity as any).someProperty;
         if (!this.index.has(key)) {
             this.index.set(key, new Set());
