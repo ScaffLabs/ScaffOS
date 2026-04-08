@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { fetchServiceHealth, checkServiceHealth } from '../api/externalApi';
+import { closePool } from './connectionPool';
 
 export const healthCheck = async (req: Request, res: Response) => {
     const serviceHealth = await checkServiceHealth();
@@ -23,8 +24,15 @@ export const monitorMemoryUsage = () => {
 
 export const gracefulShutdown = (server: any) => {
     console.log('Shutting down gracefully...');
-    server.close(() => {
-        console.log('Closed out remaining connections.');
-        process.exit(0);
+    closePool().then(() => {
+        server.close(() => {
+            console.log('Closed out remaining connections.');
+            process.exit(0);
+        });
     });
+};
+
+export const registerShutdownHandlers = (server: any) => {
+    process.on('SIGTERM', () => gracefulShutdown(server));
+    process.on('SIGINT', () => gracefulShutdown(server));
 };

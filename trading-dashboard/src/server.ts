@@ -6,10 +6,10 @@ import bodyParser from 'body-parser';
 import { fetchPositions, updatePosition, deletePosition } from './api/portfolioApi';
 import { validateInput } from './middleware/inputValidation';
 import errorHandler from './middleware/errorHandler';
-import { healthCheck, readyCheck } from './utils/healthCheck';
+import { healthCheck, readyCheck, monitorMemoryUsage, gracefulShutdown } from './utils/healthCheck';
 import { createServer } from 'http';
 import logger, { logRequest, logError } from './utils/logger';
-import { gracefulShutdown } from './utils/healthCheck';
+import { registerShutdownHandlers } from './utils/shutdown';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -69,6 +69,9 @@ app.delete('/api/positions/:id', async (req, res) => {
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 
+// Monitor memory usage every minute
+setInterval(monitorMemoryUsage, 60 * 1000);
+
 // Error handling middleware
 app.use(errorHandler);
 
@@ -76,5 +79,5 @@ server.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
 });
 
-process.on('SIGTERM', () => gracefulShutdown(server));
-process.on('SIGINT', () => gracefulShutdown(server));
+// Graceful shutdown
+registerShutdownHandlers(server);
