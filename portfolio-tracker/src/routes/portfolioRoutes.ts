@@ -12,15 +12,16 @@ router.post('/', [
     const startTime = Date.now();
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array() });
+        logger.warn('Validation errors', { errors: errors.array(), requestId: req.id });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         const portfolio = await createPortfolio(req.body);
-        logger.info('Portfolio created', { portfolio, duration: Date.now() - startTime });
+        const duration = Date.now() - startTime;
+        logger.info('Portfolio created', { portfolio, duration, requestId: req.id });
         res.status(201).json(portfolio);
     } catch (error) {
-        logger.error('Error creating portfolio', { error: error.message });
+        logger.error('Error creating portfolio', { error: error.message, requestId: req.id });
         res.status(400).json({ error: error.message });
     }
 });
@@ -31,15 +32,16 @@ router.get('/:id', [
     const startTime = Date.now();
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array() });
+        logger.warn('Validation errors', { errors: errors.array(), requestId: req.id });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         const portfolio = await getPortfolio(req.params.id);
-        logger.info('Portfolio retrieved', { portfolio, duration: Date.now() - startTime });
+        const duration = Date.now() - startTime;
+        logger.info('Portfolio retrieved', { portfolio, duration, requestId: req.id });
         res.json(portfolio);
     } catch (error) {
-        logger.error('Portfolio not found', { error: error.message, id: req.params.id });
+        logger.error('Portfolio not found', { error: error.message, id: req.params.id, requestId: req.id });
         res.status(404).json({ error: error.message });
     }
 });
@@ -52,15 +54,16 @@ router.put('/:id', [
     const startTime = Date.now();
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array() });
+        logger.warn('Validation errors', { errors: errors.array(), requestId: req.id });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
-        logger.info('Portfolio updated', { updatedPortfolio, duration: Date.now() - startTime });
+        const duration = Date.now() - startTime;
+        logger.info('Portfolio updated', { updatedPortfolio, duration, requestId: req.id });
         res.json(updatedPortfolio);
     } catch (error) {
-        logger.error('Error updating portfolio', { error: error.message });
+        logger.error('Error updating portfolio', { error: error.message, requestId: req.id });
         res.status(400).json({ error: error.message });
     }
 });
@@ -68,10 +71,10 @@ router.put('/:id', [
 router.get('/', async (req, res) => {
     try {
         const portfolios = await fetchPortfolios();
-        logger.info('Fetched all portfolios');
+        logger.info('Fetched all portfolios', { requestId: req.id });
         res.json(portfolios);
     } catch (error) {
-        logger.error('Service unavailable', { error: error.message });
+        logger.error('Service unavailable', { error: error.message, requestId: req.id });
         res.status(503).json({ error: 'Service unavailable' });
     }
 });
