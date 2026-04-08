@@ -57,4 +57,9 @@ describe('Portfolio Service', () => {
         expect(updatedPortfolio.positions.length).toBe(1);
         expect(updatedPortfolio.positions[0]).toEqual({ symbol: 'AAPL', quantity: 10, averagePrice: 150 });
     });
+
+    test('should throw an error for invalid position update data', async () => {
+        await createPortfolio(testPortfolio);
+        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: '', quantity: -5, averagePrice: 150 }] })).rejects.toThrow('Invalid portfolio update data');
+    });
 });
