@@ -8,13 +8,14 @@ interface Storage<T> {
 }
 
 class InMemoryStorage<T> implements Storage<T> {
-    private items: Map<string, T> = new Map();
+    private items: Map<string, T & { id: string }> = new Map();
     private idCounter: number = 0;
 
-    async create(item: T): Promise<T> {
+    async create(item: T): Promise<T & { id: string }> {
         const id = (this.idCounter++).toString();
-        this.items.set(id, { ...item, id } as T);
-        return this.items.get(id) as T;
+        const newItem = { ...item, id };
+        this.items.set(id, newItem as T & { id: string });
+        return newItem;
     }
 
     async read(id: string): Promise<T | null> {
@@ -23,8 +24,9 @@ class InMemoryStorage<T> implements Storage<T> {
 
     async update(id: string, item: T): Promise<T | null> {
         if (!this.items.has(id)) return null;
-        this.items.set(id, { ...item, id } as T);
-        return this.items.get(id) as T;
+        const updatedItem = { ...item, id };
+        this.items.set(id, updatedItem as T);
+        return updatedItem;
     }
 
     async delete(id: string): Promise<void> {
@@ -58,75 +60,11 @@ class InMemoryStorage<T> implements Storage<T> {
 }
 
 class SQLiteStorage<T> implements Storage<T> {
-    private db: any; // Placeholder for SQLite database connection
-
-    constructor() {
-        this.initialize();
-    }
-
-    private async initialize() {
-        // Initialize SQLite connection and create necessary tables
-    }
-
-    async create(item: T): Promise<T> {
-        // Implement create logic using SQLite
-    }
-
-    async read(id: string): Promise<T | null> {
-        // Implement read logic using SQLite
-    }
-
-    async update(id: string, item: T): Promise<T | null> {
-        // Implement update logic using SQLite
-    }
-
-    async delete(id: string): Promise<void> {
-        // Implement delete logic using SQLite
-    }
-
-    async findAll(query?: Partial<T>): Promise<T[]> {
-        // Implement findAll logic using SQLite
-    }
-
-    async transaction(operations: () => Promise<void>): Promise<void> {
-        // Implement transaction logic using SQLite
-    }
+    // Placeholder implementation for SQLite storage
 }
 
 class PostgreSQLStorage<T> implements Storage<T> {
-    private db: any; // Placeholder for PostgreSQL database connection
-
-    constructor() {
-        this.initialize();
-    }
-
-    private async initialize() {
-        // Initialize PostgreSQL connection and create necessary tables
-    }
-
-    async create(item: T): Promise<T> {
-        // Implement create logic using PostgreSQL
-    }
-
-    async read(id: string): Promise<T | null> {
-        // Implement read logic using PostgreSQL
-    }
-
-    async update(id: string, item: T): Promise<T | null> {
-        // Implement update logic using PostgreSQL
-    }
-
-    async delete(id: string): Promise<void> {
-        // Implement delete logic using PostgreSQL
-    }
-
-    async findAll(query?: Partial<T>): Promise<T[]> {
-        // Implement findAll logic using PostgreSQL
-    }
-
-    async transaction(operations: () => Promise<void>): Promise<void> {
-        // Implement transaction logic using PostgreSQL
-    }
+    // Placeholder implementation for PostgreSQL storage
 }
 
 export const storage = new InMemoryStorage<PriceData>();
