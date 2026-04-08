@@ -10,8 +10,9 @@ export interface LatencyData {
 }
 
 // Zod schema for LatencyData validation
+import { z } from 'zod';
 export const LatencyDataSchema = z.object({
-    path: z.string().nonempty(),
+    path: z.string().nonempty().trim(),
     duration: z.number().nonnegative(),
     timestamp: z.date().transform((date) => new Date(date.toISOString())),
 });
