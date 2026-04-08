@@ -12,10 +12,10 @@ export class PriceAggregator extends EventEmitter {
     private clients: WebSocket[] = [];
     private eventBus: EventBus;
 
-    constructor(eventBus: EventBus) {
+    constructor() {
         super();
-        this.eventBus = eventBus;
         this.startPriceFetch();
+        this.eventBus = new EventBus();
         this.eventBus.on('PRICE_ADDED', (priceData) => this.handlePriceAdded(priceData));
     }
 
@@ -39,47 +39,7 @@ export class PriceAggregator extends EventEmitter {
         }
     }
 
-    public async updatePrice(id: string, priceData: PriceData): Promise<PriceData | null> {
-        this.validatePriceData(priceData);
-        try {
-            const updatedPrice = await storage.update(id, priceData);
-            if (!updatedPrice) {
-                throw new ValidationError('Price not found.');
-            }
-            await this.updateCurrentPrices();
-            return updatedPrice;
-        } catch (error) {
-            logError(error, 'Error updating price data');
-            throw new ServiceError('Failed to update price.');
-        }
-    }
-
-    public async deletePrice(id: string): Promise<void> {
-        try {
-            await storage.delete(id);
-            await this.updateCurrentPrices();
-        } catch (error) {
-            logError(error, 'Error deleting price data');
-            throw new ServiceError('Failed to delete price.');
-        }
-    }
-
-    public async fetchPricesFromExchanges(): Promise<void> {
-        const exchangeUrls = ['/exchange1/prices', '/exchange2/prices'];
-        const pricePromises = exchangeUrls.map(url => httpClient(url));
-        try {
-            const prices = await Promise.all(pricePromises);
-            for (const priceData of prices) {
-                if (priceData) {
-                    await this.addPrice(priceData);
-                }
-            }
-        } catch (error) {
-            logError(error, 'Error fetching prices from exchanges');
-        }
-    }
-
-    private async updateCurrentPrices(): Promise<void> {
+    public async updateCurrentPrices(): Promise<void> {
         try {
             const prices = await storage.findAll();
             this.currentPrices = prices.reduce((acc, priceData) => {
@@ -103,6 +63,21 @@ export class PriceAggregator extends EventEmitter {
         setInterval(() => {
             this.fetchPricesFromExchanges();
         }, 30000); // Fetch every 30 seconds
+    }
+
+    private async fetchPricesFromExchanges(): Promise<void> {
+        const exchangeUrls = ['/exchange1/prices', '/exchange2/prices'];
+        const pricePromises = exchangeUrls.map(url => httpClient(url));
+        try {
+            const prices = await Promise.all(pricePromises);
+            for (const priceData of prices) {
+                if (priceData) {
+                    await this.addPrice(priceData);
+                }
+            }
+        } catch (error) {
+            logError(error, 'Error fetching prices from exchanges');
+        }
     }
 
     private handlePriceAdded(priceData: PriceData) {
