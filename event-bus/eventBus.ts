@@ -28,7 +28,9 @@ class EventBus {
 
     public unsubscribe<T>(topic: string, listener: (message: Message<T>) => void): void {
         this.emitter.off(topic, listener);
-        this.subscriptions[topic] = this.subscriptions[topic].filter(l => l !== listener);
+        if (this.subscriptions[topic]) {
+            this.subscriptions[topic] = this.subscriptions[topic].filter(l => l !== listener);
+        }
     }
 
     public clearSubscriptions(topic: string): void {
@@ -42,6 +44,23 @@ class EventBus {
 
     public getSubscriptionCount(topic: string): number {
         return this.subscriptions[topic] ? this.subscriptions[topic].length : 0;
+    }
+
+    public async publishWithRetry<T>(topic: string, data: T, retries: number): Promise<void> {
+        let attempts = 0;
+        while (attempts < retries) {
+            try {
+                this.publish(topic, data);
+                return;
+            } catch (error) {
+                attempts++;
+                console.error(`Publish failed, attempt ${attempts}:`, error);
+                if (attempts >= retries) {
+                    throw new Error('Max retries reached for publishing.');
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retrying
+            }
+        }
     }
 }
 
