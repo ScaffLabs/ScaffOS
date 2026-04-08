@@ -5,6 +5,7 @@ import http from 'http';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
+import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -28,6 +29,9 @@ const startApp = async () => {
     app.get('/prices', async (req, res, next) => {
         try {
             const prices = await priceAggregator.getCurrentPrices();
+            if (Object.keys(prices).length === 0) {
+                return res.status(204).send();
+            }
             res.status(200).json(prices);
         } catch (error) {
             logError(error, 'Error fetching prices');
@@ -35,7 +39,7 @@ const startApp = async () => {
         }
     });
 
-    app.post('/prices', async (req, res, next) => {
+    app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, next) => {
         try {
             const newPrice = await priceAggregator.addPrice(req.body);
             res.status(201).json(newPrice);

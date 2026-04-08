@@ -3,7 +3,7 @@ import { PriceData, CurrentPrices, PriceDataSchema } from './types';
 import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
-import { ServiceError, ValidationError } from './errors';
+import { ServiceError, ValidationError, OverflowError, DivisionByZeroError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -25,6 +25,14 @@ export class PriceAggregator {
         const validation = PriceDataSchema.safeParse(priceData);
         if (!validation.success) {
             throw new ValidationError(JSON.stringify(validation.error.errors));
+        }
+        this.checkForOverflow(priceData);
+    }
+
+    private checkForOverflow(priceData: PriceData): void {
+        const { price, volume } = priceData;
+        if (price > Number.MAX_SAFE_INTEGER || volume > Number.MAX_SAFE_INTEGER) {
+            throw new OverflowError('Price or volume exceeds maximum safe integer value.');
         }
     }
 
