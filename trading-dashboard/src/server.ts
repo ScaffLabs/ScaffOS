@@ -1,7 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import { limiter } from './middleware/rateLimiter';
 import { healthCheck } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
@@ -15,17 +15,11 @@ const app = express();
 logger.logStartup(config);
 app.use(helmet());
 app.use(cors({ origin: ['http://your-allowed-origin.com'] }));
-
-const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests, please try again later.',
-});
-app.use(limiter);
+app.use(limiter); // Apply rate limiter
 app.use(express.json());
 app.use(requestLogger);
 app.get('/api/health', healthCheck);
-app.get('/api/external-health', externalHealthCheck); // New health check endpoint for external services
+app.get('/api/external-health', externalHealthCheck);
 
 registerRoutes(app);
 app.use(errorHandler);
