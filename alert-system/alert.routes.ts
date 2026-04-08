@@ -20,17 +20,21 @@ router.use(helmet());
 
 // Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
 });
-
 router.use(limiter);
 
+// Get active alerts with pagination and sorting
 router.get('/api/alerts', async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = parseInt(req.query.offset) || 0;
+    const sort = req.query.sort ? req.query.sort : 'createdAt';
+    const order = req.query.order === 'desc' ? -1 : 1;
+    const type = req.query.type;
     try {
-        const alerts = await alertStore.findIndex({}).skip(offset).limit(limit);
+        const filter = type ? { type } : {};
+        const alerts = await alertStore.findIndex(filter).sort({ [sort]: order }).skip(offset).limit(limit);
         if (!alerts.length) return res.status(204).send();
         return res.json(alerts);
     } catch (error) {
@@ -39,6 +43,7 @@ router.get('/api/alerts', async (req, res) => {
     }
 });
 
+// Create alert
 router.post('/api/alerts', async (req, res) => {
     try {
         const alert = validateAlertMessage(req.body);
@@ -54,6 +59,7 @@ router.post('/api/alerts', async (req, res) => {
     }
 });
 
+// Update alert
 router.put('/api/alerts/:id', async (req, res) => {
     const alertId = req.params.id;
     try {
@@ -69,6 +75,7 @@ router.put('/api/alerts/:id', async (req, res) => {
     }
 });
 
+// Delete alert
 router.delete('/api/alerts/:id', async (req, res) => {
     const alertId = req.params.id;
     try {
