@@ -23,3 +23,7 @@ export const config = {
     port: env.PORT,
     nodeEnv: env.NODE_ENV,
 };
+
+export const isProduction = env.NODE_ENV === 'production';
+export const isStaging = env.NODE_ENV === 'staging';
+export const isDevelopment = env.NODE_ENV === 'development';
