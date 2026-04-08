@@ -1,8 +1,7 @@
 import express from 'express';
 import { logger } from '../middleware/logger';
-import { healthCheck, readinessCheck } from '../services/HealthService';
 import os from 'os';
-import { healthCheckService } from '../services/ServiceClient';
+import { healthCheck } from '../services/HealthService';
 
 const router = express.Router();
 
@@ -18,7 +17,7 @@ router.get('/', async (req, res) => {
 
 router.get('/ready', async (req, res) => {
     try {
-        const serviceHealth = await healthCheckService();
+        const serviceHealth = await healthCheck();
         if (serviceHealth.database === 'down') {
             return res.status(503).json({ message: 'Service is not ready' });
         }

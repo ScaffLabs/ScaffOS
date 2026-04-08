@@ -10,6 +10,8 @@ import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { logRequest, logSuccess } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
+import { createClient } from 'redis';
+import { performance } from 'perf_hooks';
 
 dotenv.config();
 const app = express();
@@ -24,8 +26,12 @@ app.use(logRequest);
 app.use('/api/health', healthRouter);
 app.use(errorHandler);
 
+const redisClient = createClient();
+redisClient.on('error', (err) => console.error('Redis Client Error', err));
+
 const startServer = async () => {
     await db.connect(config.databaseUrl);
+    await redisClient.connect();
     logSuccess(`Database connected: ${config.databaseUrl}`);
     server.listen(config.port, () => {
         logSuccess(`Server running on http://localhost:${config.port}`);
@@ -35,6 +41,7 @@ const startServer = async () => {
 const shutdown = async () => {
     logSuccess('Shutting down gracefully...');
     await db.closeConnection();
+    await redisClient.quit();
     server.close(() => {
         logSuccess('Server closed.');
         process.exit(0);
