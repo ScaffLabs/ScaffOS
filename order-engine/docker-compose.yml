@@ -4,12 +4,8 @@ services:
     build: .
     ports:
       - '3000:3000'
-    environment:
-      - PORT=3000
-      - BASE_URL=http://localhost:3000
-      - DATABASE_URL=postgres://your_user:your_password@db:5432/your_database
-      - ANOTHER_SERVICE_URL=http://another-service:4000
-      - ORDER_SERVICE_URL=http://order-service:5000
+    env_file:
+      - .env
     depends_on:
       - db
   db:
