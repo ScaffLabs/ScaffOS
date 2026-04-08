@@ -42,8 +42,8 @@ export interface Strategy {
  * Schema for validating strategies using Zod.
  */
 export const StrategySchema = z.object({
-    name: z.string().min(1),
-    parameters: z.object({}).catchall(z.any()),
+    name: z.string().min(1, { message: 'Name must be at least 1 character long.' }),
+    parameters: z.object({}).catchall(z.any()).optional(),
 });
 
 /**
@@ -52,3 +52,27 @@ export const StrategySchema = z.object({
 export type AnalyticsEvent =
     | { type: 'PERFORMANCE_METRICS_FETCHED'; data: PerformanceMetrics }
     | { type: 'STRATEGY_COMPARISON_RESULT'; betterStrategy: string };
+
+/**
+ * Event representing a comparison between two strategies.
+ */
+export interface StrategyComparisonEvent {
+    /** The type of event. */
+    type: 'STRATEGY_COMPARISON';
+    /** The identifier of the first strategy. */
+    strategyA: string;
+    /** The identifier of the second strategy. */
+    strategyB: string;
+    /** The result of the comparison. */
+    result: string;
+}
+
+/**
+ * Schema for validating strategy comparison events.
+ */
+export const StrategyComparisonEventSchema = z.object({
+    type: z.literal('STRATEGY_COMPARISON'),
+    strategyA: z.string(),
+    strategyB: z.string(),
+    result: z.string(),
+});
