@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 // Branded types for IDs
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
@@ -27,6 +25,7 @@ export const OrderSchema = z.object({
     status: z.enum(['open', 'filled', 'cancelled']),
 });
 
+// Order events
 export interface OrderCreatedEvent {
     type: 'ORDER_CREATED';
     payload: Order;
@@ -44,9 +43,12 @@ export interface OrderDeletedEvent {
 
 export type OrderEvent = OrderCreatedEvent | OrderUpdatedEvent | OrderDeletedEvent;
 
-// Shared types for other services
+// Zod schema for events
 export const OrderEventSchema = z.union([
     z.object({ type: z.literal('ORDER_CREATED'), payload: OrderSchema }),
     z.object({ type: z.literal('ORDER_UPDATED'), payload: OrderSchema }),
     z.object({ type: z.literal('ORDER_DELETED'), payload: z.object({ id: z.string().transform((id) => id as OrderId) }) }),
 ]);
+
+// Shared types for other services
+export type { Order };
