@@ -18,9 +18,9 @@ const limiter = rateLimit({
 router.post('/alerts', limiter, body('type').isString().notEmpty(), body('threshold').isNumeric(), body('currentValue').isNumeric(), async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        throw new ValidationError('Invalid input.');
+        return res.status(400).json({ errors: errors.array() });
     }
-    const alert: AlertMessage = req.body;
+    const alert: AlertMessage = { ...req.body, id: Date.now().toString(), createdAt: new Date() };
     const createdAlert = await alertStore.create(alert);
     return res.status(201).json(createdAlert);
 });
@@ -29,11 +29,11 @@ router.post('/alerts', limiter, body('type').isString().notEmpty(), body('thresh
 router.get('/alerts/:id', param('id').isString(), async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        throw new ValidationError('Invalid alert ID.');
+        return res.status(400).json({ errors: errors.array() });
     }
     const alert = await alertStore.read(req.params.id);
     if (!alert) {
-        throw new NotFoundError('Alert not found.');
+        return res.status(404).json({ message: 'Alert not found.' });
     }
     return res.status(200).json(alert);
 });
@@ -42,11 +42,11 @@ router.get('/alerts/:id', param('id').isString(), async (req: Request, res: Resp
 router.put('/alerts/:id', limiter, param('id').isString(), body('threshold').isNumeric(), async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        throw new ValidationError('Invalid input.');
+        return res.status(400).json({ errors: errors.array() });
     }
     const updatedAlert = await alertStore.update(req.params.id, req.body);
     if (!updatedAlert) {
-        throw new NotFoundError('Alert not found.');
+        return res.status(404).json({ message: 'Alert not found.' });
     }
     return res.status(200).json(updatedAlert);
 });
@@ -55,11 +55,11 @@ router.put('/alerts/:id', limiter, param('id').isString(), body('threshold').isN
 router.delete('/alerts/:id', param('id').isString(), async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        throw new ValidationError('Invalid alert ID.');
+        return res.status(400).json({ errors: errors.array() });
     }
     const deleted = await alertStore.delete(req.params.id);
     if (!deleted) {
-        throw new NotFoundError('Alert not found.');
+        return res.status(404).json({ message: 'Alert not found.' });
     }
     return res.status(204).send();
 });
@@ -69,12 +69,23 @@ router.get('/alerts', query('limit').isNumeric().optional(), query('offset').isN
     const limit = Number(req.query.limit) || 10;
     const offset = Number(req.query.offset) || 0;
     const sort = req.query.sort ? req.query.sort.split(',') : [];
-    const alerts = await alertStore.findIndex({}); // Implement filtering if needed
-    const sortedAlerts = alerts.sort((a, b) => {
-        // Sort logic based on `sort` query
-        return 0; // Placeholder for actual sorting
-    }).slice(offset, offset + limit);
-    return res.status(200).json(sortedAlerts);
+
+    let alerts = await alertStore.findIndex({});
+
+    // Implement sorting
+    if (sort.length > 0) {
+        alerts.sort((a, b) => {
+            for (const field of sort) {
+                if (a[field] < b[field]) return -1;
+                if (a[field] > b[field]) return 1;
+            }
+            return 0;
+        });
+    }
+
+    // Implement pagination
+    const paginatedAlerts = alerts.slice(offset, offset + limit);
+    return res.status(200).json(paginatedAlerts);
 });
 
 export default router;
