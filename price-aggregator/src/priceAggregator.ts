@@ -1,11 +1,10 @@
 import WebSocket from 'ws';
 import { PriceData, CurrentPrices, PriceDataSchema, PriceEvent } from './types';
-import { httpClient } from './httpClient';
+import { httpClient, postHttpClient } from './httpClient';
 import { storage } from './storage';
-import { logError, logRequest } from './logger';
+import { logError } from './logger';
 import { EventBus } from './eventBus';
-import { ServiceError, ValidationError, OverflowError } from './errors';
-import { z } from 'zod';
+import { ServiceError, ValidationError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -29,49 +28,14 @@ export class PriceAggregator {
         }
     }
 
-    private validatePriceData(priceData: PriceData): void {
-        const validation = PriceDataSchema.safeParse(priceData);
-        if (!validation.success) {
-            throw new ValidationError(JSON.stringify(validation.error.errors));
-        }
-        this.checkForOverflow(priceData);
-    }
-
-    private checkForOverflow(priceData: PriceData): void {
-        const { price, volume } = priceData;
-        if (price > Number.MAX_SAFE_INTEGER || volume > Number.MAX_SAFE_INTEGER) {
-            throw new OverflowError('Price or volume exceeds maximum safe integer value.');
-        }
-    }
-
-    private async updateCurrentPrices(): Promise<void> {
-        this.currentPrices = await storage.findAll();
-    }
-
-    public async fetchPrices(): Promise<void> {
+    public async fetchExternalPrices(): Promise<void> {
         try {
-            const prices = await httpClient('/prices');
-            this.currentPrices = prices;
+            const prices = await httpClient('/external-prices');
+            this.currentPrices = { ...this.currentPrices, ...prices };
         } catch (error) {
-            logError(error, 'Failed to fetch prices');
-            throw new ServiceError('Could not fetch prices from the external service.');
+            logError(error, 'Failed to fetch external prices');
+            throw new ServiceError('Could not fetch prices from external service.');
         }
-    }
-
-    private handlePriceEvent(event: PriceEvent): void {
-        this.broadcastPriceUpdate(event.data);
-    }
-
-    private broadcastPriceUpdate(priceData: PriceData): void {
-        this.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify(priceData));
-            }
-        });
-    }
-
-    public getCurrentPrices(): CurrentPrices {
-        return this.currentPrices;
     }
 
     public async checkDependencies(): Promise<{ [key: string]: string }> {
@@ -84,5 +48,24 @@ export class PriceAggregator {
             logError(error, 'Price service dependency is unhealthy');
         }
         return healthStatus;
+    }
+
+    private validatePriceData(priceData: PriceData): void {
+        const validation = PriceDataSchema.safeParse(priceData);
+        if (!validation.success) {
+            throw new ValidationError(JSON.stringify(validation.error.errors));
+        }
+    }
+
+    private async updateCurrentPrices(): Promise<void> {
+        this.currentPrices = await storage.findAll();
+    }
+
+    private handlePriceEvent(event: PriceEvent): void {
+        this.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(event.data));
+            }
+        });
     }
 }
