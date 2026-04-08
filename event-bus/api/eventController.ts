@@ -44,6 +44,36 @@ export const getEvents = async (req: Request<{}, {}, {}, GetEventsQuery>, res: R
     }
 };
 
+export const updateEvent = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const validation = updateEventSchema.safeParse(req.body);
+        if (!validation.success) {
+            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+        }
+        const eventId = req.params.id;
+        const updatedEvent = await storage.update(eventId, validation.data);
+        if (!updatedEvent) {
+            throw new NotFoundError(`Event with id ${eventId} not found`);
+        }
+        res.status(200).json(updatedEvent);
+    } catch (error) {
+        handleError(error, res);
+    }
+};
+
+export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const eventId = req.params.id;
+        const deleted = await storage.delete(eventId);
+        if (!deleted) {
+            throw new NotFoundError(`Event with id ${eventId} not found`);
+        }
+        res.status(204).send();
+    } catch (error) {
+        handleError(error, res);
+    }
+};
+
 const handleError = (error: Error, res: Response) => {
     if (error instanceof ValidationError) {
         res.status(400).json({ message: error.message });
@@ -58,4 +88,6 @@ const handleError = (error: Error, res: Response) => {
 const router = Router();
 router.post('/', createEventLimiter, createEvent);
 router.get('/', getEvents);
+router.put('/:id', updateEvent);
+router.delete('/:id', deleteEvent);
 export default router;
