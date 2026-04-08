@@ -5,7 +5,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
+import csrf from 'csurf';
 import { NotFoundError, ValidationError } from './errors';
+import { RiskPositionSchema } from './sharedTypes';
+
+const csrfProtection = csrf({ cookie: true });
 
 const router = express.Router();
 
@@ -16,17 +20,16 @@ router.use(helmet()); // Set security-related HTTP headers
 
 // Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000,
     max: 100,
     message: 'Too many requests from this IP, please try again later.'
 });
 router.use(limiter);
+router.use(csrfProtection);
 
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
-    query('sort').optional().isString(),
-    query('filter').optional().isString(),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -34,7 +37,7 @@ router.get('/risk', [
     }
     try {
         const { limit = 10, offset = 0 } = req.query;
-        const positions = await riskManager.getRiskPositions(Number(limit), Number(offset));
+        const positions = await riskManager.getRiskPositions(limit, offset);
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
@@ -43,8 +46,8 @@ router.get('/risk', [
 });
 
 router.post('/risk', [
-    body('asset').isString().notEmpty(),
-    body('position').isNumeric().isFloat({ min: 0 }),
+    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
+    body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -65,7 +68,7 @@ router.post('/risk', [
 
 router.put('/risk/:id', [
     param('id').isString(),
-    body('position').isNumeric().isFloat({ min: 0 }),
+    body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -74,7 +77,10 @@ router.put('/risk/:id', [
     try {
         const { id } = req.params;
         const { position } = req.body;
-        await riskManager.updateRiskPosition(id, position);
+        const updatedPosition = await riskManager.updateRiskPosition(id, position);
+        if (!updatedPosition) {
+            return res.status(404).send();
+        }
         res.status(204).send();
     } catch (error) {
         logger.error('Error updating risk position: ', error);
@@ -94,7 +100,10 @@ router.delete('/risk/:id', [
     }
     try {
         const { id } = req.params;
-        await riskManager.deleteRiskPosition(id);
+        const deleted = await riskManager.deleteRiskPosition(id);
+        if (!deleted) {
+            return res.status(404).send();
+        }
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting risk position: ', error);
