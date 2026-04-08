@@ -1,14 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import fs from 'fs';
-import path from 'path';
-
-const logFilePath = path.join(__dirname, '../logs/audit.log');
+import logger from '../logger';
 
 export const auditLogger = (req: Request, res: Response, next: NextFunction) => {
-    const { method, url, body, query } = req;
-    const logEntry = `${new Date().toISOString()} - ${method} ${url} - Body: ${JSON.stringify(body)} - Query: ${JSON.stringify(query)}\n`;
-    fs.appendFile(logFilePath, logEntry, (err) => {
-        if (err) console.error('Failed to write to audit log:', err);
+    const { method, url } = req;
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        logger.logRequest(method, url, res.statusCode, duration);
     });
     next();
 };

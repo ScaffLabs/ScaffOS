@@ -7,12 +7,13 @@ import { dependentHealthCheckHandler } from './handlers/dependentHealthCheck';
 import { auditLogger } from './middleware/auditLogger';
 import { validateQueryParams } from './middleware/inputValidator';
 import { validateStrategy } from './middleware/strategyValidator';
+import logger, { logStartup } from './logger';
 
 const app = express();
 
 // CORS configuration
 app.use(cors({
-    origin: ['https://your-allowed-origin.com'], // specify allowed origins
+    origin: ['https://your-allowed-origin.com'],
     methods: ['GET', 'POST'],
 }));
 
@@ -21,8 +22,8 @@ app.use(helmet());
 
 // Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
 });
 app.use(limiter);
 
@@ -33,13 +34,8 @@ app.use(auditLogger);
 app.get('/api/health', healthCheckHandler);
 app.get('/api/dependent-health', dependentHealthCheckHandler);
 
-// Example strategy route using validation
-app.post('/api/strategies', validateStrategy, async (req, res) => {
-    // Your strategy creation logic here
-    res.status(201).json({ message: 'Strategy created successfully.' });
-});
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
+    logStartup({ PORT });
     console.log(`Server is running on port ${PORT}`);
 });
