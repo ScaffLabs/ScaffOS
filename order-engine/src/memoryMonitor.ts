@@ -1,7 +1,10 @@
+import { config } from './config';
+
 setInterval(() => {
     const memoryUsage = process.memoryUsage();
     console.log(`Memory Usage: RSS: ${memoryUsage.rss}, Heap Total: ${memoryUsage.heapTotal}, Heap Used: ${memoryUsage.heapUsed}`);
-    if (memoryUsage.heapUsed > 0.8 * memoryUsage.heapTotal) {
+    const memoryLimit = parseFloat(config.MEMORY_LIMIT) * 0.01 * memoryUsage.heapTotal;
+    if (memoryUsage.heapUsed > memoryLimit) {
         console.warn('Memory usage is high! Consider optimizing.');
     }
 }, 5000);
