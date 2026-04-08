@@ -3,6 +3,7 @@ import { config } from '../config';
 import { Message, UserCreated } from '../messageSchema';
 import eventBus from '../eventBus';
 import { circuitBreaker } from '../utils/retry';
+import { checkHealth } from './healthCheck';
 
 const fetchUserService = async (userId: string) => {
     const url = `${config.OTHER_SERVICE_URL}/users/${userId}`;
@@ -23,10 +24,10 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
 // Subscribe to userCreated events
 eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
 
-export const checkHealth = async () => {
+export const checkServiceHealth = async () => {
     try {
-        const response = await axios.get(`${config.OTHER_SERVICE_URL}/health`);
-        return response.status === 200;
+        const health = await checkHealth();
+        return health.serviceHealthy;
     } catch (error) {
         console.error('Health check failed:', error);
         return false;

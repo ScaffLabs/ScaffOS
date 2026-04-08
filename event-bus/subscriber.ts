@@ -1,22 +1,29 @@
 import redisClient from './redisClient';
 import { Message } from './messageSchema';
-import { Event } from './types';
+import { UserCreated } from './types';
 import { circuitBreaker } from './utils/retry';
+import eventBus from './eventBus';
 
-const handleUserCreated: (message: Message<Event>) => void = (message) => {
+const handleUserCreated: (message: Message<UserCreated>) => void = (message) => {
     console.log('User created event received:', message);
-    // Business logic to handle the user created event
+    // Further processing can be added here
 };
 
-const subscribeToTopic = circuitBreaker((topic: string, handler: (message: Message<Event>) => void) => {
-    redisClient.subscribe(topic, (message) => {
-        try {
-            const parsedMessage: Message<Event> = JSON.parse(message);
-            handler(parsedMessage);
-        } catch (error) {
-            console.error('Error parsing message', error);
-        }
-    });
-});
+const subscribeToTopic = async (topic: string, handler: (message: Message<UserCreated>) => void) => {
+    try {
+        redisClient.subscribe(topic, (message) => {
+            try {
+                const parsedMessage: Message<UserCreated> = JSON.parse(message);
+                handler(parsedMessage);
+            } catch (error) {
+                console.error('Error parsing message', error);
+            }
+        });
+    } catch (error) {
+        console.error('Error subscribing to topic:', error);
+    }
+};
 
-subscribeToTopic('userCreated', handleUserCreated);
+const subscribeToUserCreated = circuitBreaker(() => subscribeToTopic('userCreated', handleUserCreated));
+
+subscribeToUserCreated();
