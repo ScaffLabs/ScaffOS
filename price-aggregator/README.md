@@ -4,7 +4,7 @@
 The Price Aggregator service fetches real-time prices from multiple exchanges, calculates the Volume Weighted Average Price (VWAP), and provides a RESTful API for clients to access this data.
 
 ## Architecture Overview
-The service is built using Node.js, Express for the API, and WebSocket for real-time price broadcasting. It uses a circuit breaker pattern for resilient HTTP requests to external price exchanges. The service also implements memory monitoring and error handling middleware to ensure robustness.
+The service is built using Node.js, Express for the API, and WebSocket for real-time price broadcasting. It employs a circuit breaker pattern for resilient HTTP requests to external price exchanges. The service also implements memory monitoring and error handling middleware to ensure robustness.
 
 ## Setup Instructions
 ### Prerequisites
@@ -85,8 +85,6 @@ Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing
 
 ## Changelog
 See [CHANGELOG.md](CHANGELOG.md) for version history.
-
----
 
 ## API Error Handling
 Error handling is implemented through a centralized middleware that captures and formats errors into a consistent response structure. This ensures clarity for clients on what went wrong and why.

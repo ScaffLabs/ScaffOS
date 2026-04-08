@@ -30,3 +30,7 @@
 ## [1.5.0] - 2023-11-02
 - Improved API documentation in README.md to provide detailed endpoint descriptions.
 - Added explanations for error handling and logging in the README.
+
+## [1.6.0] - 2023-11-05
+- Incorporated detailed API error handling and responses.
+- Updated README.md to include error handling strategies.
