@@ -16,6 +16,7 @@ const limiter = rateLimit({
 
 router.use(limiter);
 
+// Create a new configuration
 router.post('/', [
     body('key').trim().escape().notEmpty().withMessage('Key is required'),
     body('value').trim().escape().notEmpty().withMessage('Value is required')
@@ -34,6 +35,7 @@ router.post('/', [
     }
 });
 
+// Get all configurations with pagination, sorting and filtering
 router.get('/', async (req, res) => {
     const { limit = 10, offset = 0, sortBy = 'key', order = 'asc' } = req.query;
     try {
@@ -45,6 +47,7 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Get a configuration by key
 router.get('/:key', async (req, res) => {
     const { key } = req.params;
     try {
@@ -62,6 +65,7 @@ router.get('/:key', async (req, res) => {
     }
 });
 
+// Update a configuration
 router.put('/', [
     body('key').trim().escape().notEmpty().withMessage('Key is required'),
     body('value').trim().escape().notEmpty().withMessage('Value is required')
@@ -83,6 +87,7 @@ router.put('/', [
     }
 });
 
+// Delete a configuration
 router.delete('/:key', async (req, res) => {
     const { key } = req.params;
     try {
