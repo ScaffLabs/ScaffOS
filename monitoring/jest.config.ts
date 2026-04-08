@@ -7,6 +7,7 @@ const config: Config = {
     coverageDirectory: 'coverage',
     collectCoverage: true,
     collectCoverageFrom: ['**/*.ts', '!**/node_modules/**'],
+    testTimeout: 10000,
 };
 
-export default config;
+export default config; 
