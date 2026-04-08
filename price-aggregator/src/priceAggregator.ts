@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices, PriceEvent } from './types';
+import { PriceData, CurrentPrices, PriceEvent, PriceDataSchema, PriceEventSchema } from './types';
 import { httpClient, postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
@@ -17,7 +17,12 @@ export class PriceAggregator {
     }
 
     public async addPrice(priceData: PriceData): Promise<PriceData> {
-        this.validatePriceData(priceData);
+        // Validate price data using Zod schema
+        const validation = PriceDataSchema.safeParse(priceData);
+        if (!validation.success) {
+            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+        }
+
         try {
             const newPrice = await storage.create(priceData);
             await this.updateCurrentPrices();
@@ -48,12 +53,6 @@ export class PriceAggregator {
         return dependencies;
     }
 
-    private validatePriceData(priceData: PriceData): void {
-        if (!priceData.exchange || priceData.price == null || priceData.volume == null) {
-            throw new NullValueError('Price data contains null or empty values.');
-        }
-    }
-
     private async updateCurrentPrices(): Promise<void> {
         const allPrices = await storage.findAll();
         this.currentPrices = {};
@@ -67,10 +66,10 @@ export class PriceAggregator {
         });
 
         if (totalVolume === 0) {
-            throw new Error('Total volume cannot be zero when calculating VWAP.');
+            this.currentPrices.VWAP = 0;
+        } else {
+            this.currentPrices.VWAP = totalValue / totalVolume;
         }
-
-        this.currentPrices.VWAP = totalValue / totalVolume;
     }
 
     private handlePriceEvent(event: PriceEvent): void {
