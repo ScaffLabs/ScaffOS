@@ -1,7 +1,8 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import config from '../config';
 import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
+import { CircuitBreaker } from 'opossum';
 
 const BASE_URL = config.API_URL;
 
@@ -41,4 +42,24 @@ const updateConfiguration = async (key: string, value: string): Promise<void> =>
     }
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration }; 
+const healthCircuitBreaker = new CircuitBreaker({
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+});
+
+const healthCheckService = async () => {
+    try {
+        const result = await healthCircuitBreaker.fire(fetchHealthStatus);
+        return result;
+    } catch (error) {
+        throw new ServiceError('Health check failed');
+    }
+};
+
+const fetchHealthStatus = async () => {
+    const response = await axios.get(`${BASE_URL}/health`);
+    return response.data;
+};
+
+export { fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration, healthCheckService }; 
