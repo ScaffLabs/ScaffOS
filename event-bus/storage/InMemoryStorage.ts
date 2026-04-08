@@ -1,14 +1,14 @@
 import { IStorage } from './IStorage';
 
 export class InMemoryStorage<T> implements IStorage<T> {
-    private storage: Record<string, T> = {};
+    private storage: Record<string, T & { id: string }> = {};
     private currentId = 0;
-    private index: Record<string, Record<string, T>> = {};
+    private index: Record<string, Record<string, T & { id: string }>> = {};
 
-    async create(item: T): Promise<T> {
+    async create(item: T): Promise<T & { id: string }> {
         const id = String(++this.currentId);
-        this.storage[id] = { ...item, id } as T;
-        this.indexItem(id, item);
+        this.storage[id] = { ...item, id } as T & { id: string };
+        this.indexItem(id, this.storage[id]);
         return this.storage[id];
     }
 
@@ -34,7 +34,7 @@ export class InMemoryStorage<T> implements IStorage<T> {
         return Object.values(this.storage).slice(offset, offset + limit);
     }
 
-    private indexItem(id: string, item: T): void {
+    private indexItem(id: string, item: T & { id: string }): void {
         const keys = Object.keys(item);
         keys.forEach(key => {
             if (!this.index[key]) {
@@ -65,6 +65,6 @@ export class InMemoryStorage<T> implements IStorage<T> {
 
     async seedData(): Promise<void> {
         console.log('Seeding data...');
-        // Implement seeding logic if needed
+        await this.create({ title: 'Sample Event', description: 'This is a sample event', type: 'userCreated' });
     }
 }

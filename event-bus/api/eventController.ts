@@ -3,7 +3,6 @@ import { StorageManager } from '../storage/storageManager';
 import { Event, createEventSchema, updateEventSchema } from '../types';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
-import { ServiceError } from '../errors/serviceError';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
