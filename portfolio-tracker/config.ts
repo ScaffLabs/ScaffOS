@@ -7,7 +7,7 @@ const env = cleanEnv(process.env, {
   PORT: port({ default: 3000 }),
   PORTFOLIO_SERVICE_URL: str({ default: 'http://localhost:3001/api/portfolios' }),
   NODE_ENV: str({ choices: ['development', 'staging', 'production'], default: 'development' }),
-  DATABASE_URL: str({ default: 'mongodb://localhost:27017/portfolio-tracker' }),
+  DATABASE_URL: str({ default: 'mongodb://mongo:27017/portfolio-tracker' }),
   LOG_LEVEL: str({ choices: ['debug', 'info', 'warn', 'error'], default: 'info' }),
   DEBUG_MODE: bool({ default: false }),
 });
