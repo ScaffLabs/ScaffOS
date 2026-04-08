@@ -25,14 +25,6 @@ export const createOrderService = async (orderData: unknown) => {
     }
 };
 
-export const checkDependentServicesHealth = async () => {
-    const healthChecks = await Promise.all([
-        fetchData(`${process.env.DATABASE_URL}/health`),
-        fetchData(`${ANOTHER_SERVICE_URL}/health`)
-    ]);
-    return healthChecks.every(response => response.status === 200);
-};
-
 export const updateOrderService = async (id: string, updates: unknown) => {
     const parsedUpdates = OrderSchema.partial().safeParse(updates);
     if (!parsedUpdates.success) {
