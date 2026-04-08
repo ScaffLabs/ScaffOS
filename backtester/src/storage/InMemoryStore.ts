@@ -42,17 +42,16 @@ export class InMemoryStore<T> implements StorageInterface<T> {
         return entities.slice(start, start + (limit || entities.length));
     }
 
-    async findByField(field: keyof T, value: any): Promise<Entity<T>[]> {
+    async findByField<K extends keyof T>(field: K, value: T[K]): Promise<Entity<T>[]> {
         return Array.from(this.store.values()).filter(entity => entity.data[field] === value);
     }
 
     async transaction(operations: Array<() => Promise<void>>): Promise<void> {
-        await Promise.all(operations.map(operation => operation()));
+        const results = await Promise.all(operations.map(operation => operation()));
+        logger.debug({ message: 'Transaction completed', results });
     }
 
     async migrate(newData: T[]): Promise<void> {
         await Promise.all(newData.map(data => this.create(data)));
     }
 }
-
-export default InMemoryStore;
