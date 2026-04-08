@@ -1,9 +1,21 @@
 export const fetchPerformanceMetrics = async () => {
-    const response = await fetch('/api/performance');
-    return response.json();
+    try {
+        const response = await fetch('/api/performance');
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch performance metrics:', error);
+        throw error;
+    }
 };
 
 export const fetchComparisonData = async (strategyA: string, strategyB: string) => {
-    const response = await fetch(`/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
-    return response.json();
+    try {
+        const response = await fetch(`/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch comparison data:', error);
+        throw error;
+    }
 };
