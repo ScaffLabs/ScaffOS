@@ -16,7 +16,7 @@ export const ComparisonTool: React.FC = () => {
                 const data = await getStrategies();
                 setStrategies(data);
             } catch (err) {
-                setError('Failed to load strategies.');
+                setError('Failed to load strategies: ' + err.message);
             }
         };
         loadStrategies();
@@ -35,7 +35,7 @@ export const ComparisonTool: React.FC = () => {
             if (err instanceof ValidationError) {
                 setError(err.message);
             } else {
-                setError('Failed to compare strategies.');
+                setError('Failed to compare strategies: ' + err.message);
             }
         } finally {
             setLoading(false);

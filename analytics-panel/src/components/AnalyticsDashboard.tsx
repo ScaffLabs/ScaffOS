@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchPerformanceMetrics } from '../api/analytics';
 import { DrawdownChart } from './DrawdownChart';
-import { subscribeToEvent } from '../api/eventBus';
+import { subscribeToEvent, unsubscribeFromEvent } from '../api/eventBus';
 
 export const AnalyticsDashboard: React.FC = () => {
     const [metrics, setMetrics] = useState<any>(null);
@@ -10,11 +10,12 @@ export const AnalyticsDashboard: React.FC = () => {
 
     useEffect(() => {
         const loadMetrics = async () => {
+            setLoading(true);
             try {
                 const data = await fetchPerformanceMetrics();
                 setMetrics(data);
             } catch (err) {
-                setError('Failed to load metrics.');
+                setError('Failed to load metrics: ' + err.message);
             } finally {
                 setLoading(false);
             }
