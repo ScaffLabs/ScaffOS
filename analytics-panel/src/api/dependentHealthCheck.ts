@@ -5,7 +5,7 @@ const SERVICES = {
     strategyService: process.env.STRATEGY_SERVICE_URL || 'http://localhost:3001/api/health',
 };
 
-export const checkServiceHealth = async (url: string) => {
+const checkServiceHealth = async (url: string) => {
     try {
         const response = await axios.get(url);
         return response.status === 200;
@@ -22,7 +22,7 @@ export const dependentHealthCheck = async () => {
     return healthResults;
 };
 
-export const healthCheckHandler = async (req, res) => {
+export const healthCheckHandler = async (req: Request, res: Response) => {
     try {
         const dependencies = await dependentHealthCheck();
         const allHealthy = dependencies.every(dep => dep.healthy);

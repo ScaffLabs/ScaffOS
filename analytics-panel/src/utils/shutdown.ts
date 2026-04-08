@@ -1,7 +1,8 @@
 import { Server } from 'http';
 import logger from '../logger';
+import { gracefulShutdown } from './shutdown';
 
-export const gracefulShutdown = (server: Server) => {
+export const initiateGracefulShutdown = (server: Server) => {
     console.log('Received shutdown signal. Gracefully shutting down...');
     server.close(async () => {
         logger.info('Closed all connections.');
@@ -15,3 +16,6 @@ export const gracefulShutdown = (server: Server) => {
         process.exit(1);
     }, 10000);
 };
+
+process.on('SIGTERM', () => initiateGracefulShutdown(server));
+process.on('SIGINT', () => initiateGracefulShutdown(server));

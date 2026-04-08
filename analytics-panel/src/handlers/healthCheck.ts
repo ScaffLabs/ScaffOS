@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import os from 'os';
-import axios from 'axios';
 import { dependentHealthCheck } from '../api/dependentHealthCheck';
+import { logPerformance } from '../logger';
 
 export const healthCheckHandler = async (req: Request, res: Response) => {
     try {
@@ -23,6 +23,7 @@ export const readyCheckHandler = async (req: Request, res: Response) => {
     try {
         const dependencies = await dependentHealthCheck();
         const allHealthy = dependencies.every(dep => dep.healthy);
+        logPerformance('Ready check', allHealthy ? 0 : 1);
         res.status(allHealthy ? 200 : 503).json({
             status: allHealthy ? 'ready' : 'not ready',
             dependencies,
