@@ -9,4 +9,5 @@ export default {
     collectCoverage: true,
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov'],
+    setupFilesAfterEnv: ['./jest.setup.ts'], // Setup file for global configurations
 };
