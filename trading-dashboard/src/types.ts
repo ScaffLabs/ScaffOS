@@ -43,3 +43,21 @@ export const TradingEventSchema = z.union([
     z.object({ type: z.literal('ORDER_SUBMITTED'), order: OrderSchema }),
     z.object({ type: z.literal('POSITION_UPDATED'), position: PositionSchema }),
 ]);
+
+export const validateOrder = (data: unknown): Order => {
+    const result = OrderSchema.safeParse(data);
+    if (!result.success) throw new Error('Invalid order data');
+    return result.data;
+};
+
+export const validatePosition = (data: unknown): Position => {
+    const result = PositionSchema.safeParse(data);
+    if (!result.success) throw new Error('Invalid position data');
+    return result.data;
+};
+
+export const validateTradingEvent = (data: unknown): TradingEvent => {
+    const result = TradingEventSchema.safeParse(data);
+    if (!result.success) throw new Error('Invalid trading event data');
+    return result.data;
+};
