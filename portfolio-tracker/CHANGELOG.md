@@ -28,3 +28,8 @@ All notable changes to this project will be documented in this file.
 - Inline code comments explaining complex logic for better understanding.
 - Detailed information in CONTRIBUTING.md for contributors.
 - Version history updates in CHANGELOG.md.
+
+## [1.0.4] - 2023-10-30
+### Changed
+- Updated README.md to include additional examples for API endpoints.
+- Clarified environment variables section to provide more context.
