@@ -19,4 +19,4 @@ const loggingMiddleware = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
-export default loggingMiddleware; 
+export default loggingMiddleware;
