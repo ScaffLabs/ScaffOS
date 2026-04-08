@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, checkExternalPortfolioService } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, deletePortfolio } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError } from '../errors';
-import { auditLog } from '../services/auditService';
 
 const router = Router();
 
@@ -29,20 +28,10 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
     try {
         const portfolio = await createPortfolio(req.body);
-        await auditLog('Create Portfolio', { portfolioId: portfolio.id, name: portfolio.name });
         res.status(201).json(portfolio);
     } catch (error) {
         logger.error('Error creating portfolio', { error: error.message });
         res.status(400).json({ error: error.message });
-    }
-});
-
-router.get('/health', async (req, res) => {
-    try {
-        const status = await checkExternalPortfolioService();
-        res.status(200).json({ status: 'UP', portfolioService: status });
-    } catch (error) {
-        res.status(503).json({ status: 'DOWN', error: error.message });
     }
 });
 
@@ -67,11 +56,28 @@ router.put('/:id', [param('id').isString().trim().escape(), ...portfolioValidati
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
-        await auditLog('Update Portfolio', { portfolioId: updatedPortfolio.id, name: updatedPortfolio.name });
         res.status(200).json(updatedPortfolio);
     } catch (error) {
         logger.error('Error updating portfolio', { error: error.message });
         res.status(404).json({ error: error.message });
+    }
+});
+
+router.delete('/:id', [param('id').isString().trim().escape()], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const result = await deletePortfolio(req.params.id);
+        if (result) {
+            res.status(204).send();
+        } else {
+            res.status(404).json({ error: 'Portfolio not found' });
+        }
+    } catch (error) {
+        logger.error('Error deleting portfolio', { error: error.message });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
