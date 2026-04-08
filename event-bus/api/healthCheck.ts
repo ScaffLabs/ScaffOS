@@ -18,9 +18,9 @@ const checkHealth = async () => {
     try {
         const response = await axios.get(`${config.OTHER_SERVICE_URL}/health`);
         serviceHealthy = response.status === 200;
-        logger.info('User service is healthy');
+        logger.info('Other service is healthy');
     } catch (error) {
-        logger.error('User service connection failed', error);
+        logger.error('Other service connection failed', error);
     }
 
     return { redisHealthy, serviceHealthy };
