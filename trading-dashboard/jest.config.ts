@@ -5,4 +5,14 @@ module.exports = {
     },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+    collectCoverage: true,
+    coverageDirectory: 'coverage',
+    coverageThreshold: {
+        global: {
+            lines: 80,
+            functions: 80,
+            branches: 80,
+            statements: 80,
+        },
+    },
 };
