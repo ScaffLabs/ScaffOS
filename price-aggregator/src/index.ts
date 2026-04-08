@@ -10,13 +10,22 @@ const wss = new Server({ server });
 const priceAggregator = new PriceAggregator();
 
 app.get('/prices', (req, res) => {
-  res.json(priceAggregator.getCurrentPrices());
+    res.json(priceAggregator.getCurrentPrices());
+});
+
+app.get('/health', async (req, res) => {
+    try {
+        const healthCheck = await priceAggregator.checkDependencies();
+        res.json({ status: 'healthy', dependencies: healthCheck });
+    } catch (error) {
+        res.status(500).json({ status: 'unhealthy', error: error.message });
+    }
 });
 
 wss.on('connection', (ws) => {
-  priceAggregator.subscribe(ws);
+    priceAggregator.subscribe(ws);
 });
 
 server.listen(3000, () => {
-  console.log('Price aggregator service running on port 3000');
+    console.log('Price aggregator service running on port 3000');
 });
