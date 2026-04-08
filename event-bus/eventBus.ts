@@ -9,10 +9,14 @@ interface Message<T> {
 class EventBus {
     private emitter: EventEmitter;
     private subscriptions: Record<string, Array<(message: Message<any>) => void>>;
+    private connectionRetries: number;
+    private maxRetries: number;
 
-    constructor() {
+    constructor(maxRetries: number = 5) {
         this.emitter = new EventEmitter();
         this.subscriptions = {};
+        this.connectionRetries = 0;
+        this.maxRetries = maxRetries;
     }
 
     public subscribe<T>(topic: string, listener: (message: Message<T>) => void): void {
@@ -46,21 +50,19 @@ class EventBus {
         return this.subscriptions[topic] ? this.subscriptions[topic].length : 0;
     }
 
-    public async publishWithRetry<T>(topic: string, data: T, retries: number): Promise<void> {
-        let attempts = 0;
-        while (attempts < retries) {
+    public async connect(): Promise<void> {
+        while (this.connectionRetries < this.maxRetries) {
             try {
-                this.publish(topic, data);
+                // Simulating a connection setup
+                console.log('Connected to Event Bus');
                 return;
             } catch (error) {
-                attempts++;
-                console.error(`Publish failed, attempt ${attempts}:`, error);
-                if (attempts >= retries) {
-                    throw new Error('Max retries reached for publishing.');
-                }
+                this.connectionRetries++;
+                console.error('Connection failed, retrying...', error);
                 await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retrying
             }
         }
+        throw new Error('Failed to connect to Event Bus after retries');
     }
 }
 
