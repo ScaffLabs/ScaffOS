@@ -35,4 +35,14 @@ const startServer = async () => {
     });
 };
 
+process.on('SIGTERM', async () => {
+    await db.closeConnection();
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    await db.closeConnection();
+    process.exit(0);
+});
+
 startServer();

@@ -10,6 +10,7 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
         path: req.originalUrl,
         method: req.method
     });
+
     if (err instanceof ValidationError) {
         return res.status(400).json({ error: err.message });
     }
@@ -18,6 +19,9 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     }
     if (err instanceof ServiceError) {
         return res.status(500).json({ error: 'Service Error: ' + err.message });
+    }
+    if (err instanceof Error) {
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
     console.error(err);
     return res.status(500).json({ error: 'Internal Server Error' });
