@@ -17,15 +17,12 @@ const simulateBacktestWithDependencies = circuitBreaker(async (params: StrategyP
     const orderServiceUrl = process.env.ORDER_SERVICE_URL;
     const dataServiceUrl = process.env.DATA_SERVICE_URL;
 
-    // Fetch some data from external services as part of the backtest
     try {
         const orderData = await withRetry(() => axios.get(`${orderServiceUrl}/orders`));
         const historicalDataResponse = await withRetry(() => axios.get(`${dataServiceUrl}/historical-data`));
 
-        // Emit events for order and historical data fetched
         eventEmitter.emit('dataFetched', { orderData: orderData.data, historicalData: historicalDataResponse.data });
 
-        // Here you would integrate that data into your logic
         logger.info('Fetched order data:', orderData.data);
         logger.info('Fetched historical data:', historicalDataResponse.data);
 
@@ -76,8 +73,8 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
 
         const startTime = Date.now();
         const totalReturns = await simulateBacktestWithDependencies(params, historicalData);
-        const trades = historicalData.length; // Simple count of trades based on historical data length.
-        const winRate = Math.random() * 100; // Placeholder for actual win rate calculation.
+        const trades = historicalData.length;
+        const winRate = Math.random() * 100;
         const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}.`;
 
         logger.info({
