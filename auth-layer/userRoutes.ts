@@ -4,6 +4,7 @@ import { validateAndSanitizeUserInput, authMiddleware } from './middleware';
 import logger from './logger';
 import { rateLimit } from './rateLimit';
 import { ValidationError, NotFoundError } from './errors';
+import { emitUserCreated } from './interServiceClient';
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
     const { username, email } = req.body;
     try {
         const user = await createUser(username, email);
+        emitUserCreated(user);
         logger.info('User created', { userId: user.id });
         res.status(201).json(user);
     } catch (error) {

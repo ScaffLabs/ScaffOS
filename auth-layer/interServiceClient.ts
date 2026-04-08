@@ -44,8 +44,8 @@ export const fetchUserData = async (userId: string) => {
 
 export const healthCheckService = async (serviceUrl: string) => {
     try {
-        await axios.get(serviceUrl);
-        return { status: 'healthy' };
+        const response = await axios.get(serviceUrl);
+        return { status: response.data.status };
     } catch (error) {
         logger.error(`Health check failed for ${serviceUrl}`, { error: error.message });
         return { status: 'unhealthy' };
