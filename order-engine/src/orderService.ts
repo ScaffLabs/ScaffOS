@@ -1,41 +1,60 @@
 import { fetchData, postData } from './axiosClient';
-import { Order, OrderEvent } from './types';
+import { Order, OrderSchema } from './types';
 import { emitWithRetry } from './eventBus';
-import { storage } from './storage';
-import { ValidationError, NotFoundError } from './errors';
+import { ServiceError } from './errors';
 
-export const createOrderService = async (order: Order) => {
-    if (!order.id || !order.type || order.price <= 0 || order.quantity <= 0 || !['open', 'filled', 'cancelled'].includes(order.status)) {
-        throw new ValidationError('Invalid order fields');
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
+
+export const createOrderService = async (orderData: any) => {
+    const parsedOrder = OrderSchema.safeParse(orderData);
+    if (!parsedOrder.success) {
+        throw new ServiceError('Invalid order data.');
     }
-    const createdOrder = await storage.create(order);
-    await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder });
-    return createdOrder;
+    const order: Order = parsedOrder.data;
+    try {
+        const response = await postData(`${ORDER_SERVICE_URL}/orders`, order);
+        await emitWithRetry({ type: 'ORDER_CREATED', payload: response.data });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating order:', error);
+        throw new ServiceError('Could not create order. Please try again later.');
+    }
 };
 
 export const getOrdersService = async () => {
-    const orders = await storage.findAll();
-    if (!orders.length) {
-        throw new NotFoundError('No orders found.');
+    try {
+        const response = await fetchData(`${ORDER_SERVICE_URL}/orders`);
+        if (!response.data || response.data.length === 0) {
+            throw new ServiceError('No orders available.');
+        }
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        throw new ServiceError('Could not fetch orders. Please try again later.');
     }
-    return orders;
 };
 
-export const updateOrderService = async (id: string, updates: Partial<Order>) => {
-    const existingOrder = await storage.read(id);
-    if (!existingOrder) {
-        throw new NotFoundError('Order not found.');
+export const updateOrderService = async (id: string, updates: any) => {
+    const parsedUpdates = OrderSchema.partial().safeParse(updates);
+    if (!parsedUpdates.success) {
+        throw new ServiceError('Invalid order update data.');
     }
-    const updatedOrder = await storage.update(id, updates);
-    await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
-    return updatedOrder;
+    try {
+        const response = await postData(`${ORDER_SERVICE_URL}/orders/${id}`, parsedUpdates.data);
+        await emitWithRetry({ type: 'ORDER_UPDATED', payload: response.data });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating order:', error);
+        throw new ServiceError('Could not update order. Please try again later.');
+    }
 };
 
 export const deleteOrderService = async (id: string) => {
-    const existingOrder = await storage.read(id);
-    if (!existingOrder) {
-        throw new NotFoundError('Order not found.');
+    try {
+        await postData(`${ORDER_SERVICE_URL}/orders/${id}`);
+        await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        throw new ServiceError('Could not delete order. Please try again later.');
     }
-    await storage.delete(id);
-    await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
 };
