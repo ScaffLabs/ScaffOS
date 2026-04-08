@@ -1,12 +1,13 @@
 {
   "name": "analytics-panel",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
     "build": "tsc",
     "start": "node dist/server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:integration": "jest --runInBand"
   },
   "dependencies": {
     "axios": "^0.21.1",

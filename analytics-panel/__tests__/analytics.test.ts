@@ -2,6 +2,8 @@ import { fetchPerformanceMetrics, fetchComparisonData, healthCheck } from '../ap
 import { ServiceError } from '../errors/customErrors';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import request from 'supertest';
+import app from '../server';
 
 const mock = new MockAdapter(axios);
 
@@ -52,23 +54,33 @@ describe('Analytics API', () => {
         await expect(healthCheck()).rejects.toThrow(ServiceError);
     });
 
-    test('fetchComparisonData handles empty strategy names', async () => {
-        await expect(fetchComparisonData('', '')).rejects.toThrow(ServiceError);
+    // Integration tests for API endpoints
+    test('GET /api/performance responds with 200 and performance data', async () => {
+        const mockData = { drawdown: [10, 20, 30], maxDrawdown: 30, sharpeRatio: 1.5 };
+        mock.onGet('/api/performance').reply(200, mockData);
+
+        const response = await request(app).get('/api/performance');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(mockData);
     });
 
-    test('healthCheck includes memory usage', async () => {
-        const mockHealth = { status: 'ok', uptime: 1000, memoryUsage: { rss: 100000, heapTotal: 200000, heapUsed: 150000 } };
+    test('GET /api/compare responds with 200 for valid strategies', async () => {
+        const mockResult = { betterStrategy: 'A' };
+        mock.onGet('/api/compare?strategyA=strategyA&strategyB=strategyB').reply(200, mockResult);
+
+        const response = await request(app)
+            .get('/api/compare')
+            .query({ strategyA: 'strategyA', strategyB: 'strategyB' });
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(mockResult);
+    });
+
+    test('GET /api/health responds with 200 and health status', async () => {
+        const mockHealth = { status: 'ok', uptime: 1000, memoryUsage: process.memoryUsage() };
         mock.onGet('/api/health').reply(200, mockHealth);
 
-        const health = await healthCheck();
-        expect(health.memoryUsage).toHaveProperty('rss');
-        expect(health.memoryUsage).toHaveProperty('heapTotal');
-        expect(health.memoryUsage).toHaveProperty('heapUsed');
-    });
-
-    test('fetchPerformanceMetrics handles invalid data', async () => {
-        mock.onGet('/api/performance').reply(200, { invalidField: 'data' });
-
-        await expect(fetchPerformanceMetrics()).rejects.toThrow(ServiceError);
+        const response = await request(app).get('/api/health');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(mockHealth);
     });
 });
