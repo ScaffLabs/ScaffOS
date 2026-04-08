@@ -36,6 +36,8 @@ export interface StopOrder extends Order {
 }
 
 // Zod Schemas for runtime validation
+import { z } from 'zod';
+
 export const OrderSchema = z.object({
   id: z.string().transform((val) => val as OrderId),
   type: z.enum(['limit', 'market', 'stop']),
