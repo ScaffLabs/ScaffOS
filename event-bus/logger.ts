@@ -22,4 +22,8 @@ export const logError = (error: Error, reqId: string) => {
     logger.error({ message: error.message, stack: error.stack, reqId });
 };
 
+export const logSensitiveOperation = (operation: string, details: object) => {
+    logger.info({ operation, details });
+};
+
 export default logger;

@@ -115,7 +115,8 @@ export const eventRoutes = () => {
     router.use(helmet());
     router.use(expressSanitizer());
     router.use(csrfProtection);
-    router.post('/', limiter, [body('title').notEmpty().withMessage('Title is required'), body('type').isIn(['userCreated', 'orderPlaced']).withMessage('Invalid event type')], createEvent);
+    router.use(limiter);
+    router.post('/', [body('title').notEmpty().withMessage('Title is required'), body('type').isIn(['userCreated', 'orderPlaced']).withMessage('Invalid event type')], createEvent);
     router.get('/', getEvents);
     router.put('/:id', [body('title').optional().notEmpty(), body('description').optional().isString()], updateEvent);
     router.delete('/:id', deleteEvent);

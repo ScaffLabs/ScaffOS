@@ -8,7 +8,7 @@ import { config } from './config';
 const app = express();
 
 app.use(requestLogger);
-app.use(express.json());
+app.use(express.json({ limit: '1mb' })); // Limit request size to 1 MB
 
 const main = async () => {
     await initializeRedis();
