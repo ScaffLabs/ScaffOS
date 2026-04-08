@@ -1,58 +1,60 @@
 import express, { Request, Response } from 'express';
 import { AlertMessage, validateAlertMessage } from './alert.schema';
-import { alertStore } from './index';
+import { AlertStore } from './storage';
 import { ValidationError, ServiceError } from './error.types';
 
 export class AlertController {
-    private activeAlerts: AlertMessage[] = [];
+    private alertStore: AlertStore;
 
-    /**
-     * Retrieves the active alerts.
-     * @param req - The request object.
-     * @param res - The response object.
-     */
-    getActiveAlerts(req: Request, res: Response) {
+    constructor(alertStore: AlertStore) {
+        this.alertStore = alertStore;
+    }
+
+    async getActiveAlerts(req: Request, res: Response) {
         try {
-            return res.json(this.activeAlerts);
+            const alerts = await this.alertStore.findIndex({});
+            return res.json(alerts);
         } catch (error) {
             throw new ServiceError('Failed to fetch active alerts.');
         }
     }
 
-    /**
-     * Adds a new alert to the active alerts.
-     * @param alertData - The data of the alert to add.
-     */
-    async addAlert(alertData: unknown) {
+    async addAlert(req: Request, res: Response) {
         try {
-            const alert = validateAlertMessage(alertData);
-            this.activeAlerts.push(alert);
-            await alertStore.create(alert);
+            const alert = validateAlertMessage(req.body);
+            const createdAlert = await this.alertStore.create(alert);
+            return res.status(201).json(createdAlert);
         } catch (error) {
             if (error instanceof ValidationError) {
-                throw new ValidationError('Invalid alert data: ' + error.message);
+                return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
             }
             throw new ServiceError('Failed to add alert.');
         }
     }
 
-    /**
-     * Health check endpoint.
-     * @param req - The request object.
-     * @param res - The response object.
-     */
-    async healthCheck(req: Request, res: Response) {
-        const isHealthy = true; // Implement health check logic
-        return res.status(isHealthy ? 200 : 503).json({ healthy: isHealthy });
+    async updateAlert(req: Request, res: Response) {
+        const alertId = req.params.id;
+        try {
+            const updatedAlert = await this.alertStore.update(alertId, req.body);
+            if (!updatedAlert) {
+                return res.status(404).json({ message: 'Alert not found.' });
+            }
+            return res.json(updatedAlert);
+        } catch (error) {
+            throw new ServiceError('Failed to update alert.');
+        }
     }
 
-    /**
-     * Readiness check endpoint.
-     * @param req - The request object.
-     * @param res - The response object.
-     */
-    async readyCheck(req: Request, res: Response) {
-        const isReady = true; // Implement readiness check logic
-        return res.status(isReady ? 200 : 503).json({ ready: isReady });
+    async deleteAlert(req: Request, res: Response) {
+        const alertId = req.params.id;
+        try {
+            const deleted = await this.alertStore.delete(alertId);
+            if (!deleted) {
+                return res.status(404).json({ message: 'Alert not found.' });
+            }
+            return res.status(204).send();
+        } catch (error) {
+            throw new ServiceError('Failed to delete alert.');
+        }
     }
 }
