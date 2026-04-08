@@ -1,24 +1,34 @@
-import fs from 'fs';
-import path from 'path';
+import winston from 'winston';
 
-const logFilePath = path.join(__dirname, 'audit.log');
+const logFormat = winston.format.printf(({ level, message, timestamp, ...meta }) => {
+    return `${timestamp} [${level}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
+});
 
-export const logAudit = (action: string, orderId: string) => {
-  const timeStamp = new Date().toISOString();
-  const logEntry = `${timeStamp} - ${action} - Order ID: ${orderId}\n`;
-  fs.appendFile(logFilePath, logEntry, (err) => {
-    if (err) {
-      console.error('Failed to log audit entry:', err);
-    }
-  });
+const logger = winston.createLogger({
+    level: process.env.LOG_LEVEL || 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        process.env.NODE_ENV === 'production' ? winston.format.json() : winston.format.simple(),
+        logFormat
+    ),
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'combined.log' })
+    ],
+});
+
+export const logRequest = (req, res, next) => {
+    const start = process.hrtime();
+    res.on('finish', () => {
+        const duration = process.hrtime(start);
+        const durationInMs = (duration[0] * 1e3 + duration[1] / 1e6).toFixed(2);
+        logger.info(`Request: ${req.method} ${req.path} - ${res.statusCode} - ${durationInMs}ms`, { requestId: req.headers['x-request-id'] });
+    });
+    next();
 };
 
-export const logError = (error: Error) => {
-  const timeStamp = new Date().toISOString();
-  const logEntry = `${timeStamp} - ERROR: ${error.message}\n`;
-  fs.appendFile(logFilePath, logEntry, (err) => {
-    if (err) {
-      console.error('Failed to log error entry:', err);
-    }
-  });
+export const logError = (error, req) => {
+    logger.error('Error occurred', { error: error.stack, requestId: req.headers['x-request-id'] });
 };
+
+export default logger;
