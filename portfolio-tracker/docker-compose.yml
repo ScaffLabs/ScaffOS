@@ -5,10 +5,9 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - PORT=3000
-      - PORTFOLIO_SERVICE_URL=http://mongo:27017/portfolio-tracker
       - NODE_ENV=development
       - DATABASE_URL=mongodb://mongo:27017/portfolio-tracker
+      - PORT=3000
       - LOG_LEVEL=info
       - DEBUG_MODE=false
     depends_on:
@@ -16,4 +15,4 @@ services:
   mongo:
     image: mongo
     ports:
-      - '27017:27017' 
+      - '27017:27017'
