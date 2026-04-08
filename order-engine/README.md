@@ -67,7 +67,7 @@ The service uses a REST API built with Express.js, utilizing an in-memory storag
   - Delete an order.
   - **Response:** `204 No Content` if successful.
 
-## Environment Variables
+### Environment Variables
 | Variable    | Description                       |
 |-------------|-----------------------------------|
 | PORT        | Port for the server to listen on  |
@@ -91,3 +91,18 @@ Contributions are welcome! Please open an issue or submit a pull request.
 ## CHANGELOG
 ### [1.0.0] - 2023-10-01
 - Initial release of the Order Engine service.
+
+### [1.0.1] - 2023-10-15
+- Improved error handling in order services.
+- Enhanced logging for order processing.
+
+### [1.0.2] - 2023-10-30
+- Resolved issue with invalid order data handling.
+- Fixed memory leak in the event bus implementation.
+
+### [1.0.3] - 2023-11-15
+- Dockerfile and docker-compose for easy deployment.
+- Updated README with detailed setup instructions.
+
+### [1.0.4] - 2023-11-20
+- Comprehensive documentation including API reference, environment variables table, and development guide.
