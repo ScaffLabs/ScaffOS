@@ -19,3 +19,13 @@ services:
     image: your_user_service_image
     ports:
       - '5000:5000'
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: monitoring_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:
