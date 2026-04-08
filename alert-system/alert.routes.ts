@@ -1,11 +1,20 @@
 import express, { Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import helmet from 'helmet';
+import { body, param, query, validationResult } from 'express-validator';
 import { alertStore } from './index';
 import { AlertMessage } from './alert.schema';
 import { ValidationError, NotFoundError } from './error.types';
-import rateLimit from 'express-rate-limit';
-import { body, param, query, validationResult } from 'express-validator';
 
 const router = express.Router();
+
+// CORS configuration
+const allowedOrigins = ['http://example.com', 'http://another-domain.com'];
+router.use(cors({ origin: allowedOrigins }));
+
+// Helmet middleware for security headers
+router.use(helmet());
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -14,8 +23,11 @@ const limiter = rateLimit({
     message: 'Too many requests, please try again later.'
 });
 
+// Request size limit
+router.use(express.json({ limit: '1mb' }));
+
 // Create alert
-router.post('/alerts', limiter, body('type').isString().notEmpty(), body('threshold').isNumeric(), body('currentValue').isNumeric(), async (req: Request, res: Response) => {
+router.post('/alerts', limiter, body('type').isString().notEmpty().escape(), body('threshold').isNumeric(), body('currentValue').isNumeric(), async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
