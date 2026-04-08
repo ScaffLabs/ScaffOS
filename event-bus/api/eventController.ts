@@ -21,37 +21,19 @@ export const createEvent = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-export const getEvents = async (req: Request, res: Response): Promise<void> => {
+export const seedData = async (req: Request, res: Response): Promise<void> => {
     try {
-        const events = await storage.findAll();
-        if (!events.length) throw new NotFoundError('No events found');
-        res.status(200).json(events);
+        await storageManager.seedData();
+        res.status(200).json({ message: 'Data seeded successfully' });
     } catch (error) {
         handleError(error, res);
     }
 };
 
-export const updateEvent = async (req: Request, res: Response): Promise<void> => {
+export const migrateData = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = req.params.id;
-        const validation = updateEventSchema.safeParse(req.body);
-        if (!validation.success) {
-            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
-        }
-        const updatedEvent = await storage.update(id, validation.data);
-        if (!updatedEvent) throw new NotFoundError('Event not found');
-        res.status(200).json(updatedEvent);
-    } catch (error) {
-        handleError(error, res);
-    }
-};
-
-export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const id = req.params.id;
-        const deleted = await storage.delete(id);
-        if (!deleted) throw new NotFoundError('Event not found');
-        res.status(204).send();
+        await storageManager.migrate();
+        res.status(200).json({ message: 'Migration performed successfully' });
     } catch (error) {
         handleError(error, res);
     }
@@ -72,8 +54,6 @@ const handleError = (error: Error, res: Response) => {
 
 const router = Router();
 router.post('/', createEvent);
-router.get('/', getEvents);
-router.put('/:id', updateEvent);
-router.delete('/:id', deleteEvent);
-
+router.post('/seed', seedData);
+router.post('/migrate', migrateData);
 export default router;
