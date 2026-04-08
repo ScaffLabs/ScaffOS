@@ -26,7 +26,7 @@ describe('Risk Manager API', () => {
       .send({ asset: '', position: -10 })
       .set('Authorization', validToken);
     expect(response.status).toBe(400);
-    expect(response.body.errors).toBeDefined();
+    expect(response.body.error).toBeDefined();
   });
 
   it('should retrieve risk positions', async () => {
