@@ -14,7 +14,7 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
         // Validate pagination
         const parsedLimit = Number(limit);
         const parsedOffset = Number(offset);
-        if (parsedLimit < 0 || parsedOffset < 0) {
+        if (isNaN(parsedLimit) || isNaN(parsedOffset) || parsedLimit < 0 || parsedOffset < 0) {
             throw new ValidationError('Limit and offset must be non-negative numbers.');
         }
 
