@@ -1,6 +1,6 @@
 // Branded types for IDs
 export type OrderId = string & { readonly brand: unique symbol };
-export type TradeId = string & { readonly brand: unique symbol };
+export type UserId = string & { readonly brand: unique symbol };
 
 // Discriminated union for event types
 export type EventType = 'userCreated' | 'orderPlaced';
