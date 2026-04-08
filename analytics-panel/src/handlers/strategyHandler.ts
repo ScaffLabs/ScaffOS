@@ -10,7 +10,7 @@ export const getStrategiesHandler = async (req: Request, res: Response) => {
     try {
         const query = name ? { name: name.toString() } : {};
         const strategies = await findStrategies(query);
-        const paginatedStrategies = strategies.slice(offset, offset + limit);
+        const paginatedStrategies = strategies.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedStrategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
@@ -19,6 +19,29 @@ export const getStrategiesHandler = async (req: Request, res: Response) => {
 };
 
 // Handler to create a new strategy
+/**
+ * @swagger
+ * /api/strategies:
+ *   post:
+ *     summary: Create a new strategy
+ *     description: Creates a new strategy with specified parameters
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               parameters:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Invalid input
+ */
 export const createStrategyHandler = async (req: Request, res: Response) => {
     const { name, parameters } = req.body;
     try {
@@ -26,7 +49,7 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
             throw new ValidationError('Name and parameters are required.');
         }
         const newStrategy = await createStrategy({ name, parameters });
-        logger.logRequest('POST', '/api/strategies', 201, 0); // Log creation
+        logger.logRequest('POST', '/api/strategies', 201, 0);
         res.status(201).json(newStrategy);
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -39,6 +62,38 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
 };
 
 // Handler to update an existing strategy
+/**
+ * @swagger
+ * /api/strategies/{id}:
+ *   put:
+ *     summary: Update a strategy
+ *     description: Updates the strategy with the specified ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the strategy to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               parameters:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Successfully updated
+ *       404:
+ *         description: Strategy not found
+ *       400:
+ *         description: Invalid input
+ */
 export const updateStrategyHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, parameters } = req.body;
@@ -50,7 +105,7 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
         if (!updatedStrategy) {
             throw new NotFoundError('Strategy not found.');
         }
-        logger.logRequest('PUT', `/api/strategies/${id}`, 200, 0); // Log update
+        logger.logRequest('PUT', `/api/strategies/${id}`, 200, 0);
         res.status(200).json(updatedStrategy);
     } catch (error) {
         if (error instanceof ValidationError || error instanceof NotFoundError) {
@@ -63,6 +118,25 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
 };
 
 // Handler to delete a strategy
+/**
+ * @swagger
+ * /api/strategies/{id}:
+ *   delete:
+ *     summary: Delete a strategy
+ *     description: Deletes the strategy with the specified ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the strategy to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Successfully deleted
+ *       404:
+ *         description: Strategy not found
+ */
 export const deleteStrategyHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -70,7 +144,7 @@ export const deleteStrategyHandler = async (req: Request, res: Response) => {
         if (!deleted) {
             throw new NotFoundError('Strategy not found.');
         }
-        logger.logRequest('DELETE', `/api/strategies/${id}`, 204, 0); // Log deletion
+        logger.logRequest('DELETE', `/api/strategies/${id}`, 204, 0);
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {
