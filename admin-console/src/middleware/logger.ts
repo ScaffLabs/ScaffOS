@@ -4,12 +4,13 @@ import winston from 'winston';
 const logger = winston.createLogger({
     level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
     format: winston.format.combine(
-        process.env.NODE_ENV === 'development' ? winston.format.prettyPrint() : winston.format.json(),
         winston.format.timestamp(),
+        process.env.NODE_ENV === 'development' ? winston.format.prettyPrint() : winston.format.json(),
         winston.format.printf(({ timestamp, level, message }) => `[{timestamp}] {level}: {message}`)
     ),
     transports: [
         new winston.transports.Console(),
+        new winston.transports.File({ filename: 'combined.log' }),
     ],
 });
 
@@ -26,4 +27,8 @@ export const logRequest = (req: Request, res: Response, next: NextFunction) => {
 export const logError = (err: Error, req: Request, res: Response, next: NextFunction) => {
     logger.error(`Error: {err.message} - {err.stack}`);
     res.status(500).json({ error: 'Internal Server Error' });
+};
+
+export const logSuccess = (message: string) => {
+    logger.info(message);
 };

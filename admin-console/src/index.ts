@@ -8,7 +8,7 @@ import config from './config';
 import Database from './storage/Database';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
-import { logRequest } from './middleware/logger';
+import { logRequest, logError } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 import { body, validationResult } from 'express-validator';
 import { ServiceError } from './errors/CustomErrors';
@@ -28,18 +28,19 @@ app.use(errorHandler);
 
 const startServer = async () => {
     await db.connect(config.databaseUrl);
+    logSuccess(`Database connected: {config.databaseUrl}`);
     server.listen(config.port, () => {
-        console.log(`Server running on http://localhost:${config.port}`);
+        logSuccess(`Server running on http://localhost:${config.port}`);
     });
 };
 
 startServer();
 
 const shutdown = async () => {
-    console.log('Shutting down gracefully...');
+    logSuccess('Shutting down gracefully...');
     await db.closeConnection();
     server.close(() => {
-        console.log('Server closed.');
+        logSuccess('Server closed.');
         process.exit(0);
     });
 };
