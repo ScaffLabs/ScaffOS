@@ -27,6 +27,14 @@ export interface AlertMessage {
 }
 
 /**
+ * Represents different alert events.
+ */
+export type AlertEvent = 
+    | { type: 'ALERT_CREATED'; alert: AlertMessage }
+    | { type: 'ALERT_UPDATED'; alert: AlertMessage }
+    | { type: 'ALERT_DELETED'; id: OrderId };
+
+/**
  * Zod schema for validating AlertMessage objects.
  */
 export const AlertMessageSchema = z.object({
