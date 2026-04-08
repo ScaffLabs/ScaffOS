@@ -1,24 +1,33 @@
 import axios from 'axios';
 import config from '../config';
+import { emitEvent } from '../events/EventBus';
 
 const BASE_URL = config.API_URL;
 
-export const fetchHealthStatus = async () => {
-    try {
-        const response = await axios.get(`${BASE_URL}/health`);
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching health status:', error);
-        throw error;
+const retry = async (fn, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (i === retries - 1) throw error;
+        }
     }
 };
 
-export const postConfiguration = async (key: string, value: string) => {
-    try {
-        const response = await axios.post(`${BASE_URL}/config`, { key, value });
+const fetchHealthStatus = async () => {
+    return retry(async () => {
+        const response = await axios.get(`${BASE_URL}/health`);
+        emitEvent('SERVICE_HEALTH_UPDATED', response.data);
         return response.data;
-    } catch (error) {
-        console.error('Error posting configuration:', error);
-        throw error;
-    }
+    });
 };
+
+const postConfiguration = async (key: string, value: string) => {
+    return retry(async () => {
+        const response = await axios.post(`${BASE_URL}/config`, { key, value });
+        emitEvent('CONFIGURATION_CREATED', { key, value });
+        return response.data;
+    });
+};
+
+export { fetchHealthStatus, postConfiguration };
