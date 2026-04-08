@@ -41,6 +41,9 @@ app.use((req, res, next) => {
 
 app.use('/api/health', healthRouter);
 
+// Error handling middleware
+app.use(logError);
+
 process.on('SIGTERM', async () => {
     console.log('Shutting down gracefully...');
     await mongoose.connection.close();
