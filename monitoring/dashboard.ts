@@ -3,8 +3,6 @@ import { ValidationError, NotFoundError } from './errorClasses';
 import InMemoryStore from './dataStore';
 import { LatencyDataSchema } from './types';
 import logger from './logger';
-import { OrderId } from './types';
-import { sanitize } from './sanitize';
 
 const store = new InMemoryStore<{ value: number }>();
 
@@ -24,6 +22,11 @@ const store = new InMemoryStore<{ value: number }>();
  *         description: Offset for pagination
  *         required: false
  *         type: integer
+ *       - name: sort
+ *         in: query
+ *         description: Sort entries by a field
+ *         required: false
+ *         type: string
  *     responses:
  *       200:
  *         description: A list of dashboard entries
@@ -52,7 +55,13 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
         const limit = parseInt(req.query.limit as string) || 10;
         const offset = parseInt(req.query.offset as string) || 0;
+        const sort = req.query.sort as string;
         const entries = Array.from(store.getAll()).map(entry => ({ id: entry.id, data: entry.data }));
+
+        // Sorting logic
+        if (sort) {
+            entries.sort((a, b) => a.data.value - b.data.value);
+        }
 
         const paginatedEntries = entries.slice(offset, offset + limit);
         if (paginatedEntries.length === 0) {
@@ -72,10 +81,10 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
             throw new ValidationError('Invalid input data. Both id and value are required.');
         }
         const { id, value } = bodyValidation.data;
-        if (store.read(id as OrderId)) {
+        if (store.read(id)) {
             throw new ValidationError('Entry with this ID already exists.');
         }
-        store.create({ value }, id as OrderId);
+        store.create({ value }, id);
         res.status(201).json({ message: 'Entry created', id });
     } catch (error) {
         logger.error(error, req);
@@ -94,11 +103,11 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data.');
         }
-        const existingEntry = store.read(id as OrderId);
+        const existingEntry = store.read(id);
         if (!existingEntry) {
             throw new NotFoundError('Entry not found.');
         }
-        store.update(id as OrderId, { value: bodyValidation.data.value });
+        store.update(id, { value: bodyValidation.data.value });
         res.status(204).send();
     } catch (error) {
         logger.error(error, req);
@@ -115,10 +124,10 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        if (!store.read(id as OrderId)) {
+        if (!store.read(id)) {
             throw new NotFoundError('Entry not found.');
         }
-        store.delete(id as OrderId);
+        store.delete(id);
         res.status(204).send();
     } catch (error) {
         logger.error(error, req);
