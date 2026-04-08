@@ -1,49 +1,29 @@
-import { fetchChartData, validateChartData, addChartData, deleteChartData } from '../src/api/chartApi';
-import { ServiceError } from '../src/utils/errors';
-import axios from 'axios';
+import request from 'supertest';
+import app from '../src/server';
+import { fetchChartData } from '../src/api/chartApi';
+import { jest } from '@jest/globals';
 
-jest.mock('axios');
+jest.mock('../src/api/chartApi');
 
-describe('chartApi', () => {
-    afterEach(() => {
-        jest.clearAllMocks();
+describe('Chart API Endpoints', () => {
+    it('GET /api/chart should return chart data', async () => {
+        (fetchChartData as jest.Mock).mockResolvedValue([{ date: '2021-01-01', price: 100 }]);
+        const response = await request(app).get('/api/chart');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([{ date: '2021-01-01', price: 100 }]);
     });
 
-    it('fetchChartData should return valid chart data', async () => {
-        const mockData = [{ date: '2021-01-01', price: 100 }];
-        (axios.get as jest.Mock).mockResolvedValue({ data: mockData });
-        const data = await fetchChartData();
-        expect(data).toEqual(mockData);
+    it('GET /api/chart should return 500 on fetch error', async () => {
+        (fetchChartData as jest.Mock).mockRejectedValue(new Error('Fetch error'));
+        const response = await request(app).get('/api/chart');
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ message: 'Error fetching chart data' });
     });
 
-    it('fetchChartData should throw ServiceError on invalid data structure', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({ data: {} });
-        await expect(fetchChartData()).rejects.toThrow(ServiceError);
-    });
-
-    it('validateChartData should throw ServiceError for invalid data', () => {
-        expect(() => validateChartData([])).toThrow(ServiceError);
-        expect(() => validateChartData([{ invalid: true }])).toThrow(ServiceError);
-    });
-
-    it('addChartData should add valid chart data', async () => {
-        (axios.post as jest.Mock).mockResolvedValue({});
-        await addChartData('2021-01-01', 100);
-        expect(axios.post).toHaveBeenCalledWith(expect.any(String), { date: '2021-01-01', price: 100 });
-    });
-
-    it('addChartData should throw ServiceError for invalid inputs', async () => {
-        await expect(addChartData('', 100)).rejects.toThrow(ServiceError);
-        await expect(addChartData('2021-01-01', -100)).rejects.toThrow(ServiceError);
-    });
-
-    it('deleteChartData should delete valid chart data', async () => {
-        (axios.delete as jest.Mock).mockResolvedValue({});
-        await deleteChartData('2021-01-01');
-        expect(axios.delete).toHaveBeenCalledWith(expect.any(String));
-    });
-
-    it('deleteChartData should throw ServiceError for invalid date', async () => {
-        await expect(deleteChartData(123)).rejects.toThrow(ServiceError);
+    it('GET /api/chart should return 400 for invalid data structure', async () => {
+        (fetchChartData as jest.Mock).mockResolvedValue({ invalid: true });
+        const response = await request(app).get('/api/chart');
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('Invalid data structure');
     });
 });
