@@ -4,7 +4,6 @@ import Database from '../storage/Database';
 import { ConfigurationItem } from '../types';
 import { NotFoundError, ValidationError } from '../errors/CustomErrors';
 import rateLimit from 'express-rate-limit';
-import { logAudit } from '../middleware/auditLogger';
 
 const router = express.Router();
 const db = new Database();
@@ -31,9 +30,6 @@ router.post('/', [
         await db.createConfiguration(configItem);
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
-        if (error instanceof ValidationError) {
-            return res.status(400).json({ error: error.message });
-        }
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }

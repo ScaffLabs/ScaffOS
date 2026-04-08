@@ -1,6 +1,7 @@
 import express from 'express';
 import { logger } from '../middleware/logger';
 import { healthCheck, readinessCheck } from '../services/HealthService';
+import os from 'os';
 
 const router = express.Router();
 
@@ -43,6 +44,33 @@ router.get('/ready', async (req, res) => {
     } catch (error) {
         logger.error(`Readiness check failed: ${error.message}`);
         res.status(500).json({ error: 'Readiness check failed' });
+    }
+});
+
+/**
+ * @swagger
+ * /api/health/metrics:
+ *   get:
+ *     summary: Returns system metrics including memory usage and uptime.
+ *     responses:
+ *       200:
+ *         description: System metrics successfully retrieved.
+ *       500:
+ *         description: Failed to retrieve system metrics.
+ */
+router.get('/metrics', (req, res) => {
+    try {
+        const memoryUsage = process.memoryUsage();
+        const uptime = process.uptime();
+        res.status(200).json({
+            memoryUsage,
+            uptime,
+            platform: os.platform(),
+            arch: os.arch(),
+        });
+    } catch (error) {
+        logger.error(`Failed to retrieve metrics: ${error.message}`);
+        res.status(500).json({ error: 'Failed to retrieve system metrics' });
     }
 });
 
