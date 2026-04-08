@@ -22,7 +22,7 @@ export const createOrderService = async (orderData: unknown) => {
 export const getOrdersService = async () => {
     try {
         const orders = await storage.findAll();
-        if (!orders.length) {
+        if (!orders || orders.length === 0) {
             throw new ServiceError('No orders available.');
         }
         return orders;
@@ -39,10 +39,13 @@ export const updateOrderService = async (id: string, updates: unknown) => {
     }
     const orderToUpdate = await storage.read(id);
     if (!orderToUpdate) {
-        throw new ValidationError('Order not found.');
+        throw new NotFoundError('Order not found.');
     }
     try {
         const updatedOrder = await storage.update(id, parsedUpdates.data);
+        if (!updatedOrder) {
+            throw new ServiceError('Failed to update order.');
+        }
         await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
         return updatedOrder;
     } catch (error) {
@@ -54,7 +57,7 @@ export const updateOrderService = async (id: string, updates: unknown) => {
 export const deleteOrderService = async (id: string) => {
     const orderToDelete = await storage.read(id);
     if (!orderToDelete) {
-        throw new ValidationError('Order not found.');
+        throw new NotFoundError('Order not found.');
     }
     try {
         await storage.delete(id);

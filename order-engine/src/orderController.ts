@@ -71,5 +71,3 @@ const handleError = (res: Response, error: Error) => {
 const generateRequestId = () => {
     return 'req-' + Math.random().toString(36).substr(2, 9);
 };
-
-export default { createOrder, getOrders, updateOrder, deleteOrder };
