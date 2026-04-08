@@ -44,7 +44,7 @@ export interface ErrorResponse {
 /**
  * Types for common application errors.
  */
-export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError; 
+export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError;
 
 /**
  * Represents a custom error with additional details.
@@ -54,7 +54,7 @@ export type AppError = ServiceError | ValidationError | NotFoundError | Overflow
  */
 export interface CustomError extends ErrorResponse {
     type: 'CustomError';
-} 
+}
 
 /**
  * Creates a custom error.
