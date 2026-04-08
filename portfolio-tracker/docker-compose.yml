@@ -6,10 +6,11 @@ services:
       - '3000:3000'
     environment:
       - PORT=3000
-      - PORTFOLIO_SERVICE_URL=http://other_service:3001/api/portfolios
+      - PORTFOLIO_SERVICE_URL=http://mongo:27017/portfolio-tracker
       - NODE_ENV=development
       - DATABASE_URL=mongodb://mongo:27017/portfolio-tracker
       - LOG_LEVEL=info
+      - DEBUG_MODE=false
     depends_on:
       - mongo
   mongo:
