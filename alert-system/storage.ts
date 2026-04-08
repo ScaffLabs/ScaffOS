@@ -24,23 +24,31 @@ export class MongoDBAlertStore implements AlertStoreInterface {
     async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
         const newAlert = new AlertModel({ ...alert, id: (Math.random() * 10000).toString() });
         await newAlert.save();
+        logger.info('Alert created:', newAlert);
         return newAlert.toObject();
     }
 
     async read(id: OrderId): Promise<AlertMessage | null> {
-        return AlertModel.findOne({ id }).exec();
+        const alert = await AlertModel.findOne({ id }).exec();
+        logger.info('Alert read:', alert);
+        return alert;
     }
 
     async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
-        return AlertModel.findOneAndUpdate({ id }, alert, { new: true }).exec();
+        const updatedAlert = await AlertModel.findOneAndUpdate({ id }, alert, { new: true }).exec();
+        logger.info('Alert updated:', updatedAlert);
+        return updatedAlert;
     }
 
     async delete(id: OrderId): Promise<boolean> {
         const result = await AlertModel.deleteOne({ id }).exec();
+        logger.info('Alert deleted:', { id });
         return result.deletedCount > 0;
     }
 
     async findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]> {
-        return AlertModel.find(query).exec();
+        const alerts = await AlertModel.find(query).exec();
+        logger.info('Alerts found:', alerts);
+        return alerts;
     }
 }
