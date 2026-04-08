@@ -67,4 +67,10 @@ describe('Analytics API', () => {
         expect(health.memoryUsage).toHaveProperty('heapTotal');
         expect(health.memoryUsage).toHaveProperty('heapUsed');
     });
+
+    test('fetchPerformanceMetrics handles invalid data', async () => {
+        mock.onGet('/api/performance').reply(200, { invalidField: 'data' });
+
+        await expect(fetchPerformanceMetrics()).rejects.toThrow(ServiceError);
+    });
 });

@@ -58,4 +58,22 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(500);
         expect(response.body).toHaveProperty('error', 'Internal Server Error');
     });
+
+    it('GET /api/strategies responds with strategies', async () => {
+        const mockStrategies = [{ name: 'Strategy A' }, { name: 'Strategy B' }];
+        jest.spyOn(createStrategy, 'getStrategies').mockResolvedValue(mockStrategies);
+
+        const response = await request(app).get('/api/strategies');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(mockStrategies);
+    });
+
+    it('POST /api/strategies creates a new strategy', async () => {
+        const newStrategy = { name: 'Strategy C', parameters: { param1: 'value3' } };
+        jest.spyOn(createStrategy, 'createStrategy').mockResolvedValue(newStrategy);
+
+        const response = await request(app).post('/api/strategies').send(newStrategy);
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual(newStrategy);
+    });
 });
