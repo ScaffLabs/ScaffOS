@@ -20,16 +20,16 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         // Buy Condition
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
-            totalReturns += currentPrice * (1 - slippage) - previousPrice; // Calculate profit after slippage
+            totalReturns += (currentPrice * (1 - slippage)) - previousPrice; // Calculate profit after slippage
         } 
         // Sell Condition
         else if (currentPrice < previousPrice * (1 - sellThreshold)) {
             trades++;
-            totalReturns += previousPrice * (1 - slippage) - currentPrice; // Calculate profit after slippage
+            totalReturns += previousPrice - (currentPrice * (1 + slippage)); // Calculate profit after slippage
         }
     }
 
-    const winRate = trades > 0 ? (totalReturns > 0 ? 100 : 0) : 0; // Simple win rate calculation
+    const winRate = trades > 0 ? (totalReturns > 0 ? (trades / (trades * 2)) * 100 : 0) : 0; // Simple win rate calculation
     const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate}%`;
     return { totalReturns, trades, winRate, performanceMetrics };
 }
