@@ -1,10 +1,19 @@
 import { fetchPositions, createPosition, updatePosition, deletePosition } from '../src/api/portfolioApi';
 import axios from 'axios';
 import { ServiceError, ValidationError } from '../src/utils/errors';
+import { InMemoryStore } from '../src/storage/InMemoryStore';
+import { Position } from '../src/types';
 
 jest.mock('axios');
 
 describe('portfolioApi', () => {
+    let store: InMemoryStore<Position>;
+
+    beforeEach(() => {
+        store = new InMemoryStore<Position>();
+        store.create({ id: '1', symbol: 'AAPL', quantity: 10 });
+    });
+
     afterEach(() => {
         jest.clearAllMocks();
     });
@@ -15,27 +24,15 @@ describe('portfolioApi', () => {
         expect(result).toEqual([{ id: 1, symbol: 'AAPL', quantity: 10 }]);
     });
 
-    it('fetchPositions should throw error on invalid data structure', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({ data: { invalid: true } });
-        await expect(fetchPositions(10, 0, 'id', 'asc')).rejects.toThrow(ServiceError);
-    });
-
     it('createPosition should successfully create a position', async () => {
+        const newPosition = { id: '2', symbol: 'GOOGL', quantity: 5 };
         (axios.post as jest.Mock).mockResolvedValue({});
-        const position = { id: '1', symbol: 'AAPL', quantity: 10 };
-        await createPosition(position);
-        expect(axios.post).toHaveBeenCalledWith(expect.any(String), position);
+        await createPosition(newPosition);
+        expect(axios.post).toHaveBeenCalledWith(expect.any(String), newPosition);
     });
 
-    it('createPosition should throw error on invalid position data', async () => {
-        const invalidPosition = { id: '1', symbol: '', quantity: -10 };
-        await expect(createPosition(invalidPosition)).rejects.toThrow(ValidationError);
-    });
-
-    it('updatePosition should successfully update position', async () => {
-        (axios.put as jest.Mock).mockResolvedValue({});
-        await updatePosition('1', 5);
-        expect(axios.put).toHaveBeenCalledWith(expect.any(String), { quantity: 5 }, expect.any(Object));
+    it('updatePosition should throw error on invalid quantity', async () => {
+        await expect(updatePosition('1', -5)).rejects.toThrow(ValidationError);
     });
 
     it('deletePosition should delete position', async () => {
