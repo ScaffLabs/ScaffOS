@@ -1,12 +1,14 @@
 import axios from 'axios';
 import config from '../config';
 import { ServiceError } from '../utils/errors';
+import { query } from '../utils/connectionPool';
 
 export const fetchChartData = async () => {
     try {
-        const response = await axios.get(`${config.API_URL}/chart-data`);
-        if (!Array.isArray(response.data)) throw new ServiceError('Invalid data structure');
-        return response.data;
+        const sql = 'SELECT date, price FROM chart_data ORDER BY date ASC';
+        const result = await query(sql, []);
+        if (!Array.isArray(result)) throw new ServiceError('Invalid data structure');
+        return result;
     } catch (error) {
         throw new ServiceError('Error fetching chart data: ' + error.message);
     }
@@ -21,4 +23,13 @@ export const validateChartData = (data) => {
             throw new ServiceError('Invalid data item');
         }
     });
+};
+
+export const addChartData = async (date: string, price: number) => {
+    try {
+        const sql = 'INSERT INTO chart_data (date, price) VALUES (?, ?)';
+        await query(sql, [date, price]);
+    } catch (error) {
+        throw new ServiceError('Error adding chart data: ' + error.message);
+    }
 };
