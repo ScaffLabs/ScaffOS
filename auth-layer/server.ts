@@ -10,9 +10,9 @@ import logger, { startupLog } from './logger';
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 import { logRequest } from './logger';
+import { csrfMiddleware } from './middleware';
+import { rateLimit as apiRateLimit } from './rateLimit';
 import { sanitizeInput } from './middleware';
-import { setTimeout } from 'timers';
-import { checkServiceHealth } from './interServiceClient';
 
 const app = express();
 const server = http.createServer(app);
@@ -56,6 +56,7 @@ app.use('/api/', apiLimiter);
 app.use('/health', healthRouter);
 app.use('/api', userRoutes);
 app.use(errorMiddleware);
+app.use(csrfMiddleware); // CSRF protection middleware
 
 const start = async () => {
     try {
