@@ -1,8 +1,8 @@
 import axios from 'axios';
 import config from '../config';
 import { emitEvent } from '../events/EventBus';
-import { EventType, ConfigurationItem } from '../types';
-import { ServiceError } from '../errors/CustomErrors';
+import { ServiceError, NotFoundError } from '../errors/CustomErrors';
+import { ConfigurationItem } from '../types';
 import { CircuitBreaker } from 'opossum';
 
 const BASE_URL = config.API_URL;
@@ -52,4 +52,8 @@ const healthCheckWithRetry = async () => {
     return requestWithRetry(fetchHealthStatus);
 };
 
-export { fetchHealthStatus, postConfiguration, requestWithRetry, healthCheckWithRetry };
+const fetchServiceHealthWithRetry = async () => {
+    return requestWithRetry(fetchHealthStatus);
+};
+
+export { fetchHealthStatus, postConfiguration, requestWithRetry, healthCheckWithRetry, fetchServiceHealthWithRetry };
