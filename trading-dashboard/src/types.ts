@@ -7,20 +7,27 @@ export type PositionId = string & { readonly brand: unique symbol };
 
 // Type for Order details
 export interface Order {
+    /** Unique identifier for the order */
     id: OrderId;
+    /** The stock symbol for the order */
     symbol: string;
+    /** The quantity of shares to buy/sell */
     quantity: number;
+    /** The type of order - either 'buy' or 'sell' */
     type: 'buy' | 'sell';
 }
 
 // Type for Position
 export interface Position {
+    /** Unique identifier for the position */
     id: PositionId;
+    /** The stock symbol for the position */
     symbol: string;
+    /** The quantity of shares held in the position */
     quantity: number;
 }
 
-// Event types
+// Event types for trading events
 export type TradingEvent =
     | { type: 'ORDER_SUBMITTED'; order: Order }
     | { type: 'POSITION_UPDATED'; position: Position };
@@ -44,18 +51,36 @@ export const TradingEventSchema = z.union([
     z.object({ type: z.literal('POSITION_UPDATED'), position: PositionSchema }),
 ]);
 
+/**
+ * Validates an order data structure
+ * @param data - The data to validate
+ * @returns The validated order
+ * @throws Will throw an error if validation fails
+ */
 export const validateOrder = (data: unknown): Order => {
     const result = OrderSchema.safeParse(data);
     if (!result.success) throw new Error('Invalid order data');
     return result.data;
 };
 
+/**
+ * Validates a position data structure
+ * @param data - The data to validate
+ * @returns The validated position
+ * @throws Will throw an error if validation fails
+ */
 export const validatePosition = (data: unknown): Position => {
     const result = PositionSchema.safeParse(data);
     if (!result.success) throw new Error('Invalid position data');
     return result.data;
 };
 
+/**
+ * Validates a trading event data structure
+ * @param data - The data to validate
+ * @returns The validated trading event
+ * @throws Will throw an error if validation fails
+ */
 export const validateTradingEvent = (data: unknown): TradingEvent => {
     const result = TradingEventSchema.safeParse(data);
     if (!result.success) throw new Error('Invalid trading event data');

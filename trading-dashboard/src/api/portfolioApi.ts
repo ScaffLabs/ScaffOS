@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { InMemoryStore } from '../storage/InMemoryStore';
-import { Position, PositionSchema } from '../types';
-import { ServiceError, ValidationError, NotFoundError } from '../utils/errors';
+import { Position, PositionSchema, validatePosition } from '../types';
+import { ServiceError, NotFoundError } from '../utils/errors';
 import validator from 'validator';
 
 const positionStore = new InMemoryStore<Position>();
@@ -24,16 +24,16 @@ export const fetchPositions = async (req: Request, res: Response) => {
 };
 
 export const createPosition = async (req: Request, res: Response) => {
-    const position = req.body;
-    const validationResult = PositionSchema.safeParse(position);
-    if (!validationResult.success) {
-        return res.status(400).json({ message: 'Invalid position data', errors: validationResult.error.errors });
-    }
+    const positionData = req.body;
     try {
-        const createdPosition = positionStore.create(validationResult.data);
+        const validatedPosition = validatePosition(positionData);
+        const createdPosition = positionStore.create(validatedPosition);
         res.status(201).json({ message: 'Position created successfully', position: createdPosition });
     } catch (error) {
-        throw new ServiceError('Error creating position: ' + error.message);
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ message: error.message });
+        }
+        return res.status(400).json({ message: 'Invalid position data', errors: error.errors });
     }
 };
 
