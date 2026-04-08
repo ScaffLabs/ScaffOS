@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import os from 'os';
 
 export class HealthCheck {
     static async checkServices(services: string[]): Promise<{ [key: string]: boolean }> {
