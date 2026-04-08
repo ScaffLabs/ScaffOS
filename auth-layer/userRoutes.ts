@@ -2,9 +2,8 @@ import express from 'express';
 import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from './storage';
 import { validateAndSanitizeUserInput, authMiddleware } from './middleware';
 import logger from './logger';
-import { rateLimit } from './rateLimit';
 import { ValidationError, NotFoundError } from './errors';
-import { emitUserCreated } from './interServiceClient';
+import { emitUserCreated } from './eventBus';
 
 const router = express.Router();
 
@@ -27,6 +26,16 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
     }
 });
 
+router.get('/users', authMiddleware, async (req, res) => {
+    try {
+        const users = await getAllUsers();
+        res.status(200).json(users);
+    } catch (error) {
+        logger.error('Error retrieving users', { error: error.message });
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 router.put('/users/:id', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
     const userId = req.params.id;
     try {
@@ -42,3 +51,21 @@ router.put('/users/:id', authMiddleware, validateAndSanitizeUserInput, async (re
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+router.delete('/users/:id', authMiddleware, async (req, res) => {
+    const userId = req.params.id;
+    try {
+        const deleted = await deleteUser(userId);
+        if (!deleted) throw new NotFoundError('User not found for deletion');
+        logger.info('User deleted', { userId });
+        res.status(204).send();
+    } catch (error) {
+        logger.error('Error deleting user', { error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+export default router;
