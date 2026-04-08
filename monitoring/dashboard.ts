@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ValidationError, NotFoundError } from './errorClasses';
-import { LatencyDataSchema } from './types';
+import { LatencyData, LatencyDataSchema } from './types';
 import logger from './logger';
 import { createConnectionPool } from './connectionPool';
 
@@ -25,8 +25,8 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data. Both id and value are required.');
         }
-        const { id, value } = bodyValidation.data;
-        const response = await connectionPool.requestWithRetry('order', 'post', '/dashboard', { id, value });
+        const { path, duration, timestamp } = bodyValidation.data;
+        const response = await connectionPool.requestWithRetry('order', 'post', '/dashboard', { path, duration, timestamp });
         res.status(201).json({ message: 'Entry created', id: response.id });
     } catch (error) {
         logger.error(error, req);
@@ -41,7 +41,7 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const bodyValidation = LatencyDataSchema.pick({ value: true }).safeParse(req.body);
+        const bodyValidation = LatencyDataSchema.pick({ duration: true }).safeParse(req.body);
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data.');
         }
