@@ -75,4 +75,13 @@ describe('User Routes', () => {
         expect(res.status).toBe(400);
         expect(res.body.errors.length).toBeGreaterThan(0);
     });
+
+    it('should handle empty username or email on create', async () => {
+        const res = await request(app)
+            .post('/users')
+            .set('x-api-key', apiKey)
+            .send({ username: '', email: '' });
+        expect(res.status).toBe(400);
+        expect(res.body.errors.length).toBeGreaterThan(0);
+    });
 });
