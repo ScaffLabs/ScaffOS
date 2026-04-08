@@ -10,6 +10,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import { logRequest, logAudit } from './logger';
+import { ServiceError } from './errors';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -36,21 +37,17 @@ const startApp = async () => {
             const health = await priceAggregator.checkDependencies();
             res.status(200).json({ status: 'healthy', dependencies: health });
         } catch (error) {
-            next(error);
+            next(new ServiceError('Health check failed.')); // Improved error handling
         }
     });
 
     app.get('/prices', async (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
         try {
             const prices = await priceAggregator.getCurrentPrices();
             if (Object.keys(prices).length === 0) return res.status(204).send();
             res.status(200).json(prices);
         } catch (error) {
-            next(error);
+            next(new ServiceError('Failed to fetch current prices.'));
         }
     });
 
@@ -77,6 +74,17 @@ const startApp = async () => {
 
     httpServer.listen(config.port, () => {
         console.log(`Price aggregator service running on port ${config.port}`);
+    });
+
+    process.on('SIGTERM', async () => {
+        console.log('SIGTERM signal received: closing HTTP server');
+        httpServer.close((err) => {
+            if (err) {
+                console.error('Error during server shutdown:', err);
+            }
+            console.log('HTTP server closed');
+            process.exit(0);
+        });
     });
 
     setInterval(() => {
