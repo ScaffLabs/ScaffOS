@@ -31,8 +31,6 @@ export async function healthCheckServices() {
   return results;
 }
 
-export { eventEmitter };
-
 export async function checkAllHealth() {
   const servicesHealth = await healthCheckServices();
   const allHealthy = servicesHealth.every(result => result.healthy);
@@ -62,4 +60,39 @@ export async function healthCheckMemoryUsage() {
       total: Math.round(total / 1024 / 1024)
     }
   };
+}
+
+export function setupHealthCheckEndpoints(app) {
+  app.get('/health', async (req, res) => {
+    try {
+      const results = await checkAllHealth();
+      res.status(200).json({ status: results.healthy ? 'healthy' : 'unhealthy', services: results.details });
+    } catch (error) {
+      logger.error('Health check failed:', error);
+      res.status(500).json({ status: 'unhealthy', error: error.message });
+    }
+  });
+
+  app.get('/ready', async (req, res) => {
+    try {
+      const readiness = await checkReadiness();
+      res.status(200).json({ status: readiness.healthy ? 'ready' : 'not ready' });
+    } catch (error) {
+      logger.error('Readiness check failed:', error);
+      res.status(500).json({ status: 'not ready', error: error.message });
+    }
+  });
+
+  app.get('/health/memory', (req, res) => {
+    const used = process.memoryUsage();
+    const total = used.heapTotal + used.external;
+    res.status(200).json({
+      memory: {
+        heapTotal: Math.round(used.heapTotal / 1024 / 1024),
+        heapUsed: Math.round(used.heapUsed / 1024 / 1024),
+        external: Math.round(used.external / 1024 / 1024),
+        total: Math.round(total / 1024 / 1024)
+      }
+    });
+  });
 }
