@@ -10,6 +10,7 @@ import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
 import { MemoryMonitor } from './memoryMonitor';
 import { createConnectionPool } from './dbConnection';
+import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -17,6 +18,7 @@ const priceAggregator = new PriceAggregator();
 const memoryMonitor = new MemoryMonitor();
 const connectionPool = createConnectionPool();
 
+// Security middleware setup
 app.use(helmet()); // Set security HTTP headers
 app.use(cors({ origin: ['https://allowed-origin.com'], credentials: true })); // CORS configuration
 app.use(express.json({ limit: '1mb' })); // Request size limit
@@ -98,3 +100,7 @@ const startApp = async () => {
 };
 
 startApp();
+
+const generateRequestId = () => {
+    return 'req-' + Math.random().toString(36).substr(2, 9);
+};
