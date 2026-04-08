@@ -12,4 +12,13 @@ services:
     volumes:
       - .:/usr/src/app
     depends_on:
-      - other_service # Add other services as needed
+      - database
+
+  database:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - '5432:5432'
