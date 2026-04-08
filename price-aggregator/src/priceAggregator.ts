@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 import axios from 'axios';
 import { PriceData, CurrentPrices } from './types';
 import { httpClient } from './httpClient';
+import { validationResult } from 'express-validator';
 
 export class PriceAggregator {
     private prices: PriceData[] = [];
@@ -20,7 +21,7 @@ export class PriceAggregator {
         }, 5000);
     }
 
-    private async fetchPrices() {
+    public async fetchPrices() {
         const exchanges = ['exchange1', 'exchange2', 'exchange3'];
         const fetchPromises = exchanges.map(exchange => this.fetchExchangePrice(exchange));
         const prices = await Promise.all(fetchPromises);
@@ -28,9 +29,9 @@ export class PriceAggregator {
         this.updateCurrentPrices();
     }
 
-    private async fetchExchangePrice(exchange: string): Promise<PriceData | null> {
+    public async fetchExchangePrice(exchange: string): Promise<PriceData | null> {
         try {
-            const priceData = await httpClient(`/prices/${exchange}`);
+            const priceData = await httpClient(`/prices/${encodeURIComponent(exchange)}`);
             return { exchange, price: priceData.price, volume: priceData.volume };
         } catch (error) {
             console.error(`Error fetching price for ${exchange}:`, error);
@@ -79,7 +80,7 @@ export class PriceAggregator {
         const dependencies = ['exchange1', 'exchange2'];
         const results = await Promise.all(dependencies.map(async (dep) => {
             try {
-                await httpClient(`/health/${dep}`);
+                await httpClient(`/health/${encodeURIComponent(dep)}`);
                 return { [dep]: 'healthy' };
             } catch {
                 return { [dep]: 'unhealthy' };
