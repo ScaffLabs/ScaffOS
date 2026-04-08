@@ -35,7 +35,7 @@ router.get('/risk', [
     }
     try {
         const { limit = 10, offset = 0, sort, filter } = req.query;
-        const positions = await riskManager.getRiskPositions(Number(limit), Number(offset));
+        const positions = await riskManager.getRiskPositions(Number(limit), Number(offset), sort, filter);
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
@@ -72,7 +72,7 @@ router.put('/risk/:id', [
     try {
         const { id } = req.params;
         const { position } = req.body;
-        const updatedPosition = await riskManager.updateRiskPosition(id as unknown as OrderId, position);
+        const updatedPosition = await riskManager.updateRiskPosition(id, position);
         if (!updatedPosition) {
             return res.status(404).send();
         }
@@ -92,7 +92,7 @@ router.delete('/risk/:id', [
     }
     try {
         const { id } = req.params;
-        const deleted = await riskManager.deleteRiskPosition(id as unknown as OrderId);
+        const deleted = await riskManager.deleteRiskPosition(id);
         if (!deleted) {
             return res.status(404).send();
         }
