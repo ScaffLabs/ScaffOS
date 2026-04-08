@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { securityMiddleware, validateRequest } from './middleware';
-import { createOrder, getOrders } from './orderController';
+import { createOrder, getOrders, updateOrder, deleteOrder } from './orderController';
 import { connectToDatabase, closeDatabaseConnection } from './db';
 import { healthCheck, readyCheck } from './health';
 import { setupGracefulShutdown } from './shutdown';
@@ -17,6 +17,8 @@ app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 app.post('/orders', validateRequest, createOrder);
 app.get('/orders', getOrders);
+app.put('/orders/:id', validateRequest, updateOrder);
+app.delete('/orders/:id', deleteOrder);
 
 const startServer = async () => {
   await connectToDatabase();
@@ -31,4 +33,4 @@ initializeMonitoring();
 startServer().catch(err => {
   console.error('Failed to start the server:', err);
   process.exit(1);
-};
+});
