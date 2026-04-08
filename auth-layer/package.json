@@ -7,6 +7,7 @@
         "test:watch": "jest --watch",
         "test:integration": "jest --testPathPattern=__tests__/index.test.ts",
         "test:unit": "jest --testPathPattern=__tests__/userRoutes.test.ts",
+        "test:health": "jest --testPathPattern=__tests__/health.test.ts",
         "start": "node dist/server.js"
     },
     "devDependencies": {
