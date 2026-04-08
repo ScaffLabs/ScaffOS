@@ -13,7 +13,7 @@ export type TradeId = string & { readonly brand: unique symbol };
 /**
  * Represents an alert message.
  * @property {OrderId} id - The unique identifier for the alert.
- * @property {string} type - The type of the alert, e.g., 'price' or 'risk'.
+ * @property {'price' | 'risk'} type - The type of the alert, e.g., 'price' or 'risk'.
  * @property {number} threshold - The threshold value for triggering the alert.
  * @property {number} currentValue - The current value being evaluated against the threshold.
  * @property {Date} createdAt - The date and time the alert was created.

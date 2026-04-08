@@ -6,6 +6,11 @@ import { ValidationError, ServiceError } from './error.types';
 export class AlertController {
     private activeAlerts: AlertMessage[] = [];
 
+    /**
+     * Retrieves the active alerts.
+     * @param req - The request object.
+     * @param res - The response object.
+     */
     getActiveAlerts(req: Request, res: Response) {
         try {
             return res.json(this.activeAlerts);
@@ -14,6 +19,10 @@ export class AlertController {
         }
     }
 
+    /**
+     * Adds a new alert to the active alerts.
+     * @param alertData - The data of the alert to add.
+     */
     async addAlert(alertData: unknown) {
         try {
             const alert = validateAlertMessage(alertData);
@@ -27,11 +36,21 @@ export class AlertController {
         }
     }
 
+    /**
+     * Health check endpoint.
+     * @param req - The request object.
+     * @param res - The response object.
+     */
     async healthCheck(req: Request, res: Response) {
         const isHealthy = true; // Implement health check logic
         return res.status(isHealthy ? 200 : 503).json({ healthy: isHealthy });
     }
 
+    /**
+     * Readiness check endpoint.
+     * @param req - The request object.
+     * @param res - The response object.
+     */
     async readyCheck(req: Request, res: Response) {
         const isReady = true; // Implement readiness check logic
         return res.status(isReady ? 200 : 503).json({ ready: isReady });
