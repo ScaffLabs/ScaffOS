@@ -7,7 +7,11 @@ import { CircuitBreaker } from 'opossum';
 
 const BASE_URL = config.API_URL;
 
-const circuitBreaker = new CircuitBreaker({timeout: 5000, errorThresholdPercentage: 50, resetTimeout: 30000});
+const circuitBreaker = new CircuitBreaker({
+    timeout: 5000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+});
 
 const fetchHealthStatus = async () => {
     try {
