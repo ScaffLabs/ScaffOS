@@ -4,6 +4,7 @@ import { PriceAggregator } from './priceAggregator';
 import { MemoryMonitor } from './memoryMonitor';
 import http from 'http';
 import errorMiddleware from './errorMiddleware';
+import { config } from './config';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -38,8 +39,8 @@ const startApp = async () => {
 
     app.use(errorMiddleware);
 
-    httpServer.listen(3000, () => {
-        console.log('Price aggregator service running on port 3000');
+    httpServer.listen(config.port, () => {
+        console.log(`Price aggregator service running on port ${config.port}`);
     });
 
     setInterval(() => {
