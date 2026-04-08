@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  portfolio-tracker:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=3000
+      - PORTFOLIO_SERVICE_URL=http://portfolio-tracker:3001/api/portfolios
+      - NODE_ENV=development
+  other_service:
+    image: other_service_image
+    ports:
+      - '3001:3001'
