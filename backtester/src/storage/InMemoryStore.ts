@@ -23,15 +23,6 @@ export class InMemoryStore<T> implements StorageInterface<T> {
         return this.store.get(id);
     }
 
-    async findAll(): Promise<Entity<T>[]> {
-        return Array.from(this.store.values());
-    }
-
-    async findPaginated(limit: number, offset: number): Promise<Entity<T>[]> {
-        const entities = Array.from(this.store.values());
-        return entities.slice(offset, offset + limit);
-    }
-
     async update(id: string, data: T): Promise<Entity<T> | undefined> {
         const entity = this.store.get(id);
         if (entity) {
@@ -49,5 +40,23 @@ export class InMemoryStore<T> implements StorageInterface<T> {
             return true;
         }
         return false;
+    }
+
+    async findAll(): Promise<Entity<T>[]> {
+        return Array.from(this.store.values());
+    }
+
+    async transaction(operations: Array<() => Promise<void>>): Promise<void> {
+        // This is a dummy implementation for in-memory store
+        for (const operation of operations) {
+            await operation();
+        }
+    }
+
+    async migrate(data: T[]): Promise<void> {
+        for (const item of data) {
+            await this.create(item);
+        }
+        logger.info('Migration completed for in-memory store.');
     }
 }
