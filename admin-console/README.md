@@ -111,9 +111,12 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - Notification context for managing notifications across the application.
 
 ### [1.0.1] - 2023-10-15
-- Added detailed API reference with all endpoints.
+- Added detailed API reference with all endpoints in README.md.
 - Improved setup instructions for environment variables.
 
 ### [1.0.2] - 2023-10-20
 - Added comprehensive README.md with setup, deployment, and API reference.
 - Improved inline documentation for better clarity.
+
+### [1.0.3] - 2023-10-25
+- Added detailed environment variable descriptions and guide for setting up the application.
