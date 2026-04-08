@@ -26,4 +26,12 @@ export const logSensitiveOperation = (operation: string, details: object) => {
     logger.info({ operation, details });
 };
 
+export const logStartup = (config: object) => {
+    logger.info('Service started with configuration:', config);
+};
+
+export const logPerformance = (operation: string, duration: number, reqId: string) => {
+    logger.info({ operation, duration, reqId });
+};
+
 export default logger;
