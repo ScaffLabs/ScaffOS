@@ -24,3 +24,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Dockerfile and docker-compose for easy deployment.
 - Updated README with detailed setup instructions.
+
+## [1.0.4] - 2023-11-20
+### Added
+- Comprehensive documentation including API reference, environment variables table, and development guide.

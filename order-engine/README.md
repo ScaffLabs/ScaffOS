@@ -27,9 +27,10 @@ The service uses a REST API built with Express.js, utilizing an in-memory storag
    ```bash
    PORT=3000
    BASE_URL=http://localhost:3000
-   DATABASE_URL=http://localhost:5432
-   ANOTHER_SERVICE_URL=http://localhost:4000
-   ORDER_SERVICE_URL=http://localhost:5000
+   DATABASE_URL=postgres://your_user:your_password@db:5432/your_database
+   ANOTHER_SERVICE_URL=http://another-service:4000
+   ORDER_SERVICE_URL=http://order-service:5000
+   MEMORY_LIMIT=80%
    ```
 2. Start the server:
    ```bash
@@ -74,6 +75,7 @@ The service uses a REST API built with Express.js, utilizing an in-memory storag
 | DATABASE_URL | URL for the database connection   |
 | ANOTHER_SERVICE_URL | URL for another service connection   |
 | ORDER_SERVICE_URL | URL for order service connection   |
+| MEMORY_LIMIT | Memory limit for the application   |
 
 ## Development Guide
 - Ensure you have the necessary environment set up.
