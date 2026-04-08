@@ -8,6 +8,7 @@ import errorMiddleware from './errorMiddleware';
 import logger, { startupLog } from './logger';
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
+import { logRequest } from './logger';
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +18,7 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(logRequest);
 app.use('/health', healthRouter);
 app.use('/api', userRoutes);
 app.use(errorMiddleware);
