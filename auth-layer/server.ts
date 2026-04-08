@@ -1,3 +1,4 @@
+// server.ts
 import express from 'express';
 import http from 'http';
 import healthRouter from './health';
@@ -23,5 +24,17 @@ const start = async () => {
         logger.info(`Server listening on port ${process.env.PORT || 3000}`);
     });
 };
+
+const shutdown = async () => {
+    logger.info('Shutting down gracefully...');
+    await connectionPool.drain();
+    server.close(() => {
+        logger.info('Closed out remaining connections.');
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 start();
