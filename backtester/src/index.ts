@@ -2,9 +2,10 @@ import express from 'express';
 import { backtestRouter } from './routes/backtest';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
+import { config } from '../config';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = config.port;
 
 app.use(express.json());
 
@@ -17,7 +18,7 @@ app.use((req, res, next) => {
       path: req.path,
       status: res.statusCode,
       duration,
-      requestId: req.headers['x-request-id'] || 'N/A'
+      requestId: req.headers['x-request-id'] || 'N/A',
     });
   });
   next();
@@ -28,6 +29,7 @@ app.use(errorHandler);
 
 const server = app.listen(PORT, () => {
   logger.info(`Backtester service running on port ${PORT}`);
+  logger.info('Configuration: ', config);
 });
 
 const shutdown = () => {

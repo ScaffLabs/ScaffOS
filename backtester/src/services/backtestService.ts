@@ -1,21 +1,18 @@
 import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import axios from 'axios';
 import { EventEmitter } from 'events';
-import { config } from '../../config';
-import Bottleneck from 'bottleneck';
+import logger from '../utils/logger';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 const eventEmitter = new EventEmitter();
 
-const limiter = new Bottleneck({
-  minTime: 200, // Minimum time between requests
-  maxConcurrent: 5, // Maximum concurrent requests
-});
-
 async function fetchDataFromService(url: string, retries: number = MAX_RETRIES): Promise<any> {
   try {
-    const response = await limiter.schedule(() => axios.get(url));
+    const start = Date.now();
+    const response = await axios.get(url);
+    const duration = Date.now() - start;
+    logger.debug(`Fetched data from ${url} in ${duration}ms`);
     return response.data;
   } catch (error) {
     if (retries > 0) {
@@ -27,7 +24,7 @@ async function fetchDataFromService(url: string, retries: number = MAX_RETRIES):
 }
 
 async function fetchOrders() {
-  const ordersUrl = `${config.orderServiceUrl}/orders`;
+  const ordersUrl = `${process.env.ORDER_SERVICE_URL}/orders`;
   try {
     const orders = await fetchDataFromService(ordersUrl);
     return orders;
@@ -38,7 +35,7 @@ async function fetchOrders() {
 }
 
 async function fetchHistoricalData() {
-  const dataUrl = `${config.dataServiceUrl}/historical-data`;
+  const dataUrl = `${process.env.DATA_SERVICE_URL}/historical-data`;
   try {
     const historicalData = await fetchDataFromService(dataUrl);
     return historicalData;
@@ -58,6 +55,7 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
   let trades = 0;
   let wins = 0;
 
+  // Implementing the backtest logic
   for (let i = 0; i < historicalData.length; i++) {
     const currentData = historicalData[i];
     const order = orders.find(o => o.timestamp === currentData.timestamp);

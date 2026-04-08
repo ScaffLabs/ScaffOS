@@ -7,7 +7,7 @@ const logger = winston.createLogger({
   format: winston.format.json(),
   transports: [
     new winston.transports.Console({
-      format: isDevelopment ? winston.format.simple() : winston.format.json(),
+      format: isDevelopment ? winston.format.combine(winston.format.colorize(), winston.format.simple()) : winston.format.json(),
     }),
   ],
 });
