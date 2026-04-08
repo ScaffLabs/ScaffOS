@@ -11,6 +11,7 @@ import { logRequest, logError, logStartup } from './logger';
 import { MemoryMonitor } from './memoryMonitor';
 import { createConnectionPool } from './dbConnection';
 import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
+import { ValidationError, ServiceError } from './errors';
 
 const app = express();
 const httpServer = http.createServer(app);
