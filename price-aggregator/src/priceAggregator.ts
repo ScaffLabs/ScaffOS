@@ -1,11 +1,10 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices, PriceEvent, PriceDataSchema, PriceEventSchema } from './types';
-import { httpClient, postHttpClient } from './httpClient';
+import { PriceData, CurrentPrices, PriceEvent, PriceDataSchema } from './types';
+import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
 import { EventBus } from './eventBus';
-import { ServiceError, ValidationError, NullValueError } from './errors';
-import { config } from './config';
+import { ServiceError, ValidationError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -33,28 +32,7 @@ export class PriceAggregator {
         }
     }
 
-    public async checkDependencies(): Promise<{ [key: string]: string }> {
-        const dependencies = {};
-        try {
-            const response = await httpClient('/service-health');
-            dependencies['service1'] = response.status;
-        } catch (error) {
-            dependencies['service1'] = 'unhealthy';
-            logError(error, 'Service 1 health check failed');
-        }
-
-        try {
-            const response = await httpClient('/another-service-health');
-            dependencies['service2'] = response.status;
-        } catch (error) {
-            dependencies['service2'] = 'unhealthy';
-            logError(error, 'Service 2 health check failed');
-        }
-
-        return dependencies;
-    }
-
-    private async updateCurrentPrices(): Promise<void> {
+    public async getCurrentPrices(): Promise<CurrentPrices> {
         const allPrices = await storage.findAll();
         this.currentPrices = {};
         let totalValue = 0;
@@ -71,6 +49,11 @@ export class PriceAggregator {
         } else {
             this.currentPrices.VWAP = totalValue / totalVolume;
         }
+        return this.currentPrices;
+    }
+
+    private async updateCurrentPrices(): Promise<void> {
+        await this.getCurrentPrices();
     }
 
     private handlePriceEvent(event: PriceEvent): void {

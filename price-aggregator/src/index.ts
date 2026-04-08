@@ -19,12 +19,10 @@ const priceAggregator = new PriceAggregator();
 const memoryMonitor = new MemoryMonitor();
 const connectionPool = createConnectionPool();
 
-// Security middleware setup
 app.use(helmet());
 app.use(cors({ origin: ['https://allowed-origin.com'], credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
-// Rate limit middleware
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -47,12 +45,21 @@ const startApp = async () => {
     logStartup(config);
 
     app.get('/prices', async (req, res, next) => {
+        const { limit = 10, offset = 0, sortBy = 'price', order = 'asc' } = req.query;
         try {
             const prices = await priceAggregator.getCurrentPrices();
-            if (Object.keys(prices).length === 0) {
+            // Apply sorting and pagination
+            const sortedPrices = Object.entries(prices).sort((a, b) => {
+                const aValue = a[1];
+                const bValue = b[1];
+                return order === 'asc' ? aValue - bValue : bValue - aValue;
+            }).slice(offset, offset + limit);
+            if (sortedPrices.length === 0) {
                 return res.status(204).send();
             }
-            res.status(200).json(prices);
+            const response = Object.fromEntries(sortedPrices);
+            response.VWAP = prices.VWAP; // Include VWAP in the response
+            res.status(200).json(response);
         } catch (error) {
             logError(error, 'Error fetching prices');
             next(error);
@@ -79,27 +86,7 @@ const startApp = async () => {
         }
     });
 
-    app.get('/ready', async (req, res) => {
-        const isReady = await priceAggregator.checkReady();
-        if (isReady) {
-            return res.status(200).json({ status: 'ready' });
-        }
-        res.status(503).json({ status: 'not ready' });
-    });
-
     app.use(errorMiddleware);
-
-    const shutdown = async () => {
-        console.log('Shutting down gracefully...');
-        await connectionPool.drain();
-        httpServer.close(() => {
-            console.log('HTTP server closed');
-            process.exit(0);
-        });
-    };
-
-    process.on('SIGTERM', shutdown);
-    process.on('SIGINT', shutdown);
 
     httpServer.listen(config.port, () => {
         console.log(`Price aggregator service running on port ${config.port}`);
