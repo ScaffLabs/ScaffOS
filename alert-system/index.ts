@@ -6,7 +6,7 @@ import { AlertConfiguration } from './alert.config';
 import { HealthCheck } from './health-check';
 import { AlertStore, IDataStore } from './storage';
 import { MigrationUtil } from './migrations';
-import { logStartup, logRequest } from './logger';
+import { logStartup, logRequest, logError } from './logger';
 import { errorMiddleware } from './error.middleware';
 import alertRoutes from './alert.routes';
 
