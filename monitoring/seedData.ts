@@ -11,3 +11,16 @@ export const seedData = (store: InMemoryStore<any>) => {
         store.create(data, data.id);
     });
 };
+
+// Function to seed additional data for testing and development
+export const seedAdditionalData = (store: InMemoryStore<any>) => {
+    const additionalData = [
+        { id: '4', value: 400 },
+        { id: '5', value: 500 },
+        { id: '6', value: 600 }
+    ];
+
+    additionalData.forEach(data => {
+        store.create(data, data.id);
+    });
+};

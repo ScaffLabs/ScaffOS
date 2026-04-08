@@ -66,6 +66,13 @@ class InMemoryStore<T> {
         }
         this.index.get(key)!.add(id);
     }
+
+    // Migration utility to transfer data to another store
+    public migrateTo(target: InMemoryStore<T>): void {
+        for (const [id, entity] of this.storage.entries()) {
+            target.create(entity.data, id);
+        }
+    }
 }
 
 export default InMemoryStore;
