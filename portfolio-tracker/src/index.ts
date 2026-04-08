@@ -7,6 +7,7 @@ import { connectToEventBus } from './eventBus';
 import portfolioRoutes from './routes/portfolioRoutes';
 import logger from './services/logger';
 import http from 'http';
+import errorHandler from './middleware/errorHandler';
 
 const app = express();
 app.use(json({ limit: '1mb' }));
@@ -17,18 +18,9 @@ app.use(rateLimit({
     max: 100
 }));
 
-// Middleware to add request ID
-app.use((req, res, next) => {
-    req.id = req.headers['x-request-id'] || generateUniqueId();
-    next();
-});
-
-const generateUniqueId = () => {
-    return Math.random().toString(36).substring(2, 15);
-};
-
 connectToEventBus();
 app.use('/api/portfolios', portfolioRoutes);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
@@ -36,3 +28,14 @@ const server = http.createServer(app);
 server.listen(PORT, () => {
     logger.info(`Portfolio Tracker service running on port ${PORT}`);
 });
+
+const shutdown = (signal: string) => {
+    logger.info(`Received ${signal}, shutting down gracefully...`);
+    server.close(() => {
+        logger.info('Closed HTTP server.');
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
