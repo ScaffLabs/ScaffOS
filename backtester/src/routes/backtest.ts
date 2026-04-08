@@ -3,7 +3,7 @@ import { simulateBacktest } from '../services/backtestService';
 import { ValidationError, NotFoundError, ServiceError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
-import { HistoricalDataSchema, StrategyParametersSchema, PaginationSchema } from '../types';
+import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();
@@ -29,6 +29,9 @@ backtestRouter.post('/', async (req, res, next) => {
         if (error instanceof ValidationError) {
             logger.warn({ message: 'Validation error', error: error.message });
             return next(error);
+        } else if (error instanceof ServiceError) {
+            logger.error({ message: 'Service error', error: error.message });
+            return next(error);
         }
         next(new ServiceError('Error during backtest: ' + error.message));
     }
@@ -45,6 +48,9 @@ backtestRouter.get('/:id', async (req, res, next) => {
     } catch (error) {
         if (error instanceof NotFoundError) {
             logger.warn({ message: 'Not found error for ID', id });
+            return next(error);
+        } else if (error instanceof ServiceError) {
+            logger.error({ message: 'Service error', error: error.message });
             return next(error);
         }
         next(new ServiceError('Error retrieving backtest result: ' + error.message));

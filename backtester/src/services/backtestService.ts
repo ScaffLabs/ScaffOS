@@ -1,4 +1,4 @@
-import { HistoricalData, StrategyParameters, BacktestResult, OrderId } from '../types';
+import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { logger } from '../utils/logger';
@@ -15,7 +15,9 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
 
-        if (currentPrice <= 0) throw new ValidationError('Price must be positive.');
+        if (typeof currentPrice !== 'number' || currentPrice <= 0) {
+            throw new ValidationError('Price must be a positive number.');
+        }
 
         // Buy Condition
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
