@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, checkExternalPortfolioService } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError } from '../errors';
 import { auditLog } from '../services/auditService';
@@ -34,6 +34,15 @@ router.post('/', portfolioValidation, async (req, res) => {
     } catch (error) {
         logger.error('Error creating portfolio', { error: error.message });
         res.status(400).json({ error: error.message });
+    }
+});
+
+router.get('/health', async (req, res) => {
+    try {
+        const status = await checkExternalPortfolioService();
+        res.status(200).json({ status: 'UP', portfolioService: status });
+    } catch (error) {
+        res.status(503).json({ status: 'DOWN', error: error.message });
     }
 });
 

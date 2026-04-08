@@ -1,6 +1,16 @@
 import { Portfolio, PortfolioUpdate } from '../types';
 import storage from './storage';
 import { ValidationError, NotFoundError } from '../errors';
+import axios from 'axios';
+import env from '../config';
+import { CircuitBreaker } from 'circuit-breaker-js';
+
+const axiosInstance = axios.create({
+    baseURL: env.PORTFOLIO_SERVICE_URL,
+    timeout: 5000,
+});
+
+const circuitBreaker = new CircuitBreaker();
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const { name, positions } = portfolioData;
@@ -27,6 +37,15 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
         throw new ValidationError('Positions array cannot be empty.');
     }
     return storage.update(id, updates);
+};
+
+export const checkExternalPortfolioService = async () => {
+    try {
+        await circuitBreaker.fire(() => axiosInstance.get('/'));
+        return true;
+    } catch (error) {
+        throw new Error('Portfolio service is down');
+    }
 };
 
 export const fetchPortfolios = async (options: { limit: number; offset: number; sort: string; order: string; }): Promise<Portfolio[]> => {
