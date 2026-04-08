@@ -4,13 +4,11 @@ import { cacheMessage, isMessageCached } from './cache';
 import { z } from 'zod';
 import { createEventSchema } from './types';
 
-export const publish = async <T>(message: Message<T>): Promise<void> => {
-    // Validate message using Zod schema
+export const publish = async <T>(message: Message<T>, retries = 3): Promise<void> => {
     const validation = createEventSchema.safeParse(message.data);
     if (!validation.success) {
         throw new Error('Invalid message data: ' + validation.error.errors.map(err => err.message).join(', '));
     }
-
     const { topic, data } = message;
     if (!topic || typeof topic !== 'string') {
         throw new Error('Invalid topic');
@@ -18,17 +16,19 @@ export const publish = async <T>(message: Message<T>): Promise<void> => {
     if (!data) {
         throw new Error('Invalid data');
     }
-    // Check if the message is already cached
     if (isMessageCached(topic, data)) {
         console.log('Message is already published, skipping.');
         return;
     }
-    // Cache the message before publishing
     cacheMessage(topic, data);
     try {
         await redisClient.publish(topic, JSON.stringify(data));
     } catch (error) {
-        console.error('Error publishing message', error);
-        throw new Error('Failed to publish message');
+        console.error('Error publishing message, retrying...', error);
+        if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // wait before retrying
+            return publish(message, retries - 1);
+        }
+        throw new Error('Failed to publish message after retries');
     }
 };
