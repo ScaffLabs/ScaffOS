@@ -8,15 +8,13 @@ import config from './config';
 import Database from './storage/Database';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
-import { logRequest, logError, logSuccess } from './middleware/logger';
+import { logRequest, logSuccess } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
-import { EventEmitter } from 'events';
 
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const db = new Database();
-const eventBus = new EventEmitter();
 
 app.use(helmet());
 app.use(cors());
@@ -34,8 +32,6 @@ const startServer = async () => {
     });
 };
 
-startServer();
-
 const shutdown = async () => {
     logSuccess('Shutting down gracefully...');
     await db.closeConnection();
@@ -47,3 +43,5 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+
+startServer();

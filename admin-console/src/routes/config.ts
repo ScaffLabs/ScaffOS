@@ -1,7 +1,9 @@
 import express from 'express';
-import { logger } from '../middleware/logger';
 import { ConfigurationItem } from '../types';
 import Database from '../storage/Database';
+import { ValidationError, NotFoundError, ServiceError } from '../errors/CustomErrors';
+import { logger } from '../middleware/logger';
+import { ConfigurationItemSchema } from '../types';
 
 const router = express.Router();
 const db = new Database();
@@ -9,12 +11,18 @@ const db = new Database();
 router.post('/', async (req, res) => {
     const configItem: ConfigurationItem = req.body;
     try {
+        // Validate input data
+        ConfigurationItemSchema.parse(configItem);
         await db.createConfiguration(configItem);
         logger.info(`Configuration created: ${configItem.key}`);
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
+        if (error instanceof ValidationError) {
+            logger.error(`Validation error: ${error.message}`);
+            return res.status(400).json({ error: error.message });
+        }
         logger.error(`Error creating configuration: ${error.message}`);
-        res.status(400).json({ error: 'Failed to create configuration' });
+        res.status(500).json({ error: 'Failed to create configuration' });
     }
 });
 
@@ -34,10 +42,13 @@ router.get('/:key', async (req, res) => {
         const configItem = await db.getConfigurationByKey(key);
         if (!configItem) {
             logger.warn(`Configuration not found: ${key}`);
-            return res.status(404).json({ error: 'Configuration not found' });
+            throw new NotFoundError('Configuration not found');
         }
         res.status(200).json(configItem);
     } catch (error) {
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
         logger.error(`Error fetching configuration: ${error.message}`);
         res.status(500).json({ error: 'Failed to fetch configuration' });
     }
@@ -46,12 +57,18 @@ router.get('/:key', async (req, res) => {
 router.put('/', async (req, res) => {
     const configItem: ConfigurationItem = req.body;
     try {
+        // Validate input data
+        ConfigurationItemSchema.parse(configItem);
         await db.updateConfiguration(configItem);
         logger.info(`Configuration updated: ${configItem.key}`);
         res.status(200).json({ message: 'Configuration updated successfully!' });
     } catch (error) {
+        if (error instanceof ValidationError) {
+            logger.error(`Validation error: ${error.message}`);
+            return res.status(400).json({ error: error.message });
+        }
         logger.error(`Error updating configuration: ${error.message}`);
-        res.status(400).json({ error: 'Failed to update configuration' });
+        res.status(500).json({ error: 'Failed to update configuration' });
     }
 });
 
