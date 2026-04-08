@@ -1,10 +1,11 @@
 import axios from 'axios';
 import config from '../config';
 import { emitEvent } from '../events/EventBus';
+import { EventType, ConfigurationItem } from '../types';
 
 const BASE_URL = config.API_URL;
 
-const retry = async (fn, retries = 3) => {
+const retry = async (fn: () => Promise<any>, retries = 3) => {
     for (let i = 0; i < retries; i++) {
         try {
             return await fn();
@@ -22,10 +23,11 @@ const fetchHealthStatus = async () => {
     });
 };
 
-const postConfiguration = async (key: string, value: string) => {
+const postConfiguration = async (key: string, value: string): Promise<ConfigurationItem> => {
     return retry(async () => {
         const response = await axios.post(`${BASE_URL}/config`, { key, value });
-        emitEvent('CONFIGURATION_CREATED', { key, value });
+        const configItem: ConfigurationItem = { key, value };
+        emitEvent('CONFIGURATION_CREATED', configItem);
         return response.data;
     });
 };
