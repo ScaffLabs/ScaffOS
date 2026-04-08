@@ -33,35 +33,20 @@ export class DivisionByZeroError extends Error {
     }
 }
 
-/**
- * Interface for error response structure.
- */
+export class CustomError extends Error {
+    constructor(public code: number, message: string) {
+        super(message);
+        this.name = 'CustomError';
+    }
+}
+
 export interface ErrorResponse {
     message: string;
     code?: number;
 }
 
-/**
- * Types for common application errors.
- */
-export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError;
+export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError; 
 
-/**
- * Represents a custom error with additional details.
- * @property {string} message - The error message.
- * @property {string} type - The type of error.
- * @property {number} [code] - Optional error code.
- */
-export interface CustomError extends ErrorResponse {
-    type: 'CustomError';
-}
-
-/**
- * Creates a custom error.
- * @param message - The error message.
- * @param code - Optional error code.
- * @returns {CustomError} - The created custom error.
- */
 export const createCustomError = (message: string, code?: number): CustomError => {
-    return { message, code, type: 'CustomError' };
+    return new CustomError(code || 500, message);
 };
