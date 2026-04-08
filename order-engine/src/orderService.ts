@@ -5,7 +5,7 @@ import { ServiceError } from './errors';
 
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
 
-export const createOrderService = async (orderData: any) => {
+export const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
     if (!parsedOrder.success) {
         throw new ServiceError('Invalid order data.');
@@ -34,7 +34,7 @@ export const getOrdersService = async () => {
     }
 };
 
-export const updateOrderService = async (id: string, updates: any) => {
+export const updateOrderService = async (id: string, updates: unknown) => {
     const parsedUpdates = OrderSchema.partial().safeParse(updates);
     if (!parsedUpdates.success) {
         throw new ServiceError('Invalid order update data.');

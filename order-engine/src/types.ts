@@ -8,7 +8,7 @@ export type TradeId = string & { readonly brand: unique symbol };
 export interface Order {
     /** Unique identifier for the order */
     id: OrderId;
-    /** Type of the order: 'limit', 'market', or 'stop' */
+    /** Type of the order: 'limit', 'market', 'stop' */
     type: 'limit' | 'market' | 'stop';
     /** Price at which the order is placed */
     price: number;
@@ -42,7 +42,7 @@ export interface OrderDeletedEvent {
     payload: { id: OrderId };
 }
 
-export type OrderEvent = OrderCreatedEvent | OrderUpdatedEvent | OrderDeletedEvent; 
+export type OrderEvent = OrderCreatedEvent | OrderUpdatedEvent | OrderDeletedEvent;
 
 // Shared types for other services
 export const OrderEventSchema = z.union([
