@@ -1,29 +1,37 @@
-import { z } from 'zod';
-
 // Branded types for IDs
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
 
 // Order Types
 export interface Order {
+  /** Unique identifier for the order */
   id: OrderId;
+  /** Type of the order: 'limit', 'market', or 'stop' */
   type: 'limit' | 'market' | 'stop';
+  /** Price at which the order is placed */
   price: number;
+  /** Quantity of assets to be traded */
   quantity: number;
+  /** Current status of the order */
   status: 'open' | 'filled' | 'cancelled';
 }
 
 export interface LimitOrder extends Order {
+  /** Order type is 'limit' */
   type: 'limit';
+  /** Maximum price at which to buy or minimum price to sell */
   limitPrice: number;
 }
 
 export interface MarketOrder extends Order {
+  /** Order type is 'market' */
   type: 'market';
 }
 
 export interface StopOrder extends Order {
+  /** Order type is 'stop' */
   type: 'stop';
+  /** Price at which the stop order becomes a market order */
   stopPrice: number;
 }
 
