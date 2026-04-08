@@ -6,7 +6,8 @@
         "start": "node dist/index.js",
         "test": "jest",
         "build": "tsc",
-        "dev": "ts-node-dev src/index.ts"
+        "dev": "ts-node-dev src/index.ts",
+        "test:watch": "jest --watch"
     },
     "dependencies": {
         "express": "^4.17.1",
