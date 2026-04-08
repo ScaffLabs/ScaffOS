@@ -1,60 +1,123 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { body, validationResult } from 'express-validator';
-import RateLimit from 'express-rate-limit';
-import cors from 'cors';
-import helmet from 'helmet';
-import RiskManager from './riskManager';
-import authMiddleware from './authMiddleware';
-import logger from './logger';
+/**
+ * @swagger
+ * tags:
+ *   name: Risk
+ *   description: Risk management operations
+ */
 
-const router = express.Router();
-const riskManager = new RiskManager();
-const limiter = RateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests, please try again later.'
-});
+/**
+ * @swagger
+ * /risk:
+ *   get:
+ *     summary: Get risk positions
+ *     tags: [Risk]
+ *     parameters:
+ *       - name: limit
+ *         in: query
+ *         description: Limit the number of results
+ *         required: false
+ *         schema:
+ *           type: integer
+ *       - name: offset
+ *         in: query
+ *         description: Offset for pagination
+ *         required: false
+ *         schema:
+ *           type: integer
+ *       - name: sort
+ *         in: query
+ *         description: Field to sort by
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - name: filter
+ *         in: query
+ *         description: Field to filter by
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A list of risk positions
+ *       500:
+ *         description: Internal Server Error
+ */
 
-router.use(cors({ origin: ['http://allowed-origin.com'], credentials: true }));
-router.use(helmet());
-router.use(express.json({ limit: '1mb' }));
-router.use(limiter);
+/**
+ * @swagger
+ * /risk:
+ *   post:
+ *     summary: Create a new risk position
+ *     tags: [Risk]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               asset:
+ *                 type: string
+ *               position:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Risk position created
+ *       400:
+ *         description: Bad Request
+ *       500:
+ *         description: Internal Server Error
+ */
 
-router.use((req: Request, res: Response, next: NextFunction) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        logger.info(`Request: ${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`);
-    });
-    next();
-});
+/**
+ * @swagger
+ * /risk/{id}:
+ *   put:
+ *     summary: Update a risk position
+ *     tags: [Risk]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the risk position to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               position:
+ *                 type: number
+ *     responses:
+ *       204:
+ *         description: Risk position updated
+ *       404:
+ *         description: Risk position not found
+ *       500:
+ *         description: Internal Server Error
+ */
 
-router.get('/risk', async (req: Request, res: Response) => {
-    try {
-        const positions = await riskManager.getRiskPositions(req.query.limit, req.query.offset);
-        res.status(200).json(positions);
-    } catch (error) {
-        logger.error(`Error fetching risk positions: ${error.stack}`);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-router.post('/risk', authMiddleware, body('asset').isString().trim().escape(), body('position').isNumeric(), async (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    const { asset, position } = req.body;
-    try {
-        const newPosition = await riskManager.createRiskPosition(asset, position);
-        logger.info(`Risk position created: ${newPosition.id}`);
-        res.status(201).json(newPosition);
-    } catch (error) {
-        logger.error(`Error creating risk position: ${error.stack}`);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Similar error handling for PUT and DELETE routes...
-
-export default router;
+/**
+ * @swagger
+ * /risk/{id}:
+ *   delete:
+ *     summary: Delete a risk position
+ *     tags: [Risk]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the risk position to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Risk position deleted
+ *       404:
+ *         description: Risk position not found
+ *       500:
+ *         description: Internal Server Error
+ */
