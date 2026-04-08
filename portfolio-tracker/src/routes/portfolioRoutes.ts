@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, deletePortfolio } from '../services/portfolioService';
 import logger from '../services/logger';
 
 const router = Router();
 
+// Create a new portfolio
 router.post('/', [
     body('name').isString().notEmpty().trim().escape(),
     body('positions').isArray().optional()
@@ -22,6 +23,7 @@ router.post('/', [
     }
 });
 
+// Get a specific portfolio by ID
 router.get('/:id', [
     param('id').isString().trim().escape()
 ], async (req, res) => {
@@ -38,6 +40,7 @@ router.get('/:id', [
     }
 });
 
+// Update an existing portfolio
 router.put('/:id', [
     param('id').isString().trim().escape(),
     body('name').optional().isString().notEmpty().trim().escape(),
@@ -56,6 +59,28 @@ router.put('/:id', [
     }
 });
 
+// Delete a portfolio by ID
+router.delete('/:id', [
+    param('id').isString().trim().escape()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const deleted = await deletePortfolio(req.params.id);
+        if (deleted) {
+            res.status(204).send();
+        } else {
+            res.status(404).json({ error: 'Portfolio not found' });
+        }
+    } catch (error) {
+        logger.error('Error deleting portfolio', { error: error.message });
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Fetch all portfolios with pagination and sorting
 router.get('/', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
@@ -75,4 +100,4 @@ router.get('/', [
     }
 });
 
-export default router;
+export default router; 

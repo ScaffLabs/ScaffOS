@@ -38,8 +38,19 @@ export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promis
     return portfolio;
 };
 
-export const fetchPortfolios = async (): Promise<Portfolio[]> => {
-    return storage.getAll();
+export const deletePortfolio = async (id: string): Promise<boolean> => {
+    const deleted = storage.delete(id);
+    if (!deleted) throw new Error('Portfolio not found');
+    return deleted;
+};
+
+export const fetchPortfolios = async ({ limit, offset, sort, order }): Promise<Portfolio[]> => {
+    const portfolios = storage.getAll();
+    const sortedPortfolios = portfolios.sort((a, b) => {
+        const comparison = a[sort] < b[sort] ? -1 : 1;
+        return order === 'asc' ? comparison : -comparison;
+    });
+    return sortedPortfolios.slice(offset, offset + limit);
 };
 
 export const healthCheckPortfolioService = async (): Promise<boolean> => {
