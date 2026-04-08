@@ -44,3 +44,7 @@ Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all your interacti
 
 ## Questions?
 If you have any questions or need help, feel free to open an issue in the repository.
+
+## Best Practices
+- Ensure your code is well-commented and follows the established coding standards.
+- Keep your pull requests focused on a single issue or feature to facilitate the review process.

@@ -22,3 +22,7 @@
 - Added detailed API documentation in README.md.
 - Updated environment variables section for clarity.
 - Improved error handling in user management routes.
+
+## [1.3.0] - 2023-10-30
+- Added detailed inline comments for complex logic to README.md.
+- Improved error handling across all routes.
