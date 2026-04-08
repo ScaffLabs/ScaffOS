@@ -39,7 +39,7 @@ export class PriceAggregator {
         try {
             const newPrice = await storage.create(priceData);
             await this.updateCurrentPrices();
-            this.eventBus.emit('PRICE_ADDED', { type: 'PRICE_ADDED', data: newPrice });
+            this.eventBus.emitPriceAdded(newPrice);
             return newPrice;
         } catch (error) {
             logError(error, 'Error adding price data');
