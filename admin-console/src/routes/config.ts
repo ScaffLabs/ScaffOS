@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import Database from '../storage/Database';
 import { ConfigurationItem } from '../types';
 import { logAudit } from '../middleware/auditLogger';
+import { ValidationError } from '../errors/CustomErrors';
 
 const router = express.Router();
 const db = new Database();
@@ -18,26 +19,13 @@ router.post('/', [
     try {
         const { key, value }: ConfigurationItem = req.body;
         await db.createConfiguration({ key, value });
-        // Log the successful creation of a configuration item
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
-        // Catch any database or application errors
         console.error('Create Configuration Error:', error);
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Failed to create configuration' });
-    }
-});
-
-router.get('/', async (req, res) => {
-    const { limit = '10', offset = '0', sortBy = 'key', order = 'asc' } = req.query;
-    const parsedLimit = parseInt(limit as string);
-    const parsedOffset = parseInt(offset as string);
-
-    try {
-        const items = await db.findAll({ limit: parsedLimit, offset: parsedOffset, sortBy: sortBy as string, order: order as 'asc' | 'desc' });
-        res.status(200).json(items);
-    } catch (error) {
-        console.error('Get All Configurations Error:', error);
-        res.status(500).json({ error: 'Failed to retrieve configurations' });
     }
 });
 
