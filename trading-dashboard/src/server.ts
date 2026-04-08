@@ -3,43 +3,39 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import bodyParser from 'body-parser';
-import { fetchPositions, updatePosition, deletePosition } from './api/portfolioApi';
+import { fetchPositions, createPosition, updatePosition, deletePosition } from './api/portfolioApi';
 import { validateInput } from './middleware/inputValidation';
 import errorHandler from './middleware/errorHandler';
-import { healthCheck, readyCheck, monitorMemoryUsage, gracefulShutdown } from './utils/healthCheck';
-import { createServer } from 'http';
-import logger, { logRequest, logError } from './utils/logger';
-import { registerShutdownHandlers } from './utils/shutdown';
+import logger from './utils/logger';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const server = createServer(app);
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: ['http://localhost:3000'], methods: ['GET', 'POST', 'PUT', 'DELETE'], credentials: true }));
+app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
-// Request logging middleware
-app.use((req, res, next) => {
-    const start = Date.now();
-    const requestId = req.headers['x-request-id'] || 'N/A';
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        logRequest(req.method, req.path, res.statusCode, duration, requestId);
-    });
-    next();
-});
-
 // Routes
 app.get('/api/positions', async (req, res) => {
+    const { limit = 10, offset = 0, sortBy = 'id', order = 'asc' } = req.query;
     try {
-        const positions = await fetchPositions();
+        const positions = await fetchPositions(Number(limit), Number(offset), sortBy, order);
         res.json(positions);
     } catch (error) {
-        logError(error, req.headers['x-request-id']);
+        logger.error(error);
         res.status(500).json({ message: 'Error fetching positions' });
+    }
+});
+
+app.post('/api/positions', async (req, res) => {
+    try {
+        await createPosition(req.body);
+        res.status(201).json({ message: 'Position created successfully' });
+    } catch (error) {
+        logger.error(error);
+        res.status(500).json({ message: 'Error creating position' });
     }
 });
 
@@ -50,7 +46,7 @@ app.put('/api/positions/:id', validateInput, async (req, res) => {
         await updatePosition(id, quantity);
         res.status(204).send();
     } catch (error) {
-        logError(error, req.headers['x-request-id']);
+        logger.error(error);
         res.status(500).json({ message: 'Error updating position' });
     }
 });
@@ -61,23 +57,14 @@ app.delete('/api/positions/:id', async (req, res) => {
         await deletePosition(id);
         res.status(204).send();
     } catch (error) {
-        logError(error, req.headers['x-request-id']);
+        logger.error(error);
         res.status(500).json({ message: 'Error deleting position' });
     }
 });
 
-app.get('/health', healthCheck);
-app.get('/ready', readyCheck);
-
-// Monitor memory usage every minute
-setInterval(monitorMemoryUsage, 60 * 1000);
-
 // Error handling middleware
 app.use(errorHandler);
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
 });
-
-// Graceful shutdown
-registerShutdownHandlers(server);
