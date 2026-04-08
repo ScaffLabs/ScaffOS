@@ -28,8 +28,8 @@ describe('Dashboard Endpoint', () => {
 
     it('should handle no data available', async () => {
         const response = await request(app).get('/dashboard');
-        expect(response.status).toBe(500);
-        expect(response.body.error).toBe('Failed to fetch entries.');
+        expect(response.status).toBe(204);
+        expect(response.body).toEqual([]);
     });
 
     it('should create a new entry', async () => {
@@ -79,5 +79,17 @@ describe('Dashboard Endpoint', () => {
         const response = await request(app).put('/dashboard/5').send({});
         expect(response.status).toBe(400);
         expect(response.body.error).toBe('Invalid input data.');
+    });
+
+    it('should handle edge case for empty id', async () => {
+        const response = await request(app).post('/dashboard').send({ id: '', value: 100 });
+        expect(response.status).toBe(400);
+        expect(response.body.error).toBe('Invalid input data. Both id and value are required.');
+    });
+
+    it('should handle edge case for negative value', async () => {
+        const response = await request(app).post('/dashboard').send({ id: '6', value: -50 });
+        expect(response.status).toBe(400);
+        expect(response.body.error).toBe('Invalid input data. Both id and value are required.');
     });
 });
