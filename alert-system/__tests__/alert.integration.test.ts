@@ -1,9 +1,8 @@
 import request from 'supertest';
 import express from 'express';
 import { AlertController } from '../alert.controller';
-import { AlertProcessor } from '../alert.processor';
-import { EventBus } from '../event-bus';
 import { AlertStore } from '../storage';
+import { EventBus } from '../event-bus';
 
 const app = express();
 const eventBus = new EventBus();
@@ -34,5 +33,18 @@ describe('Alert API Integration Tests', () => {
     test('GET /api/alerts returns 204 if no alerts', async () => {
         const response = await request(app).get('/api/alerts');
         expect(response.status).toBe(204);
+    });
+
+    test('POST /api/alerts returns 400 for invalid alert data', async () => {
+        const alertMessage = { type: 'invalid', threshold: -10, currentValue: -1 };
+        const response = await request(app).post('/api/alerts').send(alertMessage);
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: expect.stringContaining('Invalid alert data') });
+    });
+
+    test('GET /api/alerts returns 404 for non-existent alert', async () => {
+        const response = await request(app).get('/api/alerts/nonexistent');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: 'Alert not found.' });
     });
 });

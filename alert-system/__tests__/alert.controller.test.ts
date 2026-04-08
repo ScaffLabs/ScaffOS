@@ -1,6 +1,7 @@
 import { AlertController } from '../alert.controller';
 import { AlertMessage, validateAlertMessage } from '../alert.schema';
 import { AlertStore } from '../storage';
+import { ServiceError, ValidationError } from '../error.types';
 
 describe('AlertController', () => {
     let alertController: AlertController;
@@ -84,5 +85,16 @@ describe('AlertController', () => {
 
         expect(res.status).toHaveBeenCalledWith(404);
         expect(res.json).toHaveBeenCalledWith({ message: 'Alert not found.' });
+    });
+
+    test('should handle service errors gracefully', async () => {
+        jest.spyOn(alertStore, 'create').mockImplementation(() => { throw new ServiceError('Service error'); });
+        const req = { body: { type: 'price', threshold: 100, currentValue: 120 } } as any;
+        const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+        await alertController.addAlert(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Failed to add alert.' });
     });
 });

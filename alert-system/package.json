@@ -4,7 +4,8 @@
     "main": "index.js",
     "scripts": {
         "test": "jest",
-        "test:watch": "jest --watch"
+        "test:watch": "jest --watch",
+        "test:integration": "jest --testPathPattern=__tests__/alert.integration.test.ts"
     },
     "devDependencies": {
         "jest": "^27.0.0",
