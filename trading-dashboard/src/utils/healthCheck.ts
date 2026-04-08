@@ -4,7 +4,7 @@ import { performance } from 'perf_hooks';
 let memoryUsage = 0;
 
 export const healthCheck = (req: Request, res: Response) => {
-    res.status(200).send({ status: 'UP' });
+    res.status(200).send({ status: 'UP', memoryUsage: memoryUsage });
 };
 
 export const readyCheck = (req: Request, res: Response) => {
@@ -16,4 +16,12 @@ export const monitorMemoryUsage = () => {
     const used = process.memoryUsage();
     memoryUsage = used.heapUsed / 1024 / 1024;
     console.log(`Memory usage: ${memoryUsage.toFixed(2)} MB`);
+};
+
+export const gracefulShutdown = (server: any) => {
+    console.log('Shutting down gracefully...');
+    server.close(() => {
+        console.log('Closed out remaining connections.');
+        process.exit(0);
+    });
 };

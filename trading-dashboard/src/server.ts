@@ -6,7 +6,8 @@ import bodyParser from 'body-parser';
 import { fetchPositions, updatePosition, deletePosition } from './api/portfolioApi';
 import { validateInput } from './middleware/inputValidation';
 import { createServer } from 'http';
-import { monitorMemoryUsage, healthCheck, readyCheck } from './utils/healthCheck';
+import { monitorMemoryUsage, healthCheck, readyCheck, gracefulShutdown } from './utils/healthCheck';
+import { closePool } from './utils/connectionPool';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,10 +17,7 @@ const server = createServer(app);
 app.use(helmet());
 app.use(cors({ origin: ['https://yourdomain.com', 'https://anotherdomain.com'] }));
 app.use(bodyParser.json({ limit: '1mb' }));
-app.use(rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100
-}));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 // Health Check Endpoints
 app.get('/health', healthCheck);
@@ -57,16 +55,8 @@ app.delete('/api/positions/:id', async (req, res) => {
 });
 
 // Graceful Shutdown
-const gracefulShutdown = () => {
-    console.log('Shutting down gracefully...');
-    server.close(() => {
-        console.log('Closed out remaining connections.');
-        process.exit(0);
-    });
-};
-
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', () => gracefulShutdown(server));
+process.on('SIGINT', () => gracefulShutdown(server));
 
 // Monitor memory usage
 setInterval(monitorMemoryUsage, 60000); // Monitor every minute
