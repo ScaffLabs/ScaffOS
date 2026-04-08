@@ -5,38 +5,6 @@ import InMemoryStore from './dataStore';
 
 const store = new InMemoryStore<any>();
 
-/**
- * @swagger
- * /dashboard:
- *   get:
- *     summary: List dashboard entries
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of entries to return
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *         description: Number of entries to skip
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *         description: Sort by a specific field
- *       - in: query
- *         name: filter
- *         schema:
- *           type: string
- *         description: Filter results based on a property
- *     responses:
- *       200:
- *         description: A list of dashboard entries
- *       500:
- *         description: Internal server error
- */
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
         const { limit = 10, offset = 0, sort, filter } = req.query;
@@ -44,7 +12,7 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
 
         // Apply filtering
         if (filter) {
-            entries = entries.filter(entry => entry.data.someProperty.includes(filter));
+            entries = entries.filter(entry => entry.data.someProperty && entry.data.someProperty.includes(filter));
         }
 
         // Apply sorting
@@ -67,32 +35,10 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * @swagger
- * /dashboard:
- *   post:
- *     summary: Create a new dashboard entry
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               id:
- *                 type: string
- *               value:
- *                 type: integer
- *     responses:
- *       201:
- *         description: Dashboard entry created
- *       400:
- *         description: Invalid input data
- */
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id, value } = req.body;
-        if (!id || !value) {
+        if (!id || value === undefined) {
             throw new ValidationError('Invalid input data. ID and value are required.');
         }
         store.create({ value }, id);
@@ -106,40 +52,11 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * @swagger
- * /dashboard/{id}:
- *   put:
- *     summary: Update a dashboard entry
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID of the entry to update
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               value:
- *                 type: integer
- *     responses:
- *       204:
- *         description: Entry updated
- *       400:
- *         description: Invalid input data
- *       404:
- *         description: Entry not found
- */
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const { value } = req.body;
-        if (!value) {
+        if (value === undefined) {
             throw new ValidationError('Invalid input data. Value is required.');
         }
         store.update(id, { value });
@@ -153,24 +70,6 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * @swagger
- * /dashboard/{id}:
- *   delete:
- *     summary: Delete a dashboard entry
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID of the entry to delete
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Entry deleted
- *       404:
- *         description: Entry not found
- */
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
