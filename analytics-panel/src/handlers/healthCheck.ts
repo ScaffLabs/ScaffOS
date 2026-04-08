@@ -9,10 +9,11 @@ export const healthCheckHandler = async (req: Request, res: Response) => {
             uptime: process.uptime(),
             memoryUsage: process.memoryUsage(),
             timestamp: new Date(),
+            cpuUsage: os.cpus(),
         };
         res.status(200).json(healthStatus);
     } catch (error) {
         console.error('Health check failed:', error);
-        throw new ServiceError('Health check failed.');
+        res.status(500).json({ error: 'Health check failed.' });
     }
 };
