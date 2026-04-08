@@ -9,8 +9,7 @@ import logger, { requestLogger } from './services/logger';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import { healthCheck } from './services/healthService';
-import { auditLog } from './services/auditService';
-import { csrfProtection } from './middleware/csrfProtection';
+import { csrfMiddleware } from './middleware/csrfProtection';
 
 const app = express();
 app.use(json({ limit: '1mb' }));
@@ -22,8 +21,7 @@ app.use(rateLimit({
     keyGenerator: (req) => req.headers['x-api-key'] || req.ip,
 }));
 app.use(requestLogger);
-app.use(csrfProtection);
-
+app.use(csrfMiddleware);
 connectToEventBus();
 app.use('/api/portfolios', portfolioRoutes);
 app.get('/health', healthCheck);
