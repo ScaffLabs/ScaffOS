@@ -22,7 +22,6 @@ const checkHealth = async () => {
     } catch (error) {
         logger.error('Other service connection failed', error);
     }
-
     return { redisHealthy, serviceHealthy };
 };
 
@@ -37,3 +36,6 @@ export const gracefulShutdown = async () => {
     await redisClient.quit();
     process.exit(0);
 };
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
