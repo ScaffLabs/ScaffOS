@@ -14,11 +14,13 @@ const checkDependentService = async (url: string) => {
 
 export const healthCheck = async (req: Request, res: Response): Promise<void> => {
     try {
-        const isDatabaseHealthy = await checkDependentService(process.env.DATABASE_URL + '/health-check');
-        const isAnotherServiceHealthy = await checkDependentService(process.env.ANOTHER_SERVICE_URL + '/health-check');
-        const isOrderServiceHealthy = await checkDependentService(process.env.ORDER_SERVICE_URL + '/health-check');
+        const healthChecks = await Promise.all([
+            checkDependentService(process.env.DATABASE_URL + '/health-check'),
+            checkDependentService(process.env.ANOTHER_SERVICE_URL + '/health-check'),
+            checkDependentService(process.env.ORDER_SERVICE_URL + '/health-check')
+        ]);
 
-        if (isDatabaseHealthy && isAnotherServiceHealthy && isOrderServiceHealthy) {
+        if (healthChecks.every(status => status)) {
             res.status(200).send('Order Engine is healthy!');
         } else {
             res.status(503).send('Dependent services are down.');
@@ -31,11 +33,13 @@ export const healthCheck = async (req: Request, res: Response): Promise<void> =>
 
 export const readyCheck = async (req: Request, res: Response): Promise<void> => {
     try {
-        const isDatabaseReady = await checkDependentService(process.env.DATABASE_URL + '/ready-check');
-        const isAnotherServiceReady = await checkDependentService(process.env.ANOTHER_SERVICE_URL + '/ready-check');
-        const isOrderServiceReady = await checkDependentService(process.env.ORDER_SERVICE_URL + '/ready-check');
+        const readinessChecks = await Promise.all([
+            checkDependentService(process.env.DATABASE_URL + '/ready-check'),
+            checkDependentService(process.env.ANOTHER_SERVICE_URL + '/ready-check'),
+            checkDependentService(process.env.ORDER_SERVICE_URL + '/ready-check')
+        ]);
 
-        if (isDatabaseReady && isAnotherServiceReady && isOrderServiceReady) {
+        if (readinessChecks.every(status => status)) {
             res.status(200).send('Order Engine is ready!');
         } else {
             res.status(503).send('Dependent services are not ready.');

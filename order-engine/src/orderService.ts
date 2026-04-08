@@ -1,8 +1,9 @@
 import { Order, OrderSchema } from './types';
 import { emitWithRetry } from './eventBus';
-import { ServiceError, ValidationError } from './errors';
+import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { storage } from './storage';
 import logger from './logger';
+import axios from 'axios';
 
 export const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -71,4 +72,20 @@ export const deleteOrderService = async (id: string) => {
         logger.error('Error deleting order:', error);
         throw new ServiceError('Could not delete order. Please try again later.');
     }
+};
+
+export const fetchExternalService = async (url: string) => {
+    try {
+        const response = await axios.get(url);
+        return response.data;
+    } catch (error) {
+        logger.error('Error fetching external service:', error);
+        throw new ServiceError('Failed to fetch external service.');
+    }
+};
+
+export const updateOrderWithExternalService = async (id: string, updates: unknown) => {
+    const order = await updateOrderService(id, updates);
+    await fetchExternalService(`${process.env.ORDER_SERVICE_URL}/orders/${id}`);
+    return order;
 };
