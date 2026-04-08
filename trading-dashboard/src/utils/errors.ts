@@ -45,4 +45,13 @@ const validateQuantity = (quantity: number) => {
     }
 };
 
-export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, validateInput, validateQuantity }; 
+const validateArray = (arr: any[]) => {
+    if (!Array.isArray(arr)) {
+        throw new ValidationError('Input must be an array.');
+    }
+    if (arr.length === 0) {
+        throw new ValidationError('Array cannot be empty.');
+    }
+};
+
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, validateInput, validateQuantity, validateArray }; 

@@ -44,4 +44,4 @@ const server = app.listen(PORT, () => {
 
 registerShutdownHandlers(server);
 
-export default app;
+export default app; 
