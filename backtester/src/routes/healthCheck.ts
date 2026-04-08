@@ -24,4 +24,17 @@ healthCheckRouter.get('/ready', async (req, res) => {
   }
 });
 
+healthCheckRouter.get('/memory', (req, res) => {
+  const used = process.memoryUsage();
+  const total = used.heapTotal + used.external;
+  res.status(200).json({
+    memory: {
+      heapTotal: Math.round(used.heapTotal / 1024 / 1024),
+      heapUsed: Math.round(used.heapUsed / 1024 / 1024),
+      external: Math.round(used.external / 1024 / 1024),
+      total: Math.round(total / 1024 / 1024)
+    }
+  });
+});
+
 export default healthCheckRouter;

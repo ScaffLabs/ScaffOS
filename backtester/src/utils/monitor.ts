@@ -8,4 +8,14 @@ const monitorMemoryUsage = () => {
     }, 60000); // Log memory usage every minute
 };
 
-export { monitorMemoryUsage };
+const gracefulShutdown = async (server) => {
+    logger.info('Shutting down gracefully...');
+    await new Promise(resolve => server.close(resolve));
+    logger.info('Server closed');
+    process.exit(0);
+};
+
+process.on('SIGTERM', () => gracefulShutdown);
+process.on('SIGINT', () => gracefulShutdown);
+
+export { monitorMemoryUsage, gracefulShutdown };

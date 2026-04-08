@@ -15,6 +15,7 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
         try {
             return await fn();
         } catch (error) {
+            logger.warn(`Retrying due to error: ${error.message}`);
             if (i === retryLimit - 1) throw error;
             await exponentialBackoff(i);
         }
@@ -24,8 +25,9 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 
 function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallback: T): () => Promise<T> {
     let failureCount = 0;
+    let isCircuitOpen = false;
     return async () => {
-        if (failureCount >= failureThreshold) {
+        if (isCircuitOpen) {
             logger.warn('Circuit breaker activated');
             return fallback;
         }
@@ -35,6 +37,14 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
             return result;
         } catch (error) {
             failureCount++;
+            if (failureCount >= failureThreshold) {
+                isCircuitOpen = true;
+                logger.error('Circuit breaker opened due to failures');
+                setTimeout(() => {
+                    isCircuitOpen = false; // Reset the circuit after a timeout
+                    logger.info('Circuit breaker reset');
+                }, 30000); // 30 seconds timeout
+            }
             throw error;
         }
     };
