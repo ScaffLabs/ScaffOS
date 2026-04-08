@@ -73,3 +73,19 @@ export const fetchPortfolios = async (options: { limit: number; offset: number; 
 export const clearPortfolios = () => {
     storage.clear();
 };
+
+export const healthCheckExternalService = async () => {
+    try {
+        await axiosInstance.get('/health');
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const fetchHealthStatus = async () => {
+    const status = await healthCheckExternalService();
+    return {
+        portfolioService: status,
+    };
+};
