@@ -22,13 +22,6 @@ export class PriceAggregator extends EventEmitter {
         }
     }
 
-    private validatePriceEvent(priceEvent: PriceEvent): void {
-        const result = PriceEventSchema.safeParse(priceEvent);
-        if (!result.success) {
-            throw new ValidationError(result.error.errors.map(e => e.message).join(', '));
-        }
-    }
-
     public async addPrice(priceData: PriceData) {
         this.validatePriceData(priceData);
         try {
@@ -42,24 +35,24 @@ export class PriceAggregator extends EventEmitter {
         }
     }
 
-    public async deletePrice(exchange: string) {
-        const prices = await storage.findAll({ exchange });
-        if (prices.length === 0) throw new NotFoundError('Price not found');
-        await Promise.all(prices.map(price => storage.delete(price.id)));
-        await this.updateCurrentPrices();
-        this.emit('PRICE_DELETED', { exchange });
+    public async fetchPricesFromExchanges() {
+        const exchangeUrls = ['/exchange1/prices', '/exchange2/prices'];
+        const pricePromises = exchangeUrls.map(url => httpClient(url));
+        try {
+            const prices = await Promise.all(pricePromises);
+            prices.forEach(priceData => this.addPrice(priceData));
+        } catch (error) {
+            logError(error, 'Error fetching prices from exchanges');
+        }
     }
 
     private async updateCurrentPrices() {
         try {
             const prices = await storage.findAll();
-            if (!prices || prices.length === 0) {
-                throw new ServiceError('No prices available for update.');
-            }
-            this.currentPrices = {};
-            prices.forEach(priceData => {
-                this.currentPrices[priceData.exchange] = priceData.price;
-            });
+            this.currentPrices = prices.reduce((acc, priceData) => {
+                acc[priceData.exchange] = priceData.price;
+                return acc;
+            }, {} as CurrentPrices);
         } catch (error) {
             logError(error, 'Error updating current prices');
             throw new ServiceError('Failed to update current prices.');
@@ -71,6 +64,8 @@ export class PriceAggregator extends EventEmitter {
     }
 
     private startPriceFetch() {
-        // Fetch prices logic here.
+        setInterval(() => {
+            this.fetchPricesFromExchanges();
+        }, 30000); // Fetch every 30 seconds
     }
 }
