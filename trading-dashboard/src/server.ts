@@ -17,8 +17,8 @@ const server = createServer(app);
 
 // Middleware
 app.use(helmet());
-app.use(cors());
-app.use(bodyParser.json());
+app.use(cors({ origin: ['http://localhost:3000'], methods: ['GET', 'POST', 'PUT', 'DELETE'], credentials: true }));
+app.use(bodyParser.json({ limit: '1mb' }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 // Request logging middleware

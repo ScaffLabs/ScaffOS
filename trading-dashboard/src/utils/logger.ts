@@ -13,6 +13,7 @@ const logger = winston.createLogger({
     ),
     transports: [
         new winston.transports.Console(),
+        new winston.transports.File({ filename: 'audit.log', level: 'info' })
     ],
 });
 
@@ -22,6 +23,10 @@ export const logRequest = (method: string, path: string, status: number, duratio
 
 export const logError = (error: Error, requestId: string) => {
     logger.error(error.message, { stack: error.stack, requestId });
+};
+
+export const logAudit = (action: string, details: any) => {
+    logger.info(`Audit - Action: ${action}`, { details });
 };
 
 export default logger;
