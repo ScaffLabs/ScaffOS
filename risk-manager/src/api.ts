@@ -1,31 +1,10 @@
 import express from 'express';
 import riskManager from './riskManager';
 import logger from './logger';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
-import { RiskPositionSchema } from './sharedTypes';
-
-const csrfProtection = csrf({ cookie: true });
 
 const router = express.Router();
-
-// CORS configuration
-const allowedOrigins = ['http://example.com', 'http://anotherdomain.com'];
-router.use(cors({ origin: allowedOrigins }));
-router.use(helmet()); // Set security-related HTTP headers
-
-// Rate limiting middleware
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests from this IP, please try again later.'
-});
-router.use(limiter);
-
-router.use(csrfProtection);
 
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
@@ -77,10 +56,7 @@ router.put('/risk/:id', [
     try {
         const { id } = req.params;
         const { position } = req.body;
-        const updatedPosition = await riskManager.updateRiskPosition(id, position);
-        if (!updatedPosition) {
-            return res.status(404).send();
-        }
+        await riskManager.updateRiskPosition(id, position);
         res.status(204).send();
     } catch (error) {
         logger.error('Error updating risk position: ', error);
@@ -100,10 +76,7 @@ router.delete('/risk/:id', [
     }
     try {
         const { id } = req.params;
-        const deleted = await riskManager.deleteRiskPosition(id);
-        if (!deleted) {
-            return res.status(404).send();
-        }
+        await riskManager.deleteRiskPosition(id);
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting risk position: ', error);
