@@ -11,4 +11,16 @@ describe('Health Check Endpoint', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({ status: 'UP' });
     });
+
+    it('should handle unexpected errors', async () => {
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        // Simulating an unexpected error by throwing an error in healthCheck
+        const faultyHealthCheck = (req, res) => { throw new Error('Unexpected error'); };
+        app.get('/health', faultyHealthCheck);
+
+        const response = await request(app).get('/health');
+        expect(response.status).toBe(500);
+        expect(response.body.error).toBe('Internal Server Error');
+    });
 });
