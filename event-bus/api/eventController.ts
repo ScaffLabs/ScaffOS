@@ -34,27 +34,18 @@ export const createEvent = async (req: Request, res: Response) => {
 export const getEvents = async (req: Request<{}, {}, {}, GetEventsQuery>, res: Response) => {
     const reqId = req.headers['x-request-id'] || uuidv4();
     const start = Date.now();
+    const { limit = 10, offset = 0, sortBy = 'createdAt', order = 'asc' } = req.query;
     try {
-        const events = await storage.findAll();
-        res.status(200).json(events);
+        const events = await storage.findAll(Number(limit), Number(offset));
+        const sortedEvents = events.sort((a, b) => {
+            const compare = a[sortBy] > b[sortBy] ? 1 : -1;
+            return order === 'asc' ? compare : -compare;
+        });
+        res.status(200).json(sortedEvents);
         logger.logRequest(req.method, req.path, res.statusCode, Date.now() - start, reqId);
     } catch (error) {
         logger.logError(error, reqId);
         res.status(500).json({ message: error.message });
-    }
-};
-
-export const checkExternalServiceHealth = async (req: Request, res: Response) => {
-    try {
-        const response = await axios.get(`${config.OTHER_SERVICE_URL}/health`);
-        if (response.status === 200) {
-            res.status(200).json({ status: 'healthy' });
-        } else {
-            res.status(503).json({ status: 'unhealthy' });
-        }
-    } catch (error) {
-        res.status(503).json({ status: 'unhealthy', error: error.message });
-        logger.logError(error, req.headers['x-request-id'] || 'unknown');
     }
 };
 
