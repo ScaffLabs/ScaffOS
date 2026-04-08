@@ -8,6 +8,7 @@ import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
 import logger from './utils/logger';
 import config from './config';
+import { registerShutdownHandlers } from './utils/healthCheck';
 
 const app = express();
 
@@ -40,5 +41,7 @@ const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+registerShutdownHandlers(server);
 
 export default app;
