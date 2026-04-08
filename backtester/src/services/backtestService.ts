@@ -36,14 +36,10 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 
 const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     try {
-        // Perform the backtest calculation
         const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
-
-        // Notify order service if trades occurred
         if (trades > 0) {
             await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades })); // Notify order service
         }
-
         logger.info({ message: 'Backtest simulation completed', params, totalReturns });
         return { totalReturns, trades, winRate, performanceMetrics };
     } catch (error) {
