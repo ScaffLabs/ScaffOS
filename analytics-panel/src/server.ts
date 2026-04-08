@@ -1,3 +1,4 @@
+// Import necessary modules
 import express from 'express';
 import http from 'http';
 import helmet from 'helmet';
@@ -5,6 +6,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { healthCheckHandler } from './handlers/healthCheck';
 import { validateQueryParams } from './middleware/inputValidator';
+import { validateStrategy } from './middleware/strategyValidator';
 import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies } from './services/strategyService';
 import morgan from 'morgan';
 
@@ -23,13 +25,13 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(morgan('combined'));
 
+// Health Check Endpoint
 app.get('/api/health', healthCheckHandler);
 
 // Create Strategy
-app.post('/api/strategies', async (req, res) => {
-    const strategy = req.body;
+app.post('/api/strategies', validateStrategy, async (req, res) => {
     try {
-        const createdStrategy = await createStrategy(strategy);
+        const createdStrategy = await createStrategy(req.body);
         res.status(201).json(createdStrategy);
     } catch (error) {
         console.error(error);
@@ -53,11 +55,10 @@ app.get('/api/strategies/:id', async (req, res) => {
 });
 
 // Update Strategy
-app.put('/api/strategies/:id', async (req, res) => {
+app.put('/api/strategies/:id', validateStrategy, async (req, res) => {
     const { id } = req.params;
-    const strategy = req.body;
     try {
-        const updatedStrategy = await updateStrategy(id, strategy);
+        const updatedStrategy = await updateStrategy(id, req.body);
         if (!updatedStrategy) {
             return res.status(404).json({ error: 'Not Found' });
         }
@@ -83,11 +84,11 @@ app.delete('/api/strategies/:id', async (req, res) => {
     }
 });
 
-// List Strategies with Pagination
+// List Strategies with Pagination, Sorting, and Filtering
 app.get('/api/strategies', async (req, res) => {
     const { limit = 10, offset = 0, sort = 'name', order = 'asc' } = req.query;
     try {
-        const strategies = await findStrategies({}); // You would add filtering logic here based on query params.
+        const strategies = await findStrategies({}); // You can implement filtering logic here based on query params.
         const sortedStrategies = strategies.sort((a, b) => {
             const modifier = order === 'asc' ? 1 : -1;
             return a.data[sort] > b.data[sort] ? modifier : -modifier;
