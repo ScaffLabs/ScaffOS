@@ -51,3 +51,18 @@ export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promis
     logger.info('Updated portfolio', { id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
     return portfolio;
 };
+
+export const healthCheckPortfolioService = async (): Promise<boolean> => {
+    try {
+        await axiosInstance.get('/health');
+        return true;
+    } catch (error) {
+        logger.error('Health check failed for portfolio service', { error: error.message });
+        return false;
+    }
+};
+
+export const healthCheck = async (req: Request, res: Response) => {
+    const portfolioServiceStatus = await healthCheckPortfolioService();
+    res.json({ status: 'UP', portfolioService: portfolioServiceStatus });
+};

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, param, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, healthCheck } from '../services/portfolioService';
 import logger from '../services/logger';
 import { auditLog } from '../services/auditService';
 
@@ -75,5 +75,8 @@ router.put('/:id', [
         res.status(404).json({ error: error.message });
     }
 });
+
+// Health Check
+router.get('/health', healthCheck);
 
 export default router;
