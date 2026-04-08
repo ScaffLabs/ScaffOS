@@ -10,6 +10,7 @@ const app = express();
 
 const main = async () => {
     await initializeRedis();
+    logger.info(`Configuration: ${JSON.stringify(config)}`);
     app.use(express.json());
     app.use((req, res, next) => {
         const reqId = uuidv4();
