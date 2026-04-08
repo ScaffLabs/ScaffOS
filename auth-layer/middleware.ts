@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from './jwt';
-import { validateApiKey } from './apiKey';
+import { validateApiKey, getUserIdFromApiKey } from './apiKey';
 import { rateLimit } from './rateLimit';
+import { findUserById } from './user';
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers['authorization']?.split(' ')[1];
@@ -20,10 +21,14 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     }
 
     try {
-        const user = verifyToken(token);
+        const { userId } = verifyToken(token);
+        const user = findUserById(userId);
+        if (!user) {
+            return res.status(401).json({ error: 'User not found' });
+        }
         req.user = user;
         next();
     } catch (error) {
-        return res.status(401).json({ error: 'Invalid token' });
+        return res.status(401).json({ error: error.message });
     }
 };
