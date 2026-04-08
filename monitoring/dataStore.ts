@@ -37,6 +37,28 @@ class InMemoryStore<T> {
     public getAll(): Entity<T>[] {
         return Array.from(this.storage.values());
     }
+
+    public indexBy<K extends keyof T>(key: K): Map<T[K], Entity<T>[]> {
+        const index = new Map<T[K], Entity<T>[]>();
+        for (const entity of this.storage.values()) {
+            const indexedKey = entity.data[key];
+            if (!index.has(indexedKey)) {
+                index.set(indexedKey, []);
+            }
+            index.get(indexedKey)?.push(entity);
+        }
+        return index;
+    }
+
+    public transaction(operations: (store: InMemoryStore<T>) => void): void {
+        const snapshot = new Map(this.storage);
+        try {
+            operations(this);
+        } catch (error) {
+            this.storage = snapshot; // Rollback on error
+            throw error;
+        }
+    }
 }
 
 export default InMemoryStore;
