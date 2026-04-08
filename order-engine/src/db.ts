@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { config } from './config';
+import logger from './logger';
 
 const pool = new Pool({
   user: config.DB_USER,
@@ -28,23 +29,28 @@ const retry = async (fn: Function, retries: number = 3, delay: number = 1000) =>
 };
 
 export const connectToDatabase = async () => {
-  await retry(() => pool.connect());
-  console.log('Connected to the database.');
+  await retry(async () => {
+    const client = await pool.connect();
+    logger.info('Connected to the database.');
+    return client;
+  });
 };
 
 export const closeDatabaseConnection = async () => {
   await pool.end();
-  console.log('Database connection pool closed.');
+  logger.info('Database connection pool closed.');
 };
 
 export const queryDatabase = async (query: string, params: any[]) => {
-  return retry(async () => {
-    const client = await pool.connect();
-    try {
-      const res = await client.query(query, params);
-      return res;
-    } finally {
-      client.release();
-    }
-  });
+  const start = process.hrtime();
+  const client = await pool.connect();
+  try {
+    const res = await client.query(query, params);
+    const duration = process.hrtime(start);
+    const durationInMs = (duration[0] * 1e3 + duration[1] / 1e6).toFixed(2);
+    logger.logDatabaseQuery(query, params, durationInMs, client.processID);
+    return res;
+  } finally {
+    client.release();
+  }
 };

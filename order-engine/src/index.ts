@@ -6,9 +6,8 @@ import { migrateData } from './migrations';
 import { setupGracefulShutdown } from './shutdown';
 import { setupRequestQueue } from './requestQueue';
 import { monitorMemoryUsage } from './memoryMonitor';
-import { setupConnectionPooling } from './db';
 import { errorHandlingMiddleware } from './middleware';
-import { logRequest, logError } from './logger';
+import logger, { logStartup } from './logger';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -19,7 +18,6 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors({ origin: ['http://allowed-origin.com'] }));
 app.use(bodyParser.json());
-app.use(logRequest);
 app.use(errorHandlingMiddleware);
 
 app.get('/health', healthCheck);
@@ -33,6 +31,7 @@ const startServer = async () => {
     setupGracefulShutdown();
     monitorMemoryUsage();
     app.listen(PORT, () => {
+        logStartup({ PORT, ENV: process.env.NODE_ENV });
         logger.info(`Order Engine listening on port ${PORT}`);
     });
 };

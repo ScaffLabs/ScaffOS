@@ -37,3 +37,19 @@ const generateRequestId = () => {
 };
 
 export default logger;
+
+export const logDatabaseQuery = (query, params, duration, requestId) => {
+    logger.info('Database Query Executed', { query, params, durationInMs: duration, requestId });
+};
+
+export const logServiceCall = (serviceName, action, duration, success, requestId) => {
+    logger.info('Service Call', { serviceName, action, durationInMs: duration, success, requestId });
+};
+
+export const logStartup = (config) => {
+    logger.info('Service started', { config });
+};
+
+export const logShutdown = () => {
+    logger.info('Service shutting down');
+};
