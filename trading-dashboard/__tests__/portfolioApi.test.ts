@@ -50,4 +50,15 @@ describe('portfolioApi', () => {
         expect(() => handleDivision(10, 0)).toThrow(ServiceError);
         expect(() => handleDivision(10, 0)).toThrow('Division by zero is not allowed.');
     });
+
+    it('should handle empty positions response gracefully', async () => {
+        (axios.get as jest.Mock).mockResolvedValue({ data: [] });
+        const result = await fetchPositions();
+        expect(result).toEqual([]);
+    });
+
+    it('should throw an error if fetchPositions returns invalid data structure', async () => {
+        (axios.get as jest.Mock).mockResolvedValue({ data: { invalid: true } });
+        await expect(fetchPositions()).rejects.toThrow(ServiceError);
+    });
 });

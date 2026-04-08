@@ -33,6 +33,7 @@ describe('API Endpoints', () => {
             .put('/api/positions/1')
             .send({ quantity: -10 });
         expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: 'Invalid quantity' });
     });
 
     it('DELETE /api/positions/:id should delete position', async () => {
@@ -46,5 +47,11 @@ describe('API Endpoints', () => {
         const response = await request(app).delete('/api/positions/1');
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ message: 'Error deleting position' });
+    });
+
+    it('should respond with 404 for non-existing position', async () => {
+        (deletePosition as jest.Mock).mockRejectedValue(new Error('Position not found'));
+        const response = await request(app).delete('/api/positions/99');
+        expect(response.status).toBe(404);
     });
 });
