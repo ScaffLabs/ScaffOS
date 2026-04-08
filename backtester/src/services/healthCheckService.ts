@@ -50,3 +50,16 @@ export async function checkServiceDependencies() {
   const allHealthy = health.every(service => service.healthy);
   return allHealthy;
 }
+
+export async function healthCheckMemoryUsage() {
+  const used = process.memoryUsage();
+  const total = used.heapTotal + used.external;
+  return {
+    memory: {
+      heapTotal: Math.round(used.heapTotal / 1024 / 1024),
+      heapUsed: Math.round(used.heapUsed / 1024 / 1024),
+      external: Math.round(used.external / 1024 / 1024),
+      total: Math.round(total / 1024 / 1024)
+    }
+  };
+}
