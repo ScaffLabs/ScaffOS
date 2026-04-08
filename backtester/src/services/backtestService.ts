@@ -1,6 +1,7 @@
 import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
 import { ServiceError } from '../middleware/errorHandler';
 import { BacktestResultSchema } from '../types';
+import { logger } from '../utils/logger';
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<number> {
     let totalReturns = 0;
@@ -29,10 +30,20 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
         }
         historicalData.forEach(data => HistoricalDataSchema.parse(data));
 
+        const startTime = Date.now();
         const totalReturns = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
         const trades = historicalData.length; // Simple count of trades based on historical data length.
         const winRate = Math.random() * 100; // Placeholder for actual win rate calculation.
         const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}.`;
+
+        logger.info({
+            message: 'Backtest simulation completed',
+            duration: Date.now() - startTime,
+            totalReturns,
+            trades,
+            winRate,
+            performanceMetrics,
+        });
 
         const result: BacktestResult = {
             totalReturns,
