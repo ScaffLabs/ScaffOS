@@ -25,7 +25,7 @@ class Database {
     }
 
     async findAll({ limit, offset, sortBy, order }: { limit: number; offset: number; sortBy: string; order: 'asc' | 'desc';}): Promise<ConfigurationItem[]> {
-        const allItems = Array.from(this.store.getAll()); // Assume this method exists
+        const allItems = Array.from(this.store.data.values());
         const sortedItems = allItems.sort((a, b) => {
             const comparison = a[sortBy].localeCompare(b[sortBy]);
             return order === 'asc' ? comparison : -comparison;

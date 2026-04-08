@@ -43,7 +43,7 @@ class InMemoryStore<T> {
             for (const operation of operations) {
                 const result = await operation();
                 results.push(result);
-                rollbackActions.push(() => this.delete((result as any).key)); // Assuming the result has a key property
+                rollbackActions.push(() => this.delete((result as any).key));
             }
         } catch (error) {
             await Promise.all(rollbackActions.reverse().map(fn => fn()));
