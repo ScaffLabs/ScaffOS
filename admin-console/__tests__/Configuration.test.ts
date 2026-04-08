@@ -47,7 +47,7 @@ describe('Configuration Component', () => {
     test('handles empty input', async () => {
         render(<Configuration />);
         fireEvent.click(screen.getByText(/Create Configuration/i));
-        expect(await screen.findByText(/Configuration created successfully!/i)).not.toBeInTheDocument();
+        expect(await screen.findByText(/Key cannot be empty/i)).toBeInTheDocument();
     });
 
     test('handles invalid input', async () => {
