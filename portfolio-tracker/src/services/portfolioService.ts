@@ -3,6 +3,7 @@ import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import CircuitBreaker from 'circuit-breaker-js';
 import axios from 'axios';
+import { ValidationError, NotFoundError, ServiceError } from '../errors';
 
 const circuitBreaker = new CircuitBreaker({
     timeout: 3000,
@@ -26,13 +27,9 @@ axiosInstance.interceptors.response.use(null, async (error) => {
     return Promise.reject(error);
 });
 
-export const initializeStorage = async (): Promise<void> => {
-    // Seed initial data for development
-};
-
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-    if (!data.name || !Array.isArray(data.positions)) {
-        throw new Error('Invalid portfolio data');
+    if (!data.name || !Array.isArray(data.positions) || data.positions.some(p => !p.symbol || p.quantity < 0 || p.averagePrice < 0)) {
+        throw new ValidationError('Invalid portfolio data');
     }
     const newPortfolio = storage.create(data);
     await publishPortfolioUpdate(newPortfolio);
@@ -41,13 +38,16 @@ export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Port
 
 export const getPortfolio = async (id: string): Promise<Portfolio> => {
     const portfolio = await circuitBreaker.call(() => axiosInstance.get(`/portfolios/${id}`)).then(res => res.data);
-    if (!portfolio) throw new Error('Portfolio not found');
+    if (!portfolio) throw new NotFoundError('Portfolio not found');
     return portfolio;
 };
 
 export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promise<Portfolio> => {
+    if (data.positions && data.positions.some(p => !p.symbol || p.quantity < 0 || p.averagePrice < 0)) {
+        throw new ValidationError('Invalid portfolio update data');
+    }
     const portfolio = await circuitBreaker.call(() => axiosInstance.put(`/portfolios/${id}`, data)).then(res => res.data);
-    if (!portfolio) throw new Error('Portfolio not found');
+    if (!portfolio) throw new NotFoundError('Portfolio not found');
     await publishPortfolioUpdate(portfolio);
     return portfolio;
 };
@@ -59,6 +59,7 @@ export const deletePortfolio = async (id: string): Promise<boolean> => {
 
 export const fetchPortfolios = async ({ limit, offset, sort, order }): Promise<Portfolio[]> => {
     const response = await circuitBreaker.call(() => axiosInstance.get('/portfolios', { params: { limit, offset, sort, order } }));
+    if (!response.data) throw new ServiceError('Failed to fetch portfolios');
     return response.data;
 };
 
