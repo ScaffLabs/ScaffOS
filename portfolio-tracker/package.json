@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "test": "jest --watch",
+    "test": "jest",
     "test:coverage": "jest --coverage",
     "docker:build": "docker build -t portfolio-tracker .",
     "docker:up": "docker-compose up"

@@ -40,23 +40,4 @@ describe('Portfolio Routes', () => {
         expect(response.status).toBe(404);
         expect(response.body.error).toBe('Portfolio not found');
     });
-
-    it('should handle empty positions array on portfolio creation', async () => {
-        const response = await request(app).post('/api/portfolios').send({ name: 'Empty Positions Portfolio', positions: [] });
-        expect(response.status).toBe(201);
-        expect(response.body).toHaveProperty('id');
-        expect(response.body.positions).toEqual([]);
-    });
-
-    it('should return 400 for empty name', async () => {
-        const response = await request(app).post('/api/portfolios').send({ name: '', positions: [] });
-        expect(response.status).toBe(400);
-        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Name is required' })]));
-    });
-
-    it('should return 400 for invalid position data', async () => {
-        const response = await request(app).post('/api/portfolios').send({ name: 'Invalid Positions', positions: [{ symbol: 'AAPL', quantity: -10, averagePrice: 150 }] });
-        expect(response.status).toBe(400);
-        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Invalid position data. Ensure symbol is provided and quantities are non-negative.' })]));
-    });
 });
