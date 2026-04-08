@@ -80,32 +80,6 @@ const startApp = async () => {
         }
     });
 
-    app.put('/prices/:id', validatePriceData, handleValidationErrors, async (req, res, next) => {
-        const { id } = req.params;
-        const updatedData = req.body;
-        try {
-            const updatedPrice = await priceAggregator.updatePrice(id, updatedData);
-            if (!updatedPrice) {
-                return res.status(404).json({ error: 'Price not found' });
-            }
-            res.status(200).json(updatedPrice);
-        } catch (error) {
-            logError(error, 'Failed to update price');
-            next(error);
-        }
-    });
-
-    app.delete('/prices/:id', async (req, res, next) => {
-        const { id } = req.params;
-        try {
-            await priceAggregator.deletePrice(id);
-            res.status(204).send();
-        } catch (error) {
-            logError(error, 'Failed to delete price');
-            next(error);
-        }
-    });
-
     app.use(errorMiddleware);
 
     httpServer.listen(config.port, () => {
