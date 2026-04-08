@@ -4,9 +4,8 @@ import { migrateData, seedData } from './storage/migrations';
 import { Position } from './types';
 import logger, { logRequest, logStartup, generateRequestId } from './utils/logger';
 import errorHandler from './middleware/errorHandler';
-import { registerShutdownHandlers, monitorMemoryUsage } from './utils/healthCheck';
-import rateLimit from 'express-rate-limit';
 import { validateInput, validatePositionId } from './middleware/inputValidation';
+import { healthCheck } from './api/externalApi';
 
 const app = express();
 app.use(express.json());
@@ -14,21 +13,7 @@ app.use(express.json());
 const positionStore = new InMemoryStore<Position>();
 migrateData(positionStore, seedData());
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-});
-app.use(limiter);
-
-app.use((req, res, next) => {
-    const requestId = generateRequestId();
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        logRequest(req.method, req.path, res.statusCode, duration, requestId);
-    });
-    next();
-});
+app.get('/api/health', healthCheck);
 
 app.get('/api/positions', async (req, res) => {
     const { limit = 10, offset = 0, sortBy = 'id', order = 'asc' } = req.query;
@@ -59,8 +44,5 @@ const server = app.listen(PORT, () => {
     logStartup({ port: PORT });
     console.log(`Server is running on port ${PORT}`);
 });
-
-registerShutdownHandlers(server);
-setInterval(monitorMemoryUsage, 60000);
 
 export default app;
