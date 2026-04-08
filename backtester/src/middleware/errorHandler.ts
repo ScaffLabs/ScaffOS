@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import logger from '../utils/logger';
 
 class ServiceError extends Error {
   constructor(message: string) {
@@ -22,6 +23,12 @@ class NotFoundError extends Error {
 }
 
 const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+  logger.error({
+    message: err.message,
+    stack: err.stack,
+    requestId: req.headers['x-request-id'] || 'N/A'
+  });
+
   if (err instanceof ValidationError) {
     return res.status(400).json({ error: err.message });
   }
