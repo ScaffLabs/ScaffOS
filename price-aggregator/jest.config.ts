@@ -7,6 +7,9 @@ const config: Config = {
     },
     testPathIgnorePatterns: ['/node_modules/', '/dist/'],
     moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+    collectCoverage: true,
+    coverageDirectory: 'coverage',
+    coverageReporters: ['text', 'lcov'],
 };
 
 export default config;

@@ -9,7 +9,8 @@
         "test": "jest --passWithNoTests",
         "test:watch": "jest --watch",
         "test:unit": "jest --testPathPattern=__tests__/",
-        "test:integration": "jest --testPathPattern=__tests__/api.test.ts"
+        "test:integration": "jest --testPathPattern=__tests__/api.test.ts",
+        "test:all": "jest"
     },
     "dependencies": {
         "express": "^4.17.1",
