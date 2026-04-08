@@ -8,7 +8,11 @@ services:
       - PORT=3000
       - PORTFOLIO_SERVICE_URL=http://other_service:3001/api/portfolios
       - NODE_ENV=development
-  other_service:
-    image: other_service_image
+      - DATABASE_URL=mongodb://mongo:27017/portfolio-tracker
+      - LOG_LEVEL=info
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo
     ports:
-      - '3001:3001'
+      - '27017:27017'
