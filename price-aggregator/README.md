@@ -88,3 +88,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## API Error Handling
 Error handling is implemented through a centralized middleware that captures and formats errors into a consistent response structure. This ensures clarity for clients on what went wrong and why.
+
+## Additional Notes
+- Ensure to maintain the security of sensitive information like database credentials in your environment variable configurations.
+- Regularly update dependencies to keep the service running smoothly and securely.
