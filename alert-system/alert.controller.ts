@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { AlertMessage, validateAlertMessage } from './alert.schema';
 import { AlertStore } from './storage';
-import { ValidationError, ServiceError } from './error.types';
+import { ValidationError, ServiceError, NotFoundError } from './error.types';
 
 export class AlertController {
     private alertStore: AlertStore;
@@ -37,10 +37,13 @@ export class AlertController {
         try {
             const updatedAlert = await this.alertStore.update(alertId, req.body);
             if (!updatedAlert) {
-                return res.status(404).json({ message: 'Alert not found.' });
+                throw new NotFoundError('Alert not found.');
             }
             return res.json(updatedAlert);
         } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ message: error.message });
+            }
             throw new ServiceError('Failed to update alert.');
         }
     }
@@ -50,10 +53,13 @@ export class AlertController {
         try {
             const deleted = await this.alertStore.delete(alertId);
             if (!deleted) {
-                return res.status(404).json({ message: 'Alert not found.' });
+                throw new NotFoundError('Alert not found.');
             }
             return res.status(204).send();
         } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ message: error.message });
+            }
             throw new ServiceError('Failed to delete alert.');
         }
     }
