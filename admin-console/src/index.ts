@@ -13,6 +13,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { exit } from 'process';
 import csurf from 'csurf';
+import { body, validationResult } from 'express-validator';
+import winston from 'winston';
 
 dotenv.config();
 const app = express();
@@ -57,6 +59,26 @@ app.get('/health', async (req, res) => {
         res.status(200).json(healthStatus);
     } catch (error) {
         logError(error, req, res);
+    }
+});
+
+// Configuration endpoint with validation and sanitization
+app.post('/api/config', [
+    body('key').trim().escape().notEmpty().withMessage('Key is required'),
+    body('value').trim().escape().notEmpty().withMessage('Value is required'),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const { key, value } = req.body;
+        // Assuming a function saveConfiguration exists
+        await saveConfiguration(key, value);
+        res.status(201).json({ message: 'Configuration created successfully!' });
+    } catch (error) {
+        logError(error, req, res);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
