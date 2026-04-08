@@ -1,6 +1,7 @@
-import { User, UserId } from './types';
+import { User, UserId, UserSchema } from './types';
 import crypto from 'crypto';
 import sanitizeHtml from 'sanitize-html';
+import { ValidationError } from './errors';
 
 const sanitizeInput = (input: string) => {
     return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} });
@@ -54,6 +55,11 @@ const userStore = new InMemoryStore<User>();
 export const createUser = (username: string, email: string): User => {
     const sanitizedUsername = sanitizeInput(username);
     const sanitizedEmail = sanitizeInput(email);
+    try {
+        UserSchema.parse({ username: sanitizedUsername, email: sanitizedEmail });
+    } catch (error) {
+        throw new ValidationError(error.errors.map((err: any) => err.message));
+    }
     if (userStore.findByIndex('email', sanitizedEmail).length > 0) {
         throw new Error('Email already in use');
     }
