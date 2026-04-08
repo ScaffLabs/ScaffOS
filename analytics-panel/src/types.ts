@@ -76,3 +76,22 @@ export const StrategyComparisonEventSchema = z.object({
     strategyB: z.string(),
     result: z.string(),
 });
+
+/**
+ * Type for error handling in service calls.
+ */
+export enum ErrorType {
+    SERVICE_ERROR = 'SERVICE_ERROR',
+    VALIDATION_ERROR = 'VALIDATION_ERROR',
+    NOT_FOUND = 'NOT_FOUND',
+}
+
+/**
+ * Interface for structured error response.
+ */
+export interface ErrorResponse {
+    /** The type of error that occurred. */
+    type: ErrorType;
+    /** A human-readable message describing the error. */
+    message: string;
+}
