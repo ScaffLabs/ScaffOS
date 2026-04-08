@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchPerformanceMetrics } from '../api/analytics';
 import { DrawdownChart } from './DrawdownChart';
+import { subscribeToEvent } from '../api/eventBus';
 
 export const AnalyticsDashboard: React.FC = () => {
     const [metrics, setMetrics] = useState<any>(null);
@@ -19,6 +20,13 @@ export const AnalyticsDashboard: React.FC = () => {
             }
         };
         loadMetrics();
+
+        const handlePerformanceMetricsFetched = (data: any) => setMetrics(data);
+        subscribeToEvent('performanceMetricsFetched', handlePerformanceMetricsFetched);
+
+        return () => {
+            unsubscribeFromEvent('performanceMetricsFetched', handlePerformanceMetricsFetched);
+        };
     }, []);
 
     if (loading) return <div>Loading metrics...</div>;

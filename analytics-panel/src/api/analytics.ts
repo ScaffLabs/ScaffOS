@@ -32,10 +32,6 @@ export const healthCheck = async () => {
     return await fetchWithRetry('/api/health');
 };
 
-export const getStrategies = async () => {
-    return await fetchWithRetry('/api/strategies');
-};
-
 export const dependentHealthCheck = async () => {
     const services = {
         strategyService: process.env.STRATEGY_SERVICE_URL,
@@ -49,4 +45,8 @@ export const dependentHealthCheck = async () => {
         }
     }));
     return healthResults;
+};
+
+export const getStrategies = async () => {
+    return await fetchWithRetry('/api/strategies');
 };
