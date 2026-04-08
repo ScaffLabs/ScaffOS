@@ -6,6 +6,8 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgres://user:password@database:5432/admin_console
+      - API_KEY=your_api_key_here
     volumes:
       - .:/app
 
