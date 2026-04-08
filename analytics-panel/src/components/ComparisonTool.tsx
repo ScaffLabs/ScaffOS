@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchComparisonData, getStrategies } from '../api/analytics';
+import { ValidationError } from '../errors/customErrors';
 
 export const ComparisonTool: React.FC = () => {
     const [strategies, setStrategies] = useState<string[]>([]);
@@ -25,10 +26,17 @@ export const ComparisonTool: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
+            if (!strategyA || !strategyB) {
+                throw new ValidationError('Both strategies must be selected.');
+            }
             const result = await fetchComparisonData(strategyA, strategyB);
             setComparisonResult(result);
         } catch (err) {
-            setError('Failed to compare strategies.');
+            if (err instanceof ValidationError) {
+                setError(err.message);
+            } else {
+                setError('Failed to compare strategies.');
+            }
         } finally {
             setLoading(false);
         }
@@ -45,7 +53,7 @@ export const ComparisonTool: React.FC = () => {
                 <option value='' disabled>Select Strategy B</option>
                 {strategies.map(strategy => <option key={strategy} value={strategy}>{strategy}</option>)}
             </select>
-            <button onClick={handleCompare} disabled={loading || !strategyA || !strategyB}>Compare</button>
+            <button onClick={handleCompare} disabled={loading}>Compare</button>
             {loading && <div>Loading...</div>}
             {error && <div>{error}</div>}
             {comparisonResult && <div>{JSON.stringify(comparisonResult)}</div>}
