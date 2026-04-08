@@ -32,3 +32,16 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Graceful shutdown
+const shutdown = async () => {
+    console.log('Shutting down gracefully...');
+    await db.closeConnection();
+    server.close(() => {
+        console.log('Server closed.');
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
