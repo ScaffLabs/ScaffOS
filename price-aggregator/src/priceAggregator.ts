@@ -39,6 +39,31 @@ export class PriceAggregator extends EventEmitter {
         }
     }
 
+    public async updatePrice(id: string, priceData: PriceData): Promise<PriceData | null> {
+        this.validatePriceData(priceData);
+        try {
+            const updatedPrice = await storage.update(id, priceData);
+            if (!updatedPrice) {
+                throw new ValidationError('Price not found.');
+            }
+            await this.updateCurrentPrices();
+            return updatedPrice;
+        } catch (error) {
+            logError(error, 'Error updating price data');
+            throw new ServiceError('Failed to update price.');
+        }
+    }
+
+    public async deletePrice(id: string): Promise<void> {
+        try {
+            await storage.delete(id);
+            await this.updateCurrentPrices();
+        } catch (error) {
+            logError(error, 'Error deleting price data');
+            throw new ServiceError('Failed to delete price.');
+        }
+    }
+
     public async fetchPricesFromExchanges(): Promise<void> {
         const exchangeUrls = ['/exchange1/prices', '/exchange2/prices'];
         const pricePromises = exchangeUrls.map(url => httpClient(url));
@@ -61,7 +86,6 @@ export class PriceAggregator extends EventEmitter {
                 acc[priceData.exchange] = priceData.price;
                 return acc;
             }, {} as CurrentPrices);
-            // Calculate VWAP
             const totalVolume = prices.reduce((sum, p) => sum + p.volume, 0);
             const weightedPriceSum = prices.reduce((sum, p) => sum + (p.price * p.volume), 0);
             this.currentPrices['VWAP'] = totalVolume > 0 ? (weightedPriceSum / totalVolume) : 0;

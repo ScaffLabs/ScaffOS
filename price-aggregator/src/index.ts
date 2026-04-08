@@ -55,16 +55,14 @@ const startApp = async () => {
         }
     });
 
-    app.get('/ready', async (req, res) => {
-        // Here you can add logic to check if the service is ready to handle requests
-        res.status(200).json({ status: 'ready' });
-    });
-
     app.get('/prices', async (req, res, next) => {
+        const { limit = 10, offset = 0, sort = 'price', order = 'asc' } = req.query;
         try {
             const prices = await priceAggregator.getCurrentPrices();
-            if (Object.keys(prices).length === 0) return res.status(204).send();
-            res.status(200).json(prices);
+            const sortedPrices = Object.entries(prices)
+                .sort(([, a], [, b]) => (order === 'asc' ? a - b : b - a))
+                .slice(offset, offset + limit);
+            res.status(200).json(sortedPrices);
         } catch (error) {
             logError(error, 'Failed to fetch current prices');
             next(new ServiceError('Failed to fetch current prices.'));
@@ -78,6 +76,32 @@ const startApp = async () => {
             res.status(201).json(createdPrice);
         } catch (error) {
             logError(error, 'Failed to add price');
+            next(error);
+        }
+    });
+
+    app.put('/prices/:id', validatePriceData, handleValidationErrors, async (req, res, next) => {
+        const { id } = req.params;
+        const updatedData = req.body;
+        try {
+            const updatedPrice = await priceAggregator.updatePrice(id, updatedData);
+            if (!updatedPrice) {
+                return res.status(404).json({ error: 'Price not found' });
+            }
+            res.status(200).json(updatedPrice);
+        } catch (error) {
+            logError(error, 'Failed to update price');
+            next(error);
+        }
+    });
+
+    app.delete('/prices/:id', async (req, res, next) => {
+        const { id } = req.params;
+        try {
+            await priceAggregator.deletePrice(id);
+            res.status(204).send();
+        } catch (error) {
+            logError(error, 'Failed to delete price');
             next(error);
         }
     });
