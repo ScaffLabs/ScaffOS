@@ -27,3 +27,21 @@ export const checkServiceHealth = async () => {
         return { status: 'DOWN', error: error.message };
     }
 };
+
+export const checkExternalService = async () => {
+    try {
+        const response = await fetchData('/external-service');
+        return response;
+    } catch (error) {
+        throw new Error(`External service check failed: ${error.message}`);
+    }
+};
+
+export const healthCheck = async (req, res) => {
+    const serviceHealth = await checkServiceHealth();
+    const externalServiceHealth = await checkExternalService();
+    res.status(serviceHealth.status === 'UP' && externalServiceHealth.status === 'UP' ? 200 : 500).send({
+        serviceHealth,
+        externalServiceHealth
+    });
+};

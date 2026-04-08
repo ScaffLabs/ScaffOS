@@ -8,6 +8,7 @@ import { validateInput, validatePositionId } from './middleware/inputValidation'
 import errorHandler from './middleware/errorHandler';
 import logger from './utils/logger';
 import { healthCheck, readyCheck, registerShutdownHandlers, monitorMemoryUsage } from './utils/healthCheck';
+import { healthCheck as externalServiceHealthCheck } from './api/externalApi';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,6 +66,7 @@ app.delete('/api/positions/:id', validatePositionId, async (req, res) => {
 
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
+app.get('/external-health', externalServiceHealthCheck);
 
 // Error handling middleware
 app.use(errorHandler);
