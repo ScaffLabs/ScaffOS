@@ -17,7 +17,12 @@ const config: Config = {
         },
     },
     setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-    testTimeout: 30000
+    testTimeout: 30000,
+    globals: {
+        'ts-jest': {
+            tsconfig: '<rootDir>/tsconfig.json',
+        },
+    },
 };
 
 export default config;

@@ -24,6 +24,15 @@ describe('API Endpoints', () => {
         expect(response.body).toHaveProperty('externalService');
     });
 
+    it('GET /api/health/metrics returns system metrics', async () => {
+        const response = await request(app).get('/api/health/metrics');
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('memoryUsage');
+        expect(response.body).toHaveProperty('uptime');
+        expect(response.body).toHaveProperty('platform');
+        expect(response.body).toHaveProperty('arch');
+    });
+
     it('POST /api/config creates a configuration', async () => {
         const response = await request(app).post('/api/config').send({ key: 'testKey', value: 'testValue' });
         expect(response.status).toBe(201);
