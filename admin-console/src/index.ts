@@ -11,8 +11,8 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import http from 'http';
 import { Server } from 'socket.io';
-import { createConnection } from 'mysql2/promise';
 import { exit } from 'process';
+import csurf from 'csurf';
 
 dotenv.config();
 const app = express();
@@ -34,7 +34,7 @@ process.on('SIGINT', shutdown);
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: ['https://your-allowed-origin.com'], credentials: true }));
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -44,20 +44,19 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '1mb' }));
 app.use(logRequest);
 app.use(logAudit);
+app.use(csurf());
 app.use('/api/health', healthRouter);
 
 // Health check route
 app.get('/health', async (req, res) => {
     try {
-        // Example health check logic
-        const dbConnection = await createConnection({host: 'localhost', user: 'root', database: 'test'});
-        const healthStatus = dbConnection ? 'up' : 'down';
-        res.status(200).json({ service: 'running', database: healthStatus });
+        const healthStatus = { service: 'running', uptime: process.uptime(), memory: process.memoryUsage() };
+        res.status(200).json(healthStatus);
     } catch (error) {
-        res.status(500).json({ error: 'Service is down' });
+        logError(error, req, res);
     }
 });
 
