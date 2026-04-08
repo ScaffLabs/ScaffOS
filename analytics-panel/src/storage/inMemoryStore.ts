@@ -77,4 +77,8 @@ export class InMemoryStore<T> implements Store<T> {
             });
         }
     }
+
+    async findByIndex(key: keyof T, value: any): Promise<Record<T>[]> {
+        return this.indexes[key]?.get(value) || [];
+    }
 }
