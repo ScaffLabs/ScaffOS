@@ -29,13 +29,23 @@ const limiter = RateLimit({
  *         schema:
  *           type: integer
  *         description: Number of results to skip
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: Field to sort by
+ *       - in: query
+ *         name: filter
+ *         schema:
+ *           type: string
+ *         description: Field to filter by
  *     responses:
  *       200:
  *         description: A list of risk positions
  */
 router.get('/risk', limiter, async (req: Request, res: Response) => {
-  const { limit = 10, offset = 0 } = req.query;
-  const positions = await riskManager.getRiskPositions(Number(limit), Number(offset));
+  const { limit = 10, offset = 0, sort, filter } = req.query;
+  const positions = await riskManager.getRiskPositions(Number(limit), Number(offset), sort, filter);
   res.status(200).json(positions);
 });
 
