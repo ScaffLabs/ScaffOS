@@ -1,3 +1,4 @@
+// server.ts
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
@@ -14,6 +15,23 @@ import { logRequest } from './logger';
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+const shutdown = async () => {
+    logger.info('Shutting down gracefully...');
+    try {
+        await pool.drain(); // Ensure all active connections are closed
+        server.close(() => {
+            logger.info('HTTP server closed.');
+            process.exit(0);
+        });
+    } catch (error) {
+        logger.error('Error during shutdown: ' + error.message);
+        process.exit(1);
+    }
+};
 
 // CORS configuration
 const allowedOrigins = ['http://localhost:3000', 'https://yourdomain.com'];
@@ -54,6 +72,4 @@ const start = async () => {
     }
 };
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
 start();
