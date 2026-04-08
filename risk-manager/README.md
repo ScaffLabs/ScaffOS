@@ -11,7 +11,6 @@ The service is built using Express.js and follows a modular architecture. The co
 - Health check endpoints to monitor service status
 
 ## Setup Instructions
-
 ### Prerequisites
 - Node.js (14.x or later)
 - npm (6.x or later)
@@ -31,7 +30,6 @@ The service is built using Express.js and follows a modular architecture. The co
 2. Start the server with `npm start`.
 
 ## API Reference
-
 ### GET /api/risk
 - **Description**: Retrieve risk positions.
 - **Query Parameters**:
