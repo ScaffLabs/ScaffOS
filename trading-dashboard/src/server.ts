@@ -6,6 +6,7 @@ import bodyParser from 'body-parser';
 import { fetchPositions, updatePosition, deletePosition } from './api/portfolioApi';
 import { validateInput } from './middleware/inputValidation';
 import errorHandler from './middleware/errorHandler';
+import { healthCheck, readyCheck } from './utils/healthCheck';
 import { createServer } from 'http';
 import logger, { logRequest, logError } from './utils/logger';
 
@@ -63,6 +64,9 @@ app.delete('/api/positions/:id', async (req, res) => {
         res.status(500).json({ message: 'Error deleting position' });
     }
 });
+
+app.get('/health', healthCheck);
+app.get('/ready', readyCheck);
 
 // Error handling middleware
 app.use(errorHandler);
