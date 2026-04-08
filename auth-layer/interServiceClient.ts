@@ -2,7 +2,7 @@ import axios from 'axios';
 import config from './config';
 import logger from './logger';
 
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1000;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -27,11 +27,11 @@ const fetchWithRetry = async (url: string) => {
                     circuitBreaker.failureCount = 0;
                 }
             }
-            const response = await axios.get(url, { timeout: 5000 });
+            const response = await axios.get(url);
             return response.data;
         } catch (error) {
             circuitBreaker.failureCount++;
-            logger.warn(`Retrying fetch: ${url}, attempt: ${i + 1}`);
+            logger.warn(`Fetch failed: ${url}, attempt: ${i + 1}`);
             if (circuitBreaker.failureCount >= circuitBreaker.failureThreshold) {
                 circuitBreaker.isOpen = true;
                 circuitBreaker.lastFailure = Date.now();
@@ -45,16 +45,14 @@ const fetchWithRetry = async (url: string) => {
     }
 };
 
-export const fetchUserData = async (userId: string) => {
-    return await fetchWithRetry(`${config.USER_SERVICE_URL}/users/${userId}`);
+export const checkUserServiceHealth = async () => {
+    return await fetchWithRetry(`${config.USER_SERVICE_URL}/health`);
 };
 
-export const checkServiceHealth = async (url: string) => {
-    try {
-        await fetchWithRetry(url);
-        return true;
-    } catch (error) {
-        logger.error(`Service health check failed for ${url}: ${error.message}`);
-        return false;
-    }
+export const checkOrderServiceHealth = async () => {
+    return await fetchWithRetry(`${config.ORDER_SERVICE_URL}/health`);
+};
+
+export const fetchUserData = async (userId: string) => {
+    return await fetchWithRetry(`${config.USER_SERVICE_URL}/users/${userId}`);
 };
