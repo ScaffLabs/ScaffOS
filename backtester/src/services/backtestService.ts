@@ -17,6 +17,14 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     return totalReturns;
 }
 
+async function fetchOrderData(orderId: string): Promise<any> {
+    const url = `${process.env.ORDER_SERVICE_URL}/api/orders/${orderId}`;
+    return await withRetry(async () => {
+        const response = await axios.get(url);
+        return response.data;
+    });
+}
+
 const simulateWithRetry = withRetry(async (params: StrategyParameters, historicalData: HistoricalData[]) => {
     return await simulateBacktest(params, historicalData);
 });

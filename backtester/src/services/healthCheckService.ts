@@ -41,3 +41,9 @@ export async function checkReadiness() {
   const allHealthy = servicesHealth.every(result => result.healthy);
   return { healthy: allHealthy };
 }
+
+export async function checkServiceDependencies() {
+  const health = await healthCheckServices();
+  const allHealthy = health.every(service => service.healthy);
+  return allHealthy;
+}
