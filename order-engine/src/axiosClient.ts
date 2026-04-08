@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { CircuitBreaker } from 'opossum';
 
 const httpClient = axios.create({
     baseURL: process.env.BASE_URL,
@@ -15,10 +16,16 @@ const retry = async (fn: Function, retries: number = 3) => {
     }
 };
 
+const circuitBreaker = new CircuitBreaker({
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+});
+
 export const fetchData = async (url: string) => {
-    return retry(() => httpClient.get(url));
+    return retry(() => circuitBreaker.fire(() => httpClient.get(url)));
 };
 
 export const postData = async (url: string, data: any) => {
-    return retry(() => httpClient.post(url, data));
+    return retry(() => circuitBreaker.fire(() => httpClient.post(url, data)));
 };
