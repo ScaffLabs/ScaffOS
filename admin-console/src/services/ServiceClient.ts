@@ -1,7 +1,7 @@
 import axios from 'axios';
 import config from '../config';
 import { emitEvent } from '../events/EventBus';
-import { ServiceError, NotFoundError } from '../errors/CustomErrors';
+import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
 import { CircuitBreaker } from 'opossum';
 
@@ -26,8 +26,7 @@ const fetchHealthStatus = async () => {
 const postConfiguration = async (key: string, value: string): Promise<ConfigurationItem> => {
     try {
         const response = await circuitBreaker.fire(axios.post, `${BASE_URL}/config`, { key, value });
-        const configItem: ConfigurationItem = { key, value };
-        emitEvent('CONFIGURATION_CREATED', configItem);
+        emitEvent('CONFIGURATION_CREATED', { key, value });
         return response.data;
     } catch (error) {
         throw new ServiceError('Failed to create configuration');
@@ -52,8 +51,4 @@ const healthCheckWithRetry = async () => {
     return requestWithRetry(fetchHealthStatus);
 };
 
-const fetchServiceHealthWithRetry = async () => {
-    return requestWithRetry(fetchHealthStatus);
-};
-
-export { fetchHealthStatus, postConfiguration, requestWithRetry, healthCheckWithRetry, fetchServiceHealthWithRetry };
+export { fetchHealthStatus, postConfiguration, healthCheckWithRetry };
