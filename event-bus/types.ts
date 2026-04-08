@@ -5,7 +5,15 @@ export type UserId = string & { readonly brand: unique symbol };
 // Discriminated union for event types
 export type EventType = 'userCreated' | 'orderPlaced';
 
-// Event interface with additional properties for better type safety
+/**
+ * Event interface defining the structure of events in the system.
+ * @property id - Unique identifier for the event.
+ * @property title - Title of the event. Must be a non-empty string.
+ * @property description - Optional description of the event.
+ * @property type - The type of event being represented.
+ * @property createdAt - The date when the event was created.
+ * @property updatedAt - The date when the event was last updated.
+ */
 export interface Event {
     id: OrderId;
     title: string;

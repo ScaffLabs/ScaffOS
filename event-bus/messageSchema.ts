@@ -5,8 +5,19 @@ export interface Message<T> {
 }
 
 export interface UserCreated {
-    userId: string;
+    userId: UserId;
     username: string;
 }
 
 export type EventMessages = UserCreated;
+
+import { z } from 'zod';
+
+// Zod schema for message validation
+export const messageSchema = z.object({
+    topic: z.string(),
+    data: z.any(),
+    timestamp: z.number(),
+});
+
+export type MessageSchemaType = z.infer<typeof messageSchema>;
