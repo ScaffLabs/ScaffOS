@@ -2,7 +2,6 @@ import storage from './storage';
 import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import CircuitBreaker from 'circuit-breaker-js';
-import axios from 'axios';
 import { migrateData, seedData } from './migration';
 
 const circuitBreaker = new CircuitBreaker({
@@ -11,7 +10,6 @@ const circuitBreaker = new CircuitBreaker({
     resetTimeout: 10000
 });
 
-// Migration and seeding
 export const initializeStorage = async (): Promise<void> => {
     await seedData(); // Seed initial data for development
 };
@@ -54,7 +52,7 @@ export const fetchPortfolios = async ({ limit, offset, sort, order }): Promise<P
 };
 
 export const healthCheckPortfolioService = async (): Promise<HealthCheckResponse> => {
-    // Health check logic here...
+    return { status: 'UP', portfolioService: true };
 };
 
 export const clearPortfolios = () => {

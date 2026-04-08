@@ -41,6 +41,24 @@ class InMemoryStorage {
         this.clear();
         portfolios.forEach(portfolio => this.create(portfolio));
     }
+
+    public getByIds(ids: string[]): Portfolio[] {
+        return this.portfolios.filter(portfolio => ids.includes(portfolio.id));
+    }
+
+    public transaction(actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): void {
+        const results = portfolioIds.map(id => actions(id));
+        return results;
+    }
+
+    public indexBy(field: keyof Portfolio): { [key: string]: Portfolio[] } {
+        return this.portfolios.reduce((acc, portfolio) => {
+            const key = portfolio[field] as unknown as string;
+            acc[key] = acc[key] || [];
+            acc[key].push(portfolio);
+            return acc;
+        }, {} as { [key: string]: Portfolio[] });
+    }
 }
 
 const storage = new InMemoryStorage();
