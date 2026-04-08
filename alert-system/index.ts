@@ -6,10 +6,12 @@ import { HealthCheck } from './health-check';
 import { config } from './config';
 import logger, { logStartup } from './logger';
 import bodyParser from 'body-parser';
+import pLimit from 'p-limit';
 
 const app = express();
 const eventBus = new EventBus();
 const alertProcessor = new AlertProcessor(eventBus);
+const limit = pLimit(5); // Limit concurrency for database connections
 
 app.use(bodyParser.json({ limit: '1mb' })); // Limit request size
 
@@ -17,12 +19,21 @@ app.get('/health', HealthCheck.checkHealth);
 app.get('/ready', HealthCheck.checkReady);
 
 const connectDatabase = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-        logger.info('Connected to MongoDB');
-    } catch (error) {
-        logger.error('Failed to connect to MongoDB:', error);
-        process.exit(1);
+    const connectionOptions = { useNewUrlParser: true, useUnifiedTopology: true };
+    const retries = 5;
+    for (let i = 0; i < retries; i++) {
+        try {
+            await mongoose.connect(process.env.MONGO_URI, connectionOptions);
+            logger.info('Connected to MongoDB');
+            break;
+        } catch (error) {
+            logger.error('Failed to connect to MongoDB:', error);
+            if (i < retries - 1) {
+                await new Promise(res => setTimeout(res, 5000)); // Wait before retrying
+            } else {
+                process.exit(1);
+            }
+        }
     }
 };
 
@@ -44,11 +55,5 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-process.on('uncaughtException', (err) => {
-    logger.error(err);
-    shutdown();
-});
-process.on('unhandledRejection', (reason) => {
-    logger.error(new Error(String(reason)));
-    shutdown();
-});
+process.on('uncaughtException', shutdown);
+process.on('unhandledRejection', shutdown);

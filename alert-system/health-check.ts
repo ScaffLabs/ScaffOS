@@ -42,9 +42,4 @@ export class HealthCheck {
         const services = await this.checkServices(['webhook', 'email']);
         return res.json({ ready: dbStatus && services.webhook && services.email });
     }
-
-    static async checkMemoryUsage(req: Request, res: Response) {
-        const memory = await this.memoryUsage();
-        return res.json({ memory });
-    }
 }
