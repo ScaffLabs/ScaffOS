@@ -31,13 +31,11 @@ export const requestLogger = (req, res, next) => {
 
 // Error logging
 export const errorLogger = (err: Error, req, res, next) => {
-    logger.error('Error occurred', { message: err.message, stack: err.stack, path: req.originalUrl });
+    logger.error('Error occurred', { message: err.message, stack: err.stack, path: req.originalUrl, requestId: req.headers['x-request-id'] });
     next(err);
 };
 
-export default logger;
-
 // Initialization logging
 logger.info('Starting Portfolio Tracker service', { environment: process.env.NODE_ENV, port: process.env.PORT, database: process.env.DATABASE_URL });
-logger.info('Connected to database', { database: process.env.DATABASE_URL });
-logger.info('Logger initialized', { logLevel: process.env.LOG_LEVEL });
+
+export default logger;

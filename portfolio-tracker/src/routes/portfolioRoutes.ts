@@ -83,7 +83,7 @@ router.get('/', async (req, res) => {
         const portfolios = await fetchPortfolios({ limit: 100, offset: 0, sort: 'name', order: 'asc' });
         res.status(200).json(portfolios);
     } catch (error) {
-        logger.error('Error fetching portfolios', { error: error.message });
+        logger.error('Error fetching portfolios', { error: error.message, requestId: req.headers['x-request-id'] });
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
