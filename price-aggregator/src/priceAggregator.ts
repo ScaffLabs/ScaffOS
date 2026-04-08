@@ -22,7 +22,7 @@ export class PriceAggregator extends EventEmitter {
         }
     }
 
-    public async addPrice(priceData: PriceData) {
+    public async addPrice(priceData: PriceData): Promise<PriceData> {
         this.validatePriceData(priceData);
         try {
             const newPrice = await storage.create(priceData);
@@ -35,28 +35,40 @@ export class PriceAggregator extends EventEmitter {
         }
     }
 
-    public async fetchPricesFromExchanges() {
+    public async fetchPricesFromExchanges(): Promise<void> {
         const exchangeUrls = ['/exchange1/prices', '/exchange2/prices'];
         const pricePromises = exchangeUrls.map(url => httpClient(url));
         try {
             const prices = await Promise.all(pricePromises);
-            prices.forEach(priceData => this.addPrice(priceData));
+            for (const priceData of prices) {
+                if (priceData) {
+                    await this.addPrice(priceData);
+                }
+            }
         } catch (error) {
             logError(error, 'Error fetching prices from exchanges');
         }
     }
 
-    private async updateCurrentPrices() {
+    private async updateCurrentPrices(): Promise<void> {
         try {
             const prices = await storage.findAll();
             this.currentPrices = prices.reduce((acc, priceData) => {
                 acc[priceData.exchange] = priceData.price;
                 return acc;
             }, {} as CurrentPrices);
+            const vwap = this.calculateVWAP(prices);
+            this.currentPrices.VWAP = vwap;
         } catch (error) {
             logError(error, 'Error updating current prices');
             throw new ServiceError('Failed to update current prices.');
         }
+    }
+
+    private calculateVWAP(prices: PriceData[]): number {
+        const totalValue = prices.reduce((acc, { price, volume }) => acc + price * volume, 0);
+        const totalVolume = prices.reduce((acc, { volume }) => acc + volume, 0);
+        return totalVolume > 0 ? totalValue / totalVolume : 0;
     }
 
     public getCurrentPrices(): CurrentPrices {
