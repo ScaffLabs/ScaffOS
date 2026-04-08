@@ -15,4 +15,4 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     return res.status(500).json({ message: 'Internal Server Error', type: 'UnknownError' });
 };
 
-export default errorHandler; 
+export default errorHandler;

@@ -29,7 +29,7 @@ export const createPosition = async (position: Position) => {
 };
 
 export const updatePosition = async (positionId: Position['id'], quantity: number) => {
-    if (typeof quantity !== 'number' || quantity <= 0) throw new ValidationError('Invalid quantity');
+    validateQuantity(quantity);
     try {
         const positionUpdate = { id: positionId, quantity };
         const validationResult = PositionSchema.safeParse(positionUpdate);

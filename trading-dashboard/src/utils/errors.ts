@@ -39,4 +39,10 @@ const validateInput = (input: any) => {
     }
 };
 
-export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, validateInput }; 
+const validateQuantity = (quantity: number) => {
+    if (typeof quantity !== 'number' || quantity <= 0) {
+        throw new ValidationError('Quantity must be a positive number.');
+    }
+};
+
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, validateInput, validateQuantity }; 
