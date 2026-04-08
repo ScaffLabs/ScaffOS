@@ -51,12 +51,11 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
     fetchOrders(),
     fetchHistoricalData()
   ]);
-  
+
   let totalReturns = 0;
   let trades = 0;
   let wins = 0;
 
-  // Implementing the backtest logic
   for (let i = 0; i < historicalData.length; i++) {
     const currentData = historicalData[i];
     const order = orders.find(o => o.timestamp === currentData.timestamp);
@@ -69,10 +68,10 @@ export async function simulateBacktest(params: StrategyParameters, historicalDat
 
       if (shouldBuy) {
         trades++;
-        totalReturns -= entryPrice; // Cost of buying
+        totalReturns -= entryPrice;
       } else if (shouldSell) {
         trades++;
-        totalReturns += entryPrice; // Proceeds from selling
+        totalReturns += entryPrice;
         wins++;
       }
     }

@@ -9,7 +9,6 @@ const backtestRouter = Router();
 backtestRouter.post('/', async (req, res, next) => {
   const { strategyParams, historicalData } = req.body;
   try {
-    // Validate input data
     StrategyParametersSchema.parse(strategyParams);
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
       throw new ValidationError('historicalData must be a non-empty array.');
@@ -22,16 +21,16 @@ backtestRouter.post('/', async (req, res, next) => {
     if (error instanceof ValidationError) {
       return next(error);
     }
-    next(new Error('Error during backtest')); // Generic error handling
+    next(new Error('Error during backtest'));
   }
 });
 
-backtestRouter.get('/health', async (req, res) => {
+backtestRouter.get('/health', async (req, res, next) => {
   try {
     const healthResults = await healthCheckServices();
     res.status(200).json({ health: healthResults });
   } catch (error) {
-    next(new Error('Health check failed')); // Handle health check error
+    next(new Error('Health check failed'));
   }
 });
 
