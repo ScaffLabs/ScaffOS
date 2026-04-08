@@ -3,6 +3,7 @@ import { StorageManager } from '../storage/storageManager';
 import { Event, createEventSchema, updateEventSchema } from '../types';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
+import { ServiceError } from '../errors/serviceError';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -16,11 +17,7 @@ export const createEvent = async (req: Request, res: Response): Promise<void> =>
         const event = await storage.create(validation.data);
         res.status(201).json(event);
     } catch (error) {
-        if (error instanceof ValidationError) {
-            return res.status(400).json({ message: error.message });
-        }
-        console.error(error);
-        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+        handleError(error, res);
     }
 };
 
@@ -30,15 +27,23 @@ export const getEvents = async (req: Request, res: Response): Promise<void> => {
         if (!events.length) throw new NotFoundError('No events found');
         res.status(200).json(events);
     } catch (error) {
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ message: error.message });
-        }
+        handleError(error, res);
+    }
+};
+
+const handleError = (error: Error, res: Response) => {
+    if (error instanceof ValidationError) {
+        res.status(400).json({ message: error.message });
+    } else if (error instanceof NotFoundError) {
+        res.status(404).json({ message: error.message });
+    } else if (error instanceof ServiceError) {
+        res.status(500).json({ message: error.message });
+    } else {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 };
 
-// Additional controller methods for update, delete, and health check can be added here.
 const router = Router();
 router.post('/', createEvent);
 router.get('/', getEvents);
