@@ -10,29 +10,24 @@ export class AlertController {
         this.alertStore = alertStore;
     }
 
-    /**
-     * Retrieves active alerts from the store.
-     * @param req - The request object.
-     * @param res - The response object.
-     */
     async getActiveAlerts(req: Request, res: Response) {
+        const { limit = 10, offset = 0, type, sortBy = 'createdAt', order = 'asc' } = req.query;
         try {
-            const alerts = await this.alertStore.findIndex({});
-            if (!alerts || alerts.length === 0) {
-                return res.status(204).send();
-            }
-            return res.json(alerts);
+            const query: any = {};
+            if (type) query.type = type;
+            const alerts = await this.alertStore.findIndex(query);
+            const sortedAlerts = alerts.sort((a, b) => {
+                const modifier = order === 'asc' ? 1 : -1;
+                return (a[sortBy] > b[sortBy] ? 1 : -1) * modifier;
+            });
+            const paginatedAlerts = sortedAlerts.slice(Number(offset), Number(offset) + Number(limit));
+            return res.json(paginatedAlerts);
         } catch (error) {
             console.error(error);
             throw new ServiceError('Failed to fetch active alerts.');
         }
     }
 
-    /**
-     * Adds a new alert to the store.
-     * @param req - The request object containing the alert data.
-     * @param res - The response object.
-     */
     async addAlert(req: Request, res: Response) {
         try {
             const alert = validateAlertMessage(req.body);
@@ -47,11 +42,6 @@ export class AlertController {
         }
     }
 
-    /**
-     * Updates an existing alert by ID.
-     * @param req - The request object containing the alert ID and new data.
-     * @param res - The response object.
-     */
     async updateAlert(req: Request, res: Response) {
         const alertId = req.params.id;
         try {
@@ -69,11 +59,6 @@ export class AlertController {
         }
     }
 
-    /**
-     * Deletes an alert by ID.
-     * @param req - The request object containing the alert ID.
-     * @param res - The response object.
-     */
     async deleteAlert(req: Request, res: Response) {
         const alertId = req.params.id;
         try {
