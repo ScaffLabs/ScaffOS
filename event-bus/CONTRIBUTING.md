@@ -11,7 +11,7 @@ Thank you for considering contributing to the Event Bus service! We appreciate y
 6. **Submit a pull request**: Push your changes to your fork and submit a pull request to the main repository.
 
 ## Code Style
-- Follow the existing code style and structure.
+- Follow the existing code style and structure. Consistency helps maintain readability.
 - Write meaningful commit messages that describe the changes made.
 - Ensure consistent use of semicolons and indentation.
 
@@ -20,7 +20,7 @@ Thank you for considering contributing to the Event Bus service! We appreciate y
 - Run `npm test` to verify that all tests pass before creating a pull request.
 
 ## Issues
-- If you encounter any issues, please report them through the GitHub issues page.
+- If you encounter any issues, please report them through the GitHub issues page. Provide as much detail as possible to help us understand the problem.
 
 ## Contact
-For any questions or suggestions, feel free to reach out to the maintainers via GitHub issues or discussions.
+For any questions or suggestions, please feel free to reach out to the maintainers via GitHub issues or discussions.

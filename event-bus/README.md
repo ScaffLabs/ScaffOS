@@ -105,3 +105,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 ## Changelog
 See [CHANGELOG.md](./CHANGELOG.md) for version history.
+
+## License
+This project is licensed under the MIT License.
