@@ -6,6 +6,7 @@ import { HealthCheck } from './health-check';
 import { config } from './config';
 import logger, { logStartup } from './logger';
 import bodyParser from 'body-parser';
+import { errorMiddleware } from './error.middleware';
 
 const app = express();
 const eventBus = new EventBus();
@@ -14,6 +15,8 @@ const alertProcessor = new AlertProcessor(eventBus);
 app.use(bodyParser.json({ limit: '1mb' })); // Limit request size
 app.get('/health', HealthCheck.checkHealth);
 app.get('/ready', HealthCheck.checkReady);
+
+app.use(errorMiddleware); // Use error handling middleware after all routes
 
 const server = app.listen(config.PORT, () => {
     logStartup(config);
