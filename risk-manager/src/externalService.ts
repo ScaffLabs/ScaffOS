@@ -29,12 +29,6 @@ export const fetchAnotherServiceData = async () => {
     return await fetchWithRetry(url);
 };
 
-export const healthCheckServices = async () => {
-    const eventBusHealth = await checkServiceHealth(config.EVENT_BUS_URL);
-    const anotherServiceHealth = await checkServiceHealth(config.ANOTHER_SERVICE_URL);
-    return { eventBus: eventBusHealth, anotherService: anotherServiceHealth };
-};
-
 const checkServiceHealth = async (url: string): Promise<boolean> => {
     try {
         const response = await axios.get(url, { timeout: 5000 });
@@ -43,4 +37,10 @@ const checkServiceHealth = async (url: string): Promise<boolean> => {
         logger.error(`Health check failed for ${url}: ${error.message}`);
         return false;
     }
+};
+
+export const healthCheckServices = async () => {
+    const eventBusHealth = await checkServiceHealth(config.EVENT_BUS_URL);
+    const anotherServiceHealth = await checkServiceHealth(config.ANOTHER_SERVICE_URL);
+    return { eventBus: eventBusHealth, anotherService: anotherServiceHealth };
 };
