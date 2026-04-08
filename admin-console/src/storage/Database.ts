@@ -9,14 +9,17 @@ class Database {
     constructor(dbType: string) {
         if (dbType === 'in-memory') {
             this.dbClient = new InMemoryStore<ConfigurationItem>();
+        } else if (dbType === 'postgres') {
+            this.dbClient = new Client();
+        } else if (dbType === 'sqlite') {
+            this.dbClient = new sqlite3.Database(':memory:');
         } else {
-            this.dbClient = null;
+            throw new Error('Unsupported database type');
         }
     }
 
     async connect(databaseUrl: string) {
         if (this.dbClient instanceof Client) {
-            this.dbClient = new Client({ connectionString: databaseUrl });
             await this.dbClient.connect();
         } else if (this.dbClient instanceof sqlite3.Database) {
             this.dbClient = new sqlite3.Database(databaseUrl.replace('sqlite://', ''));
@@ -37,23 +40,6 @@ class Database {
                 });
             }
         }
-    }
-
-    async getConfigurations({ limit, offset, sortBy, order }: { limit: number; offset: number; sortBy: string; order: 'asc' | 'desc'; }): Promise<ConfigurationItem[]> {
-        if (!this.dbClient) throw new Error('Database not connected');
-        if (this.dbClient instanceof InMemoryStore) {
-            return Array.from(this.dbClient.data.values()).slice(offset, offset + limit);
-        }
-        const query = `SELECT * FROM configurations ORDER BY ${sortBy} ${order} LIMIT $1 OFFSET $2`;
-        if (this.dbClient instanceof Client) {
-            const res = await this.dbClient.query(query, [limit, offset]);
-            return res.rows;
-        } else if (this.dbClient instanceof sqlite3.Database) {
-            return new Promise((resolve, reject) => {
-                this.dbClient.all(query, [limit, offset], (err, rows) => err ? reject(err) : resolve(rows));
-            });
-        }
-        return [];
     }
 
     async getConfigurationByKey(key: string): Promise<ConfigurationItem | null> {

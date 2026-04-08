@@ -24,10 +24,10 @@ class InMemoryStore<T> {
     }
 
     private indexItem(id: string, item: T) {
-        for (const key of Object.keys(item)) {
-            if (!this.index.has(key)) this.index.set(key, new Set());
-            this.index.get(key)!.add(id);
-        }
+        // Assume item has a key property for indexing
+        const key = (item as any).key;
+        if (!this.index.has(key)) this.index.set(key, new Set());
+        this.index.get(key)!.add(id);
     }
 
     async findByIndex(key: string, value: any): Promise<T[]> {

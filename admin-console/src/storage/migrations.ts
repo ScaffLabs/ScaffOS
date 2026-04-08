@@ -9,8 +9,8 @@ const migrateData = async (sourceDb: Database, targetDb: Database) => {
 };
 
 const runMigrations = async (sourceDbUrl: string, targetDbUrl: string) => {
-    const sourceDb = new Database('in-memory');
-    const targetDb = new Database('in-memory');
+    const sourceDb = new Database('sqlite'); // Example for SQLite
+    const targetDb = new Database('postgres'); // Example for PostgreSQL
     await sourceDb.connect(sourceDbUrl);
     await targetDb.connect(targetDbUrl);
     await migrateData(sourceDb, targetDb);
