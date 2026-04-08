@@ -20,33 +20,15 @@ async function fetchDataFromService(url: string, retries: number = MAX_RETRIES):
       return fetchDataFromService(url, retries - 1);
     }
     logger.error(`Failed to fetch from ${url}: ${error.message}`);
-    throw error;
-  }
-}
-
-async function fetchOrders() {
-  const ordersUrl = `${process.env.ORDER_SERVICE_URL}/orders`;
-  try {
-    const orders = await fetchDataFromService(ordersUrl);
-    return orders;
-  } catch (error) {
-    eventEmitter.emit('error', { service: 'Order Service', error });
-    throw new Error('Failed to fetch orders');
-  }
-}
-
-async function fetchHistoricalData() {
-  const dataUrl = `${process.env.DATA_SERVICE_URL}/historical-data`;
-  try {
-    const historicalData = await fetchDataFromService(dataUrl);
-    return historicalData;
-  } catch (error) {
-    eventEmitter.emit('error', { service: 'Data Service', error });
-    throw new Error('Failed to fetch historical data');
+    throw new ServiceError('Service unavailable');
   }
 }
 
 export async function simulateBacktest(params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> {
+  if (historicalData.length === 0) {
+    throw new ValidationError('historicalData cannot be empty.');
+  }
+
   const [orders, historicalDataResponse] = await Promise.all([
     fetchOrders(),
     fetchHistoricalData()
