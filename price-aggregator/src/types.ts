@@ -21,18 +21,19 @@ export interface PriceData {
  * This is a mapping of exchange names to their respective prices.
  */
 export interface CurrentPrices {
-  [key: string]: number;
+  VWAP?: number; // Optional VWAP field
+  [key: string]: number | undefined;
 }
 
 // Zod schema for PriceData validation
 export const PriceDataSchema = z.object({
-  exchange: z.string().nonempty(),
-  price: z.number().positive(),
-  volume: z.number().positive(),
+  exchange: z.string().nonempty().description('The name of the exchange, must be a non-empty string.'),
+  price: z.number().positive().description('The price in USD, must be a positive number.'),
+  volume: z.number().positive().description('The traded volume, must be a positive number.'),
 });
 
 // Zod schema for CurrentPrices validation
-export const CurrentPricesSchema = z.record(z.number().positive());
+export const CurrentPricesSchema = z.record(z.number().positive()).description('A record of current prices from exchanges.');
 
 /**
  * Represents the event types for price updates.

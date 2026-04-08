@@ -4,7 +4,7 @@ import { httpClient } from './httpClient';
 import { storage } from './storage';
 import { logError } from './logger';
 import { EventBus } from './eventBus';
-import { ServiceError, ValidationError, OverflowError, DivisionByZeroError } from './errors';
+import { ServiceError, ValidationError, OverflowError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -15,6 +15,12 @@ export class PriceAggregator {
         this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
     }
 
+    /**
+     * Adds a new price entry to the storage and updates current prices.
+     * @param priceData - The price data to add.
+     * @returns The newly added price data.
+     * @throws {ServiceError} If there is an error adding the price.
+     */
     public async addPrice(priceData: PriceData): Promise<PriceData> {
         this.validatePriceData(priceData);
         try {
@@ -28,6 +34,11 @@ export class PriceAggregator {
         }
     }
 
+    /**
+     * Validates the price data against the schema.
+     * @param priceData - The price data to validate.
+     * @throws {ValidationError} If validation fails.
+     */
     private validatePriceData(priceData: PriceData): void {
         const validation = PriceDataSchema.safeParse(priceData);
         if (!validation.success) {
@@ -36,6 +47,11 @@ export class PriceAggregator {
         this.checkForOverflow(priceData);
     }
 
+    /**
+     * Checks if price or volume exceeds maximum safe integer value.
+     * @param priceData - The price data to check.
+     * @throws {OverflowError} If overflow is detected.
+     */
     private checkForOverflow(priceData: PriceData): void {
         const { price, volume } = priceData;
         if (price > Number.MAX_SAFE_INTEGER || volume > Number.MAX_SAFE_INTEGER) {
@@ -43,10 +59,17 @@ export class PriceAggregator {
         }
     }
 
+    /**
+     * Updates the current prices from storage.
+     */
     private async updateCurrentPrices(): Promise<void> {
         this.currentPrices = await storage.findAll();
     }
 
+    /**
+     * Fetches the latest prices from the external service.
+     * @throws {ServiceError} If fetching prices fails.
+     */
     public async fetchPrices(): Promise<void> {
         try {
             const prices = await httpClient('/prices');
@@ -57,11 +80,18 @@ export class PriceAggregator {
         }
     }
 
+    /**
+     * Handles price events emitted through the event bus.
+     * @param event - The price event to handle.
+     */
     private handlePriceEvent(event: PriceEvent): void {
-        // Handle price events, such as broadcasting to connected clients
         this.broadcastPriceUpdate(event.data);
     }
 
+    /**
+     * Broadcasts updated price data to all connected clients.
+     * @param priceData - The price data to broadcast.
+     */
     private broadcastPriceUpdate(priceData: PriceData): void {
         this.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
@@ -70,10 +100,18 @@ export class PriceAggregator {
         });
     }
 
+    /**
+     * Gets the current prices.
+     * @returns The current prices.
+     */
     public getCurrentPrices(): CurrentPrices {
         return this.currentPrices;
     }
 
+    /**
+     * Checks the health status of dependencies.
+     * @returns Health status of the dependencies.
+     */
     public async checkDependencies(): Promise<{ [key: string]: string }> {
         const healthStatus: { [key: string]: string } = {};
         try {
