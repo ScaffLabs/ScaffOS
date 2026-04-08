@@ -1,17 +1,17 @@
 import { InMemoryStore } from '../storage/inMemoryStore';
 import { Strategy } from '../types';
-import { ValidationError } from '../errors/customErrors';
+import { ValidationError, NotFoundError } from '../errors/customErrors';
 
 const strategyStore = new InMemoryStore<Strategy>();
 
-const seedData: Strategy[] = [
-    { name: 'Strategy A', parameters: { param1: 'value1' } },
-    { name: 'Strategy B', parameters: { param1: 'value2' } },
-];
-
 const initializeStore = async () => {
-    for (const data of seedData) {
-        await strategyStore.create(data);
+    // Seed strategies if needed
+    const seedData: Strategy[] = [
+        { name: 'Strategy A', parameters: { param1: 'value1' } },
+        { name: 'Strategy B', parameters: { param1: 'value2' } },
+    ];
+    for (const strategy of seedData) {
+        await createStrategy(strategy);
     }
 };
 
@@ -23,15 +23,21 @@ const createStrategy = async (strategy: Strategy) => {
 };
 
 const getStrategy = async (id: string) => {
-    return await strategyStore.read(id);
+    const strategy = await strategyStore.read(id);
+    if (!strategy) throw new NotFoundError('Strategy not found.');
+    return strategy;
 };
 
 const updateStrategy = async (id: string, strategy: Strategy) => {
-    return await strategyStore.update(id, strategy);
+    const existingStrategy = await getStrategy(id);
+    const updated = { ...existingStrategy.data, ...strategy };
+    return await strategyStore.update(id, updated);
 };
 
 const deleteStrategy = async (id: string) => {
-    return await strategyStore.delete(id);
+    const deleted = await strategyStore.delete(id);
+    if (!deleted) throw new NotFoundError('Strategy not found.');
+    return deleted;
 };
 
 const findStrategies = async (query: Partial<Strategy>) => {
