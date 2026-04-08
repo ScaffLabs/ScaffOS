@@ -1,4 +1,3 @@
-// Import statements
 import express from 'express';
 import riskManager from './riskManager';
 import logger from './logger';
