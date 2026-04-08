@@ -25,7 +25,7 @@ class Database {
         await this.store.create(item.key, item);
         // Persist to DB if connected
         if (this.dbClient) {
-            const query = 'INSERT INTO configurations(key, value) VALUES($1, $2)';
+            const query = 'INSERT INTO configurations(key, value) VALUES($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value';
             if (this.dbClient instanceof Client) {
                 await this.dbClient.query(query, [item.key, item.value]);
             } else if (this.dbClient instanceof sqlite3.Database) {
