@@ -25,7 +25,7 @@ export const logRequest = (req, res, next) => {
 };
 
 export const logError = (error, req) => {
-    logger.error({ error: error.stack, path: req.path }, 'Error occurred');
+    logger.error({ error: error.stack, message: error.message, path: req.path }, 'Error occurred');
 };
 
 export const logStartup = () => {
