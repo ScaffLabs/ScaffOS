@@ -1,93 +1,82 @@
-import axios from 'axios';
-import { DrawdownCircuitBreaker } from './drawdownCircuitBreaker';
-import { RiskAlerting } from './riskAlerting';
-import { PositionLimits } from './positionLimits';
 import { RiskPosition, RiskPositionSchema } from './sharedTypes';
-import MemoryQueue from './memoryQueue';
+import { RiskPositionStorage } from './storage';
 import logger from './logger';
 
 export default class RiskManager {
-  private drawdownCircuitBreaker: DrawdownCircuitBreaker;
-  private riskAlerting: RiskAlerting;
-  private positionLimits: PositionLimits;
-  private riskPositions: RiskPosition[];
-  private riskPositionQueue: MemoryQueue;
+    private storage: RiskPositionStorage;
 
-  constructor() {
-    this.drawdownCircuitBreaker = new DrawdownCircuitBreaker(20);
-    this.riskAlerting = new RiskAlerting();
-    this.positionLimits = new PositionLimits();
-    this.riskPositions = [];
-    this.riskPositionQueue = new MemoryQueue();
-    this.riskPositionQueue.eventEmitter.on('itemAdded', this.handleNewRiskPosition.bind(this));
-  }
-
-  private handleNewRiskPosition(position: RiskPosition) {
-    this.riskPositions.push(position);
-    this.riskAlerting.triggerRiskAlert(`New risk position added for asset: ${position.asset}`);
-    logger.info(`New risk position handling: ${JSON.stringify(position)}`);
-  }
-
-  async getRiskPositions(limit: number, offset: number, sort?: string, filter?: string) {
-    let positions = this.riskPositions;
-    if (filter) {
-      positions = positions.filter(pos => pos.asset.includes(filter));
-    }
-    if (sort) {
-      positions.sort((a, b) => a[sort] > b[sort] ? 1 : -1);
-    }
-    return positions.slice(offset, offset + limit);
-  }
-
-  async createRiskPosition(asset: string, position: number) {
-    const newPosition = { id: this.generateId(), asset, position };
-    const validationResult = RiskPositionSchema.safeParse(newPosition);
-    if (!validationResult.success) {
-      logger.error('Invalid risk position data: ' + validationResult.error);
-      throw new Error('Invalid risk position data: ' + validationResult.error);
+    constructor() {
+        this.storage = new RiskPositionStorage();
     }
 
-    if (!this.positionLimits.checkLimit(asset, position)) {
-      logger.warn(`Position exceeds limit for asset: ${asset}`);
-      throw new Error('Position exceeds limit for this asset.');
+    /**
+     * Retrieves risk positions with optional pagination, filtering, and sorting.
+     * @param limit - Number of items to return.
+     * @param offset - Number of items to skip.
+     * @param sort - Field to sort the results.
+     * @param filter - Filter applied to asset.
+     * @returns A list of risk positions.
+     */
+    async getRiskPositions(limit: number, offset: number, sort?: string, filter?: string) {
+        let positions = await this.storage.findAll(limit, offset);
+        if (filter) {
+            positions = positions.filter(pos => pos.asset.includes(filter));
+        }
+        if (sort) {
+            positions.sort((a, b) => a[sort] > b[sort] ? 1 : -1);
+        }
+        return positions;
     }
 
-    this.riskPositionQueue.enqueue(newPosition);
-    logger.info(`Risk position created: ${newPosition.id}`);
-    return newPosition;
-  }
-
-  async updateRiskPosition(id: string, position: number) {
-    const index = this.riskPositions.findIndex(pos => pos.id === id);
-    if (index === -1) {
-      logger.warn(`Risk position not found for update: ${id}`);
-      return null;
+    /**
+     * Creates a new risk position.
+     * @param asset - The asset for the risk position.
+     * @param position - The position size.
+     * @returns The newly created risk position.
+     */
+    async createRiskPosition(asset: string, position: number) {
+        const newPosition: RiskPosition = { id: this.generateId(), asset, position };
+        const validationResult = RiskPositionSchema.safeParse(newPosition);
+        if (!validationResult.success) {
+            logger.error('Invalid risk position data: ' + validationResult.error);
+            throw new Error('Invalid risk position data: ' + validationResult.error);
+        }
+        return this.storage.create(newPosition);
     }
 
-    const updatedPosition = { ...this.riskPositions[index], position };
-    const validationResult = RiskPositionSchema.safeParse(updatedPosition);
-    if (!validationResult.success) {
-      logger.error('Invalid risk position data for update: ' + validationResult.error);
-      throw new Error('Invalid risk position data: ' + validationResult.error);
+    /**
+     * Updates an existing risk position.
+     * @param id - The ID of the risk position to update.
+     * @param position - The new position size.
+     * @returns The updated risk position or null if not found.
+     */
+    async updateRiskPosition(id: string, position: number) {
+        const existingPosition = await this.storage.read(id);
+        if (!existingPosition) {
+            logger.warn(`Risk position not found for update: ${id}`);
+            return null;
+        }
+
+        const updatedPosition: RiskPosition = { ...existingPosition, position };
+        const validationResult = RiskPositionSchema.safeParse(updatedPosition);
+        if (!validationResult.success) {
+            logger.error('Invalid risk position data for update: ' + validationResult.error);
+            throw new Error('Invalid risk position data: ' + validationResult.error);
+        }
+
+        return this.storage.update(id, updatedPosition);
     }
 
-    this.riskPositions[index].position = position;
-    logger.info(`Risk position updated: ${id}`);
-    return this.riskPositions[index];
-  }
-
-  async deleteRiskPosition(id: string) {
-    const index = this.riskPositions.findIndex(pos => pos.id === id);
-    if (index === -1) {
-      logger.warn(`Risk position not found for deletion: ${id}`);
-      return false;
+    /**
+     * Deletes a risk position.
+     * @param id - The ID of the risk position to delete.
+     * @returns True if the position was deleted, false otherwise.
+     */
+    async deleteRiskPosition(id: string) {
+        return this.storage.delete(id);
     }
-    this.riskPositions.splice(index, 1);
-    logger.info(`Risk position deleted: ${id}`);
-    return true;
-  }
 
-  private generateId() {
-    return Math.random().toString(36).substr(2, 9);
-  }
+    private generateId() {
+        return Math.random().toString(36).substr(2, 9);
+    }
 }
