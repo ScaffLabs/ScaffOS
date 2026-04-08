@@ -44,7 +44,7 @@ describe('Order Service Tests', () => {
     });
 
     test('getOrdersService - should return an empty array when no orders exist', async () => {
-        const orders = await getOrdersService();
+        const orders = await getOrdersService({ limit: 10, offset: 0 });
         expect(orders).toHaveLength(0);
     });
 
@@ -53,8 +53,18 @@ describe('Order Service Tests', () => {
         const order2: Order = { id: '2' as OrderId, type: 'market', price: 0, quantity: 5, status: 'open' };
         await createOrderService(order1);
         await createOrderService(order2);
-        const orders = await getOrdersService();
+        const orders = await getOrdersService({ limit: 10, offset: 0 });
         expect(orders).toHaveLength(2);
         expect(orders).toEqual(expect.arrayContaining([order1, order2]));
+    });
+
+    test('getOrdersService - should return orders with pagination', async () => {
+        const order1: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
+        const order2: Order = { id: '2' as OrderId, type: 'market', price: 0, quantity: 5, status: 'open' };
+        await createOrderService(order1);
+        await createOrderService(order2);
+        const orders = await getOrdersService({ limit: 1, offset: 0 });
+        expect(orders).toHaveLength(1);
+        expect(orders).toEqual(expect.arrayContaining([order1]));
     });
 });
