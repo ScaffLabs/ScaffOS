@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 // Branded types for IDs
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
@@ -19,7 +17,7 @@ export const LatencyDataSchema = z.object({
 });
 
 // Discriminated union for events
-export type MonitoringEvent = 
+export type MonitoringEvent =  
     | { type: 'LATENCY_RECORD', data: LatencyData }
     | { type: 'SERVICE_HEALTH_CHECK', status: Record<string, boolean> };
 
