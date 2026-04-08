@@ -12,6 +12,7 @@ import { logRequest, logError, logStartup } from './logger';
 import { ServiceError } from './errors';
 import csrf from 'csurf';
 import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
+import { query } from 'express-validator';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -56,9 +57,15 @@ const startApp = async () => {
         }
     });
 
-    app.get('/prices', async (req, res, next) => {
+    app.get('/prices', [
+        query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+        query('offset').optional().isInt({ min: 0 }).toInt(),
+        query('sort').optional().isIn(['asc', 'desc']),
+        query('filter').optional().isString().escape(),
+    ], async (req, res, next) => {
         try {
-            const prices = await priceAggregator.getCurrentPrices();
+            const { limit, offset, sort, filter } = req.query;
+            const prices = await priceAggregator.getCurrentPrices({ limit, offset, sort, filter });
             res.status(200).json(prices);
         } catch (error) {
             logError(error, 'Failed to fetch current prices');
@@ -73,6 +80,32 @@ const startApp = async () => {
             res.status(201).json(createdPrice);
         } catch (error) {
             logError(error, 'Failed to add price');
+            next(error);
+        }
+    });
+
+    app.put('/prices/:id', validatePriceData, handleValidationErrors, async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const updatedPriceData = req.body;
+            const updatedPrice = await priceAggregator.updatePrice(id, updatedPriceData);
+            if (!updatedPrice) {
+                return res.status(404).json({ error: 'Price not found' });
+            }
+            res.status(200).json(updatedPrice);
+        } catch (error) {
+            logError(error, 'Failed to update price');
+            next(error);
+        }
+    });
+
+    app.delete('/prices/:id', async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            await priceAggregator.deletePrice(id);
+            res.status(204).send();
+        } catch (error) {
+            logError(error, 'Failed to delete price');
             next(error);
         }
     });
