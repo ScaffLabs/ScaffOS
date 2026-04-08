@@ -5,9 +5,11 @@ import healthRouter from './healthCheck';
 import logger from './logger';
 import { errorHandler } from './errors';
 import MemoryQueue from './memoryQueue';
-import { createPool } from 'mysql2/promise';
+import loggingMiddleware from './middleware/loggingMiddleware';
+import requestIdMiddleware from './middleware/requestIdMiddleware';
 import gracefulShutdown from './gracefulShutdown';
-import setHealth from './healthCheck';
+import { createPool } from 'mysql2/promise';
+import { healthCheckServices } from './externalService';
 
 const app = express();
 const server = http.createServer(app);
@@ -23,6 +25,8 @@ const dbPool = createPool({
 });
 
 app.use(express.json());
+app.use(requestIdMiddleware);
+app.use(loggingMiddleware);
 app.use('/api', apiRouter);
 app.use('/health', healthRouter);
 app.use(errorHandler);
@@ -34,11 +38,13 @@ const startServer = async () => {
     });
 };
 
-// Health check interval
+// Health check interval to monitor service health
 setInterval(async () => {
-    const healthStatus = await dbPool.query('SELECT 1');
-    if (healthStatus[0].length === 0) {
-        logger.warn('Health check failed!');
+    try {
+        const healthStatus = await healthCheckServices();
+        logger.info('Health check status: ', healthStatus);
+    } catch (error) {
+        logger.error('Health check failed: ', error);
     }
 }, 60000);
 
