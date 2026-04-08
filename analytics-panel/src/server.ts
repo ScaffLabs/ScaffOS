@@ -14,23 +14,21 @@ const app = express();
 const server = createServer(app);
 
 // Middleware setup
-app.use(helmet()); // Security headers
-app.use(cors({ origin: ['http://example.com', 'http://localhost:3000'] })); // CORS setup
-app.use(express.json()); // JSON body parser
-app.use(logWithRequestId); // Request ID logging
+app.use(helmet());
+app.use(cors({ origin: ['http://example.com', 'http://localhost:3000'] }));
+app.use(express.json());
+app.use(logWithRequestId);
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Too many requests, please try again later.'
 });
-app.use('/api/', limiter); // Apply rate limiting to all routes
+app.use('/api/', limiter);
 
-// Routes
 app.use('/api/strategies', strategyRoutes);
 app.use('/api', healthRoutes);
 
-// Error handling middleware
 app.use(errorHandler);
 
 const startServer = async () => {
@@ -40,7 +38,7 @@ const startServer = async () => {
     });
 };
 
-const monitorInterval = setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every 60 seconds
+const monitorInterval = setInterval(monitorMemoryUsage, 60000);
 
 process.on('SIGTERM', () => gracefulShutdown(server, monitorInterval));
 process.on('SIGINT', () => gracefulShutdown(server, monitorInterval));
