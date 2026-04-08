@@ -11,7 +11,7 @@ const serviceUrls = {
 
 async function checkService(url: string): Promise<boolean> {
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, { timeout: 5000 });
     return response.status === 200;
   } catch (error) {
     logger.error(`Health check failed for ${url}: ${error.message}`);
@@ -29,3 +29,14 @@ export async function healthCheckServices() {
 }
 
 export { eventEmitter };
+
+export async function checkAllHealth() {
+  const servicesHealth = await healthCheckServices();
+  const allHealthy = servicesHealth.every(result => result.healthy);
+  return { healthy: allHealthy, details: servicesHealth };
+}
+
+export async function checkReadiness() {
+  // Here we can add additional readiness checks if needed
+  return await checkAllHealth();
+}
