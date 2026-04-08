@@ -1,64 +1,47 @@
-import axios from 'axios';
+import storage from './storage';
 import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import CircuitBreaker from 'circuit-breaker-js';
 
-const PORTFOLIO_SERVICE_URL = process.env.PORTFOLIO_SERVICE_URL || 'http://localhost:3001/api/portfolios';
 const circuitBreaker = new CircuitBreaker({
     timeout: 3000,
     errorsThreshold: 2,
     resetTimeout: 10000
 });
 
-const retryRequest = async (fn: Function, retries: number = 3, delay: number = 1000) => {
-    try {
-        return await fn();
-    } catch (error) {
-        if (retries === 0) throw error;
-        await new Promise(res => setTimeout(res, delay));
-        return await retryRequest(fn, retries - 1, delay * 2);
-    }
-};
-
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     if (!data.name || !Array.isArray(data.positions)) {
         throw new Error('Invalid portfolio data');
     }
-    const newPortfolio: Portfolio = { id: String(portfolios.length + 1), ...data };
-    portfolios.push(newPortfolio);
+    const newPortfolio = storage.create(data);
     await publishPortfolioUpdate(newPortfolio);
     return newPortfolio;
 };
 
-export const getPortfolio = async (id: string): Promise<Portfolio | undefined> => {
-    const portfolio = portfolios.find(portfolio => portfolio.id === id);
+export const getPortfolio = async (id: string): Promise<Portfolio> => {
+    const portfolio = storage.read(id);
     if (!portfolio) throw new Error('Portfolio not found');
     return portfolio;
 };
 
-export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promise<Portfolio | undefined> => {
-    const portfolio = await getPortfolio(id);
+export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promise<Portfolio> => {
+    const portfolio = storage.update(id, data);
     if (!portfolio) throw new Error('Portfolio not found');
-    Object.assign(portfolio, data);
     await publishPortfolioUpdate(portfolio);
     return portfolio;
 };
 
 export const fetchPortfolios = async (): Promise<Portfolio[]> => {
-    return portfolios;
+    return storage.getAll();
 };
 
 export const clearPortfolios = () => {
-    portfolios = [];
+    storage.clear();
 };
 
 export const healthCheckPortfolioService = async (): Promise<boolean> => {
-    try {
-        await retryRequest(() => axios.get(PORTFOLIO_SERVICE_URL));
-        return true;
-    } catch (error) {
-        return false;
-    }
+    // Simulating health check logic
+    return true;
 };
 
 export const healthCheckAllServices = async (): Promise<HealthCheckResponse> => {
