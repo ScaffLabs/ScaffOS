@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import Joi from 'joi';
+import winston from 'winston';
 
 dotenv.config();
 
@@ -12,7 +13,7 @@ const envSchema = Joi.object({
 
 const { error, value: envVars } = envSchema.validate(process.env);
 if (error) {
-    throw new Error(`Configuration validation error: ${error.message}`);
+    throw new Error(`Configuration validation error: {error.message}`);
 }
 
 const config = {
@@ -21,5 +22,13 @@ const config = {
     databaseUrl: envVars.DATABASE_URL,
     apiKey: envVars.API_KEY,
 };
+
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [new winston.transports.Console()],
+});
+
+logger.info(`Configuration loaded: {JSON.stringify(config)}`);
 
 export default config;

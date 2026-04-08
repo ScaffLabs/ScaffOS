@@ -2,12 +2,19 @@ import express from 'express';
 import dotenv from 'dotenv';
 import healthRouter from './routes/health';
 import config from './config';
+import { logRequest, logError } from './middleware/logger';
 
 dotenv.config();
 const app = express();
 app.use(express.json());
 
+// Logger middleware
+app.use(logRequest);
+
 app.use('/api/health', healthRouter);
+
+// Error handling middleware
+app.use(logError);
 
 app.listen(config.port, () => {
     console.log(`Server running on http://localhost:${config.port}`);
