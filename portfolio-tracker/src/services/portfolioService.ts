@@ -12,7 +12,7 @@ const circuitBreakerOptions = {
     resetTimeout: 30000,
 };
 
-const serviceCircuit = new CircuitBreaker(fetchPortfolioServiceData, circuitBreakerOptions);
+const serviceCircuit = new CircuitBreaker(createPortfolioInternal, circuitBreakerOptions);
 
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     return await serviceCircuit.fire(data);
@@ -31,18 +31,6 @@ const createPortfolioInternal = async (data: Omit<Portfolio, 'id'>): Promise<Por
     await publishPortfolioUpdate(newPortfolio);
     logger.info('Created portfolio', { id: newPortfolio.id });
     return newPortfolio;
-};
-
-const fetchPortfolioServiceData = async () => {
-    for (let i = 0; i < 5; i++) {
-        try {
-            const response = await axios.get(process.env.PORTFOLIO_SERVICE_URL);
-            return response.data;
-        } catch (error) {
-            if (i === 4) throw new Error('Failed to fetch portfolio service data after retries');
-            logger.warn('Fetch attempt failed, retrying...', { attempt: i + 1, error: error.message });
-        }
-    }
 };
 
 export const getPortfolio = async (id: string): Promise<Portfolio> => {
