@@ -20,6 +20,7 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
     }
 };
 
+// Subscribe to userCreated events
 eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
 
 export const checkHealth = async () => {

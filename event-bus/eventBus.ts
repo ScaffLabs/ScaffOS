@@ -1,22 +1,13 @@
 import { EventEmitter } from 'events';
-
-interface Message<T> {
-    topic: string;
-    data: T;
-    timestamp: number;
-}
+import { Message } from './messageSchema';
 
 class EventBus {
     private emitter: EventEmitter;
     private subscriptions: Record<string, Array<(message: Message<any>) => void>>;
-    private connectionRetries: number;
-    private maxRetries: number;
 
-    constructor(maxRetries: number = 5) {
+    constructor() {
         this.emitter = new EventEmitter();
         this.subscriptions = {};
-        this.connectionRetries = 0;
-        this.maxRetries = maxRetries;
     }
 
     public subscribe<T>(topic: string, listener: (message: Message<T>) => void): void {
@@ -48,21 +39,6 @@ class EventBus {
 
     public getSubscriptionCount(topic: string): number {
         return this.subscriptions[topic] ? this.subscriptions[topic].length : 0;
-    }
-
-    public async connect(): Promise<void> {
-        while (this.connectionRetries < this.maxRetries) {
-            try {
-                // Simulating a connection setup
-                console.log('Connected to Event Bus');
-                return;
-            } catch (error) {
-                this.connectionRetries++;
-                console.error('Connection failed, retrying...', error);
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retrying
-            }
-        }
-        throw new Error('Failed to connect to Event Bus after retries');
     }
 }
 
