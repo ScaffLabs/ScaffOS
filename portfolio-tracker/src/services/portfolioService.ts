@@ -65,3 +65,10 @@ export const fetchAllPortfolios = async (): Promise<Portfolio[]> => {
 export const clearPortfolios = () => {
     portfolios = [];
 };
+
+export const healthCheckAllServices = async (): Promise<{ [key: string]: boolean }> => {
+    const status = {};
+    status.portfolioService = await healthCheckPortfolioService();
+    // Add more health checks for other services here
+    return status;
+};
