@@ -1,0 +1,20 @@
+{
+    "name": "auth-layer",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "test": "jest",
+        "test:watch": "jest --watch"
+    },
+    "devDependencies": {
+        "jest": "^27.0.0",
+        "supertest": "^6.0.0",
+        "ts-jest": "^27.0.0",
+        "@types/jest": "^27.0.0",
+        "@types/supertest": "^2.0.0"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "jsonwebtoken": "^8.5.1"
+    }
+}

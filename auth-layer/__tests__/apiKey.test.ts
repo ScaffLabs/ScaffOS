@@ -1,0 +1,29 @@
+import { generateApiKey, validateApiKey, getUserIdFromApiKey } from '../apiKey';
+
+describe('API Key Functions', () => {
+    it('should generate a valid API key', () => {
+        const userId = 'user123';
+        const apiKey = generateApiKey(userId);
+        expect(apiKey).toHaveLength(32);
+    });
+
+    it('should validate a valid API key', () => {
+        const userId = 'user123';
+        const apiKey = generateApiKey(userId);
+        expect(validateApiKey(apiKey)).toBe(true);
+    });
+
+    it('should not validate an invalid API key', () => {
+        expect(validateApiKey('invalid_key')).toBe(false);
+    });
+
+    it('should return user ID from a valid API key', () => {
+        const userId = 'user123';
+        const apiKey = generateApiKey(userId);
+        expect(getUserIdFromApiKey(apiKey)).toBe(userId);
+    });
+
+    it('should return null for an invalid API key', () => {
+        expect(getUserIdFromApiKey('invalid_key')).toBe(null);
+    });
+});
