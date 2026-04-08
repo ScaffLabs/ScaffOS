@@ -3,6 +3,7 @@ import { body, param, query, validationResult } from 'express-validator';
 import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError } from '../errors';
+import { auditLog } from '../services/auditService';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
     try {
         const portfolio = await createPortfolio(req.body);
+        await auditLog('Create Portfolio', { portfolioId: portfolio.id, name: portfolio.name });
         res.status(201).json(portfolio);
     } catch (error) {
         logger.error('Error creating portfolio', { error: error.message });
@@ -56,6 +58,7 @@ router.put('/:id', [param('id').isString().trim().escape(), ...portfolioValidati
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
+        await auditLog('Update Portfolio', { portfolioId: updatedPortfolio.id, name: updatedPortfolio.name });
         res.status(200).json(updatedPortfolio);
     } catch (error) {
         logger.error('Error updating portfolio', { error: error.message });
