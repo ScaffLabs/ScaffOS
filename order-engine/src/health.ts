@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import { fetchData } from './axiosClient';
 import { ServiceError } from './errors';
-import { pool } from './db';
 
-const checkDependentService = async (url: string) => {
+const checkServiceHealth = async (url: string) => {
     try {
         await fetchData(url);
         return true;
@@ -15,13 +14,12 @@ const checkDependentService = async (url: string) => {
 
 export const healthCheck = async (req: Request, res: Response): Promise<void> => {
     try {
-        const healthChecks = await Promise.all([
-            checkDependentService(process.env.DATABASE_URL + '/health-check'),
-            checkDependentService(process.env.ANOTHER_SERVICE_URL + '/health-check'),
-            checkDependentService(process.env.ORDER_SERVICE_URL + '/health-check')
+        const checks = await Promise.all([
+            checkServiceHealth(process.env.DATABASE_URL + '/health-check'),
+            checkServiceHealth(process.env.ANOTHER_SERVICE_URL + '/health-check'),
+            checkServiceHealth(process.env.ORDER_SERVICE_URL + '/health-check')
         ]);
-
-        if (healthChecks.every(status => status)) {
+        if (checks.every(status => status)) {
             res.status(200).send('Order Engine is healthy!');
         } else {
             res.status(503).send('Dependent services are down.');
@@ -35,11 +33,10 @@ export const healthCheck = async (req: Request, res: Response): Promise<void> =>
 export const readyCheck = async (req: Request, res: Response): Promise<void> => {
     try {
         const readinessChecks = await Promise.all([
-            checkDependentService(process.env.DATABASE_URL + '/ready-check'),
-            checkDependentService(process.env.ANOTHER_SERVICE_URL + '/ready-check'),
-            checkDependentService(process.env.ORDER_SERVICE_URL + '/ready-check')
+            checkServiceHealth(process.env.DATABASE_URL + '/ready-check'),
+            checkServiceHealth(process.env.ANOTHER_SERVICE_URL + '/ready-check'),
+            checkServiceHealth(process.env.ORDER_SERVICE_URL + '/ready-check')
         ]);
-
         if (readinessChecks.every(status => status)) {
             res.status(200).send('Order Engine is ready!');
         } else {

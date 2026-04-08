@@ -3,6 +3,9 @@ import { emitWithRetry } from './eventBus';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { storage } from './storage';
 import logger from './logger';
+import { fetchData } from './axiosClient';
+
+const ANOTHER_SERVICE_URL = process.env.ANOTHER_SERVICE_URL;
 
 export const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -14,6 +17,8 @@ export const createOrderService = async (orderData: unknown) => {
         const createdOrder = await storage.create(order);
         await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder });
         logger.info('Order created successfully', { order: createdOrder });
+        // Notify another service about the new order
+        await fetchData(`${ANOTHER_SERVICE_URL}/orders`, createdOrder);
         return createdOrder;
     } catch (error) {
         logger.error('Error creating order:', error);
@@ -34,6 +39,8 @@ export const updateOrderService = async (id: string, updates: unknown) => {
         const updatedOrder = await storage.update(id, parsedUpdates.data);
         await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
         logger.info('Order updated successfully', { order: updatedOrder });
+        // Notify another service about the updated order
+        await fetchData(`${ANOTHER_SERVICE_URL}/orders/${id}`, updatedOrder);
         return updatedOrder;
     } catch (error) {
         logger.error('Error updating order:', error);
@@ -50,6 +57,8 @@ export const deleteOrderService = async (id: string) => {
         await storage.delete(id);
         await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
         logger.info('Order deleted successfully', { id });
+        // Notify another service about the deleted order
+        await fetchData(`${ANOTHER_SERVICE_URL}/orders/${id}`, { deleted: true });
     } catch (error) {
         logger.error('Error deleting order:', error);
         throw new ServiceError('Could not delete order. Please try again later.');
