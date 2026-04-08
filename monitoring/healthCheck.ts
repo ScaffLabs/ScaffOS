@@ -15,8 +15,8 @@ export const healthCheck = async (req: Request, res: Response) => {
 export const readyCheck = async (req: Request, res: Response) => {
     try {
         const healthStatus = await checkServiceHealth();
-        const allServicesUp = Object.values(healthStatus).every(status => status);
-        res.status(allServicesUp ? 200 : 503).json({ status: allServicesUp ? 'READY' : 'NOT READY' });
+        const allServicesReady = Object.values(healthStatus).every(status => status);
+        res.status(allServicesReady ? 200 : 503).json({ status: allServicesReady ? 'READY' : 'NOT READY' });
     } catch (error) {
         console.error('Ready check failed:', error);
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
@@ -28,4 +28,13 @@ export const memoryHealthCheck = (req: Request, res: Response) => {
     const totalMemory = memoryUsage.rss / (1024 * 1024);
     const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
     res.status(200).json({ status: 'UP', memory: { total: totalMemory, used: usedMemory } });
+};
+
+export const gracefulShutdown = (server: any, connections: any) => {
+    console.log('Shutting down gracefully...');
+    connections.forEach((conn: any) => conn.close());
+    server.close(() => {
+        console.log('HTTP server closed.');
+        process.exit(0);
+    });
 };

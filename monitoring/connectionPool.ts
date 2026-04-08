@@ -2,10 +2,12 @@ import axios, { AxiosError } from 'axios';
 import { ValidationError } from './errorClasses';
 import config from './config';
 import logger from './logger';
+import EventEmitter from 'eventemitter3';
 
 const MAX_RETRIES = 3;
 const TIMEOUT = 5000;
 const circuit = new Map(); // To track circuit breaker states
+const serviceEmitter = new EventEmitter();
 
 const createConnectionPool = () => {
     const connections = {};
@@ -36,7 +38,11 @@ const createConnectionPool = () => {
             if (error.isAxiosError && error.response) {
                 // Circuit breaker logic
                 circuit.set(service, true);
-                setTimeout(() => circuit.delete(service), 30000); // Reset circuit after 30 seconds
+                serviceEmitter.emit('circuitOpen', { service });
+                setTimeout(() => {
+                    circuit.delete(service);
+                    serviceEmitter.emit('circuitClosed', { service });
+                }, 30000); // Reset circuit after 30 seconds
             }
             if (retries > 0) {
                 return requestWithRetry(service, method, url, data, retries - 1);
@@ -48,4 +54,4 @@ const createConnectionPool = () => {
     return { getConnection, requestWithRetry, close: () => logger.info('Connection pool closed') };
 };
 
-export { createConnectionPool };
+export { createConnectionPool, serviceEmitter };
