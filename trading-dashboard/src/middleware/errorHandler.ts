@@ -9,9 +9,10 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
         return res.status(404).json({ message: err.message });
     }
     if (err instanceof ServiceError) {
-        return res.status(500).json({ message: err.message });
+        return res.status(500).json({ message: err.message, type: 'ServiceError' });
     }
-    return res.status(500).json({ message: 'Internal Server Error' });
+    console.error(err);
+    return res.status(500).json({ message: 'Internal Server Error', type: 'UnknownError' });
 };
 
 export default errorHandler;

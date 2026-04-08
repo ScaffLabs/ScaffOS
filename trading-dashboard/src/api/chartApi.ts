@@ -26,10 +26,25 @@ export const validateChartData = (data) => {
 };
 
 export const addChartData = async (date: string, price: number) => {
+    if (typeof date !== 'string' || typeof price !== 'number') {
+        throw new ServiceError('Invalid input for chart data');
+    }
     try {
         const sql = 'INSERT INTO chart_data (date, price) VALUES (?, ?)';
         await query(sql, [date, price]);
     } catch (error) {
         throw new ServiceError('Error adding chart data: ' + error.message);
+    }
+};
+
+export const deleteChartData = async (date: string) => {
+    if (typeof date !== 'string') {
+        throw new ServiceError('Invalid date input for deletion');
+    }
+    try {
+        const sql = 'DELETE FROM chart_data WHERE date = ?';
+        await query(sql, [date]);
+    } catch (error) {
+        throw new ServiceError('Error deleting chart data: ' + error.message);
     }
 };
