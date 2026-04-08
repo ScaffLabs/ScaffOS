@@ -9,6 +9,7 @@ import errorHandler from './middleware/errorHandler';
 import { healthCheck, readyCheck } from './utils/healthCheck';
 import { createServer } from 'http';
 import logger, { logRequest, logError } from './utils/logger';
+import { gracefulShutdown } from './utils/healthCheck';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -74,3 +75,6 @@ app.use(errorHandler);
 server.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
 });
+
+process.on('SIGTERM', () => gracefulShutdown(server));
+process.on('SIGINT', () => gracefulShutdown(server));
