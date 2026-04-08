@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 ### Added
-- Initial setup of Admin Console with basic routing and components.
+- Comprehensive documentation for project setup and usage in README.md.
+- Inline comments in Configuration component for clarity on complex logic.
 
 ## [1.0.0] - 2023-10-01
 ### Added
