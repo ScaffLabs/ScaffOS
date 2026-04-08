@@ -36,6 +36,8 @@ const simulateBacktest = circuitBreaker(async (params: StrategyParameters, histo
         const winRate = trades > 0 ? (totalReturns > 0 ? 100 : 0) : 0; // Simple win rate calculation
         const performanceMetrics = `Simulated ${trades} trades with ${winRate}% win rate`;
 
+        await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades })); // Notify order service
+
         logger.info({ message: 'Backtest simulation completed', params, totalReturns });
         return { totalReturns, trades, winRate, performanceMetrics };
     } catch (error) {
