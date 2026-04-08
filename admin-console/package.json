@@ -5,11 +5,12 @@
     "scripts": {
         "start": "node dist/index.js",
         "test": "jest",
-        "build": "tsc",
-        "dev": "ts-node-dev src/index.ts",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
-        "test:integration": "jest __tests__/api.test.ts"
+        "test:integration": "jest __tests__/api.test.ts",
+        "test:unit": "jest __tests__/**/*.test.ts",
+        "build": "tsc",
+        "dev": "ts-node-dev src/index.ts"
     },
     "dependencies": {
         "express": "^4.17.1",

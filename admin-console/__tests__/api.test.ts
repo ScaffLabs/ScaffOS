@@ -59,4 +59,9 @@ describe('API Endpoints', () => {
         const response = await request(app).delete('/api/config/testKey');
         expect(response.status).toBe(204);
     });
+
+    it('DELETE /api/config returns 404 for non-existing configuration', async () => {
+        const response = await request(app).delete('/api/config/nonExistingKey');
+        expect(response.status).toBe(404);
+    });
 });

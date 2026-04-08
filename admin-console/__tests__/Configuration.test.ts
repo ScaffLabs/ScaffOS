@@ -58,4 +58,13 @@ describe('Configuration Component', () => {
 
         expect(await screen.findByText(/Key cannot be empty/i)).toBeInTheDocument();
     });
+
+    test('handles whitespace input', async () => {
+        render(<Configuration />);
+        fireEvent.change(screen.getByLabelText(/Key/i), { target: { value: '   ' } });
+        fireEvent.change(screen.getByLabelText(/Value/i), { target: { value: 'validValue' } });
+        fireEvent.click(screen.getByText(/Create Configuration/i));
+
+        expect(await screen.findByText(/Key cannot be empty/i)).toBeInTheDocument();
+    });
 });

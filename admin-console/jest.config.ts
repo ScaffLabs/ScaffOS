@@ -16,6 +16,8 @@ const config: Config = {
             statements: 80,
         },
     },
+    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+    testTimeout: 30000
 };
 
 export default config;
