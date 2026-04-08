@@ -57,4 +57,13 @@ class InMemoryStorage<T> implements Storage<T> {
     }
 }
 
+class SQLiteStorage<T> implements Storage<T> {
+    // SQLite implementation will go here
+}
+
+class PostgreSQLStorage<T> implements Storage<T> {
+    // PostgreSQL implementation will go here
+}
+
 export const storage = new InMemoryStorage<PriceData>();
+// Export SQLiteStorage and PostgreSQLStorage for later use.

@@ -23,3 +23,11 @@ export const clearData = async () => {
         await Promise.all(allPrices.map(price => storage.delete(price.id)));
     });
 };
+
+export const migrateToSQLite = async (sqliteData: PriceData[]) => {
+    // Logic for migrating data to SQLite
+};
+
+export const migrateToPostgreSQL = async (postgresData: PriceData[]) => {
+    // Logic for migrating data to PostgreSQL
+};
