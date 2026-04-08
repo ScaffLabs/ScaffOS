@@ -2,7 +2,7 @@ import axios from 'axios';
 import config from '../config';
 import { emitEvent } from '../events/EventBus';
 import { ServiceError } from '../errors/CustomErrors';
-import { ConfigurationItem, ConfigurationItemSchema } from '../types';
+import { ConfigurationItem } from '../types';
 import { CircuitBreaker } from 'opossum';
 
 const BASE_URL = config.API_URL;
@@ -25,7 +25,6 @@ const fetchHealthStatus = async () => {
 
 const postConfiguration = async (key: string, value: string): Promise<ConfigurationItem> => {
     const configItem: ConfigurationItem = { key, value };
-    ConfigurationItemSchema.parse(configItem);
     try {
         const response = await circuitBreaker.fire(axios.post, `${BASE_URL}/config`, configItem);
         emitEvent('CONFIGURATION_CREATED', configItem);
