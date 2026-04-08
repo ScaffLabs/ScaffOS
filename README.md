@@ -138,39 +138,51 @@ Lens:    ───────────────────────�
 
 ### 4. Continuous Improvement
 
-After the initial build completes, ScaffOS enters an endless improvement cycle. Two agents work in parallel each round, cycling through 12 improvement categories:
+After the initial build completes, ScaffOS enters an endless improvement cycle. Two agents work in parallel each round, cycling through improvement categories:
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │              Improvement Cycle (∞)                   │
 │                                                     │
-│  ┌─ refactor ──── error-handling ──── testing ─┐    │
-│  │                                             │    │
-│  │  performance ── logging ── types ── feature │    │
-│  │                                             │    │
-│  │  config ── docs ── security ── integration  │    │
-│  │                                             │    │
-│  └─ monitoring ──────────────────── refactor ──┘    │
+│  ┌─ implementation ── error-handling ── testing ─┐  │
+│  │                                               │  │
+│  │  wiring ── config ── types ── data-layer      │  │
+│  │                                               │  │
+│  │  api-completeness ── logging ── resilience    │  │
+│  │                                               │  │
+│  └─ security ── documentation ── implementation ─┘  │
 │                    (loops forever)                   │
 │                                                     │
 │  Each cycle:                                        │
 │  • Pick 2 agents + 2 random services                │
 │  • Review existing code                             │
-│  • Generate targeted improvements                   │
+│  • Generate production-quality improvements          │
 │  • Write changes to disk                            │
 │  • Commit + push to GitHub                          │
 │                                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
-### 5. Real Code on Disk
+---
 
-Every file is real TypeScript written to the filesystem. Every change is committed to this repository. You can:
+## The Ecosystem
 
-- Browse the file tree on the live page
-- Click any file to read the generated source
-- Watch the repository grow in real-time
-- See the git log for a complete history of every decision
+This repository is the live output of ScaffOS building a crypto trading ecosystem. The following services are being built and continuously improved:
+
+| Service | Agent | Dependencies | Description |
+|---------|-------|-------------|-------------|
+| `price-aggregator` | Forge | — | Multi-exchange price feeds with VWAP calculation |
+| `event-bus` | Wire | — | Pub/sub message backbone for inter-service communication |
+| `order-engine` | Forge | price-aggregator | Limit, market, and stop order matching |
+| `auth-layer` | Shield | event-bus | JWT auth, API keys, rate limiting |
+| `risk-manager` | Shield | price-aggregator, order-engine | Position limits, drawdown circuit breakers |
+| `portfolio-tracker` | Forge | order-engine, event-bus | Real-time PnL and allocation tracking |
+| `backtester` | Forge | price-aggregator | Historical strategy replay engine |
+| `alert-system` | Wire | price-aggregator, risk-manager | Threshold alerts via webhook and websocket |
+| `monitoring` | Shield | event-bus | Health checks, latency tracking, uptime |
+| `trading-dashboard` | Lens | price-aggregator, portfolio-tracker, order-engine | Unified trading interface |
+| `analytics-panel` | Lens | backtester, portfolio-tracker | Performance and strategy analysis |
+| `admin-console` | Lens | monitoring, auth-layer, alert-system | System health and configuration |
 
 ---
 
@@ -214,136 +226,29 @@ Every file is real TypeScript written to the filesystem. Every change is committ
 
 ---
 
-## The Ecosystem
-
-This repository is the live output of ScaffOS building a crypto trading ecosystem. The following services are being built and continuously improved:
-
-| Service | Agent | Dependencies | Description |
-|---------|-------|-------------|-------------|
-| `price-aggregator` | Forge | — | Multi-exchange price feeds with VWAP calculation |
-| `event-bus` | Wire | — | Redis-backed pub/sub message backbone |
-| `order-engine` | Forge | price-aggregator | Limit, market, and stop order matching |
-| `auth-layer` | Shield | event-bus | JWT auth, API keys, rate limiting |
-| `risk-manager` | Shield | price-aggregator, order-engine | Position limits, drawdown circuit breakers |
-| `portfolio-tracker` | Forge | order-engine, event-bus | Real-time PnL and allocation tracking |
-| `backtester` | Forge | price-aggregator | Historical strategy replay engine |
-| `alert-system` | Wire | price-aggregator, risk-manager | Threshold alerts via webhook and websocket |
-| `monitoring` | Shield | event-bus | Health checks, latency tracking, uptime |
-| `trading-dashboard` | Lens | price-aggregator, portfolio-tracker, order-engine | Unified trading interface |
-| `analytics-panel` | Lens | backtester, portfolio-tracker | Performance and strategy analysis |
-| `admin-console` | Lens | monitoring, auth-layer, alert-system | System health and configuration |
-
----
-
-## Running ScaffOS
-
-### Prerequisites
-
-- Node.js 18+
-- OpenAI API key
-
-### Setup
-
-```bash
-git clone https://github.com/ScaffLabs/ScaffOS.git
-cd ScaffOS
-npm install
-```
-
-### Configuration
-
-Set your OpenAI API key in `server.js` or via environment variable:
-
-```bash
-export OPENAI_API_KEY=sk-...
-```
-
-### Start
-
-```bash
-node server.js
-```
-
-Open `http://localhost:3000` to watch the agents build.
-
----
-
-## Framework Source
-
-```
-scaffos/
-  server.js         — orchestrator, agents, file writer, git integration
-  public/
-    index.html      — live dashboard with file tree, agent logs, file viewer
-  ecosystem/        — generated output (this repository)
-    price-aggregator/
-    event-bus/
-    order-engine/
-    auth-layer/
-    risk-manager/
-    portfolio-tracker/
-    backtester/
-    alert-system/
-    monitoring/
-    trading-dashboard/
-    analytics-panel/
-    admin-console/
-```
-
----
-
-## How Agents Think
-
-Each agent has a unique system prompt shaping its cognitive style. When given a task, the agent:
-
-1. **Analyzes** requirements and dependencies
-2. **Reasons** through architecture decisions (visible in the thinking logs)
-3. **Generates** real TypeScript files with proper types, imports, and error handling
-4. **Writes** files to disk one at a time
-5. **Commits** changes to git with descriptive messages
-6. **Pushes** to GitHub automatically
-
-During improvement cycles, agents:
-
-1. **Read** all existing files for a service
-2. **Identify** a specific improvement (refactoring, testing, security, etc.)
-3. **Generate** targeted changes (1-3 files)
-4. **Write** updated or new files
-5. **Commit + push** with improvement-type-prefixed messages
-
----
-
 ## Commit Convention
 
 ```
 feat(service-name): initial implementation — N files
-refactor(service-name): description of refactoring
-error-handling(service-name): added try/catch and validation
-testing(service-name): unit tests for core logic
-performance(service-name): caching and algorithm optimization
-security(service-name): input sanitization and hardening
-feature(service-name): new endpoint or capability
-docs(service-name): README and inline documentation
+implementation(service-name): replace stubs with working logic
+error-handling(service-name): production-grade error handling
+testing(service-name): comprehensive unit tests with Jest
+wiring(service-name): real inter-service HTTP communication
+config(service-name): environment variables, Docker, compose
+types(service-name): Zod schemas, branded types, zero any
+data-layer(service-name): proper CRUD with in-memory storage
+api-completeness(service-name): pagination, filtering, status codes
+logging(service-name): structured logging with pino/winston
+resilience(service-name): health checks, circuit breakers, graceful shutdown
+security(service-name): input sanitization, CORS, rate limiting
+documentation(service-name): README, API docs, setup instructions
 ```
 
 ---
 
 ## Live Instance
 
-The live demo runs at [scaffos.dev](https://scaffos.dev) — four agents building this exact repository in real-time. Every commit you see here was made by an autonomous agent.
-
----
-
-## Stats
-
-These update in real-time on the live page:
-
-- **Phase** — `building` (initial) or `improving` (continuous cycle)
-- **Services** — how many of the 12 services are deployed
-- **Files** — total files written to disk
-- **Commits** — total git commits pushed
-- **Changes** — number of file modifications (not new files)
-- **Uptime** — how long the current session has been running
+The live demo runs at [scaffos.dev](https://scaffos.dev) — four agents building and continuously improving this exact repository in real-time. Every commit you see here was made by an autonomous agent.
 
 ---
 
