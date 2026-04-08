@@ -1,22 +1,34 @@
 import { Request, Response } from 'express';
 import { fetchData } from './axiosClient';
 
-export const healthCheck = async (req: Request, res: Response): Promise<void> => {
+const checkDependentService = async (url: string) => {
     try {
-        await fetchData('/health-check'); // Replace with the actual health check endpoint
-        res.status(200).send('Order Engine is healthy!');
+        await fetchData(url);
+        return true;
     } catch (error) {
-        console.error('Health check failed:', error);
+        console.error(`Service at ${url} is down:`, error);
+        return false;
+    }
+};
+
+export const healthCheck = async (req: Request, res: Response): Promise<void> => {
+    const isDatabaseHealthy = await checkDependentService(process.env.DATABASE_URL + '/health-check');
+    const isAnotherServiceHealthy = await checkDependentService(process.env.ANOTHER_SERVICE_URL + '/health-check');
+
+    if (isDatabaseHealthy && isAnotherServiceHealthy) {
+        res.status(200).send('Order Engine is healthy!');
+    } else {
         res.status(500).send('Dependent services are down.');
     }
 };
 
 export const readyCheck = async (req: Request, res: Response): Promise<void> => {
-    try {
-        await fetchData('/ready-check'); // Replace with actual readiness check endpoint
+    const isDatabaseReady = await checkDependentService(process.env.DATABASE_URL + '/ready-check');
+    const isAnotherServiceReady = await checkDependentService(process.env.ANOTHER_SERVICE_URL + '/ready-check');
+
+    if (isDatabaseReady && isAnotherServiceReady) {
         res.status(200).send('Order Engine is ready!');
-    } catch (error) {
-        console.error('Readiness check failed:', error);
+    } else {
         res.status(500).send('Dependent services are not ready.');
     }
 };
