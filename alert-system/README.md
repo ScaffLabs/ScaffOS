@@ -1,14 +1,14 @@
 # Alert System
 
 ## Project Description
-The Alert System is a service designed to monitor and notify users of specific conditions in real-time, such as price thresholds and risk levels. It uses an event-driven architecture to process alerts and notify users via configured channels.
+The Alert System is a robust service designed to monitor and notify users of specific conditions in real-time, such as price thresholds and risk levels. It utilizes an event-driven architecture to process alerts and notify users via configured channels, ensuring timely responses to critical situations.
 
 ## Architecture Overview
-The Alert System is built using Node.js and Express. It follows a microservices architecture where:
-- **AlertController** manages alert creation and retrieval.
-- **AlertProcessor** processes incoming data to evaluate alerts.
-- **EventBus** handles event publication and subscription.
-- **AlertStore** acts as the in-memory data store for alerts.
+The Alert System leverages Node.js and Express, organized under a microservices architecture. The key components of the system include:
+- **AlertController**: Handles the creation, retrieval, updating, and deletion of alerts.
+- **AlertProcessor**: Processes incoming data to evaluate alerts and communicate with external services.
+- **EventBus**: Manages event publication and subscription, facilitating communication between components.
+- **AlertStore**: Serves as the in-memory data store for alerts, providing CRUD operations.
 
 ## Setup Instructions
 ### Prerequisites
@@ -17,14 +17,12 @@ The Alert System is built using Node.js and Express. It follows a microservices 
 
 ### Install
 1. Clone the repository:
-   
    ```bash
    git clone <repository-url>
    cd alert-system
    ```
 
 2. Install dependencies:
-   
    ```bash
    npm install
    ```
@@ -64,6 +62,9 @@ The server will be running on port 3000.
 |----------------|-------------------------------------|
 | NODE_ENV       | Environment for the application (dev/prod) |
 | PORT           | Port on which to run the server (default: 3000) |
+| WEBHOOK_URL    | URL for webhook notifications |
+| EMAIL_SERVICE_URL | URL for email service notifications |
+| MONGO_URI      | MongoDB connection string |
 
 ## Development Guide
 To run tests, use:
@@ -72,7 +73,7 @@ npm test
 ```
 
 ## Deployment Guide
-For production deployment, consider using Docker or a cloud service provider like AWS or Heroku. Ensure to set environment variables appropriately.
+For production deployment, consider using Docker or a cloud service provider like AWS or Heroku. Ensure to set environment variables appropriately based on your environment.
 
 ## Contributing
 Please refer to the `CONTRIBUTING.md` file for guidelines on contributing to this project.
@@ -81,6 +82,6 @@ Please refer to the `CONTRIBUTING.md` file for guidelines on contributing to thi
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ## Changelog
-### [1.0.1] - 2023-10-15
-- Added comprehensive README documentation including project description, architecture overview, setup instructions, API reference, and guides for development and deployment.
+### [1.0.2] - 2023-10-15
+- Added comprehensive README documentation.
 - Improved error handling and logging in the Alert System.
