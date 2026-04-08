@@ -9,6 +9,7 @@ import errorMiddleware from './errorMiddleware';
 import logger, { logRequest, startupLog } from './logger';
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
+import { requestIdMiddleware } from './middleware';
 
 const app = express();
 const server = http.createServer(app);
@@ -27,6 +28,9 @@ app.use(cors({
 
 // Security headers with helmet
 app.use(helmet());
+
+// Request ID middleware
+app.use(requestIdMiddleware);
 
 // Rate limiting middleware
 const limiter = rateLimit({
