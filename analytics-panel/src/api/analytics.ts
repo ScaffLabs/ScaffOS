@@ -5,34 +5,29 @@ import { emitEvent } from './eventBus';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 const axiosInstance = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
 const fetchWithRetry = async (url: string, config?: any, retries: number = 0) => {
     try {
         const response = await axiosInstance.get(url, config);
         return response.data;
     } catch (error) {
-        if (retries < 3) {
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
+        if (retries < MAX_RETRIES) {
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
             return fetchWithRetry(url, config, retries + 1);
         }
         throw new ServiceError('Failed to fetch data: ' + error.message);
     }
 };
 
-export const fetchPerformanceMetrics = async () => {
-    const data = await fetchWithRetry('/api/performance');
-    emitEvent('performanceMetricsFetched', data);
-    return data;
-};
-
-export const fetchComparisonData = async (strategyA: string, strategyB: string) => {
-    return await fetchWithRetry('/api/compare', { params: { strategyA, strategyB }});
-};
-
+// Health check for dependent services
 export const healthCheck = async () => {
     return await fetchWithRetry('/api/health');
 };
 
-export const dependentHealthCheck = async () => {
+// Example usage of health check
+export const checkDependenciesHealth = async () => {
     const services = {
         strategyService: process.env.STRATEGY_SERVICE_URL,
     };
@@ -57,13 +52,4 @@ export const compareStrategies = async (strategyA: string, strategyB: string) =>
         throw new ServiceError('Unable to determine better strategy');
     }
     return data;
-};
-
-export const getPerformanceData = async () => {
-    const metrics = await fetchPerformanceMetrics();
-    return {
-        drawdown: metrics.drawdown,
-        maxDrawdown: metrics.maxDrawdown,
-        sharpeRatio: metrics.sharpeRatio,
-    };
 };
