@@ -54,3 +54,22 @@ export const AlertMessageSchema = z.object({
 export const validateAlertMessage = (data: unknown): AlertMessage => {
     return AlertMessageSchema.parse(data);
 };
+
+/**
+ * Schema for alert creation request validation.
+ */
+export const CreateAlertRequestSchema = z.object({
+    type: z.enum(['price', 'risk']),
+    threshold: z.number().min(0, { message: 'Threshold must be a non-negative number.' }),
+    currentValue: z.number().min(0, { message: 'Current value must be a non-negative number.' }),
+});
+
+/**
+ * Validates an alert creation request.
+ * @param data - The request data to validate.
+ * @returns {Omit<AlertMessage, 'id' | 'createdAt'>} - The validated alert creation request.
+ * @throws {ZodError} - If validation fails.
+ */
+export const validateCreateAlertRequest = (data: unknown): Omit<AlertMessage, 'id' | 'createdAt'> => {
+    return CreateAlertRequestSchema.parse(data);
+};
