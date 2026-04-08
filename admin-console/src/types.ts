@@ -1,68 +1,40 @@
 // Shared TypeScript types and Zod schemas
 import { z } from 'zod';
 
-/**
- * Branded types for IDs to ensure type safety.
- */
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
 
-/**
- * Interface representing a configuration item.
- * @property key - The configuration key (must be a non-empty string).
- * @property value - The configuration value (must be a non-empty string).
- */
 export interface ConfigurationItem {
     key: string;
     value: string;
 }
 
-/**
- * Zod schema for validating ConfigurationItem.
- * Ensures that key and value are non-empty strings.
- */
 export const ConfigurationItemSchema = z.object({
     key: z.string().min(1, { message: 'Key cannot be empty' }),
     value: z.string().min(1, { message: 'Value cannot be empty' }),
 });
 
-/**
- * Discriminated union for different event types.
- * Represents various events that can occur in the application.
- */
-export type EventType =
-    | { type: 'CONFIGURATION_CREATED'; payload: ConfigurationItem }
-    | { type: 'SERVICE_HEALTH_UPDATED'; payload: { [service: string]: string } }; 
+export interface HealthCheckResponse {
+    serviceHealth: { [service: string]: string };
+    database: 'up' | 'down';
+}
 
-/**
- * Zod schema for validating events.
- * Ensures that events conform to the expected structure.
- */
-export const EventTypeSchema = z.union([
-    z.object({ type: z.literal('CONFIGURATION_CREATED'), payload: ConfigurationItemSchema }),
-    z.object({ type: z.literal('SERVICE_HEALTH_UPDATED'), payload: z.record(z.string()) }),
-]);
+export interface Migration {
+    id: string;
+    up: () => Promise<void>;
+    down: () => Promise<void>;
+}
 
-/**
- * Function to validate events at runtime.
- * @param event - The event to validate.
- * @returns The validated event if it matches the schema.
- * @throws Error if validation fails.
- */
-export const validateEvent = (event: unknown): EventType => {
-    const result = EventTypeSchema.safeParse(event);
+export const MigrationSchema = z.object({
+    id: z.string().min(1),
+    up: z.function().args().returns(z.promise(z.void())),
+    down: z.function().args().returns(z.promise(z.void())),
+});
+
+export const validateMigration = (migration: unknown): Migration => {
+    const result = MigrationSchema.safeParse(migration);
     if (!result.success) {
         throw new Error(result.error.errors.map(err => err.message).join(', '));
     }
     return result.data;
 };
-
-/**
- * Interface representing a service health check response.
- * @property serviceHealth - The health status of services.
- * @property database - The status of the database connection ('up' or 'down').
- */
-export interface HealthCheckResponse {
-    serviceHealth: { [service: string]: string };
-    database: 'up' | 'down';
-}

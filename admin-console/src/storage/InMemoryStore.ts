@@ -50,6 +50,11 @@ class InMemoryStore<T> {
             throw error;
         }
     }
+
+    async clear() {
+        this.data.clear();
+        this.index.clear();
+    }
 }
 
 export default InMemoryStore;
