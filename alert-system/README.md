@@ -67,6 +67,7 @@ The server will be running on port 3000.
 | MONGO_URI      | MongoDB connection string |
 
 ## Development Guide
+### Running Tests
 To run tests, use:
 ```bash
 npm test
@@ -82,6 +83,6 @@ Please refer to the `CONTRIBUTING.md` file for guidelines on contributing to thi
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ## Changelog
-### [1.0.2] - 2023-10-15
-- Added comprehensive README documentation.
-- Improved error handling and logging in the Alert System.
+### [1.0.3] - 2023-10-20
+- Comprehensive README documentation detailing project description, architecture overview, setup instructions, API reference, and guides for development and deployment.
+- Detailed logging for API requests and errors.
