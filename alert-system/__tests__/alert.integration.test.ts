@@ -16,6 +16,10 @@ app.put('/api/alerts/:id', (req, res) => alertController.updateAlert(req, res));
 app.delete('/api/alerts/:id', (req, res) => alertController.deleteAlert(req, res));
 
 describe('Alert API Integration Tests', () => {
+    afterEach(async () => {
+        await alertStore.deleteAll(); // Clear all alerts after each test
+    });
+
     test('POST /api/alerts creates a new alert', async () => {
         const alertMessage = { type: 'price', threshold: 100, currentValue: 120, createdAt: new Date() };
         const response = await request(app).post('/api/alerts').send(alertMessage);
