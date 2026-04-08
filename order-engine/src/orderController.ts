@@ -4,7 +4,7 @@ import { storage } from './storage';
 import { ValidationError, NotFoundError } from './errors';
 import { emitOrderEvent } from './eventBus';
 
-export const createOrder = [orderRateLimiter, async (req: Request, res: Response): Promise<void> => {
+export const createOrder = async (req: Request, res: Response): Promise<void> => {
     const result = OrderSchema.safeParse(req.body);
     if (!result.success) {
         throw new ValidationError(result.error.errors.map(e => e.message).join(', '));
@@ -13,7 +13,7 @@ export const createOrder = [orderRateLimiter, async (req: Request, res: Response
     await storage.create(order);
     emitOrderEvent({ type: 'ORDER_CREATED', payload: order });
     res.status(201).json(order);
-}];
+};
 
 export const updateOrder = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
@@ -22,7 +22,7 @@ export const updateOrder = async (req: Request, res: Response): Promise<void> =>
     if (!result.success) {
         throw new ValidationError(result.error.errors.map(e => e.message).join(', '));
     }
-    const updatedOrder = await storage.update(id, result.data);
+    const updatedOrder = await storage.update(id as string, result.data);
     if (!updatedOrder) {
         throw new NotFoundError('Order not found.');
     }
@@ -32,7 +32,12 @@ export const updateOrder = async (req: Request, res: Response): Promise<void> =>
 
 export const deleteOrder = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    await storage.delete(id);
+    await storage.delete(id as string);
     emitOrderEvent({ type: 'ORDER_DELETED', payload: { id }});
     res.status(204).send();
+};
+
+export const getOrders = async (req: Request, res: Response): Promise<void> => {
+    const orders = await storage.findAll();
+    res.status(200).json(orders);
 };
