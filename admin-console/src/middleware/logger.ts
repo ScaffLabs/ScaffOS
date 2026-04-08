@@ -19,13 +19,24 @@ export const logRequest = (req: Request, res: Response, next: NextFunction) => {
     const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(7);
     res.on('finish', () => {
         const duration = Date.now() - start;
-        logger.info(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms ${requestId}`);
+        logger.info({
+            message: 'Request completed',
+            method: req.method,
+            path: req.originalUrl,
+            status: res.statusCode,
+            duration: duration,
+            requestId: requestId
+        });
     });
     next();
 };
 
 export const logError = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    logger.error(`Error: ${err.message} - ${err.stack}`);
+    logger.error({
+        message: 'Error occurred',
+        error: err.message,
+        stack: err.stack
+    });
     res.status(500).json({ error: 'Internal Server Error' });
 };
 

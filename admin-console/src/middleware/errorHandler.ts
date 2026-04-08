@@ -1,7 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError, ServiceError, NotFoundError } from '../errors/CustomErrors';
+import { logger } from './logger';
 
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    logger.error({
+        message: 'Error occurred',
+        error: err.message,
+        stack: err.stack,
+        path: req.originalUrl,
+        method: req.method
+    });
     if (err instanceof ValidationError) {
         return res.status(400).json({ error: err.message });
     }

@@ -8,10 +8,8 @@ import config from './config';
 import Database from './storage/Database';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
-import { logRequest, logSuccess } from './middleware/logger';
+import { logRequest } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
-import { createClient } from 'redis';
-import { performance } from 'perf_hooks';
 
 dotenv.config();
 const app = express();
@@ -23,32 +21,18 @@ app.use(cors());
 app.use(rateLimiter);
 app.use(bodyParser.json());
 app.use(logRequest);
+app.use((req, res, next) => {
+    req.headers['x-request-id'] = Math.random().toString(36).substring(7);
+    next();
+});
 app.use('/api/health', healthRouter);
 app.use(errorHandler);
 
-const redisClient = createClient();
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
-
 const startServer = async () => {
     await db.connect(config.databaseUrl);
-    await redisClient.connect();
-    logSuccess(`Database connected: ${config.databaseUrl}`);
     server.listen(config.port, () => {
-        logSuccess(`Server running on http://localhost:${config.port}`);
+        console.log(`Server running on http://localhost:${config.port}`);
     });
 };
-
-const shutdown = async () => {
-    logSuccess('Shutting down gracefully...');
-    await db.closeConnection();
-    await redisClient.quit();
-    server.close(() => {
-        logSuccess('Server closed.');
-        process.exit(0);
-    });
-};
-
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
 
 startServer();
