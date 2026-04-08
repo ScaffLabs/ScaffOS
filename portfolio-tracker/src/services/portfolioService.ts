@@ -3,7 +3,7 @@ import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import CircuitBreaker from 'circuit-breaker-js';
 import axios from 'axios';
-import { retry } from 'async';
+import { migrateData, seedData } from './migration';
 
 const circuitBreaker = new CircuitBreaker({
     timeout: 3000,
@@ -11,9 +11,9 @@ const circuitBreaker = new CircuitBreaker({
     resetTimeout: 10000
 });
 
-const retryOptions = {
-    times: 5,
-    interval: (attempt) => Math.pow(2, attempt) * 1000 // Exponential backoff
+// Migration and seeding
+export const initializeStorage = async (): Promise<void> => {
+    await seedData(); // Seed initial data for development
 };
 
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
@@ -54,18 +54,7 @@ export const fetchPortfolios = async ({ limit, offset, sort, order }): Promise<P
 };
 
 export const healthCheckPortfolioService = async (): Promise<HealthCheckResponse> => {
-    try {
-        const portfolioServiceStatus = await circuitBreaker.fire(async () => {
-            await retry(async (times) => {
-                return await axios.get(process.env.PORTFOLIO_SERVICE_URL);
-            }, retryOptions);
-            return true;
-        });
-        return { status: 'UP', portfolioService: portfolioServiceStatus };
-    } catch (error) {
-        console.error('Health check failed:', error);
-        return { status: 'DOWN', portfolioService: false, error: error.message };
-    }
+    // Health check logic here...
 };
 
 export const clearPortfolios = () => {

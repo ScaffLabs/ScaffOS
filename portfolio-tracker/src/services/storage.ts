@@ -37,9 +37,9 @@ class InMemoryStorage {
         this.idCounter = 1;
     }
 
-    public migrate(data: Portfolio[]): void {
+    public migrate(portfolios: Portfolio[]): void {
         this.clear();
-        data.forEach(portfolio => this.create(portfolio));
+        portfolios.forEach(portfolio => this.create(portfolio));
     }
 }
 
