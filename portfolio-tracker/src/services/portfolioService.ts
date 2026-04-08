@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Portfolio, PortfolioUpdate } from '../types';
+import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import CircuitBreaker from 'circuit-breaker-js';
 
@@ -61,8 +61,19 @@ export const healthCheckPortfolioService = async (): Promise<boolean> => {
     }
 };
 
-export const healthCheckAllServices = async (): Promise<{ [key: string]: boolean }> => {
-    const status: { [key: string]: boolean } = {};
-    status.portfolioService = await healthCheckPortfolioService();
-    return status;
+export const healthCheckAllServices = async (): Promise<HealthCheckResponse> => {
+    const portfolioServiceStatus = await healthCheckPortfolioService();
+    return {
+        status: 'UP',
+        portfolioService: portfolioServiceStatus
+    };
+};
+
+export const healthCheck = async (req: Request, res: Response) => {
+    try {
+        const healthStatus = await healthCheckAllServices();
+        res.json(healthStatus);
+    } catch (error) {
+        res.status(503).json({ status: 'DOWN', error: error.message });
+    }
 };
