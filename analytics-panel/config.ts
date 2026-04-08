@@ -8,6 +8,8 @@ const schema = Joi.object({
     PORT: Joi.number().default(3000),
     NODE_ENV: Joi.string().valid('development', 'staging', 'production').default('development'),
     STRATEGY_SERVICE_URL: Joi.string().uri().default('http://localhost:3001/api/health'),
+    DB_URL: Joi.string().uri().required(),
+    LOG_LEVEL: Joi.string().valid('debug', 'info', 'warn', 'error').default('info'),
 }).unknown();
 
 const { error, value: config } = schema.validate(process.env);
