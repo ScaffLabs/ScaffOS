@@ -9,11 +9,11 @@ const connectionPool = createConnectionPool();
 
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
-        const response = await connectionPool.requestWithRetry('order', 'get', '/dashboard');
-        if (!response || response.length === 0) {
-            return res.status(204).json({ message: 'No entries available.' });
+        const entries = await connectionPool.requestWithRetry('order', 'get', '/dashboard');
+        if (!entries || entries.length === 0) {
+            return res.status(204).json([]);
         }
-        res.status(200).json(response);
+        res.status(200).json(entries);
     } catch (error) {
         logger.error(error, req);
         res.status(500).json({ error: 'Failed to fetch entries.' });
