@@ -1,4 +1,3 @@
-// health.ts
 import express from 'express';
 import { checkServiceHealth } from './interServiceClient';
 import config from './config';
@@ -22,4 +21,4 @@ router.get('/ready', async (req, res) => {
     res.status(503).json({ status: 'unhealthy' });
 });
 
-export default router;
+export default router; 
