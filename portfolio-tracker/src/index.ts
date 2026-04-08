@@ -1,14 +1,29 @@
 import express from 'express';
 import { json } from 'body-parser';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { connectToEventBus } from './eventBus';
 import portfolioRoutes from './routes/portfolioRoutes';
 import { healthCheckPortfolioService } from './services/portfolioService';
 import { createPool } from 'generic-pool';
 import http from 'http';
 import { register } from 'prom-client';
+import expressSanitizer from 'express-sanitizer';
+import csrf from 'csurf';
 
 const app = express();
 app.use(json());
+app.use(helmet());
+app.use(cors({ origin: ['https://your-allowed-origin.com'] }));
+app.use(expressSanitizer());
+app.use(rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // Limit each IP to 100 requests per windowMs
+}));
+
+const csrfProtection = csrf();
+app.use(csrfProtection);
 
 connectToEventBus();
 
@@ -28,7 +43,6 @@ const server = http.createServer(app);
 
 const onShutdown = async () => {
     console.log('Shutting down gracefully...');
-    // Close any open connections here if needed
 };
 
 process.on('SIGTERM', onShutdown);
