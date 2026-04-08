@@ -7,7 +7,9 @@
         "start": "node dist/index.js",
         "dev": "ts-node src/index.ts",
         "test": "jest --passWithNoTests",
-        "test:watch": "jest --watch"
+        "test:watch": "jest --watch",
+        "test:unit": "jest --testPathPattern=__tests__/",
+        "test:integration": "jest --testPathPattern=__tests__/api.test.ts"
     },
     "dependencies": {
         "express": "^4.17.1",
