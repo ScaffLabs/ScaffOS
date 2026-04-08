@@ -4,6 +4,7 @@ import { ValidationError, NotFoundError, ServiceError } from '../middleware/erro
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
 import { HistoricalDataSchema, StrategyParametersSchema, PaginationSchema } from '../types';
+import { z } from 'zod';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();
@@ -31,20 +32,6 @@ backtestRouter.post('/', async (req, res, next) => {
             return next(error);
         }
         next(new ServiceError('Error during backtest: ' + error.message));
-    }
-});
-
-backtestRouter.get('/', async (req, res, next) => {
-    const { limit, offset, sort, order } = PaginationSchema.parse(req.query);
-    try {
-        const results = await store.findAll();
-        const sortedResults = results.sort((a, b) => {
-            return order === 'asc' ? a.data.createdAt - b.data.createdAt : b.data.createdAt - a.data.createdAt;
-        });
-        const paginatedResults = sortedResults.slice(offset, offset + limit);
-        res.status(200).json(paginatedResults);
-    } catch (error) {
-        next(new ServiceError('Error retrieving backtest results: ' + error.message));
     }
 });
 

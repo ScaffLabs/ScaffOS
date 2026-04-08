@@ -9,6 +9,7 @@ import healthCheckRouter from './routes/healthCheck';
 import { config } from '../config';
 import { monitorMemoryUsage } from './utils/monitor';
 import expressSanitizer from 'express-sanitizer';
+import csurf from 'csurf';
 
 const app = express();
 const PORT = config.port;
@@ -26,10 +27,16 @@ app.use(helmet());
 app.use(limiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(expressSanitizer()); // Input sanitization middleware
+app.use(csurf({ cookie: true })); // CSRF protection
 
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);
 app.use(errorHandler);
+
+app.use((req, res, next) => {
+    logger.info(`Request: ${req.method} ${req.url}`);
+    next();
+});
 
 const server = app.listen(PORT, () => {
     logger.info(`Backtester service running on port ${PORT}`);
