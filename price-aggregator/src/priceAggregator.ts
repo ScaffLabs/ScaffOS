@@ -17,7 +17,6 @@ export class PriceAggregator {
     }
 
     public async addPrice(priceData: PriceData): Promise<PriceData> {
-        // Validate price data using Zod schema
         const validation = PriceDataSchema.safeParse(priceData);
         if (!validation.success) {
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
@@ -41,6 +40,7 @@ export class PriceAggregator {
             dependencies['service1'] = response.status;
         } catch (error) {
             dependencies['service1'] = 'unhealthy';
+            logError(error, 'Service 1 health check failed');
         }
 
         try {
@@ -48,6 +48,7 @@ export class PriceAggregator {
             dependencies['service2'] = response.status;
         } catch (error) {
             dependencies['service2'] = 'unhealthy';
+            logError(error, 'Service 2 health check failed');
         }
 
         return dependencies;
