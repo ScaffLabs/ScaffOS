@@ -8,6 +8,7 @@ import portfolioRoutes from './routes/portfolioRoutes';
 import logger from './services/logger';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
+import { healthCheck } from './services/healthService';
 
 const app = express();
 app.use(json({ limit: '1mb' }));
@@ -20,6 +21,7 @@ app.use(rateLimit({
 
 connectToEventBus();
 app.use('/api/portfolios', portfolioRoutes);
+app.get('/health', healthCheck);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
@@ -39,3 +41,11 @@ const shutdown = (signal: string) => {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    shutdown('Uncaught Exception');
+});
+process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled Rejection:', reason);
+    shutdown('Unhandled Rejection');
+});

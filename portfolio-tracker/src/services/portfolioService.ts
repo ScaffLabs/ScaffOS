@@ -1,13 +1,20 @@
 import storage from './storage';
-import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
+import { Portfolio, PortfolioUpdate } from '../types';
 import { publishPortfolioUpdate } from '../eventBus';
 import CircuitBreaker from 'circuit-breaker-js';
+import axios from 'axios';
+import { retry } from 'async';
 
 const circuitBreaker = new CircuitBreaker({
     timeout: 3000,
     errorsThreshold: 2,
     resetTimeout: 10000
 });
+
+const retryOptions = {
+    times: 5,
+    interval: (attempt) => Math.pow(2, attempt) * 1000 // Exponential backoff
+};
 
 export const createPortfolio = async (data: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     if (!data.name || !Array.isArray(data.positions)) {
@@ -35,28 +42,17 @@ export const fetchPortfolios = async (): Promise<Portfolio[]> => {
     return storage.getAll();
 };
 
+export const healthCheckPortfolioService = async (): Promise<boolean> => {
+    try {
+        await retry(async (times) => {
+            return await axios.get(process.env.PORTFOLIO_SERVICE_URL);
+        }, retryOptions);
+        return true;
+    } catch (error) {
+        throw new Error('Portfolio service unreachable');
+    }
+};
+
 export const clearPortfolios = () => {
     storage.clear();
-};
-
-export const healthCheckPortfolioService = async (): Promise<boolean> => {
-    // Simulating health check logic
-    return true;
-};
-
-export const healthCheckAllServices = async (): Promise<HealthCheckResponse> => {
-    const portfolioServiceStatus = await healthCheckPortfolioService();
-    return {
-        status: 'UP',
-        portfolioService: portfolioServiceStatus
-    };
-};
-
-export const healthCheck = async (req: Request, res: Response) => {
-    try {
-        const healthStatus = await healthCheckAllServices();
-        res.json(healthStatus);
-    } catch (error) {
-        res.status(503).json({ status: 'DOWN', error: error.message });
-    }
 };
