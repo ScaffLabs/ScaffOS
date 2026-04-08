@@ -64,4 +64,14 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
     logger.info('Received SIGINT. Graceful shutdown initiated.');
     serverInstance.then(server => server.close(() => process.exit(0)));
-});
+};
+
+// Monitor memory usage and log warnings if usage exceeds configured limit
+setInterval(() => {
+    const memoryUsage = process.memoryUsage();
+    console.log(`Memory Usage: RSS: ${memoryUsage.rss}, Heap Total: ${memoryUsage.heapTotal}, Heap Used: ${memoryUsage.heapUsed}`);
+    const memoryLimit = parseFloat(process.env.MEMORY_LIMIT) * 0.01 * memoryUsage.heapTotal;
+    if (memoryUsage.heapUsed > memoryLimit) {
+        console.warn('Memory usage is high! Consider optimizing.');
+    }
+}, 5000);
