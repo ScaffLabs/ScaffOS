@@ -60,7 +60,6 @@ export class InMemoryStorage<T> implements IStorage<T> {
 
     async migrate(): Promise<void> {
         console.log('Performing migration...');
-        // Implement migration logic if needed
     }
 
     async seedData(): Promise<void> {
