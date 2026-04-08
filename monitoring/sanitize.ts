@@ -20,11 +20,10 @@ const sanitize = (req: Request, res: Response, next: NextFunction) => {
             if (!bodyValidation.success) {
                 throw new ValidationError('Invalid body data.');
             }
-            for (const key in req.body) {
-                if (typeof req.body[key] === 'string') {
-                    req.body[key] = req.body[key].trim().replace(/<[^>]*>/g, ''); // Basic XSS prevention
-                }
-            }
+            req.body = {
+                id: bodyValidation.data.id.trim(),
+                value: bodyValidation.data.value,
+            };
         }
 
         // Validate and sanitize query parameters
