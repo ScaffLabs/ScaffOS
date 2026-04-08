@@ -3,7 +3,6 @@ import axios from 'axios';
 import EventEmitter from 'eventemitter3';
 import config from './config';
 import logger from './logger';
-import { MonitoringEvent, MonitoringEventSchema } from './types';
 
 const serviceEmitter = new EventEmitter();
 const SERVICE_URLS = {
@@ -37,13 +36,8 @@ export const checkServiceHealth = async (): Promise<Record<string, boolean>> => 
 
 export const emitHealthCheckEvent = async () => {
     const healthStatus = await checkServiceHealth();
-    const event: MonitoringEvent = { type: 'SERVICE_HEALTH_CHECK', status: healthStatus };
-    const validation = MonitoringEventSchema.safeParse(event);
-    if (validation.success) {
-        serviceEmitter.emit('healthCheck', event);
-    } else {
-        logger.error('Invalid health check event schema.');
-    }
+    const event = { type: 'SERVICE_HEALTH_CHECK', status: healthStatus };
+    serviceEmitter.emit('healthCheck', event);
 };
 
 export const monitorMemoryUsage = () => {
@@ -51,9 +45,4 @@ export const monitorMemoryUsage = () => {
     const totalMemory = memoryUsage.rss / (1024 * 1024);
     const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
     logger.info({ totalMemory, usedMemory }, 'Memory usage monitored');
-};
-
-export const healthCheckServices = async () => {
-    const healthStatus = await checkServiceHealth();
-    return Object.values(healthStatus).every(status => status);
 };
