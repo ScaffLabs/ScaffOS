@@ -10,9 +10,12 @@ const pool = new Pool({
 export const createConnectionPool = () => {
     return {
         query: async (text: string, params: any[]) => {
+            const start = Date.now();
             const client = await pool.connect();
             try {
                 const res = await client.query(text, params);
+                const duration = Date.now() - start;
+                logger.info(`Query executed: ${text} - Duration: ${duration}ms`, { params });
                 return res;
             } catch (err) {
                 logger.error('Query error', err);
