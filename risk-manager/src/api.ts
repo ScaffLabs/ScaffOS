@@ -6,17 +6,20 @@ import { NotFoundError, ValidationError } from './errors';
 
 const router = express.Router();
 
+// Get risk positions with pagination, filtering, and sorting
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
+    query('sort').optional().isString(),
+    query('filter').optional().isString()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { limit = 10, offset = 0 } = req.query;
-        const positions = await riskManager.getRiskPositions(limit, offset);
+        const { limit = 10, offset = 0, sort, filter } = req.query;
+        const positions = await riskManager.getRiskPositions(limit, offset, sort, filter);
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
@@ -24,6 +27,7 @@ router.get('/risk', [
     }
 });
 
+// Create a new risk position
 router.post('/risk', [
     body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
@@ -45,6 +49,7 @@ router.post('/risk', [
     }
 });
 
+// Update an existing risk position
 router.put('/risk/:id', [
     param('id').isString(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
@@ -67,6 +72,7 @@ router.put('/risk/:id', [
     }
 });
 
+// Delete a risk position
 router.delete('/risk/:id', [
     param('id').isString(),
 ], async (req, res) => {
