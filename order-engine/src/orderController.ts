@@ -1,4 +1,3 @@
-// orderController.ts
 import { Request, Response } from 'express';
 import { Order, OrderSchema } from './types';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
@@ -31,6 +30,10 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
 
 export const updateOrder = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        return res.status(400).json({ errors: validationErrors.array() });
+    }
     try {
         await OrderSchema.partial().parseAsync(req.body);
         const updatedOrder = await updateOrderService(id, req.body);
