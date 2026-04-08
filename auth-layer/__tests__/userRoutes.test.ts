@@ -84,4 +84,13 @@ describe('User Routes', () => {
         expect(res.status).toBe(400);
         expect(res.body.errors.length).toBeGreaterThan(0);
     });
+
+    it('should return 400 for invalid API key', async () => {
+        const res = await request(app)
+            .post('/users')
+            .set('x-api-key', 'invalid_key')
+            .send({ username: 'user', email: 'user@example.com' });
+        expect(res.status).toBe(401);
+        expect(res.body).toEqual({ error: 'Invalid API key' });
+    });
 });
