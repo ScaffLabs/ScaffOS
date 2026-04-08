@@ -6,6 +6,7 @@ import { AlertConfiguration } from './alert.config';
 import { HealthCheck } from './health-check';
 import { AlertStore } from './storage';
 import { config } from './config';
+import { logStartup } from './logger';
 
 const app = express();
 const eventBus = new EventBus();
@@ -29,6 +30,7 @@ const connectDatabase = async () => {
 connectDatabase();
 
 const server = app.listen(config.PORT, () => {
+    logStartup(config);
     console.log(`Alert system running on port ${config.PORT}`);
 });
 
@@ -43,3 +45,19 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    shutdown();
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection:', reason);
+    shutdown();
+});
+
+// Memory Monitoring
+setInterval(() => {
+    const memoryUsage = process.memoryUsage();
+    console.log(`Memory Usage: RSS ${memoryUsage.rss} | Heap Total ${memoryUsage.heapTotal} | Heap Used ${memoryUsage.heapUsed}`);
+}, 60000);
