@@ -2,6 +2,9 @@
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
 
+// Discriminated union for event types
+export type EventType = 'userCreated' | 'orderPlaced';
+
 /**
  * Represents an Event with a unique identifier and details.
  * @property {OrderId} id - The unique identifier for the event.
@@ -12,13 +15,17 @@ export interface Event {
     id: OrderId;
     title: string;
     description?: string;
+    type: EventType;
 }
 
 // Zod schema for Event validation
+import { z } from 'zod';
+
 export const eventSchema = z.object({
     id: z.string().uuid().transform((val) => val as OrderId),
     title: z.string().min(1, { message: 'Title is required' }),
     description: z.string().optional(),
+    type: z.enum(['userCreated', 'orderPlaced']),
 });
 
 // Zod schema for incoming events

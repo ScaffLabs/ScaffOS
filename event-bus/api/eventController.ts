@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
-import { Event } from '../types';
+import { Event, createEventSchema, updateEventSchema } from '../types';
 import { StorageManager } from '../storage/storageManager';
 
 const storageManager = new StorageManager<Event>('memory');
@@ -9,11 +9,11 @@ const storage = storageManager.getStorage();
 
 export const createEvent = async (req: Request, res: Response) => {
     try {
-        const { title, description } = req.body;
-        if (!title || typeof title !== 'string') {
-            throw new ValidationError('Invalid title');
+        const parsed = createEventSchema.safeParse(req.body);
+        if (!parsed.success) {
+            throw new ValidationError(parsed.error.errors.map(err => err.message).join(', '));
         }
-        const newEvent: Event = { title, description };
+        const newEvent: Event = { id: uuidv4() as OrderId, ...parsed.data };
         const createdEvent = await storage.create(newEvent);
         res.status(201).json(createdEvent);
     } catch (error) {
@@ -48,7 +48,11 @@ export const getEventById = async (req: Request, res: Response) => {
 export const updateEvent = async (req: Request, res: Response) => {
     try {
         const eventId = req.params.id;
-        const event = await storage.update(eventId, req.body);
+        const parsed = updateEventSchema.safeParse(req.body);
+        if (!parsed.success) {
+            throw new ValidationError(parsed.error.errors.map(err => err.message).join(', '));
+        }
+        const event = await storage.update(eventId, parsed.data);
         if (!event) {
             throw new NotFoundError('Event not found');
         }
