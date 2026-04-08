@@ -12,6 +12,8 @@ const alertController = new AlertController(alertStore);
 app.use(express.json());
 app.post('/api/alerts', (req, res) => alertController.addAlert(req, res));
 app.get('/api/alerts', (req, res) => alertController.getActiveAlerts(req, res));
+app.put('/api/alerts/:id', (req, res) => alertController.updateAlert(req, res));
+app.delete('/api/alerts/:id', (req, res) => alertController.deleteAlert(req, res));
 
 describe('Alert API Integration Tests', () => {
     test('POST /api/alerts creates a new alert', async () => {
@@ -46,5 +48,22 @@ describe('Alert API Integration Tests', () => {
         const response = await request(app).get('/api/alerts/nonexistent');
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ message: 'Alert not found.' });
+    });
+
+    test('PUT /api/alerts/:id updates an alert', async () => {
+        const alertMessage = { type: 'price', threshold: 100, currentValue: 120, createdAt: new Date() };
+        const createdResponse = await request(app).post('/api/alerts').send(alertMessage);
+        const alertId = createdResponse.body.id;
+        const updateResponse = await request(app).put(`/api/alerts/${alertId}`).send({ threshold: 150 });
+        expect(updateResponse.status).toBe(200);
+        expect(updateResponse.body.threshold).toBe(150);
+    });
+
+    test('DELETE /api/alerts/:id deletes an alert', async () => {
+        const alertMessage = { type: 'price', threshold: 100, currentValue: 120, createdAt: new Date() };
+        const createdResponse = await request(app).post('/api/alerts').send(alertMessage);
+        const alertId = createdResponse.body.id;
+        const deleteResponse = await request(app).delete(`/api/alerts/${alertId}`);
+        expect(deleteResponse.status).toBe(204);
     });
 });
