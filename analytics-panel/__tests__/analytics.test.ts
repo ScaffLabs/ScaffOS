@@ -53,8 +53,6 @@ describe('Analytics API', () => {
     });
 
     test('fetchComparisonData handles empty strategy names', async () => {
-        mock.onGet('/api/compare').reply(400);
-
         await expect(fetchComparisonData('', '')).rejects.toThrow(ServiceError);
     });
 
