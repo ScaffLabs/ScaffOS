@@ -38,7 +38,6 @@ class InMemoryStore<T> {
         return Array.from(this.storage.values());
     }
 
-    // Indexing for common queries
     public indexBy<K extends keyof T>(key: K): Map<T[K], Entity<T>[]> {
         const index = new Map<T[K], Entity<T>[]>();
         for (const entity of this.storage.values()) {
@@ -51,7 +50,6 @@ class InMemoryStore<T> {
         return index;
     }
 
-    // Transaction support
     public transaction(operations: (store: InMemoryStore<T>) => void): void {
         const snapshot = new Map(this.storage);
         try {
@@ -62,7 +60,6 @@ class InMemoryStore<T> {
         }
     }
 
-    // Migration utilities
     public migrateData(targetStore: InMemoryStore<T>): void {
         for (const [id, entity] of this.storage.entries()) {
             targetStore.create(entity.data, id);
