@@ -31,3 +31,13 @@ export const checkHealthEndpoint = async (req, res) => {
     const allHealthy = health.redisHealthy && health.serviceHealthy;
     res.status(allHealthy ? 200 : 503).json({ health });
 };
+
+process.on('SIGINT', () => {
+    logger.info('Service is shutting down...');
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    logger.info('Service is terminating...');
+    process.exit(0);
+});
