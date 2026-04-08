@@ -21,6 +21,10 @@ const connectionPool = createConnectionPool();
 app.use(express.json());
 app.use(auditLogger);
 app.use(logRequest);
+app.use((req, res, next) => {
+    req.headers['x-request-id'] = req.headers['x-request-id'] || generateRequestId();
+    next();
+});
 app.use(latencyTracker);
 app.use(limiter);
 app.use(sanitize);
@@ -38,12 +42,9 @@ app.use(errorMiddleware);
 
 const server = createServer(app);
 
-// Graceful shutdown
 const gracefulShutdown = async () => {
     console.log('Shutting down gracefully...');
-    // Close the connection pool
     connectionPool.close();
-    // Wait for existing connections to finish
     server.close(() => {
         console.log('Closed all connections.');
         process.exit(0);
@@ -57,5 +58,8 @@ server.listen(PORT, () => {
     console.log(`Monitoring service running on port ${PORT}`);
 });
 
-// Start monitoring memory usage every minute
 setInterval(monitorMemoryUsage, 60000);
+
+const generateRequestId = () => {
+    return 'req-' + Math.random().toString(36).substr(2, 9);
+};

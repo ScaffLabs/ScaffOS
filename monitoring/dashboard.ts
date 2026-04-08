@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ValidationError, NotFoundError } from './errorClasses';
 import InMemoryStore from './dataStore';
 import { LatencyDataSchema } from './types';
+import logger from './logger';
 
 const store = new InMemoryStore<{ value: number }>();
 
@@ -13,6 +14,7 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
         }
         res.status(200).json(entries);
     } catch (error) {
+        logger.error(error, req);
         res.status(500).json({ error: 'Failed to fetch entries.' });
     }
 };
@@ -27,6 +29,7 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
         store.create({ value }, id);
         res.status(201).json({ message: 'Entry created', id });
     } catch (error) {
+        logger.error(error, req);
         if (error instanceof ValidationError) {
             res.status(400).json({ error: error.message });
         } else {
@@ -49,6 +52,7 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         store.update(id, { value: bodyValidation.data.value });
         res.status(204).send();
     } catch (error) {
+        logger.error(error, req);
         if (error instanceof ValidationError) {
             res.status(400).json({ error: error.message });
         } else if (error instanceof NotFoundError) {
@@ -65,6 +69,7 @@ export const deleteDashboardEntry = async (req: Request, res: Response) => {
         store.delete(id);
         res.status(204).send();
     } catch (error) {
+        logger.error(error, req);
         if (error instanceof NotFoundError) {
             res.status(404).json({ error: error.message });
         } else {

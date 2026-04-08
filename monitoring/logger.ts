@@ -1,10 +1,18 @@
-import pino from 'pino';
+import winston from 'winston';
 import config from './config';
 
 const logFormat = config.NODE_ENV === 'production' ? 'json' : 'pretty';
-const logger = pino({
+
+const logger = winston.createLogger({
     level: 'info',
-    transport: logFormat === 'json' ? undefined : { target: 'pino-pretty', options: { colorize: true } },
+    format: logFormat === 'json' ? winston.format.json() : winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+    ),
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'combined.log' })
+    ],
 });
 
 export const logRequest = (req, res, next) => {
