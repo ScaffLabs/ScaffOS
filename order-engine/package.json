@@ -6,7 +6,9 @@
     "start": "ts-node src/index.ts",
     "build": "tsc",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathPattern=unit"
   },
   "dependencies": {
     "express": "^4.17.1",

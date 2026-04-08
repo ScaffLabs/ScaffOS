@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { createServer } from '../src/index';
-import { Order } from '../src/types';
 import { storage } from '../src/storage';
+import { Order } from '../src/types';
 
 describe('Order API Integration Tests', () => {
     let app: Express.Application;

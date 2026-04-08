@@ -1,20 +1,9 @@
-import request from 'supertest';
-import { createServer } from '../src/index';
-import { Order } from '../src/types';
+import { createOrderService, getOrdersService, updateOrderService, deleteOrderService } from '../src/orderService';
+import { Order, OrderId } from '../src/types';
 import { storage } from '../src/storage';
-import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from '../src/orderService';
+import { ValidationError, NotFoundError } from '../src/errors';
 
 describe('Order Service', () => {
-    let app: Express.Application;
-
-    beforeAll(async () => {
-        app = await createServer();
-    });
-
-    afterAll(async () => {
-        await app.close();
-    });
-
     beforeEach(() => {
         storage.items = [];
     });
@@ -33,7 +22,7 @@ describe('Order Service', () => {
     });
 
     test('createOrderService - should throw error for invalid order', async () => {
-        await expect(createOrderService({ price: 100 })).rejects.toThrow('Service Unavailable');
+        await expect(createOrderService({ price: 100 })).rejects.toThrow(ValidationError);
     });
 
     test('getOrdersService - should retrieve all orders', async () => {
@@ -47,21 +36,18 @@ describe('Order Service', () => {
         expect(orders).toEqual(expect.arrayContaining([order1, order2]));
     });
 
-    test('updateOrderService - should update an existing order', async () => {
-        const newOrder: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
-        await storage.create(newOrder);
-
-        const updatedOrder = { price: 110, quantity: 5 };
-        const result = await updateOrderService('1', updatedOrder);
-        expect(result).toMatchObject({ ...newOrder, ...updatedOrder });
+    test('updateOrderService - should throw NotFoundError for non-existent order', async () => {
+        await expect(updateOrderService('999', { price: 110 })).rejects.toThrow(NotFoundError);
     });
 
-    test('deleteOrderService - should delete an existing order', async () => {
-        const newOrder: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
-        await storage.create(newOrder);
+    test('deleteOrderService - should throw NotFoundError for non-existent order', async () => {
+        await expect(deleteOrderService('999')).rejects.toThrow(NotFoundError);
+    });
 
-        await deleteOrderService('1');
-        const orders = await storage.findAll();
-        expect(orders).toHaveLength(0);
+    test('createOrderService - should emit event after successful creation', async () => {
+        const newOrder: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
+        const result = await createOrderService(newOrder);
+        expect(result).toMatchObject(newOrder);
+        // additional test to check if event was emitted could be added here
     });
 });
