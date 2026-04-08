@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  backtester:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - ORDER_SERVICE_URL=http://order_service:4000
+      - DATA_SERVICE_URL=http://data_service:5000
+    depends_on:
+      - order_service
+      - data_service
+  order_service:
+    image: your_order_service_image
+    ports:
+      - '4000:4000'
+  data_service:
+    image: your_data_service_image
+    ports:
+      - '5000:5000'
