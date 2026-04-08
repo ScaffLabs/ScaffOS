@@ -25,7 +25,11 @@ export const submitOrder = circuitBreaker(retry(async (order: Order) => {
         throw new ServiceError('Invalid order details');
     }
     // Submit order
-    const result = await submitOrderRequest(validationResult.data);
-    publishEvent('ORDER_SUBMITTED', { type: 'ORDER_SUBMITTED', order: result });
-    return result;
+    try {
+        const result = await submitOrderRequest(validationResult.data);
+        publishEvent('ORDER_SUBMITTED', { type: 'ORDER_SUBMITTED', order: result });
+        return result;
+    } catch (error) {
+        throw new ServiceError('Failed to submit order: ' + error.message);
+    }
 }));

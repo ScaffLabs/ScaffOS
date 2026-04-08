@@ -30,13 +30,17 @@ export const updatePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
     const positionData = req.body;
     try {
+        validatePosition(positionData);
         const updatedPosition = positionStore.update(id, positionData);
         if (!updatedPosition) {
             return res.status(404).json({ message: 'Position not found' });
         }
         res.status(204).send();
     } catch (error) {
-        return res.status(400).json({ message: 'Invalid input data' });
+        if (error instanceof ServiceError) {
+            return res.status(400).json({ message: 'Invalid input data', errors: error.message });
+        }
+        return res.status(500).json({ message: 'Error updating position' });
     }
 };
 
