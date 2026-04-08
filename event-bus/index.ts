@@ -18,6 +18,12 @@ const main = async () => {
     const server = app.listen(config.port, () => {
         logger.info(`Server is running on port ${config.port}`);
     });
+
+    // Memory usage monitoring
+    setInterval(() => {
+        const memoryUsage = process.memoryUsage();
+        logger.info(`Memory Usage: RSS: ${memoryUsage.rss / 1024 / 1024} MB, Heap Total: ${memoryUsage.heapTotal / 1024 / 1024} MB, Heap Used: ${memoryUsage.heapUsed / 1024 / 1024} MB`);
+    }, 60000); // Log memory usage every minute
 };
 
 main();

@@ -31,3 +31,9 @@ export const checkHealthEndpoint = async (req, res) => {
     const allHealthy = health.redisHealthy && health.serviceHealthy;
     res.status(allHealthy ? 200 : 503).json({ health });
 };
+
+export const gracefulShutdown = async () => {
+    logger.info('Shutting down gracefully...');
+    await redisClient.quit();
+    process.exit(0);
+};
