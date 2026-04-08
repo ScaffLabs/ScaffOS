@@ -62,4 +62,11 @@ describe('EventBus', () => {
         eventBus.publish(testTopic, testData);
         expect(anotherListener).not.toHaveBeenCalled();
     });
+
+    test('should not call listener if the message is cached', () => {
+        eventBus.subscribe(testTopic, mockListener);
+        eventBus.publish(testTopic, testData);
+        eventBus.publish(testTopic, testData);
+        expect(mockListener).toHaveBeenCalledTimes(1);
+    });
 });

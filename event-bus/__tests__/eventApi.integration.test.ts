@@ -4,7 +4,7 @@ import { createEventSchema } from '../types';
 
 describe('Event API Integration Tests', () => {
     beforeEach(async () => {
-        await request(app).delete('/events'); // Assuming a reset endpoint exists
+        await request(app).delete('/events'); // Reset the events
     });
 
     describe('POST /events', () => {
