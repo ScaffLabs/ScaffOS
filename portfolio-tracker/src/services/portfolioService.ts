@@ -12,6 +12,16 @@ const axiosInstance = axios.create({
 
 const circuitBreaker = new CircuitBreaker();
 
+const retryRequest = async (fn, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (i === retries - 1) throw error;
+        }
+    }
+};
+
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const { name, positions } = portfolioData;
     if (!name || positions.length === 0) {
@@ -41,7 +51,7 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
 
 export const checkExternalPortfolioService = async () => {
     try {
-        await circuitBreaker.fire(() => axiosInstance.get('/'));
+        await circuitBreaker.fire(() => retryRequest(() => axiosInstance.get('/')));
         return true;
     } catch (error) {
         throw new Error('Portfolio service is down');
