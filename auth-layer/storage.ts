@@ -1,67 +1,58 @@
-import { User } from './user';
+import { User, UserId } from './types';
+import crypto from 'crypto';
 
 interface DataStore<T> {
     create(item: T): T;
-    read(id: string): T | undefined;
-    update(id: string, item: T): T | null;
-    delete(id: string): boolean;
+    read(id: UserId): T | undefined;
+    update(id: UserId, item: T): T | null;
+    delete(id: UserId): boolean;
     findAll(): T[];
-    transaction(operations: () => Promise<void>): Promise<void>;
 }
 
 class InMemoryStore<T> implements DataStore<T> {
-    private store: Map<string, T> = new Map();
+    private store: Map<UserId, T> = new Map();
 
     create(item: T): T {
-        const id = (item as any).id || crypto.randomUUID();
+        const id = crypto.randomUUID() as UserId; // Use branded type
         this.store.set(id, { ...item, id });
         return this.store.get(id)!;
     }
 
-    read(id: string): T | undefined {
+    read(id: UserId): T | undefined {
         return this.store.get(id);
     }
 
-    update(id: string, item: T): T | null {
+    update(id: UserId, item: T): T | null {
         if (!this.store.has(id)) return null;
         this.store.set(id, { ...item, id });
         return this.store.get(id)!;
     }
 
-    delete(id: string): boolean {
+    delete(id: UserId): boolean {
         return this.store.delete(id);
     }
 
     findAll(): T[] {
         return Array.from(this.store.values());
     }
-
-    async transaction(operations: () => Promise<void>): Promise<void> {
-        const backup = new Map(this.store);
-        try {
-            await operations();
-        } catch (error) {
-            this.store = backup; // Rollback on error
-            throw error;
-        }
-    }
 }
 
 const userStore = new InMemoryStore<User>();
 
 export const createUser = (username: string, email: string): User => {
-    return userStore.create({ username, email } as User);
+    const user: User = { id: crypto.randomUUID() as UserId, username, email };
+    return userStore.create(user);
 };
 
-export const findUserById = (id: string): User | undefined => {
+export const findUserById = (id: UserId): User | undefined => {
     return userStore.read(id);
 };
 
-export const updateUser = (id: string, userData: Partial<User>): User | null => {
-    return userStore.update(id, { ...userData, id } as User);
+export const updateUser = (id: UserId, userData: Partial<User>): User | null => {
+    return userStore.update(id, { ...userData, id });
 };
 
-export const deleteUser = (id: string): boolean => {
+export const deleteUser = (id: UserId): boolean => {
     return userStore.delete(id);
 };
 
