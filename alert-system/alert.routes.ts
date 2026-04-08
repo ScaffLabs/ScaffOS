@@ -6,6 +6,9 @@ import { validateAlertMessage } from './alert.schema';
 import { AlertStore } from './storage';
 import helmet from 'helmet';
 import cors from 'cors';
+import { logAudit } from './audit.logger';
+import xss from 'xss-clean';
+import bodyParser from 'body-parser';
 
 const alertStore = new AlertStore();
 const alertController = new AlertController(alertStore);
@@ -25,25 +28,68 @@ const limiter = rateLimit({
 });
 router.use(limiter);
 
+// XSS protection
+router.use(xss());
+
+// Body parser with size limit
+router.use(bodyParser.json({ limit: '1mb' }));
+
 // Health check routes
 router.get('/health', HealthCheck.checkHealth);
 router.get('/ready', HealthCheck.checkReady);
 
 // Alert routes
 router.get('/api/alerts', async (req, res) => {
-    // ... existing alert fetching logic
+    const start = Date.now();
+    try {
+        const alerts = await alertController.getActiveAlerts(req, res);
+        return res.json(alerts);
+    } catch (error) {
+        console.error('Failed to get alerts:', error);
+        return res.status(500).json({ message: 'Failed to fetch alerts' });
+    } finally {
+        logAudit('GET /api/alerts', { duration: Date.now() - start });
+    }
 });
 
 router.post('/api/alerts', async (req, res) => {
-    // ... existing alert creation logic
+    const start = Date.now();
+    try {
+        const alert = validateAlertMessage(req.body);
+        const createdAlert = await alertController.addAlert(req, res);
+        logAudit('POST /api/alerts', { alertId: createdAlert.id });
+        return res.status(201).json(createdAlert);
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    } finally {
+        logAudit('POST /api/alerts', { duration: Date.now() - start });
+    }
 });
 
 router.put('/api/alerts/:id', async (req, res) => {
-    // ... existing alert updating logic
+    const start = Date.now();
+    try {
+        const updatedAlert = await alertController.updateAlert(req, res);
+        logAudit('PUT /api/alerts/:id', { alertId: req.params.id });
+        return res.json(updatedAlert);
+    } catch (error) {
+        return res.status(404).json({ message: error.message });
+    } finally {
+        logAudit('PUT /api/alerts/:id', { duration: Date.now() - start });
+    }
 });
 
 router.delete('/api/alerts/:id', async (req, res) => {
-    // ... existing alert deletion logic
+    const start = Date.now();
+    try {
+        await alertController.deleteAlert(req, res);
+        logAudit('DELETE /api/alerts/:id', { alertId: req.params.id });
+        return res.status(204).send();
+    } catch (error) {
+        return res.status(404).json({ message: error.message });
+    } finally {
+        logAudit('DELETE /api/alerts/:id', { duration: Date.now() - start });
+    }
 });
 
 export default router;

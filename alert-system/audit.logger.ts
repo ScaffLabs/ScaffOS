@@ -16,3 +16,13 @@ export const logAudit = (action: string, details: any) => {
 export const logSensitiveAction = (action: string, details: any) => {
     console.warn('Sensitive action logged:', action, details);
 };
+
+export const logError = (error: Error) => {
+    const timestamp = new Date().toISOString();
+    const logEntry = `${timestamp} - ERROR: ${error.message}\n`;
+    fs.appendFile(logFile, logEntry, (err) => {
+        if (err) {
+            console.error('Failed to write to error log:', err);
+        }
+    });
+};
