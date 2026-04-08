@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { fetchHealthStatus } from '../services/ServiceClient';
 
 const ServiceHealth: React.FC = () => {
     const [serviceStatus, setServiceStatus] = useState<{ [key: string]: string }>({});
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        // Fetching service health status from the backend.
         const fetchServiceHealth = async () => {
+            setLoading(true);
             try {
-                const response = await fetch('/api/health'); // Replace with actual endpoint
-                if (!response.ok) throw new Error('Failed to fetch service health');
-                const status = await response.json();
+                const status = await fetchHealthStatus();
                 setServiceStatus(status);
             } catch (err) {
-                // Capturing any errors during the fetch process
-                setError(err.message);
+                setError('Error fetching service health status');
+            } finally {
+                setLoading(false);
             }
         };
         fetchServiceHealth();
@@ -23,7 +24,7 @@ const ServiceHealth: React.FC = () => {
     return (
         <div>
             <h1>Service Health</h1>
-            {error ? (
+            {loading ? (<p>Loading...</p>) : error ? (
                 <div style={{ color: 'red' }}>Error: {error}</div>
             ) : (
                 <ul>
