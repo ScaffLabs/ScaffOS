@@ -1,8 +1,10 @@
+// OrderService.ts
 import { Order, OrderSchema } from './types';
 import { emitWithRetry } from './eventBus';
-import { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError } from './errors';
+import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
 import logger from './logger';
+import { fetchData } from './axiosClient';
 
 const ANOTHER_SERVICE_URL = process.env.ANOTHER_SERVICE_URL;
 
@@ -13,7 +15,6 @@ export const createOrderService = async (orderData: unknown) => {
     }
     const order = parsedOrder.data;
     try {
-        if (order.price < 0) throw new OverflowError('Price cannot be negative.');
         const createdOrder = await queryDatabase('INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5) RETURNING *', [order.id, order.type, order.price, order.quantity, order.status]);
         await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder.rows[0] });
         logger.info('Order created successfully', { order: createdOrder.rows[0] });
@@ -22,6 +23,14 @@ export const createOrderService = async (orderData: unknown) => {
         logger.error('Error creating order:', error);
         throw new ServiceError('Could not create order. Please try again later.');
     }
+};
+
+export const checkDependentServicesHealth = async () => {
+    const healthChecks = await Promise.all([
+        fetchData(`${process.env.DATABASE_URL}/health`),
+        fetchData(`${ANOTHER_SERVICE_URL}/health`)
+    ]);
+    return healthChecks.every(response => response.status === 200);
 };
 
 export const updateOrderService = async (id: string, updates: unknown) => {
