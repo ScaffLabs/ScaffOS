@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 app.use(userRoutes);
 
-describe('User Routes', () => {
+describe('User Routes Tests', () => {
     let apiKey;
     let createdUser;
 

@@ -5,9 +5,9 @@
     "scripts": {
         "test": "jest",
         "test:watch": "jest --watch",
-        "test:coverage": "jest --coverage",
-        "start": "node dist/server.js",
-        "test:integration": "jest --testPathPattern=__tests__/index.test.ts"
+        "test:integration": "jest --testPathPattern=__tests__/index.test.ts",
+        "test:unit": "jest --testPathPattern=__tests__/userRoutes.test.ts",
+        "start": "node dist/server.js"
     },
     "devDependencies": {
         "jest": "^27.0.0",
