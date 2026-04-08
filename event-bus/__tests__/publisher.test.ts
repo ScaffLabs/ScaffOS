@@ -4,7 +4,7 @@ import { Message } from '../messageSchema';
 
 jest.mock('../redisClient');
 
-describe('Publisher', () => {
+describe('Publisher Tests', () => {
     const message: Message<{ userId: string; username: string }> = {
         topic: 'userCreated',
         data: { userId: '1', username: 'testuser' },
@@ -37,5 +37,10 @@ describe('Publisher', () => {
         await publish(message);
         await publish(message);
         expect(console.log).toHaveBeenCalledWith('Message is already published, skipping.');
+    });
+
+    it('should throw an error when publishing fails', async () => {
+        (redisClient.publish as jest.Mock).mockRejectedValueOnce(new Error('Redis error'));
+        await expect(publish(message)).rejects.toThrow('Failed to publish message');
     });
 });
