@@ -17,6 +17,10 @@ export const seedData = <T>(store: InMemoryStore<T>, data: T[]) => {
     });
 };
 
-export const clearData = <T>(store: InMemoryStore<T>): void => {
-    store = new InMemoryStore<T>();
+export const clearStore = <T>(store: InMemoryStore<T>): void => {
+    store.clearData();
+};
+
+export const migrateStore = (sourceStore: InMemoryStore<any>, targetStore: InMemoryStore<any>): void => {
+    sourceStore.migrateData(targetStore);
 };
