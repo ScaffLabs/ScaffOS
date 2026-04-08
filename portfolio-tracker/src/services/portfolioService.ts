@@ -6,7 +6,7 @@ import { ValidationError, NotFoundError } from '../errors';
 import { CircuitBreaker } from 'opossum';
 
 const circuitBreakerOptions = {
-    timeout: 3000, // timeout after 3 seconds
+    timeout: 3000,
     errorThresholdPercentage: 50,
     resetTimeout: 30000,
 };
@@ -32,17 +32,38 @@ const createPortfolioInternal = async (data: Omit<Portfolio, 'id'>): Promise<Por
     return newPortfolio;
 };
 
-const retry = async (fn, retries = 3, delay = 1000) => {
-    try {
-        return await fn();
-    } catch (error) {
-        if (retries > 0) {
-            logger.warn(`Retrying due to error: ${error.message}`);
-            await new Promise(res => setTimeout(res, delay));
-            return retry(fn, retries - 1, delay * 2);
-        }
-        throw error;
+export const getPortfolio = async (id: string): Promise<Portfolio> => {
+    const portfolio = storage.read(id);
+    if (!portfolio) {
+        throw new NotFoundError('Portfolio not found.');
     }
+    return portfolio;
 };
 
-// The rest of the portfolioService functions remain unchanged.
+export const updatePortfolio = async (id: string, data: PortfolioUpdate): Promise<Portfolio> => {
+    const portfolio = await getPortfolio(id);
+    if (data.name && typeof data.name !== 'string') {
+        throw new ValidationError('Portfolio name must be a string.');
+    }
+    if (data.positions) {
+        for (const position of data.positions) {
+            if (!position.symbol || position.quantity < 0 || position.averagePrice < 0) {
+                throw new ValidationError('Each position must be valid with a symbol, non-negative quantity, and non-negative average price.');
+            }
+        }
+    }
+    const updatedPortfolio = storage.update(id, data);
+    if (!updatedPortfolio) {
+        throw new NotFoundError('Portfolio not found for update.');
+    }
+    await publishPortfolioUpdate(updatedPortfolio);
+    return updatedPortfolio;
+};
+
+export const fetchPortfolios = async (): Promise<Portfolio[]> => {
+    return storage.getAll();
+};
+
+export const clearPortfolios = () => {
+    storage.clear();
+};
