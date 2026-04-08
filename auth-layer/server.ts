@@ -18,21 +18,6 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
-const shutdown = async () => {
-    logger.info('Shutting down gracefully...');
-    try {
-        await connectionPool.drain();
-        server.close(() => {
-            logger.info('HTTP server closed.');
-            process.exit(0);
-        });
-    } catch (error) {
-        logger.error('Error during shutdown: ' + error.message);
-        process.exit(1);
-    }
-};
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
 
 const allowedOrigins = ['http://localhost:3000', 'https://yourdomain.com'];
 const corsOptions = {
@@ -57,6 +42,22 @@ app.use('/health', healthRouter);
 app.use('/api', userRoutes);
 app.use(errorMiddleware);
 app.use(csrfMiddleware); // CSRF protection middleware
+
+const shutdown = async () => {
+    logger.info('Shutting down gracefully...');
+    try {
+        await connectionPool.drain();
+        server.close(() => {
+            logger.info('HTTP server closed.');
+            process.exit(0);
+        });
+    } catch (error) {
+        logger.error('Error during shutdown: ' + error.message);
+        process.exit(1);
+    }
+};
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 const start = async () => {
     try {
