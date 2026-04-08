@@ -35,4 +35,5 @@ export const gracefulShutdown = (server: any) => {
 export const registerShutdownHandlers = (server: any) => {
     process.on('SIGTERM', () => gracefulShutdown(server));
     process.on('SIGINT', () => gracefulShutdown(server));
+    setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
 };

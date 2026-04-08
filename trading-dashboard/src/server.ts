@@ -1,5 +1,6 @@
 import express from 'express';
-import { healthCheck } from './api/externalApi';
+import { healthCheck, readyCheck } from './utils/healthCheck';
+import { registerShutdownHandlers } from './utils/healthCheck';
 import { InMemoryStore } from './storage/InMemoryStore';
 import { migrateData, seedData } from './storage/migrations';
 import { Position } from './types';
@@ -13,6 +14,7 @@ const positionStore = new InMemoryStore<Position>();
 migrateData(positionStore, seedData());
 
 app.get('/api/health', healthCheck);
+app.get('/api/ready', readyCheck);
 app.get('/api/positions', async (req, res) => {
     const positions = Object.values(positionStore.data);
     res.status(200).json(positions);
@@ -36,5 +38,7 @@ const server = app.listen(PORT, () => {
     logStartup({ port: PORT });
     console.log(`Server is running on port ${PORT}`);
 });
+
+registerShutdownHandlers(server);
 
 export default app;
