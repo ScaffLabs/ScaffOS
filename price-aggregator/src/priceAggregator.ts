@@ -40,11 +40,24 @@ export class PriceAggregator extends EventEmitter {
     }
 
     private async updateCurrentPrices(): Promise<void> {
-        // Logic to update current prices based on storage data.
         this.currentPrices = await storage.findAll();
     }
 
     private handlePriceAdded(priceData: PriceData): void {
-        // Logic for handling price added event
+        // Logic for handling price added event, if needed
+    }
+
+    public async fetchPrices(): Promise<void> {
+        try {
+            const prices = await httpClient('/prices');
+            this.currentPrices = prices;
+        } catch (error) {
+            logError(error, 'Failed to fetch prices');
+            throw new ServiceError('Could not fetch prices from the external service.');
+        }
+    }
+
+    public getCurrentPrices(): CurrentPrices {
+        return this.currentPrices;
     }
 }
