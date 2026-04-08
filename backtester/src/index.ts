@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { backtestRouter } from './routes/backtest';
 import { errorHandler } from './middleware/errorHandler';
-import { logger, requestLogger } from './utils/logger';
+import { logger, requestLogger, logRequestDuration } from './utils/logger';
 import rateLimit from 'express-rate-limit';
 import { config } from '../config';
 import healthCheckRouter from './routes/healthCheck';
@@ -23,6 +23,7 @@ app.use(express.json({ limit: '1mb' }));
 
 // Logging middleware
 app.use(requestLogger);
+app.use(logRequestDuration);
 
 // Rate limiting middleware
 const limiter = rateLimit({

@@ -42,4 +42,20 @@ const logError = (err, req) => {
   });
 };
 
-export { logger, requestLogger, logError };
+const logRequestDuration = (req, res, next) => {
+  const start = process.hrtime();
+  res.on('finish', () => {
+    const duration = process.hrtime(start);
+    const durationInMs = duration[0] * 1000 + duration[1] / 1000000;
+    logger.info({
+      message: 'Request duration',
+      duration: durationInMs,
+      method: req.method,
+      path: req.path,
+      requestId: req.headers['x-request-id'],
+    });
+  });
+  next();
+};
+
+export { logger, requestLogger, logError, logRequestDuration };
