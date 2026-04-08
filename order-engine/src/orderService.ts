@@ -1,12 +1,12 @@
 import { Order, OrderSchema } from './types';
 import { emitWithRetry } from './eventBus';
-import { ServiceError } from './errors';
+import { ServiceError, ValidationError } from './errors';
 import { storage } from './storage';
 
 export const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
     if (!parsedOrder.success) {
-        throw new ServiceError('Invalid order data.');
+        throw new ValidationError('Invalid order data: ' + parsedOrder.error.errors.map(e => e.message).join(', '));
     }
     const order = parsedOrder.data;
     try {
@@ -35,11 +35,11 @@ export const getOrdersService = async () => {
 export const updateOrderService = async (id: string, updates: unknown) => {
     const parsedUpdates = OrderSchema.partial().safeParse(updates);
     if (!parsedUpdates.success) {
-        throw new ServiceError('Invalid order update data.');
+        throw new ValidationError('Invalid order update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
     }
     const orderToUpdate = await storage.read(id);
     if (!orderToUpdate) {
-        throw new ServiceError('Order not found.');
+        throw new ValidationError('Order not found.');
     }
     try {
         const updatedOrder = await storage.update(id, parsedUpdates.data);
@@ -54,7 +54,7 @@ export const updateOrderService = async (id: string, updates: unknown) => {
 export const deleteOrderService = async (id: string) => {
     const orderToDelete = await storage.read(id);
     if (!orderToDelete) {
-        throw new ServiceError('Order not found.');
+        throw new ValidationError('Order not found.');
     }
     try {
         await storage.delete(id);
