@@ -8,5 +8,16 @@ services:
       NODE_ENV: development
       WEBHOOK_URL: http://your-webhook-url
       EMAIL_SERVICE_URL: http://your-email-service-url
+      MONGO_URI: mongodb://mongo:27017/alert-system
+  mongo:
+    image: mongo
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-data:/data/db
 
-  # Additional services can be added here
+volumes:
+  mongo-data:

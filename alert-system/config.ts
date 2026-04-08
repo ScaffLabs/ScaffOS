@@ -8,6 +8,7 @@ const envSchema = z.object({
     PORT: z.string().default('3000'),
     WEBHOOK_URL: z.string().nonempty(),
     EMAIL_SERVICE_URL: z.string().nonempty(),
+    MONGO_URI: z.string().nonempty(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
