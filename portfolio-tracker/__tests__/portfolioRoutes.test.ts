@@ -42,4 +42,17 @@ describe('Portfolio Routes', () => {
         expect(response.status).toBe(200);
         expect(response.body.status).toBe('UP');
     });
+
+    it('should handle empty positions array on portfolio creation', async () => {
+        const response = await request(app).post('/api/portfolios').send({ name: 'Empty Positions Portfolio', positions: [] });
+        expect(response.status).toBe(201);
+        expect(response.body).toHaveProperty('id');
+        expect(response.body.positions).toEqual([]);
+    });
+
+    it('should return 400 for invalid portfolio update request', async () => {
+        const createResponse = await request(app).post('/api/portfolios').send({ name: 'To Update', positions: [] });
+        const response = await request(app).put(`/api/portfolios/${createResponse.body.id}`).send({ name: '' });
+        expect(response.status).toBe(400);
+    });
 });

@@ -43,4 +43,15 @@ describe('Portfolio Service', () => {
         const portfolios = await fetchPortfolios();
         expect(portfolios).toEqual([]);
     });
+
+    test('should return an error for invalid portfolio data during creation', async () => {
+        await expect(createPortfolio({ name: null, positions: [] })).rejects.toThrow('Invalid portfolio data');
+    });
+
+    test('should update portfolio with valid positions', async () => {
+        await createPortfolio(testPortfolio);
+        const updatedPortfolio = await updatePortfolio('1', { positions: [{ symbol: 'AAPL', quantity: 10, averagePrice: 150 }] });
+        expect(updatedPortfolio.positions.length).toBe(1);
+        expect(updatedPortfolio.positions[0]).toEqual({ symbol: 'AAPL', quantity: 10, averagePrice: 150 });
+    });
 });
