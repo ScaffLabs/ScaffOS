@@ -7,6 +7,9 @@ import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
 import { RiskPositionSchema } from './sharedTypes';
+import csrf from 'csurf';
+
+const csrfProtection = csrf({ cookie: true });
 
 const router = express.Router();
 
@@ -22,6 +25,8 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again later.'
 });
 router.use(limiter);
+
+router.use(csrfProtection);
 
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
