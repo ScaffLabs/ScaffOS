@@ -1,4 +1,3 @@
-// errorMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import logger from './logger';
