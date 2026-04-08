@@ -4,6 +4,7 @@ import { RiskAlerting } from './riskAlerting';
 import { PositionLimits } from './positionLimits';
 import { RiskPosition, RiskPositionSchema } from './sharedTypes';
 import MemoryQueue from './memoryQueue';
+import logger from './logger';
 
 export default class RiskManager {
   private drawdownCircuitBreaker: DrawdownCircuitBreaker;
@@ -24,6 +25,7 @@ export default class RiskManager {
   private handleNewRiskPosition(position: RiskPosition) {
     this.riskPositions.push(position);
     this.riskAlerting.triggerRiskAlert(`New risk position added for asset: ${position.asset}`);
+    logger.info(`New risk position handling: ${JSON.stringify(position)}`);
   }
 
   async getRiskPositions(limit: number, offset: number, sort?: string, filter?: string) {
@@ -41,35 +43,47 @@ export default class RiskManager {
     const newPosition = { id: this.generateId(), asset, position };
     const validationResult = RiskPositionSchema.safeParse(newPosition);
     if (!validationResult.success) {
+      logger.error('Invalid risk position data: ' + validationResult.error);
       throw new Error('Invalid risk position data: ' + validationResult.error);
     }
 
     if (!this.positionLimits.checkLimit(asset, position)) {
+      logger.warn(`Position exceeds limit for asset: ${asset}`);
       throw new Error('Position exceeds limit for this asset.');
     }
 
     this.riskPositionQueue.enqueue(newPosition);
+    logger.info(`Risk position created: ${newPosition.id}`);
     return newPosition;
   }
 
   async updateRiskPosition(id: string, position: number) {
     const index = this.riskPositions.findIndex(pos => pos.id === id);
-    if (index === -1) return null;
+    if (index === -1) {
+      logger.warn(`Risk position not found for update: ${id}`);
+      return null;
+    }
 
     const updatedPosition = { ...this.riskPositions[index], position };
     const validationResult = RiskPositionSchema.safeParse(updatedPosition);
     if (!validationResult.success) {
+      logger.error('Invalid risk position data for update: ' + validationResult.error);
       throw new Error('Invalid risk position data: ' + validationResult.error);
     }
 
     this.riskPositions[index].position = position;
+    logger.info(`Risk position updated: ${id}`);
     return this.riskPositions[index];
   }
 
   async deleteRiskPosition(id: string) {
     const index = this.riskPositions.findIndex(pos => pos.id === id);
-    if (index === -1) return false;
+    if (index === -1) {
+      logger.warn(`Risk position not found for deletion: ${id}`);
+      return false;
+    }
     this.riskPositions.splice(index, 1);
+    logger.info(`Risk position deleted: ${id}`);
     return true;
   }
 

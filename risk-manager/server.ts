@@ -26,7 +26,7 @@ const initializeConnectionPool = () => {
 };
 
 const shutdown = async () => {
-    console.log('Shutting down gracefully...');
+    logger.info('Shutting down gracefully...');
     await connectionPool.end(); // Gracefully close the pool
     process.exit(0);
 };
@@ -38,10 +38,19 @@ const startServer = async () => {
     initializeConnectionPool();
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+        logger.info(`Server is running on port ${PORT}`);
         setReady(true);
     });
 };
+
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        logger.info(`Request: ${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`);
+    });
+    next();
+});
 
 startServer().catch(err => {
     logger.error('Failed to start the server:', err);
