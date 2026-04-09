@@ -3,6 +3,22 @@ import { emitWithRetry } from './eventBus';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { storage } from './storage';
 import logger from './logger';
+import axios from 'axios';
+
+const httpClient = axios.create({
+    baseURL: process.env.ORDER_SERVICE_URL,
+    timeout: 5000,
+});
+
+const fetchDependenciesHealth = async () => {
+    try {
+        const response = await httpClient.get('/health');
+        return response.status === 200;
+    } catch (error) {
+        logger.error('Dependency health check failed:', error);
+        return false;
+    }
+};
 
 export const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -15,7 +31,7 @@ export const createOrderService = async (orderData: unknown) => {
     return createdOrder;
 };
 
-export const updateOrderService = async (id: OrderId, updates: unknown) => {
+export const updateOrderService = async (id: string, updates: unknown) => {
     const parsedUpdates = OrderSchema.partial().safeParse(updates);
     if (!parsedUpdates.success) {
         throw new ValidationError('Invalid order update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
@@ -29,7 +45,7 @@ export const updateOrderService = async (id: OrderId, updates: unknown) => {
     return updatedOrder;
 };
 
-export const deleteOrderService = async (id: OrderId) => {
+export const deleteOrderService = async (id: string) => {
     const existingOrder = await storage.read(id);
     if (!existingOrder) {
         throw new NotFoundError('Order not found.');
@@ -39,6 +55,7 @@ export const deleteOrderService = async (id: OrderId) => {
 };
 
 export const getOrdersService = async ({ limit, offset, status }: { limit: number; offset: number; status?: string; }) => {
+    await fetchDependenciesHealth();
     let orders = await storage.findAll();
     if (status) {
         orders = orders.filter(order => order.status === status);
