@@ -1,8 +1,10 @@
+// Import necessary modules
 import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
 import { PerformanceMetricsSchema } from '../types';
 import { logError } from '../utils/errorLogger';
 import { emitEvent } from '../api/eventBus';
+import { CircuitBreaker } from 'opossum';
 
 const fetchWithRetry = async (url: string, retries: number = 3): Promise<any> => {
     for (let i = 0; i < retries; i++) {
@@ -15,9 +17,15 @@ const fetchWithRetry = async (url: string, retries: number = 3): Promise<any> =>
     }
 };
 
+const circuitBreaker = new CircuitBreaker(fetchWithRetry, {
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+});
+
 const fetchPerformanceMetrics = async () => {
     try {
-        const response = await fetchWithRetry(`${process.env.REACT_APP_API_BASE_URL}/api/performance`);
+        const response = await circuitBreaker.fire(`${process.env.REACT_APP_API_BASE_URL}/api/performance`);
         const validatedData = PerformanceMetricsSchema.parse(response);
         emitEvent('PERFORMANCE_METRICS_FETCHED', validatedData);
         return validatedData;
@@ -29,7 +37,7 @@ const fetchPerformanceMetrics = async () => {
 
 const fetchComparisonData = async (strategyA: string, strategyB: string) => {
     try {
-        const response = await fetchWithRetry(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
+        const response = await circuitBreaker.fire(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
         return response;
     } catch (error) {
         logError(error, 'Comparing strategies');
@@ -44,7 +52,7 @@ const healthCheckDependentServices = async () => {
 
     const healthResults = await Promise.all(dependencies.map(async (service) => {
         try {
-            const response = await fetchWithRetry(service.url);
+            const response = await circuitBreaker.fire(service.url);
             return { serviceName: service.name, healthy: response.status === 200 };
         } catch (error) {
             return { serviceName: service.name, healthy: false };
