@@ -1,6 +1,5 @@
 import winston from 'winston';
 import { Request, Response } from 'express';
-import { escape } from 'html-escaper';
 
 const logFormat = winston.format.printf(({ level, message, timestamp, ...meta }) => {
     return `${timestamp} [${level}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
@@ -25,8 +24,7 @@ export const logRequest = (req: Request, res: Response, next: Function) => {
     res.on('finish', () => {
         const duration = process.hrtime(start);
         const durationInMs = (duration[0] * 1e3 + duration[1] / 1e6).toFixed(2);
-        const sanitizedPath = escape(req.path);
-        logger.info(`Request: ${req.method} ${sanitizedPath} - ${res.statusCode} - ${durationInMs}ms`, { requestId });
+        logger.info(`Request: ${req.method} ${req.path} - ${res.statusCode} - ${durationInMs}ms`, { requestId });
     });
     next();
 };
@@ -37,6 +35,10 @@ const generateRequestId = () => {
 
 export const logError = (error: Error, req: Request) => {
     logger.error(error.message, { stack: error.stack, url: req.url });
+};
+
+export const logStartup = (config: any) => {
+    logger.info('Starting Order Engine', { config });
 };
 
 export default logger;

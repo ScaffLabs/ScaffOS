@@ -8,7 +8,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { requestIdMiddleware, errorHandlingMiddleware } from './middleware';
-import logger from './logger';
+import logger, { logStartup } from './logger';
 import { setupRequestQueue } from './requestQueue';
 
 const app = express();
@@ -23,8 +23,8 @@ app.use(logger.logRequest);
 
 // Rate Limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Too many requests from this IP, please try again later'
 });
 app.use(limiter);
@@ -38,7 +38,7 @@ const startServer = async () => {
     await migrateData();
     setupGracefulShutdown(app);
     const server = app.listen(PORT, () => {
-        logger.logStartup({ port: PORT });
+        logStartup({ port: PORT, env: process.env.NODE_ENV });
         console.log(`Order Engine listening on port ${PORT}`);
     });
     return server;
