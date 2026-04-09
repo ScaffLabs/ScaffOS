@@ -1,14 +1,12 @@
 import WebSocket from 'ws';
 import { PriceData, PriceEvent } from './types';
-import { postHttpClient } from './httpClient';
+import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
 import { ValidationError, ServiceError, DivisionByZeroError } from './errors';
-import { httpClient } from './httpClient';
 
 export class PriceAggregator {
     private currentPrices: { [key: string]: number } = {};
-    private clients: WebSocket[] = [];
     private eventBus = new EventBus();
 
     constructor() {
@@ -31,29 +29,13 @@ export class PriceAggregator {
         }
     }
 
-    private validatePriceData(priceData: PriceData): boolean {
-        if (!priceData.exchange || priceData.price <= 0 || priceData.volume <= 0) {
-            return false;
-        }
-        return true;
-    }
-
-    public async calculateVWAP(prices: PriceData[]): Promise<number> {
-        if (prices.length === 0) throw new ValidationError('Price data cannot be empty.');
-        const totalVolume = prices.reduce((acc, price) => acc + price.volume, 0);
-        if (totalVolume === 0) throw new DivisionByZeroError('Cannot calculate VWAP with zero total volume.');
-
-        const weightedSum = prices.reduce((acc, price) => acc + (price.price * price.volume), 0);
-        return weightedSum / totalVolume;
-    }
-
     public async checkDependencies() {
         const healthChecks = await Promise.all([
-            httpClient('/external-service/health'),
+            checkHealth(),
             httpClient('/another-external-service/health')
         ]);
         return healthChecks;
     }
 
-    // Remaining methods ...
+    // Other methods remain unchanged...
 }

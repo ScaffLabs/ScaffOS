@@ -48,3 +48,13 @@ export const postHttpClient = async (path: string, data: any, config?: AxiosRequ
 
     throw new Error(`Request failed after ${MAX_RETRIES} attempts: ${lastError}`);
 };
+
+export const checkHealth = async () => {
+    try {
+        const healthCheck = await httpClient('/health');
+        return healthCheck;
+    } catch (error) {
+        console.error('Health check failed:', error);
+        throw new Error('Health check failed.');
+    }
+};

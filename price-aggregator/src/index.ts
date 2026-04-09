@@ -4,7 +4,6 @@ import { createConnectionPool } from './dbConnection';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logStartup } from './logger';
-import { httpClient } from './httpClient';
 import { PriceAggregator } from './priceAggregator';
 
 const app = express();
@@ -28,17 +27,6 @@ app.get('/health', async (req, res) => {
 app.get('/ready', async (req, res) => {
     return res.status(200).json({ status: 'ready' });
 });
-
-const shutdown = async () => {
-    console.log('Shutting down gracefully...');
-    await dbPool.drain();
-    server.close(() => {
-        console.log('Server shutdown complete.');
-    });
-};
-
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
 
 server.listen(config.port, () => {
     logStartup({ port: config.port });
