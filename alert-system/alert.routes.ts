@@ -42,9 +42,9 @@ router.get('/ready', HealthCheck.checkReady);
 // Alert routes
 router.get('/api/alerts', async (req, res) => {
     const start = Date.now();
-    const { limit, offset } = req.query;
+    const { limit = '10', offset = '0', type, threshold } = req.query;
     try {
-        const alerts = await alertController.getActiveAlerts(req, res, { limit, offset });
+        const alerts = await alertController.getActiveAlerts(req, res, { limit, offset, type, threshold });
         return res.json(alerts);
     } catch (error) {
         console.error('Failed to get alerts:', error);

@@ -11,11 +11,15 @@ export class AlertController {
         this.alertStore = alertStore;
     }
 
-    async getActiveAlerts(req: Request, res: Response, pagination: { limit?: string; offset?: string } = {}) {
+    async getActiveAlerts(req: Request, res: Response, pagination: { limit?: string; offset?: string; type?: string; threshold?: number } = {}) {
         const start = Date.now();
-        const { limit, offset } = pagination;
+        const { limit, offset, type, threshold } = pagination;
         try {
-            const alerts = await this.alertStore.findIndex({});
+            const query = {};
+            if (type) query.type = type;
+            if (threshold !== undefined) query.threshold = { $gte: threshold };
+
+            const alerts = await this.alertStore.findIndex(query);
             const paginatedAlerts = alerts.slice(Number(offset) || 0, (Number(offset) || 0) + (Number(limit) || alerts.length));
             if (!paginatedAlerts.length) return res.status(204).send();
             return res.json(paginatedAlerts);
