@@ -2,7 +2,6 @@ import redisClient from './redisClient';
 import axios from 'axios';
 import { config } from './config';
 import logger from './logger';
-import { ServiceError } from './errors/serviceError';
 
 const checkHealth = async () => {
     let redisHealthy = false;
@@ -32,12 +31,3 @@ export const checkHealthEndpoint = async (req, res) => {
     const allHealthy = health.redisHealthy && health.serviceHealthy;
     res.status(allHealthy ? 200 : 503).json({ health });
 };
-
-export const gracefulShutdown = async () => {
-    logger.info('Shutting down gracefully...');
-    await redisClient.quit();
-    process.exit(0);
-};
-
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);

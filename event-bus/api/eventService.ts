@@ -9,15 +9,15 @@ const fetchUserService = async (userId: string) => {
     return await axios.get(url);
 };
 
-const fetchUserServiceWithRetry = async (userId: string) => {
-    let retries = 3;
-    while (retries > 0) {
+const fetchUserServiceWithRetry = async (userId: string, retries = 3) => {
+    let attempt = 0;
+    while (attempt < retries) {
         try {
             return await fetchUserService(userId);
         } catch (error) {
-            retries--;
-            logger.error('Error fetching user data, retrying...', error.message);
-            if (retries === 0) throw error;
+            attempt++;
+            logger.error('Error fetching user data, attempt:', attempt, error.message);
+            if (attempt >= retries) throw error;
             await new Promise(res => setTimeout(res, 1000)); // wait before retrying
         }
     }
