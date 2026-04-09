@@ -22,7 +22,8 @@
         "nodemon": "^2.0.0",
         "express-rate-limit": "^5.3.0",
         "xss": "^1.0.0",
-        "opossum": "^5.0.0"
+        "opossum": "^5.0.0",
+        "axios": "^0.21.1"
     },
     "dependencies": {
         "express": "^4.17.1",
