@@ -38,8 +38,20 @@ export const deleteOrderService = async (id: string) => {
     await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
 };
 
-export const getOrdersService = async ({ limit, offset }: { limit: number; offset: number; }) => {
-    const orders = await storage.findAll();
+export const getOrdersService = async ({ limit, offset, status, sortBy, order }: { limit: number; offset: number; status?: string; sortBy?: string; order?: string; }) => {
+    let orders = await storage.findAll();
+    if (status) {
+        orders = orders.filter(order => order.status === status);
+    }
+    if (sortBy) {
+        orders.sort((a, b) => {
+            if (order === 'asc') {
+                return a[sortBy] > b[sortBy] ? 1 : -1;
+            } else {
+                return a[sortBy] < b[sortBy] ? 1 : -1;
+            }
+        });
+    }
     return orders.slice(offset, offset + limit);
 };
 

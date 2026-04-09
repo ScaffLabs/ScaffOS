@@ -31,9 +31,12 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
 
 // Get Orders
 export const getOrders = async (req: Request, res: Response): Promise<void> => {
-    const { limit = 10, offset = 0, status } = req.query;
+    const { limit = 10, offset = 0, status, sortBy = 'price', order = 'asc' } = req.query;
     try {
-        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), status });
+        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), status, sortBy, order });
+        if (orders.length === 0) {
+            return res.status(404).json({ message: 'No orders found.' });
+        }
         res.status(200).json(orders);
     } catch (error) {
         logger.error('Error retrieving orders', { error: error.message });
