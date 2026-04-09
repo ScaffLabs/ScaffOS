@@ -56,7 +56,6 @@ describe('Portfolio API Endpoints', () => {
         expect(response.body).toEqual({ message: 'Invalid pagination parameters' });
     });
 
-    // Edge cases
     it('GET /api/positions should return 404 for non-existing position', async () => {
         const response = await request(app).delete('/api/positions/99');
         expect(response.status).toBe(404);
