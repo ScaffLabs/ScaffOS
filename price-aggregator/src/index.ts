@@ -6,8 +6,7 @@ import { PriceAggregator } from './priceAggregator';
 import http from 'http';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
-import { logRequest, logError, logStartup } from './logger';
-import { validatePriceData, handleValidationErrors, validatePriceUpdate } from './middleware/validationMiddleware';
+import { httpClient } from './httpClient';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -24,69 +23,21 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-app.use((req, res, next) => {
-    const start = process.hrtime();
-    res.on('finish', () => {
-        const duration = process.hrtime(start);
-        logRequest(req, res, duration[0] * 1000 + duration[1] / 1e6);
-    });
-    next();
-});
-
-app.get('/prices', async (req, res, next) => {
-    const { limit = 10, offset = 0, sortBy = 'price', order = 'asc' } = req.query;
-    const numericLimit = Math.min(Number(limit), 100); // limit to 100 max
-    const numericOffset = Number(offset);
+app.get('/health', async (req, res, next) => {
     try {
-        const prices = await priceAggregator.getPrices({ limit: numericLimit, offset: numericOffset, sortBy, order });
-        if (prices.length === 0) return res.status(204).send();
-        res.status(200).json(prices);
+        await httpClient('/health'); // Check if dependent service is up
+        res.status(200).json({ status: 'healthy' });
     } catch (error) {
-        logError(error, { method: req.method, path: req.path });
-        next(error);
-    }
-});
-
-app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, next) => {
-    try {
-        const newPrice = await priceAggregator.addPrice(req.body);
-        res.status(201).json(newPrice);
-    } catch (error) {
-        logError(error, { method: req.method, path: req.path });
-        next(error);
-    }
-});
-
-app.put('/prices/:id', validatePriceUpdate, handleValidationErrors, async (req, res, next) => {
-    const { id } = req.params;
-    try {
-        const updatedPrice = await priceAggregator.updatePrice(id, req.body);
-        if (!updatedPrice) return res.status(404).send();
-        res.status(200).json(updatedPrice);
-    } catch (error) {
-        logError(error, { method: req.method, path: req.path });
-        next(error);
-    }
-});
-
-app.delete('/prices/:id', async (req, res, next) => {
-    const { id } = req.params;
-    try {
-        await priceAggregator.deletePrice(id);
-        res.status(204).send();
-    } catch (error) {
-        logError(error, { method: req.method, path: req.path });
-        next(error);
+        console.error('Health check failed:', error);
+        res.status(500).json({ status: 'unhealthy', error: error.message });
     }
 });
 
 app.use(errorMiddleware);
 
 const startApp = async () => {
-    logStartup(config);
-    httpServer.listen(config.port, () => {
-        console.log(`Price aggregator service running on port ${config.port}`);
-    });
+    console.log(`Price aggregator service running on port ${config.port}`);
+    httpServer.listen(config.port);
 };
 
 startApp();
