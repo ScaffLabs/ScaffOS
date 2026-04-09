@@ -9,7 +9,8 @@
     "test:watch": "jest --watch",
     "test:unit": "jest --testPathPattern=unit",
     "test:integration": "jest --testPathPattern=integration",
-    "test:all": "jest"
+    "test:all": "jest",
+    "test:setup": "jest --setupFilesAfterEnv jest.setup.ts"
   },
   "dependencies": {
     "express": "^4.17.1",
