@@ -5,6 +5,7 @@ import { monitorMemoryUsage } from './monitor';
 
 const router = express.Router();
 
+// Health check endpoint
 router.get('/health', async (req, res) => {
     try {
         const userServiceHealthy = await checkUserServiceHealth();
@@ -24,6 +25,7 @@ router.get('/health', async (req, res) => {
     }
 });
 
+// Readiness check endpoint
 router.get('/ready', async (req, res) => {
     try {
         const userServiceHealthy = await checkUserServiceHealth();
