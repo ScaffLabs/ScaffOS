@@ -20,20 +20,6 @@ export const seedData = async () => {
 export const clearData = async () => {
     await storage.transaction(async () => {
         const allPrices = await storage.findAll();
-        await Promise.all(allPrices.map(price => storage.delete(price.id)));
+        await Promise.all(allPrices.map(async (price) => await storage.delete(price.id!)));
     });
-};
-
-export const migrateToSQLite = async (sqliteData: PriceData[]) => {
-    const sqliteStorage = new SQLiteStorage<PriceData>();
-    for (const data of sqliteData) {
-        await sqliteStorage.create(data);
-    }
-};
-
-export const migrateToPostgreSQL = async (postgresData: PriceData[]) => {
-    const postgresStorage = new PostgreSQLStorage<PriceData>();
-    for (const data of postgresData) {
-        await postgresStorage.create(data);
-    }
 };

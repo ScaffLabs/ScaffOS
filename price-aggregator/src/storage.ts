@@ -1,36 +1,59 @@
-class SQLiteStorage<T> implements Storage<T> {
-    private db: any; // Placeholder for SQLite database connection
+interface Storage<T> {
+    create(item: T): Promise<T>;
+    read(id: string): Promise<T | null>;
+    update(id: string, item: T): Promise<T | null>;
+    delete(id: string): Promise<void>;
+    findAll(query?: Partial<T>): Promise<T[]>;
+    transaction(operations: () => Promise<void>): Promise<void>;
+}
 
-    constructor() {
-        // Initialize SQLite database connection
-    }
+class InMemoryStorage<T> implements Storage<T> {
+    private data: Map<string, T> = new Map();
+    private idCounter: number = 0;
 
     async create(item: T): Promise<T> {
-        // Implement SQLite create logic
-        return item;
+        const id = (++this.idCounter).toString();
+        this.data.set(id, { ...item, id } as T);
+        return this.data.get(id)!;
     }
 
     async read(id: string): Promise<T | null> {
-        // Implement SQLite read logic
-        return null;
+        return this.data.get(id) || null;
     }
 
     async update(id: string, item: T): Promise<T | null> {
-        // Implement SQLite update logic
-        return null;
+        if (!this.data.has(id)) return null;
+        this.data.set(id, { ...item, id } as T);
+        return this.data.get(id)!;
     }
 
     async delete(id: string): Promise<void> {
-        // Implement SQLite delete logic
+        this.data.delete(id);
     }
 
     async findAll(query?: Partial<T>): Promise<T[]> {
-        // Implement SQLite findAll logic
-        return [];
+        const results: T[] = [];
+        for (const item of this.data.values()) {
+            if (query) {
+                const match = Object.entries(query).every(([key, value]) => item[key] === value);
+                if (match) results.push(item);
+            } else {
+                results.push(item);
+            }
+        }
+        return results;
     }
 
     async transaction(operations: () => Promise<void>): Promise<void> {
-        // Implement SQLite transaction logic
-        await operations();
+        const backup = new Map(this.data);
+        try {
+            await operations();
+        } catch (error) {
+            this.data = backup; // Rollback on error
+            throw error;
+        }
     }
 }
+
+const storage = new InMemoryStorage<PriceData>();
+export { storage };
