@@ -3,7 +3,7 @@ import { simulateBacktest } from '../services/backtestService';
 import { ValidationError, NotFoundError, ServiceError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
-import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
+import { HistoricalDataSchema, StrategyParametersSchema, PaginationSchema } from '../types';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();
@@ -11,7 +11,6 @@ const store = new InMemoryStore();
 backtestRouter.post('/', async (req, res, next) => {
     const { strategyParams, historicalData } = req.body;
     try {
-        // Validate and sanitize inputs
         StrategyParametersSchema.parse(strategyParams);
         if (!Array.isArray(historicalData) || historicalData.length === 0) {
             throw new ValidationError('historicalData must be a non-empty array.');
@@ -23,18 +22,32 @@ backtestRouter.post('/', async (req, res, next) => {
         const result = await simulateBacktest(strategyParams, historicalData);
         const entity = await store.create({ strategyParams, historicalData, result });
         logger.info({ message: 'Backtest created', id: entity.id });
-        // Log sensitive operations
-        logger.info({ message: 'Backtest run initiated', id: entity.id, strategyParams });
         res.status(201).json({ id: entity.id, result });
     } catch (error) {
         if (error instanceof ValidationError) {
             logger.warn({ message: 'Validation error', error: error.message });
             return next(error);
-        } else if (error instanceof ServiceError) {
-            logger.error({ message: 'Service error', error: error.message });
-            return next(error);
         }
         next(new ServiceError('Error during backtest: ' + error.message));
+    }
+});
+
+backtestRouter.get('/', async (req, res, next) => {
+    const { limit, offset, sort, order } = PaginationSchema.parse(req.query);
+    try {
+        const results = await store.findAll();
+        const sortedResults = results.sort((a, b) => {
+            const aValue = a.data[sort];
+            const bValue = b.data[sort];
+            if (order === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            }
+            return aValue < bValue ? 1 : -1;
+        });
+        const paginatedResults = sortedResults.slice(offset, offset + limit);
+        res.status(200).json({ total: sortedResults.length, results: paginatedResults });
+    } catch (error) {
+        next(new ServiceError('Error fetching backtests: ' + error.message));
     }
 });
 
@@ -49,9 +62,6 @@ backtestRouter.get('/:id', async (req, res, next) => {
     } catch (error) {
         if (error instanceof NotFoundError) {
             logger.warn({ message: 'Not found error for ID', id });
-            return next(error);
-        } else if (error instanceof ServiceError) {
-            logger.error({ message: 'Service error', error: error.message });
             return next(error);
         }
         next(new ServiceError('Error retrieving backtest result: ' + error.message));
