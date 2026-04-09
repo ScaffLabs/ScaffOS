@@ -29,10 +29,7 @@ const startServer = async () => {
         await db.connect();
         const server = app.listen(config.port, () => {
             console.log(`Server running on http://localhost:${config.port}`);
-            console.log(`Configuration: ${JSON.stringify(config)}`);
         });
-
-        console.log(`Connected to database: ${config.databaseUrl}`);
 
         const gracefulShutdown = (signal) => {
             console.log(`Received ${signal}. Shutting down gracefully...`);
@@ -46,7 +43,7 @@ const startServer = async () => {
         process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
         process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     } catch (error) {
-        throw new ServiceError(`Failed to start server: ${error.message}`);
+        console.error(`Failed to start server: ${error.message}`);
     }
 };
 

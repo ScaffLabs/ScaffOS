@@ -29,6 +29,19 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
+router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
+    const { key } = req.params;
+    try {
+        const config = await db.readConfiguration(key);
+        if (!config) {
+            throw new NotFoundError('Configuration not found.');
+        }
+        res.status(200).json(config);
+    } catch (error) {
+        return next(error);
+    }
+});
+
 router.delete('/:key', async (req: Request, res: Response, next: NextFunction) => {
     const { key } = req.params;
     try {
