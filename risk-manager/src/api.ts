@@ -38,6 +38,16 @@ router.use(limiter);
  *         description: Number of results to skip
  *         required: false
  *         type: integer
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         required: false
+ *         type: string
+ *       - name: filterBy
+ *         in: query
+ *         description: Field to filter by (e.g., asset name)
+ *         required: false
+ *         type: string
  *     responses:
  *       200:
  *         description: A list of risk positions
@@ -47,8 +57,8 @@ router.use(limiter);
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
-    query('sortBy').optional().isString(), // New query parameter for sorting
-    query('filterBy').optional().isString(), // New query parameter for filtering
+    query('sortBy').optional().isString(), // Sorting parameter
+    query('filterBy').optional().isString(), // Filtering parameter
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
