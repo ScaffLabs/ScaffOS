@@ -27,13 +27,13 @@ export interface CurrentPrices {
 
 // Zod schema for PriceData validation
 export const PriceDataSchema = z.object({
-  exchange: z.string().nonempty().description('The name of the exchange, must be a non-empty string.'),
-  price: z.number().positive().description('The price in USD, must be a positive number.'),
-  volume: z.number().positive().description('The traded volume, must be a positive number.'),
+  exchange: z.string().nonempty().describe('The name of the exchange, must be a non-empty string.'),
+  price: z.number().positive().describe('The price in USD, must be a positive number.'),
+  volume: z.number().positive().describe('The traded volume, must be a positive number.'),
 });
 
 // Zod schema for CurrentPrices validation
-export const CurrentPricesSchema = z.record(z.number().positive()).description('A record of current prices from exchanges.');
+export const CurrentPricesSchema = z.record(z.number().positive()).describe('A record of current prices from exchanges.');
 
 /**
  * Represents the event types for price updates.
