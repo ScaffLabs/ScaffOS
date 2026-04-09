@@ -7,7 +7,7 @@ export const fetchChartData = async () => {
     try {
         const sql = 'SELECT date, price FROM chart_data ORDER BY date ASC';
         const result = await query(sql, []);
-        if (!Array.isArray(result)) throw new ServiceError('Invalid data structure');
+        validateChartData(result);
         return result;
     } catch (error) {
         throw new ServiceError('Error fetching chart data: ' + error.message);
