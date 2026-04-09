@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { withRetry } from './resilience';
+import { eventEmitter } from './resilience';
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
@@ -53,6 +54,7 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
+    eventEmitter.emit('BACKTEST_CREATED', result);
     return BacktestResultSchema.parse(result);
 };
 
