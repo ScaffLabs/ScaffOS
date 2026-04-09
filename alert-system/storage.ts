@@ -1,7 +1,4 @@
 import { AlertMessage, OrderId } from './alert.schema';
-import mongoose from 'mongoose';
-
-const connectionPool = mongoose.createConnection(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 export interface AlertStoreInterface {
     create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage>;
@@ -9,31 +6,47 @@ export interface AlertStoreInterface {
     update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null>;
     delete(id: OrderId): Promise<boolean>;
     findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]>;
+    transaction(operations: () => Promise<void>): Promise<void>;
 }
 
-class MongoDBAlertStore implements AlertStoreInterface {
+class InMemoryAlertStore implements AlertStoreInterface {
+    private alerts: Map<OrderId, AlertMessage> = new Map();
+    private nextId = 1;
+
     async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
-        const newAlert = new AlertMessage({...alert, id: (Math.random() * 10000).toString() as OrderId, createdAt: new Date() });
-        await connectionPool.model('Alert').create(newAlert);
+        const newAlert: AlertMessage = { ...alert, id: (this.nextId++).toString() as OrderId, createdAt: new Date() };
+        this.alerts.set(newAlert.id, newAlert);
         return newAlert;
     }
 
     async read(id: OrderId): Promise<AlertMessage | null> {
-        return await connectionPool.model('Alert').findById(id);
+        return this.alerts.get(id) || null;
     }
 
     async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
-        return await connectionPool.model('Alert').findByIdAndUpdate(id, alert, { new: true });
+        const existingAlert = this.alerts.get(id);
+        if (!existingAlert) return null;
+        const updatedAlert = { ...existingAlert, ...alert };
+        this.alerts.set(id, updatedAlert);
+        return updatedAlert;
     }
 
     async delete(id: OrderId): Promise<boolean> {
-        const result = await connectionPool.model('Alert').deleteOne({ id });
-        return result.deletedCount > 0;
+        return this.alerts.delete(id);
     }
 
     async findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]> {
-        return await connectionPool.model('Alert').find(query);
+        return [...this.alerts.values()].filter(alert => {
+            return Object.entries(query).every(([key, value]) => alert[key as keyof AlertMessage] === value);
+        });
+    }
+
+    async transaction(operations: () => Promise<void>): Promise<void> {
+        // In-memory store does not support transactions, but we can log operations for debug.
+        console.log('Transaction started');
+        await operations();
+        console.log('Transaction completed');
     }
 }
 
-export const alertStore = new MongoDBAlertStore();
+export const alertStore = new InMemoryAlertStore();
