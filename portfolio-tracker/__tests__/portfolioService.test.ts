@@ -63,7 +63,6 @@ describe('Portfolio Service', () => {
         await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: \'\', quantity: -5, averagePrice: 150 }] })).rejects.toThrow('Invalid portfolio update data');
     });
 
-    // Additional test for edge cases
     test('should throw an error for creating a portfolio with empty name', async () => {
         await expect(createPortfolio({ name: \'\', positions: [] })).rejects.toThrow('Invalid portfolio data');
     });
