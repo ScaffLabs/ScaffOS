@@ -9,7 +9,7 @@ const exponentialBackoff = (retryCount: number) => {
 const fetchWithRetry = async (url: string, retries: number = 5): Promise<any> => {
     for (let i = 0; i < retries; i++) {
         try {
-            const response = await axios.get(url, { timeout: 5000 }); // 5 seconds timeout
+            const response = await axios.get(url, { timeout: 5000 });
             return response.data;
         } catch (error) {
             logger.warn(`Attempt ${i + 1} failed: ${error.message}`);
