@@ -30,3 +30,12 @@ export const healthCheck = async (req, res) => {
 export const registerExternalApiRoutes = (app) => {
     app.get('/api/external/health', healthCheck);
 };
+
+export const checkExternalService = async () => {
+    try {
+        await fetchServiceHealth();
+        return true;
+    } catch {
+        return false;
+    }
+};
