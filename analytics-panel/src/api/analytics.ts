@@ -13,6 +13,7 @@ const fetchWithRetry = async (url: string, retries: number = 3): Promise<any> =>
             return response.data;
         } catch (error) {
             if (i === retries - 1) throw error; // Rethrow last error
+            console.warn(`Retrying ${url}, attempt ${i + 1}`);
         }
     }
 };
