@@ -1,8 +1,9 @@
-import { RiskPosition, RiskPositionSchema, OrderId } from './sharedTypes';
+import { RiskPosition, RiskPositionSchema, OrderId, RiskEvent, RiskEventSchema } from './sharedTypes';
 import { RiskPositionStorage } from './storage';
 import logger from './logger';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { PositionLimits } from './positionLimits';
+import MemoryQueue from './memoryQueue';
 
 export default class RiskManager {
     private storage: RiskPositionStorage;
@@ -10,7 +11,7 @@ export default class RiskManager {
 
     constructor(storage: RiskPositionStorage) {
         this.storage = storage;
-        this.positionLimits = new PositionLimits(); // Initialize PositionLimits
+        this.positionLimits = new PositionLimits();
     }
 
     async setPositionLimit(asset: string, limit: number): Promise<void> {
@@ -19,7 +20,10 @@ export default class RiskManager {
 
     async createRiskPosition(asset: string, position: number): Promise<RiskPosition> {
         if (!this.positionLimits.checkLimit(asset, position)) {
-            throw new ValidationError('Position exceeds limit for asset: ' + asset);
+            const message = 'Position exceeds limit for asset: ' + asset;
+            logger.warn(message);
+            MemoryQueue.enqueue({ type: 'RiskPositionLimitExceeded', asset, attemptedPosition: position });
+            throw new ValidationError(message);
         }
         const newPosition: RiskPosition = { id: this.generateId(), asset, position };
         const validationResult = RiskPositionSchema.safeParse(newPosition);
@@ -28,6 +32,10 @@ export default class RiskManager {
         }
         const createdPosition = await this.storage.create(newPosition);
         logger.info('Created new risk position', createdPosition);
+
+        // Emit an event for the created position
+        MemoryQueue.enqueue({ type: 'RiskPositionCreated', position: createdPosition });
+
         return createdPosition;
     }
 
@@ -37,7 +45,10 @@ export default class RiskManager {
             throw new NotFoundError('Risk position not found.');
         }
         if (!this.positionLimits.checkLimit(existingPosition.asset, position)) {
-            throw new ValidationError('Position exceeds limit for asset: ' + existingPosition.asset);
+            const message = 'Position exceeds limit for asset: ' + existingPosition.asset;
+            logger.warn(message);
+            MemoryQueue.enqueue({ type: 'RiskPositionLimitExceeded', asset: existingPosition.asset, attemptedPosition: position });
+            throw new ValidationError(message);
         }
         const updatedPosition: RiskPosition = { ...existingPosition, position };
         const validationResult = RiskPositionSchema.safeParse(updatedPosition);
@@ -46,6 +57,10 @@ export default class RiskManager {
         }
         const result = await this.storage.update(id, updatedPosition);
         logger.info('Updated risk position', result);
+
+        // Emit an event for the updated position
+        MemoryQueue.enqueue({ type: 'RiskPositionUpdated', position: updatedPosition });
+
         return result;
     }
 
@@ -55,6 +70,10 @@ export default class RiskManager {
             throw new NotFoundError('Risk position not found.');
         }
         logger.info('Deleted risk position with id:', id);
+
+        // Emit an event for deletion
+        MemoryQueue.enqueue({ type: 'RiskPositionDeleted', id });
+
         return true;
     }
 
