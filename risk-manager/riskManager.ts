@@ -3,7 +3,6 @@ import { RiskPositionStorage } from './storage';
 import logger from './logger';
 import { ValidationError, NotFoundError, ServiceError } from './errors';
 import { PositionLimits } from './positionLimits';
-import { fetchRiskAlerts } from './externalService';
 
 export default class RiskManager {
     private storage: RiskPositionStorage;
@@ -16,14 +15,16 @@ export default class RiskManager {
 
     async createRiskPosition(asset: string, position: number): Promise<RiskPosition> {
         try {
-            if (!this.positionLimits.checkLimit(asset, position)) {
-                throw new ValidationError(`Position exceeds limit for asset: ${asset}`);
-            }
             const newPosition: RiskPosition = { id: this.generateId(), asset, position };
             const validationResult = RiskPositionSchema.safeParse(newPosition);
             if (!validationResult.success) {
                 throw new ValidationError(`Invalid risk position data: ${JSON.stringify(validationResult.error.errors)}`);
             }
+
+            if (!this.positionLimits.checkLimit(asset, position)) {
+                throw new ValidationError(`Position exceeds limit for asset: ${asset}`);
+            }
+
             const createdPosition = await this.storage.create(newPosition);
             logger.info(`Created new risk position: ${JSON.stringify(createdPosition)}`);
             return createdPosition;
@@ -33,15 +34,41 @@ export default class RiskManager {
         }
     }
 
-    async fetchAndProcessRiskAlerts() {
+    async updateRiskPosition(id: OrderId, position: number): Promise<RiskPosition | null> {
         try {
-            const alerts = await fetchRiskAlerts();
-            alerts.forEach(alert => {
-                logger.info('Processing risk alert:', alert);
-                // Implement alert handling logic here
-            });
+            const existingPosition = await this.storage.read(id);
+            if (!existingPosition) {
+                throw new NotFoundError(`Risk position with id ${id} not found.`);
+            }
+
+            const updatedPosition: RiskPosition = { ...existingPosition, position };
+            const validationResult = RiskPositionSchema.safeParse(updatedPosition);
+            if (!validationResult.success) {
+                throw new ValidationError(`Invalid risk position data: ${JSON.stringify(validationResult.error.errors)}`);
+            }
+
+            if (!this.positionLimits.checkLimit(updatedPosition.asset, updatedPosition.position)) {
+                throw new ValidationError(`Position exceeds limit for asset: ${updatedPosition.asset}`);
+            }
+
+            return await this.storage.update(id, updatedPosition);
         } catch (error) {
-            logger.error('Error fetching risk alerts:', error);
+            logger.error('Error updating risk position:', error);
+            throw new ServiceError('Error updating risk position.');
+        }
+    }
+
+    async deleteRiskPosition(id: OrderId): Promise<boolean> {
+        try {
+            const existingPosition = await this.storage.read(id);
+            if (!existingPosition) {
+                throw new NotFoundError(`Risk position with id ${id} not found.`);
+            }
+
+            return await this.storage.delete(id);
+        } catch (error) {
+            logger.error('Error deleting risk position:', error);
+            throw new ServiceError('Error deleting risk position.');
         }
     }
 
