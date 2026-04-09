@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { healthCheck, readyCheck } from './healthCheck';
 import errorMiddleware from './errorMiddleware';
-import { createConnectionPool } from './connectionPool';
+import { createConnectionPool, serviceEmitter } from './connectionPool';
 import { auditLogger } from './auditLogger';
 import { logRequest } from './logger';
 import { limiter } from './rateLimiter';
@@ -28,7 +28,7 @@ app.use(express.json({ limit: '1mb' })); // Limit request size
 app.use(auditLogger);
 app.use(logRequest);
 app.use(limiter);
-app.use(sanitize); // Sanitize input data
+app.use(sanitize);
 
 // Health Check Endpoints
 app.get('/health', healthCheck);
@@ -60,3 +60,8 @@ setInterval(() => {
     const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
     console.log(`Memory Usage: Total - ${totalMemory.toFixed(2)} MB, Used - ${usedMemory.toFixed(2)} MB`);
 }, 60000);
+
+// Health check event emission
+setInterval(async () => {
+    await emitHealthCheckEvent();
+}, 60000); // Emit every minute

@@ -40,3 +40,14 @@ export const emitHealthCheckEvent = async () => {
     const event = { type: 'SERVICE_HEALTH_CHECK', status: healthStatus };
     serviceEmitter.emit('healthCheck', event);
 };
+
+// Health check endpoint to validate connectivity to dependent services
+export const healthCheckServices = async (req: Request, res: Response) => {
+    try {
+        const healthStatus = await checkServiceHealth();
+        res.status(200).json({ status: 'UP', services: healthStatus });
+    } catch (error) {
+        logger.error('Health check failed:', error);
+        res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+};
