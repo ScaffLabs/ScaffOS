@@ -108,3 +108,6 @@ See [CHANGELOG.md](./CHANGELOG.md) for version history.
 
 ## License
 This project is licensed under the MIT License.
+
+## Additional Information
+This service is designed to support event-driven communication between different parts of a system. It allows for easy scaling and the ability to handle large volumes of events efficiently. The use of Redis as a message broker ensures reliable delivery of messages and quick responses. The architecture supports both synchronous and asynchronous processing of events, making it versatile for various use cases.
