@@ -1,8 +1,8 @@
 import redisClient from './redisClient';
 import { Message } from './messageSchema';
 import { UserCreated } from './types';
-import { circuitBreaker } from './utils/retry';
 import eventBus from './eventBus';
+import { checkServiceHealth } from './api/eventService';
 
 const handleUserCreated: (message: Message<UserCreated>) => void = (message) => {
     console.log('User created event received:', message);
@@ -24,6 +24,13 @@ const subscribeToTopic = async (topic: string, handler: (message: Message<UserCr
     }
 };
 
-const subscribeToUserCreated = circuitBreaker(() => subscribeToTopic('userCreated', handleUserCreated));
+const subscribeToUserCreated = async () => {
+    await subscribeToTopic('userCreated', handleUserCreated);
+};
 
 subscribeToUserCreated();
+
+export const healthCheck = async (req, res) => {
+    const isHealthy = await checkServiceHealth();
+    res.status(isHealthy ? 200 : 503).json({ healthy: isHealthy });
+};
