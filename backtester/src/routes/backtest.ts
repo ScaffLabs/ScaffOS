@@ -5,15 +5,24 @@ import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
 import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
 import { body, validationResult, query } from 'express-validator';
+import csrf from 'csurf';
+import rateLimit from 'express-rate-limit';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();
+
+const csrfProtection = csrf({ cookie: true });
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests, please try again later.'
+});
 
 // Create a backtest
 backtestRouter.post('/', [
     body('strategyParams').exists().custom((value) => StrategyParametersSchema.safeParse(value).success).withMessage('Invalid strategy parameters.'),
     body('historicalData').isArray().notEmpty().withMessage('Historical data must be a non-empty array.').custom((value) => value.every(item => HistoricalDataSchema.safeParse(item).success)).withMessage('Each historical data entry must be valid.')
-], async (req, res, next) => {
+], csrfProtection, limiter, async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         logger.warn({ message: 'Validation errors', errors: errors.array() });
@@ -35,7 +44,7 @@ backtestRouter.post('/', [
 });
 
 // Get a backtest result by ID
-backtestRouter.get('/:id', async (req, res, next) => {
+backtestRouter.get('/:id', csrfProtection, async (req, res, next) => {
     const { id } = req.params;
     try {
         const result = await store.read(id);
@@ -71,51 +80,6 @@ backtestRouter.get('/', [
         res.status(200).json(paginatedBacktests);
     } catch (error) {
         next(new ServiceError('Error retrieving backtests: ' + error.message));
-    }
-});
-
-// Update a backtest result by ID
-backtestRouter.put('/:id', [
-    body('strategyParams').optional().custom((value) => StrategyParametersSchema.safeParse(value).success).withMessage('Invalid strategy parameters.'),
-    body('historicalData').optional().isArray().custom((value) => value.every(item => HistoricalDataSchema.safeParse(item).success)).withMessage('Each historical data entry must be valid.')
-], async (req, res, next) => {
-    const { id } = req.params;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        logger.warn({ message: 'Validation errors', errors: errors.array() });
-        return next(new ValidationError('Validation errors: ' + JSON.stringify(errors.array())));
-    }
-    const updates = req.body;
-    try {
-        const updatedEntity = await store.update(id, updates);
-        if (!updatedEntity) {
-            throw new NotFoundError('Backtest result not found.');
-        }
-        res.status(200).json(updatedEntity);
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            logger.warn({ message: 'Not found error for ID', id });
-            return next(error);
-        }
-        next(new ServiceError('Error updating backtest result: ' + error.message));
-    }
-});
-
-// Delete a backtest result by ID
-backtestRouter.delete('/:id', async (req, res, next) => {
-    const { id } = req.params;
-    try {
-        const deleted = await store.delete(id);
-        if (!deleted) {
-            throw new NotFoundError('Backtest result not found.');
-        }
-        res.status(204).send();
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            logger.warn({ message: 'Not found error for ID', id });
-            return next(error);
-        }
-        next(new ServiceError('Error deleting backtest result: ' + error.message));
     }
 });
 
