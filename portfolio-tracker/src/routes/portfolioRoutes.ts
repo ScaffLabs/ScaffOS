@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { body, param, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio } from '../services/portfolioService';
+import { body, param, query, validationResult } from 'express-validator';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
-import { auditLog } from '../services/auditService';
 
 const router = Router();
 
@@ -11,11 +10,9 @@ const router = Router();
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
     body('positions').isArray().optional().custom((positions) => {
-        // Ensure positions array is not empty
         if (positions && positions.length === 0) {
             throw new ValidationError('Positions array cannot be empty.');
         }
-        // Validate each position entry
         positions.forEach(pos => {
             if (!pos.symbol || typeof pos.quantity !== 'number' || pos.quantity < 0 || typeof pos.averagePrice !== 'number' || pos.averagePrice < 0) {
                 throw new ValidationError('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
@@ -29,20 +26,15 @@ const portfolioValidation = [
 router.post('/', portfolioValidation, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        // Log validation errors
-        logger.warn('Validation errors', { errors: errors.array(), requestId: req.headers['x-request-id'] });
+        logger.warn('Validation errors', { errors: errors.array() });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         const portfolio = await createPortfolio(req.body);
-        await auditLog('Portfolio Created', portfolio);
-        logger.info('Portfolio created', { portfolioId: portfolio.id, requestId: req.headers['x-request-id'] });
+        logger.info('Portfolio created', { portfolioId: portfolio.id });
         res.status(201).json(portfolio);
     } catch (error) {
-        logger.error('Error creating portfolio', { error: error.message, requestId: req.headers['x-request-id'] });
-        if (error instanceof ValidationError) {
-            return res.status(400).json({ error: error.message });
-        }
+        logger.error('Error creating portfolio', { error: error.message });
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -51,16 +43,15 @@ router.post('/', portfolioValidation, async (req, res) => {
 router.get('/:id', [param('id').isString().trim().escape()], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        // Log validation errors
-        logger.warn('Validation errors', { errors: errors.array(), requestId: req.headers['x-request-id'] });
+        logger.warn('Validation errors', { errors: errors.array() });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         const portfolio = await getPortfolio(req.params.id);
-        logger.info('Fetched portfolio', { portfolioId: req.params.id, requestId: req.headers['x-request-id'] });
+        logger.info('Fetched portfolio', { portfolioId: req.params.id });
         res.status(200).json(portfolio);
     } catch (error) {
-        logger.error('Error fetching portfolio', { error: error.message, requestId: req.headers['x-request-id'] });
+        logger.error('Error fetching portfolio', { error: error.message });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
@@ -72,17 +63,15 @@ router.get('/:id', [param('id').isString().trim().escape()], async (req, res) =>
 router.put('/:id', portfolioValidation, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        // Log validation errors
-        logger.warn('Validation errors', { errors: errors.array(), requestId: req.headers['x-request-id'] });
+        logger.warn('Validation errors', { errors: errors.array() });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
-        await auditLog('Portfolio Updated', { id: req.params.id, changes: req.body });
-        logger.info('Portfolio updated', { portfolioId: req.params.id, requestId: req.headers['x-request-id'] });
+        logger.info('Portfolio updated', { portfolioId: req.params.id });
         res.status(200).json(updatedPortfolio);
     } catch (error) {
-        logger.error('Error updating portfolio', { error: error.message, requestId: req.headers['x-request-id'] });
+        logger.error('Error updating portfolio', { error: error.message });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
@@ -94,20 +83,41 @@ router.put('/:id', portfolioValidation, async (req, res) => {
 router.delete('/:id', [param('id').isString().trim().escape()], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        // Log validation errors
-        logger.warn('Validation errors', { errors: errors.array(), requestId: req.headers['x-request-id'] });
+        logger.warn('Validation errors', { errors: errors.array() });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         await deletePortfolio(req.params.id);
-        await auditLog('Portfolio Deleted', { id: req.params.id });
-        logger.info('Portfolio deleted', { portfolioId: req.params.id, requestId: req.headers['x-request-id'] });
+        logger.info('Portfolio deleted', { portfolioId: req.params.id });
         res.status(204).send();
     } catch (error) {
-        logger.error('Error deleting portfolio', { error: error.message, requestId: req.headers['x-request-id'] });
+        logger.error('Error deleting portfolio', { error: error.message });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Route to fetch all portfolios with pagination, sorting, and filtering
+router.get('/', [
+    query('limit').optional().isInt({ min: 1 }).toInt(),
+    query('offset').optional().isInt({ min: 0 }).toInt(),
+    query('sortBy').optional().isString(),
+    query('filter').optional().isString()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        logger.warn('Validation errors', { errors: errors.array() });
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const { limit, offset, sortBy, filter } = req.query;
+        const portfolios = await fetchAllData(limit, offset, sortBy, filter);
+        logger.info('Fetched portfolios', { count: portfolios.length });
+        res.status(200).json(portfolios);
+    } catch (error) {
+        logger.error('Error fetching portfolios', { error: error.message });
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
