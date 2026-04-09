@@ -1,5 +1,6 @@
 import express from 'express';
 import http from 'http';
+import helmet from 'helmet';
 import logger from './services/logger';
 import healthRoutes from './routes/healthRoutes';
 import portfolioRoutes from './routes/portfolioRoutes';
@@ -8,6 +9,7 @@ import env from './config';
 const app = express();
 const server = http.createServer(app);
 
+app.use(helmet()); // Protects against well-known vulnerabilities by setting HTTP headers
 app.use(express.json());
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api', healthRoutes);

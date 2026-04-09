@@ -1,16 +1,34 @@
 import { Router } from 'express';
-import { body, param, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData } from '../services/portfolioService';
+import { body, validationResult } from 'express-validator';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import csrf from 'csurf';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 
 const router = Router();
 
+// CORS configuration
+const allowedOrigins = ['http://localhost:3000', 'https://your-allowed-origin.com'];
+router.use(cors({ origin: allowedOrigins, optionsSuccessStatus: 200 }));
+
+// CSRF protection
+const csrfProtection = csrf({ cookie: true });
+router.use(csrfProtection);
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+router.use(limiter);
+
 // Validation rules for portfolio creation and updates
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
     body('positions').isArray().optional().custom((positions) => {
-        if (positions && positions.length === 0) {
+        if (!positions || positions.length === 0) {
             throw new ValidationError('Positions array cannot be empty.');
         }
         positions.forEach(pos => {
@@ -41,6 +59,6 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
 });
 
-// Other routes... 
+// Other routes for getting, updating, and deleting portfolios...
 
 export default router;
