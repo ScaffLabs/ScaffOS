@@ -12,19 +12,11 @@ const submitOrderRequest = async (order: Order) => {
     return response.data;
 };
 
-/**
- * Submits a new order after validating it.
- * @param order - The order to be submitted.
- * @returns The submitted order data.
- * @throws Will throw a ServiceError if the order is invalid or submission fails.
- */
 export const submitOrder = circuitBreaker(retry(async (order: Order) => {
-    // Validate order
     const validationResult = OrderSchema.safeParse(order);
     if (!validationResult.success) {
         throw new ServiceError('Invalid order details');
     }
-    // Submit order
     try {
         const result = await submitOrderRequest(validationResult.data);
         publishEvent('ORDER_SUBMITTED', { type: 'ORDER_SUBMITTED', order: result });

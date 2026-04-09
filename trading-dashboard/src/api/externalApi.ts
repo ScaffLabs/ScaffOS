@@ -14,7 +14,7 @@ const fetchData = async (endpoint: string) => {
     }
 };
 
-export const fetchExternalData = circuitBreaker(retry(() => fetchData('/external-data')));
+export const fetchExternalData = circuitBreaker(retry(() => fetchData('/data')));
 
 export const fetchServiceHealth = async () => {
     return await fetchData('/health');
@@ -34,4 +34,8 @@ export const healthCheck = async (req, res) => {
     res.status(externalServiceHealth.status === 'UP' ? 200 : 500).send({
         externalServiceHealth
     });
+};
+
+export const registerExternalApiRoutes = (app: any) => {
+    app.get('/api/external/health', healthCheck);
 };

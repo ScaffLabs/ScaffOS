@@ -6,9 +6,9 @@ import { healthCheck, gracefulShutdown, registerShutdownHandlers } from './utils
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
+import { registerExternalApiRoutes } from './api/externalApi';
 import logger from './utils/logger';
 import config from './config';
-import { csrfMiddleware, getCsrfToken } from './middleware/csrfProtection';
 
 const app = express();
 
@@ -26,9 +26,9 @@ app.use(limiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(requestLogger);
 app.get('/api/health', healthCheck);
-app.get('/api/csrf-token', getCsrfToken);
 
 registerRoutes(app);
+registerExternalApiRoutes(app);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
