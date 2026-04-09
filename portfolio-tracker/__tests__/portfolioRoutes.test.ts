@@ -35,8 +35,20 @@ describe('Portfolio Routes', () => {
         expect(response.body.name).toBe('Updated Portfolio');
     });
 
-    it('should return 400 for an invalid update', async () => {
+    it('should return 404 for an invalid update', async () => {
         const response = await request(app).put('/api/portfolios/999').send({ name: 'Invalid Update' });
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Portfolio not found');
+    });
+
+    it('should delete an existing portfolio', async () => {
+        const createResponse = await request(app).post('/api/portfolios').send(validPortfolio);
+        const response = await request(app).delete(`/api/portfolios/${createResponse.body.id}`);
+        expect(response.status).toBe(204);
+    });
+
+    it('should return 404 for delete on a non-existent portfolio', async () => {
+        const response = await request(app).delete('/api/portfolios/999');
         expect(response.status).toBe(404);
         expect(response.body.error).toBe('Portfolio not found');
     });
