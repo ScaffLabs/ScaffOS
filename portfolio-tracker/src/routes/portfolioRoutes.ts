@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { body, param, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchPortfolios } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
+import { auditLog } from '../services/auditService';
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
     try {
         const portfolio = await createPortfolio(req.body);
+        await auditLog('Portfolio Created', portfolio);
         logger.info('Portfolio created', { portfolioId: portfolio.id, requestId: req.headers['x-request-id'] });
         res.status(201).json(portfolio);
     } catch (error) {
@@ -67,6 +69,7 @@ router.put('/:id', portfolioValidation, async (req, res) => {
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
+        await auditLog('Portfolio Updated', { id: req.params.id, changes: req.body });
         logger.info('Portfolio updated', { portfolioId: req.params.id, requestId: req.headers['x-request-id'] });
         res.status(200).json(updatedPortfolio);
     } catch (error) {
@@ -86,6 +89,7 @@ router.delete('/:id', [param('id').isString().trim().escape()], async (req, res)
     }
     try {
         await deletePortfolio(req.params.id);
+        await auditLog('Portfolio Deleted', { id: req.params.id });
         logger.info('Portfolio deleted', { portfolioId: req.params.id, requestId: req.headers['x-request-id'] });
         res.status(204).send();
     } catch (error) {
