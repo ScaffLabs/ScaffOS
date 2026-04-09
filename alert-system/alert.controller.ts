@@ -52,7 +52,7 @@ export class AlertController {
             const updatedAlert = await this.alertStore.update(alertId, req.body);
             if (!updatedAlert) throw new NotFoundError('Alert not found.');
             this.eventBus.publish('alert.updated', updatedAlert);
-            return res.json(updatedAlert);
+            return res.status(200).json(updatedAlert);
         } catch (error) {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
