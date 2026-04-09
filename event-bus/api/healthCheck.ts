@@ -1,8 +1,8 @@
-// healthCheck.ts
 import redisClient from './redisClient';
 import axios from 'axios';
 import { config } from './config';
 import logger from './logger';
+import { ServiceError } from './errors/serviceError';
 
 const checkHealth = async () => {
     let redisHealthy = false;

@@ -3,18 +3,19 @@ import { Message } from './messageSchema';
 import { cacheMessage, isMessageCached } from './cache';
 import { z } from 'zod';
 import { createEventSchema } from './types';
+import { ServiceError } from './errors/serviceError';
 
 export const publish = async <T>(message: Message<T>, retries = 3): Promise<void> => {
     const validation = createEventSchema.safeParse(message.data);
     if (!validation.success) {
-        throw new Error('Invalid message data: ' + validation.error.errors.map(err => err.message).join(', '));
+        throw new ServiceError('Invalid message data: ' + validation.error.errors.map(err => err.message).join(', '));
     }
     const { topic, data } = message;
     if (!topic || typeof topic !== 'string') {
-        throw new Error('Invalid topic');
+        throw new ServiceError('Invalid topic');
     }
     if (!data) {
-        throw new Error('Invalid data');
+        throw new ServiceError('Invalid data');
     }
     if (isMessageCached(topic, data)) {
         console.log('Message is already published, skipping.');
@@ -29,6 +30,6 @@ export const publish = async <T>(message: Message<T>, retries = 3): Promise<void
             await new Promise(resolve => setTimeout(resolve, 1000)); // wait before retrying
             return publish(message, retries - 1);
         }
-        throw new Error('Failed to publish message after retries');
+        throw new ServiceError('Failed to publish message after retries');
     }
 };
