@@ -11,6 +11,7 @@ import { csrfMiddleware } from './middleware/csrfProtection';
 import config from './config';
 import { monitorMemoryUsage } from './utils/monitor';
 import { gracefulShutdown } from './utils/shutdown';
+import { initializeStore } from './storage/strategyStore';
 
 const app = express();
 const server = createServer(app);
@@ -43,6 +44,7 @@ process.on('SIGTERM', () => gracefulShutdown(server, monitorInterval));
 process.on('SIGINT', () => gracefulShutdown(server, monitorInterval));
 
 const startServer = async () => {
+    await initializeStore();
     const PORT = process.env.PORT || 3000;
     logStartup(config);
     server.listen(PORT, () => {

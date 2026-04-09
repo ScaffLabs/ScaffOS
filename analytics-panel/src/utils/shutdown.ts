@@ -15,6 +15,3 @@ export const gracefulShutdown = (server: Server, monitorInterval: NodeJS.Timeout
         process.exit(1);
     }, 10000);
 };
-
-process.on('SIGTERM', () => gracefulShutdown(server));
-process.on('SIGINT', () => gracefulShutdown(server));

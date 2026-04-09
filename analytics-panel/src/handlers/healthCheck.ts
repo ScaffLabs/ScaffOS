@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import os from 'os';
 import { logPerformance } from '../logger';
-import { healthCheckHandler as dependentHealthCheckHandler } from './dependentHealthCheck';
 
 export const healthCheckHandler = async (req: Request, res: Response) => {
     try {
