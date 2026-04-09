@@ -5,6 +5,7 @@ import { validateApiKey } from './apiKey';
 import logger, { logError } from './logger';
 import csrf from 'csurf';
 import sanitizeHtml from 'sanitize-html';
+import rateLimit from './rateLimit';
 
 const csrfProtection = csrf({ cookie: true });
 
@@ -59,3 +60,24 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 };
 
 export const csrfMiddleware = csrfProtection;
+
+export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    const apiKey = req.headers['x-api-key'];
+    if (!rateLimit(apiKey as string)) {
+        return res.status(429).json({ error: 'Too many requests' });
+    }
+    next();
+};
+
+export const sanitizeOutput = (data: string) => {
+    return sanitizeHtml(data, { allowedTags: [], allowedAttributes: {} });
+};
+
+export const applySanitizationToResponse = (req: Request, res: Response, next: NextFunction) => {
+    const originalSend = res.send;
+    res.send = function (data) {
+        const sanitizedData = sanitizeOutput(data);
+        return originalSend.call(this, sanitizedData);
+    };
+    next();
+};
