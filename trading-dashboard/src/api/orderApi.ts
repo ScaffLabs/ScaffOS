@@ -1,27 +1,28 @@
-import axios from 'axios';
-import { publishEvent } from '../utils/eventBus';
-import config from '../config';
+import { Request, Response } from 'express';
 import { Order, OrderSchema } from '../types';
 import { ServiceError } from '../utils/errors';
-import { retry, circuitBreaker } from '../utils/retry';
+import { publishEvent } from '../utils/eventBus';
+import logger from '../utils/logger';
 
-const BASE_URL = `${config.API_URL}/orders`;
+const orders: Order[] = [];
 
-const submitOrderRequest = async (order: Order) => {
-    const response = await axios.post(BASE_URL, order);
-    return response.data;
-};
-
-const submitOrderWithRetry = async (order: Order) => {
-    const validationResult = OrderSchema.safeParse(order);
-    if (!validationResult.success) {
-        throw new ServiceError('Invalid order details');
+export const submitOrder = async (req: Request, res: Response) => {
+    const orderData = req.body;
+    try {
+        const validationResult = OrderSchema.safeParse(orderData);
+        if (!validationResult.success) {
+            throw new ServiceError('Invalid order details');
+        }
+        orders.push(validationResult.data);
+        publishEvent('ORDER_SUBMITTED', { type: 'ORDER_SUBMITTED', order: validationResult.data });
+        logger.info('Order submitted', { orderId: validationResult.data.id });
+        res.status(201).json({ message: 'Order submitted successfully', order: validationResult.data });
+    } catch (error) {
+        logger.error('Error submitting order', { error: error.message });
+        res.status(500).json({ message: 'Error submitting order' });
     }
-    return await submitOrderRequest(validationResult.data);
 };
 
-export const submitOrder = circuitBreaker(retry(submitOrderWithRetry));
-
-export const notifyOrderSubmitted = (order: Order) => {
-    publishEvent('ORDER_SUBMITTED', { type: 'ORDER_SUBMITTED', order });
+export const registerOrderRoutes = (app: any) => {
+    app.post('/api/orders', submitOrder);
 };
