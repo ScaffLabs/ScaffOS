@@ -6,10 +6,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - '3000:3000'
+    env_file:
+      - .env
     environment:
-      - PORT=${PORT}
-      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL}
-      - USER_SERVICE_URL=${USER_SERVICE_URL}
       - NODE_ENV=${NODE_ENV}
   order_service:
     image: your_order_service_image
