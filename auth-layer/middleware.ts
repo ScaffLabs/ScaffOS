@@ -8,8 +8,13 @@ import sanitizeHtml from 'sanitize-html';
 
 const csrfProtection = csrf({ cookie: true });
 
+export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    req.headers['x-request-id'] = req.headers['x-request-id'] || crypto.randomUUID();
+    next();
+};
+
 export const sanitizeInput = (input: string) => {
-    return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} }); // Sanitize input to prevent XSS
+    return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} });
 };
 
 export const validateAndSanitizeUserInput = (req: Request, res: Response, next: NextFunction) => {
