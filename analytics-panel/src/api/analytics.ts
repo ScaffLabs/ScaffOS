@@ -4,10 +4,21 @@ import { PerformanceMetricsSchema } from '../types';
 import { logError } from '../utils/errorLogger';
 import { emitEvent } from '../api/eventBus';
 
+const fetchWithRetry = async (url: string, retries: number = 3): Promise<any> => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await axios.get(url);
+            return response.data;
+        } catch (error) {
+            if (i === retries - 1) throw error; // Rethrow last error
+        }
+    }
+};
+
 const fetchPerformanceMetrics = async () => {
     try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/performance`);
-        const validatedData = PerformanceMetricsSchema.parse(response.data);
+        const response = await fetchWithRetry(`${process.env.REACT_APP_API_BASE_URL}/api/performance`);
+        const validatedData = PerformanceMetricsSchema.parse(response);
         emitEvent('PERFORMANCE_METRICS_FETCHED', validatedData);
         return validatedData;
     } catch (error) {
@@ -18,8 +29,8 @@ const fetchPerformanceMetrics = async () => {
 
 const fetchComparisonData = async (strategyA: string, strategyB: string) => {
     try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
-        return response.data;
+        const response = await fetchWithRetry(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
+        return response;
     } catch (error) {
         logError(error, 'Comparing strategies');
         throw new ServiceError('Failed to fetch comparison data: ' + error.message);
@@ -33,7 +44,7 @@ const healthCheckDependentServices = async () => {
 
     const healthResults = await Promise.all(dependencies.map(async (service) => {
         try {
-            const response = await axios.get(service.url);
+            const response = await fetchWithRetry(service.url);
             return { serviceName: service.name, healthy: response.status === 200 };
         } catch (error) {
             return { serviceName: service.name, healthy: false };
