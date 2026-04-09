@@ -45,7 +45,7 @@ class EventBus {
         const message: Message<T> = { topic, data, timestamp: Date.now() };
         while (retries > 0) {
             try {
-                this.emitter.emit(topic, message);
+                this.publish(topic, data);
                 return;
             } catch (error) {
                 retries--;
