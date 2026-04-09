@@ -29,8 +29,7 @@ describe('PriceAggregator', () => {
 
     test('should handle empty price data gracefully', async () => {
         const prices: PriceData[] = [];
-        const vwap = await priceAggregator.calculateVWAP(prices);
-        expect(vwap).toEqual({ VWAP: 0 });
+        await expect(priceAggregator.calculateVWAP(prices)).rejects.toThrow(ValidationError);
     });
 
     test('should throw error during VWAP calculation if total volume is zero', async () => {
