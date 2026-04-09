@@ -1,8 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import { ValidationError } from './errorClasses';
-import config from './config';
 import logger from './logger';
 import EventEmitter from 'eventemitter3';
+import config from './config';
 
 const MAX_RETRIES = 3;
 const TIMEOUT = 5000;
