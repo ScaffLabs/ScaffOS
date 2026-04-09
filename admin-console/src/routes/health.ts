@@ -2,8 +2,11 @@ import express from 'express';
 import { logger } from '../middleware/logger';
 import os from 'os';
 import { healthCheck } from '../services/HealthService';
+import { Database } from '../storage/Database';
+import config from '../config';
 
 const router = express.Router();
+const db = new Database();
 
 router.get('/', async (req, res) => {
     try {
@@ -37,6 +40,20 @@ router.get('/metrics', (req, res) => {
         platform: os.platform(),
         arch: os.arch(),
     });
+});
+
+router.get('/health', async (req, res) => {
+    try {
+        const dbStatus = await db.checkConnection();
+        res.status(200).json({
+            application: 'running',
+            database: dbStatus,
+            externalService: 'up', // Placeholder for external services
+        });
+    } catch (error) {
+        logger.error(`Health check failed: ${error.message}`);
+        res.status(500).json({ error: 'Health check failed' });
+    }
 });
 
 export default router;
