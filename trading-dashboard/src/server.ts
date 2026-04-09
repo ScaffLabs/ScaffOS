@@ -14,7 +14,9 @@ const app = express();
 
 logger.logStartup(config);
 app.use(helmet());
-app.use(cors());
+
+const allowedOrigins = ['http://localhost:3000', 'https://yourdomain.com'];
+app.use(cors({ origin: allowedOrigins }));
 
 const limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
