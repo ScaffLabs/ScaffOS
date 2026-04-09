@@ -15,11 +15,15 @@ const limiter = rateLimit({
 export const fetchPositions = async (req: Request, res: Response) => {
     try {
         const { limit = 10, offset = 0 } = req.query;
-        if (isNaN(Number(limit)) || isNaN(Number(offset))) {
+        const limitNumber = parseInt(limit as string);
+        const offsetNumber = parseInt(offset as string);
+
+        if (isNaN(limitNumber) || isNaN(offsetNumber) || limitNumber < 1 || offsetNumber < 0) {
             return res.status(400).json({ message: 'Invalid pagination parameters' });
         }
+
         let positions = Object.values(positionStore.data);
-        const paginatedPositions = positions.slice(Number(offset), Number(offset) + Number(limit));
+        const paginatedPositions = positions.slice(offsetNumber, offsetNumber + limitNumber);
         res.status(200).json(paginatedPositions);
     } catch (error) {
         console.error(error);
