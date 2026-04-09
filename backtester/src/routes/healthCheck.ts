@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { checkAllHealth, checkReadiness } from '../services/healthCheckService';
 import logger from '../utils/logger';
+import { monitorMemoryUsage } from '../utils/monitor';
 
 const healthCheckRouter = Router();
 
@@ -34,6 +35,17 @@ healthCheckRouter.get('/memory', (req, res) => {
       external: Math.round(used.external / 1024 / 1024),
       total: Math.round(total / 1024 / 1024)
     }
+  });
+});
+
+healthCheckRouter.get('/health-check', async (req, res) => {
+  const used = process.memoryUsage();
+  res.status(200).json({
+    status: 'healthy',
+    memory: {
+      heapUsed: Math.round(used.heapUsed / 1024 / 1024),
+      heapTotal: Math.round(used.heapTotal / 1024 / 1024)
+    },
   });
 });
 

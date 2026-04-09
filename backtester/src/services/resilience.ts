@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 const eventEmitter = new EventEmitter();
 const retryLimit = 5;
 const retryDelay = 1000; // milliseconds
+const circuitBreakTimeout = 30000; // 30 seconds
 
 async function exponentialBackoff(retries: number) {
     return new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * retryDelay));
@@ -26,10 +27,18 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallback: T): () => Promise<T> {
     let failureCount = 0;
     let isCircuitOpen = false;
+    let nextReset = Date.now();
+
     return async () => {
         if (isCircuitOpen) {
-            logger.warn('Circuit breaker activated');
-            return fallback;
+            if (Date.now() < nextReset) {
+                logger.warn('Circuit breaker activated');
+                return fallback;
+            } else {
+                isCircuitOpen = false;
+                failureCount = 0; // Reset on timeout
+                logger.info('Circuit breaker reset');
+            }
         }
         try {
             const result = await fn();
@@ -39,11 +48,8 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
             failureCount++;
             if (failureCount >= failureThreshold) {
                 isCircuitOpen = true;
+                nextReset = Date.now() + circuitBreakTimeout;
                 logger.error('Circuit breaker opened due to failures');
-                setTimeout(() => {
-                    isCircuitOpen = false; // Reset the circuit after a timeout
-                    logger.info('Circuit breaker reset');
-                }, 30000); // 30 seconds timeout
             }
             throw error;
         }
