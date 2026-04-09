@@ -10,6 +10,8 @@ import { createConnectionPool } from './database';
 import { rateLimit } from './rateLimit';
 import { sanitizeUserInput } from './userValidation';
 import { ValidationError } from './errors';
+import { monitorMemoryUsage } from './monitor';
+import { initGracefulShutdown } from './shutdown';
 
 const app = express();
 const server = http.createServer(app);
@@ -55,7 +57,9 @@ const start = async () => {
         server.listen(PORT, () => {
             startupLog('Auth Layer Service');
             logger.info(`Server listening on port ${PORT}`);
+            monitorMemoryUsage(); // Start monitoring memory usage
         });
+        initGracefulShutdown(server, connectionPool); // Initialize graceful shutdown
     } catch (error) {
         logger.error('Error starting server', { error: error.message });
         process.exit(1);
