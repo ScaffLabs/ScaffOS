@@ -1,7 +1,7 @@
+// Order service with actual database interaction and error handling
 import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
-import { postData } from './axiosClient';
 import logger from './logger';
 import { emitOrderEvent } from './eventBus';
 
@@ -14,7 +14,6 @@ const createOrderService = async (orderData: unknown) => {
     try {
         const createdOrder = await queryDatabase('INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5) RETURNING *', [order.id, order.type, order.price, order.quantity, order.status]);
         logger.info('Order created successfully', { order: createdOrder.rows[0] });
-        await postData(process.env.ORDER_SERVICE_URL + '/orders', order);
         emitOrderEvent({ type: 'ORDER_CREATED', payload: createdOrder.rows[0] });
         return createdOrder.rows[0];
     } catch (error) {
@@ -29,7 +28,6 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
         if (updatedOrder.rowCount === 0) {
             throw new NotFoundError('Order not found.');
         }
-        await postData(process.env.ORDER_SERVICE_URL + '/orders/' + id, updates);
         emitOrderEvent({ type: 'ORDER_UPDATED', payload: updatedOrder.rows[0] });
         return updatedOrder.rows[0];
     } catch (error) {
