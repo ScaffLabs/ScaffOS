@@ -13,14 +13,6 @@ export const createOrderValidators = [
     body('status').isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled')
 ];
 
-// Validation middleware for getting orders
-export const getOrdersValidators = [
-    query('limit').optional().isInt({ gt: 0 }).withMessage('Limit must be a positive integer'),
-    query('offset').optional().isInt({ gte: 0 }).withMessage('Offset must be a non-negative integer'),
-    query('status').optional().isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled'),
-    query('sort').optional().isIn(['asc', 'desc']).withMessage('Sort must be either asc or desc'),
-];
-
 // Create Order
 export const createOrder = [createOrderValidators, async (req: Request, res: Response) => {
     const validationErrors = validationResult(req);
@@ -42,14 +34,10 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
 }];
 
 // Get Orders
-export const getOrders = [getOrdersValidators, async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, status, sort = 'asc' } = req.query;
-    const validationErrors = validationResult(req);
-    if (!validationErrors.isEmpty()) {
-        return res.status(400).json({ errors: validationErrors.array() });
-    }
+export const getOrders = async (req: Request, res: Response) => {
+    const { limit = 10, offset = 0, status } = req.query;
     try {
-        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), status, sort });
+        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), status });
         if (orders.length === 0) {
             return res.status(404).json({ message: 'No orders found.' });
         }
@@ -58,7 +46,7 @@ export const getOrders = [getOrdersValidators, async (req: Request, res: Respons
         logger.error('Error retrieving orders', { error: error.message });
         res.status(500).json({ message: 'Internal Server Error' });
     }
-}];
+};
 
 // Update Order
 export const updateOrder = async (req: Request, res: Response) => {
