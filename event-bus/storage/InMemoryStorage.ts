@@ -34,6 +34,10 @@ export class InMemoryStorage<T> implements IStorage<T> {
         return Object.values(this.storage).slice(offset, offset + limit);
     }
 
+    async findByField(field: keyof T, value: any): Promise<T[]> {
+        return Object.values(this.index[field] || {}).filter(item => item[field] === value);
+    }
+
     private indexItem(id: string, item: T & { id: string }): void {
         const keys = Object.keys(item);
         keys.forEach(key => {
