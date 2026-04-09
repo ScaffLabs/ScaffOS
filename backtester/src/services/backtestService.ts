@@ -16,6 +16,10 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
 
+        if (typeof currentPrice !== 'number' || currentPrice <= 0) {
+            throw new ValidationError('Price must be a positive number.');
+        }
+
         // Buy Condition
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
@@ -35,12 +39,15 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 
 const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     try {
+        if (!params || !params.slippage || !params.buyThreshold || !params.sellThreshold) {
+            throw new ValidationError('Strategy parameters are missing or invalid.');
+        }
         const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
         const backtestId: BacktestId = uuidv4() as BacktestId;
         const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
         if (trades > 0) {
             await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades }));
-            await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns }));
+            await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns })); // Notify data service
         }
         logger.info({ message: 'Backtest simulation completed', params, totalReturns });
         return result;

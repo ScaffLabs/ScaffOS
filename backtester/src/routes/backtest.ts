@@ -10,13 +10,13 @@ const backtestRouter = Router();
 const store = new InMemoryStore();
 
 backtestRouter.post('/', [
-    body('strategyParams').exists().custom((value) => StrategyParametersSchema.safeParse(value).success),
-    body('historicalData').isArray().notEmpty().custom((value) => value.every(item => HistoricalDataSchema.safeParse(item).success)),
+    body('strategyParams').exists().custom((value) => StrategyParametersSchema.safeParse(value).success).withMessage('Invalid strategy parameters.'),
+    body('historicalData').isArray().notEmpty().withMessage('Historical data must be a non-empty array.').custom((value) => value.every(item => HistoricalDataSchema.safeParse(item).success)).withMessage('Each historical data entry must be valid.')
 ], async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         logger.warn({ message: 'Validation errors', errors: errors.array() });
-        return res.status(400).json({ errors: errors.array() });
+        return next(new ValidationError('Validation errors: ' + JSON.stringify(errors.array())));
     }
     const { strategyParams, historicalData } = req.body;
     try {
