@@ -8,7 +8,7 @@ const pool = createConnectionPool();
 
 export const createUser = async (username: string, email: string): Promise<User> => {
     const sanitizedInput = sanitizeUserInput({ username, email });
-    validateUser(sanitizedInput); // Validate sanitized input
+    validateUser(sanitizedInput);  // Validate input
     const existingUser = await findUserByEmail(sanitizedInput.email);
     if (existingUser) {
         throw new ValidationError(['Email already in use.']);
