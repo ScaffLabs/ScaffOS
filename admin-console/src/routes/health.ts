@@ -45,15 +45,25 @@ router.get('/metrics', (req, res) => {
 router.get('/health', async (req, res) => {
     try {
         const dbStatus = await db.checkConnection();
+        const externalServiceStatus = await fetchHealthStatus();
         res.status(200).json({
             application: 'running',
             database: dbStatus,
-            externalService: 'up', // Placeholder for external services
+            externalService: externalServiceStatus,
         });
     } catch (error) {
         logger.error(`Health check failed: ${error.message}`);
         res.status(500).json({ error: 'Health check failed' });
     }
 });
+
+const fetchHealthStatus = async () => {
+    try {
+        const response = await axios.get(`${config.API_URL}/health`);
+        return response.data;
+    } catch (error) {
+        return 'down';
+    }
+};
 
 export default router;

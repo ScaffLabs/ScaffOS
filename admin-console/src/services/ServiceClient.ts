@@ -2,8 +2,15 @@ import axios, { AxiosError } from 'axios';
 import config from '../config';
 import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
+import { CircuitBreaker } from 'opossum';
 
 const BASE_URL = config.API_URL;
+
+const fetchConfigurationsCircuitBreaker = new CircuitBreaker(fetchConfigurations, {
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+});
 
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
@@ -53,4 +60,12 @@ const updateConfiguration = async (configItem: ConfigurationItem): Promise<void>
     }
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration };
+const fetchConfigurationsWithRetry = async (): Promise<ConfigurationItem[]> => {
+    try {
+        return await fetchConfigurationsCircuitBreaker.fire();
+    } catch (error) {
+        throw new ServiceError('Failed to fetch configurations after retries');
+    }
+};
+
+export { fetchConfigurationsWithRetry as fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration };
