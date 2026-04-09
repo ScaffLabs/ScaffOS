@@ -44,3 +44,32 @@ export const deleteUser = async (id: UserId): Promise<boolean> => {
 export const getAllUsers = async (): Promise<User[]> => {
     return userStore.findAll();
 };
+
+export const migrateData = async (data: User[]) => {
+    data.forEach(user => {
+        try {
+            userStore.create(user);
+        } catch (error) {
+            console.warn(`Failed to create user ${user.email}: ${error.message}`);
+        }
+    });
+};
+
+export const clearData = () => {
+    userStore.findAll().forEach(user => userStore.delete(user.id));
+};
+
+export const seedData = async () => {
+    clearData();
+    const seedData = await readSeedData();
+    await migrateData(seedData);
+};
+
+const readSeedData = () => {
+    // Implement function to read seed data from a file or define it statically
+    return [
+        { id: '1', username: 'testuser1', email: 'test1@example.com' },
+        { id: '2', username: 'testuser2', email: 'test2@example.com' },
+        { id: '3', username: 'testuser3', email: 'test3@example.com' }
+    ];
+};
