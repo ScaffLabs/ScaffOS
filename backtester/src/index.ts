@@ -9,6 +9,8 @@ import healthCheckRouter from './routes/healthCheck';
 import { config } from '../config';
 import { monitorMemoryUsage } from './utils/monitor';
 import { gracefulShutdown } from './utils/gracefulShutdown';
+import csrf from 'csurf';
+import bodyParser from 'body-parser';
 
 const app = express();
 const PORT = config.port;
@@ -24,8 +26,12 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(limiter);
-app.use(express.json());
+app.use(bodyParser.json({ limit: '1mb' })); // Limit request size
 app.use(requestLogger);
+
+// CSRF protection
+const csrfProtection = csrf({ cookie: true });
+app.use(csrfProtection);
 
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);

@@ -5,17 +5,29 @@ import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
 import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
 import { body, validationResult } from 'express-validator';
+import xss from 'xss';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();
+
+// Sanitize input and log requests
+const sanitizeInput = (req, res, next) => {
+    req.body = {
+        strategyParams: req.body.strategyParams,
+        historicalData: req.body.historicalData.map(data => ({
+            timestamp: data.timestamp,
+            price: data.price,
+        })),
+    };
+    next();
+};
 
 // Create a backtest
 backtestRouter.post('/', [
     body('strategyParams').exists().custom((value) => StrategyParametersSchema.safeParse(value).success).withMessage('Invalid strategy parameters.'),
     body('historicalData').isArray().notEmpty().withMessage('Historical data must be a non-empty array.').custom((value) => value.every(item => HistoricalDataSchema.safeParse(item).success)).withMessage('Each historical data entry must be valid.')
-], async (req, res, next) => {
+], sanitizeInput, async (req, res, next) => {
     try {
-        validateRequestBody(req.body);
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             logger.warn({ message: 'Validation errors', errors: errors.array() });
