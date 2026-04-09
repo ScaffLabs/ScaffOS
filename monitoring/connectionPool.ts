@@ -1,4 +1,3 @@
-// connectionPool.ts
 import axios, { AxiosError } from 'axios';
 import { ValidationError } from './errorClasses';
 import config from './config';
