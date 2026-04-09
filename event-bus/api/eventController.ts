@@ -69,10 +69,13 @@ const deleteEvent = async (req: Request, res: Response): Promise<void> => {
 
 const handleError = (error: Error, res: Response) => {
     if (error instanceof ValidationError) {
+        logger.warn({ message: error.message });
         res.status(400).json({ message: error.message });
     } else if (error instanceof NotFoundError) {
+        logger.warn({ message: error.message });
         res.status(404).json({ message: error.message });
     } else {
+        logger.error('Internal Server Error', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
