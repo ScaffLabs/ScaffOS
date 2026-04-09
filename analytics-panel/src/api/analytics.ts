@@ -1,4 +1,3 @@
-// Import necessary modules
 import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
 import { PerformanceMetricsSchema } from '../types';
