@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Configuration from '../src/components/Configuration';
 import { postConfiguration, fetchConfigurations, deleteConfiguration } from '../src/services/ServiceClient';
 
@@ -77,5 +77,16 @@ describe('Configuration Component', () => {
         fireEvent.click(screen.getByText(/Delete/i));
 
         expect(await screen.findByText(/Configuration deleted successfully!/i)).toBeInTheDocument();
+    });
+
+    test('handles delete failure', async () => {
+        (fetchConfigurations as jest.Mock).mockResolvedValueOnce([{ key: 'testKey', value: 'testValue' }]);
+        (deleteConfiguration as jest.Mock).mockRejectedValueOnce(new Error('Failed to delete configuration'));
+        render(<Configuration />);
+
+        expect(await screen.findByText(/testKey: testValue/i)).toBeInTheDocument();
+        fireEvent.click(screen.getByText(/Delete/i));
+
+        expect(await screen.findByText(/Failed to delete configuration. Please try again./i)).toBeInTheDocument();
     });
 });

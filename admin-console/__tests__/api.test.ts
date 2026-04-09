@@ -29,7 +29,9 @@ describe('API Endpoints', () => {
     });
 
     it('POST /api/config creates a configuration', async () => {
-        const response = await request(app).post('/api/config').send({ key: 'testKey', value: 'testValue' });
+        const response = await request(app)
+            .post('/api/config')
+            .send({ key: 'testKey', value: 'testValue' });
         expect(response.status).toBe(201);
         expect(response.body).toEqual({ message: 'Configuration created successfully!' });
     });
@@ -53,7 +55,9 @@ describe('API Endpoints', () => {
 
     it('PUT /api/config updates an existing configuration', async () => {
         await request(app).post('/api/config').send({ key: 'testKey', value: 'testValue' });
-        const response = await request(app).put('/api/config').send({ key: 'testKey', value: 'newValue' });
+        const response = await request(app)
+            .put('/api/config')
+            .send({ key: 'testKey', value: 'newValue' });
         expect(response.status).toBe(200);
         expect(response.body).toEqual({ message: 'Configuration updated successfully!' });
     });
