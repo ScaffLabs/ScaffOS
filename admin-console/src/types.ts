@@ -3,14 +3,15 @@ import { z } from 'zod';
 
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
+export type ConfigKey = string & { readonly brand: unique symbol };
 
 /**
  * Represents a configuration item with a key and value.
- * @property {string} key - The unique identifier for the configuration.
+ * @property {ConfigKey} key - The unique identifier for the configuration.
  * @property {string} value - The value associated with the configuration key.
  */
 export interface ConfigurationItem {
-    key: string;
+    key: ConfigKey;
     value: string;
 }
 
@@ -19,7 +20,7 @@ export interface ConfigurationItem {
  * Ensures that both key and value are non-empty strings.
  */
 export const ConfigurationItemSchema = z.object({
-    key: z.string().min(1, { message: 'Key cannot be empty' }),
+    key: z.string().min(1, { message: 'Key cannot be empty' }).transform((key) => key as ConfigKey),
     value: z.string().min(1, { message: 'Value cannot be empty' }),
 });
 
@@ -34,13 +35,12 @@ export interface HealthCheckResponse {
 }
 
 /**
- * Represents an event in the application.
- * This can be used to manage different types of application events.
+ * Represents an event in the application, used to manage different types of application events.
  */
 export type AppEvent = 
     | { type: 'CONFIGURATION_CREATED'; payload: ConfigurationItem }
     | { type: 'SERVICE_HEALTH_UPDATED'; payload: HealthCheckResponse }
-    | { type: 'CONFIGURATION_DELETED'; payload: { key: string } }
+    | { type: 'CONFIGURATION_DELETED'; payload: { key: ConfigKey } }
     | { type: 'APP_ERROR'; payload: { message: string } };
 
 /**

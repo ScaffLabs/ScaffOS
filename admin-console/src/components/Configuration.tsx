@@ -33,7 +33,7 @@ const Configuration: React.FC = () => {
         setSuccessMessage(null);
 
         try {
-            const configItem: ConfigurationItem = { key, value };
+            const configItem: ConfigurationItem = { key: key as ConfigurationItem['key'], value };
             ConfigurationItemSchema.parse(configItem);
             setLoading(true);
             await postConfiguration(configItem);
@@ -96,7 +96,7 @@ const Configuration: React.FC = () => {
             <h2>Existing Configurations:</h2>
             <ul>
                 {configurations.map((config) => (
-                    <li key={config.key}>
+                    <li key={config.key}> 
                         {config.key}: {config.value} 
                         <button onClick={() => handleDelete(config.key)}>Delete</button>
                     </li>
