@@ -1,11 +1,10 @@
 import { User, UserId } from './types';
 import { ValidationError, NotFoundError } from './errors';
-import InMemoryUserStore from './inMemoryStore';
+import userStore from './inMemoryStore'; // Change to database store later
 import { createConnectionPool } from './database';
 import { v4 as uuidv4 } from 'uuid';
 
 const pool = createConnectionPool();
-const userStore = new InMemoryUserStore();
 
 export const createUser = async (username: string, email: string): Promise<User> => {
     const existingUser = await userStore.findByEmail(email);
@@ -25,10 +24,6 @@ export const findUserById = async (id: UserId): Promise<User | null> => {
     return user;
 };
 
-export const findUserByEmail = async (email: string): Promise<User | null> => {
-    return userStore.findByEmail(email);
-};
-
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
     const updatedUser = userStore.update(id, userData);
     if (!updatedUser) {
@@ -45,16 +40,6 @@ export const getAllUsers = async (): Promise<User[]> => {
     return userStore.findAll();
 };
 
-export const migrateData = async (data: User[]) => {
-    data.forEach(user => {
-        try {
-            userStore.create(user);
-        } catch (error) {
-            console.warn(`Failed to create user ${user.email}: ${error.message}`);
-        }
-    });
-};
-
 export const clearData = () => {
     userStore.findAll().forEach(user => userStore.delete(user.id));
 };
@@ -66,7 +51,6 @@ export const seedData = async () => {
 };
 
 const readSeedData = () => {
-    // Implement function to read seed data from a file or define it statically
     return [
         { id: '1', username: 'testuser1', email: 'test1@example.com' },
         { id: '2', username: 'testuser2', email: 'test2@example.com' },
