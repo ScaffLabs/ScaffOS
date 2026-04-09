@@ -23,7 +23,7 @@ export const healthCheck = async (req: Request, res: Response) => {
             memory: memoryStats,
         });
     } catch (error) {
-        logger.error('Health check failed:', error);
+        logger.error({ error: error.message }, 'Health check failed');
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
