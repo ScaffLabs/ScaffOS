@@ -52,6 +52,12 @@ The service is built using Node.js and Express, utilizing both in-memory storage
   - `200`: Portfolio updated successfully
   - `400`: Invalid update request
 
+### DELETE /api/portfolios/:id
+- **Response:** `204 No Content` or `404 Not Found`
+- **Status Codes:**
+  - `204`: Portfolio deleted successfully
+  - `404`: Portfolio not found
+
 ### GET /health
 - **Response:** `200 OK` with service health status.
 - **Status Codes:**
