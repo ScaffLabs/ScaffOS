@@ -6,12 +6,11 @@ export interface AlertStoreInterface {
     update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null>;
     delete(id: OrderId): Promise<boolean>;
     findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]>;
-    transaction(operations: () => Promise<void>): Promise<void>;
 }
 
 class InMemoryAlertStore implements AlertStoreInterface {
     private alerts: Map<OrderId, AlertMessage> = new Map();
-    private nextId = 1;
+    private nextId: number = 1;
 
     async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
         const newAlert: AlertMessage = { ...alert, id: (this.nextId++).toString() as OrderId, createdAt: new Date() };
@@ -39,18 +38,6 @@ class InMemoryAlertStore implements AlertStoreInterface {
         return [...this.alerts.values()].filter(alert => {
             return Object.entries(query).every(([key, value]) => alert[key as keyof AlertMessage] === value);
         });
-    }
-
-    async transaction(operations: () => Promise<void>): Promise<void> {
-        console.log('Transaction started');
-        try {
-            await operations();
-        } catch (error) {
-            console.error('Transaction failed:', error);
-            throw new Error('Transaction failed');
-        } finally {
-            console.log('Transaction completed');
-        }
     }
 }
 

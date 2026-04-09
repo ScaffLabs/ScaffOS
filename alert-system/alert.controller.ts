@@ -1,29 +1,24 @@
 import express, { Request, Response } from 'express';
 import { AlertMessage, validateCreateAlertRequest } from './alert.schema';
-import { AlertStore } from './storage';
+import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
 import { ValidationError, ServiceError, NotFoundError } from './error.types';
 import logger, { logRequest, logError } from './logger';
 
 export class AlertController {
-    private alertStore: AlertStore;
+    private alertStore: AlertStoreInterface;
     private eventBus: EventBus;
 
-    constructor(alertStore: AlertStore, eventBus: EventBus) {
+    constructor(alertStore: AlertStoreInterface, eventBus: EventBus) {
         this.alertStore = alertStore;
         this.eventBus = eventBus;
     }
 
     async getActiveAlerts(req: Request, res: Response) {
         const start = Date.now();
-        const { limit = 10, offset = 0, type, sort } = req.query;
         try {
-            const filters: any = {};
-            if (type) filters.type = type;
-            const alerts = await this.alertStore.findIndex(filters);
-            const sortedAlerts = sort ? alerts.sort((a, b) => a[sort] > b[sort] ? 1 : -1) : alerts;
-            const paginatedAlerts = sortedAlerts.slice(Number(offset), Number(offset) + Number(limit));
-            return paginatedAlerts.length ? res.status(200).json(paginatedAlerts) : res.status(204).send();
+            const alerts = await this.alertStore.findIndex({});
+            return alerts.length ? res.status(200).json(alerts) : res.status(204).send();
         } catch (error) {
             logError(error);
             return res.status(500).json({ message: 'Failed to retrieve alerts.' });
