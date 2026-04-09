@@ -1,41 +1,36 @@
 import axios from 'axios';
 import { ServiceError } from '../utils/errors';
 import config from '../config';
-import { retry, circuitBreaker } from '../utils/retry';
 
-const BASE_URL = process.env.EXTERNAL_API_URL;
+const BASE_URL = config.externalApiUrl;
 
-const fetchData = async (endpoint: string) => {
+export const fetchExternalData = async () => {
     try {
-        const response = await axios.get(`${BASE_URL}${endpoint}`);
+        const response = await axios.get(`${BASE_URL}/data`);
         return response.data;
     } catch (error) {
-        throw new ServiceError(`Failed to fetch data from ${endpoint}: ${error.message}`);
+        throw new ServiceError(`Failed to fetch external data: ${error.message}`);
     }
 };
 
-export const fetchExternalData = circuitBreaker(retry(() => fetchData('/data')));
-
 export const fetchServiceHealth = async () => {
-    return await fetchData('/health');
-};
-
-export const checkExternalServiceHealth = async () => {
     try {
-        const health = await fetchServiceHealth();
-        return { status: 'UP', health };
+        const response = await axios.get(`${BASE_URL}/health`);
+        return response.data;
     } catch (error) {
-        return { status: 'DOWN', error: error.message };
+        throw new ServiceError(`Failed to fetch external service health: ${error.message}`);
     }
 };
 
 export const healthCheck = async (req, res) => {
-    const externalServiceHealth = await checkExternalServiceHealth();
-    res.status(externalServiceHealth.status === 'UP' ? 200 : 500).send({
-        externalServiceHealth
-    });
+    try {
+        const health = await fetchServiceHealth();
+        res.status(health.status === 'UP' ? 200 : 500).send(health);
+    } catch (error) {
+        res.status(500).send({ status: 'DOWN', error: error.message });
+    }
 };
 
-export const registerExternalApiRoutes = (app: any) => {
+export const registerExternalApiRoutes = (app) => {
     app.get('/api/external/health', healthCheck);
 };
