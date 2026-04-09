@@ -25,7 +25,7 @@ export interface PerformanceMetrics {
 export const PerformanceMetricsSchema = z.object({
     drawdown: z.array(z.number()).nonempty(),
     maxDrawdown: z.number().nonnegative(),
-    sharpeRatio: z.number(),
+    sharpeRatio: z.number().nonnegative(),
 });
 
 /**
