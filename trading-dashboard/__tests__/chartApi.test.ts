@@ -26,4 +26,11 @@ describe('Chart API Endpoints', () => {
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('Invalid data structure');
     });
+
+    it('GET /api/chart should handle empty data gracefully', async () => {
+        (fetchChartData as jest.Mock).mockResolvedValue([]);
+        const response = await request(app).get('/api/chart');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([]);
+    });
 });
