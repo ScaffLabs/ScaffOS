@@ -5,6 +5,7 @@ import { AlertStore } from './storage';
 import { ValidationError } from './error.types';
 import { sanitize } from './sanitization';
 import rateLimit from 'express-rate-limit';
+import { HealthCheck } from './health-check';
 
 const alertStore = new AlertStore();
 const alertController = new AlertController(alertStore);
