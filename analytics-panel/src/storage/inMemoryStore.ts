@@ -10,7 +10,7 @@ interface Store<T> {
     read(id: string): Promise<Record<T> | null>;
     update(id: string, record: T): Promise<Record<T> | null>;
     delete(id: string): Promise<boolean>;
-    find(query: Partial<T>): Promise<Record<T>[]>
+    find(query: Partial<T>): Promise<Record<T>[]>;
     transaction(operations: Array<() => Promise<any>>): Promise<void>;
 }
 

@@ -1,4 +1,3 @@
-// Import necessary modules
 import { InMemoryStore } from '../storage/inMemoryStore';
 import { Strategy, PerformanceMetrics } from '../types';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
@@ -7,11 +6,9 @@ import { logPerformance } from '../logger';
 const strategyStore = new InMemoryStore<Strategy>();
 
 const calculatePerformanceMetrics = (strategies: Strategy[]): PerformanceMetrics => {
-    // Example implementation of performance metrics calculation
-    const drawdown = strategies.map(strategy => Math.random() * 100); // Simulated drawdown values
+    const drawdown = strategies.map(strategy => Math.random() * 100);
     const maxDrawdown = Math.max(...drawdown);
-    const sharpeRatio = (Math.random() * 2) - 1; // Simulated Sharpe Ratio between -1 and 1
-
+    const sharpeRatio = (Math.random() * 2) - 1;
     return { drawdown, maxDrawdown, sharpeRatio };
 };
 
@@ -24,7 +21,7 @@ const createStrategy = async (strategy: Strategy) => {
 };
 
 const getPerformanceMetrics = async () => {
-    const strategies = await strategyStore.find({}); // Fetch all strategies
+    const strategies = await strategyStore.find({});
     return calculatePerformanceMetrics(strategies.map(s => s.data));
 };
 
