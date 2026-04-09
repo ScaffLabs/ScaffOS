@@ -31,6 +31,7 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
         const newStrategy = await createStrategy({ name, parameters });
         res.status(201).json(newStrategy);
     } catch (error) {
+        // Handle validation errors specifically
         if (error instanceof ValidationError) {
             res.status(400).json({ error: error.message });
         } else {
@@ -52,6 +53,7 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
         }
         res.status(200).json(updatedStrategy);
     } catch (error) {
+        // Handle not found errors specifically
         if (error instanceof NotFoundError) {
             res.status(404).json({ error: error.message });
         } else {
@@ -72,6 +74,7 @@ export const deleteStrategyHandler = async (req: Request, res: Response) => {
         }
         res.status(204).send(); // No content to return on successful deletion
     } catch (error) {
+        // Handle not found errors specifically
         if (error instanceof NotFoundError) {
             res.status(404).json({ error: error.message });
         } else {
