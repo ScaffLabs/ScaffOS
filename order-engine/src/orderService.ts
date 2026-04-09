@@ -29,6 +29,7 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
         if (updatedOrder.rowCount === 0) {
             throw new NotFoundError('Order not found.');
         }
+        await postData(process.env.ORDER_SERVICE_URL + '/orders/' + id, updates);
         emitOrderEvent({ type: 'ORDER_UPDATED', payload: updatedOrder.rows[0] });
         return updatedOrder.rows[0];
     } catch (error) {
