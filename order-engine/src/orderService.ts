@@ -37,7 +37,11 @@ const notifyOtherServices = async (order: Order) => {
     }
 };
 
-const updateOrderService = async (id: string, updates: Partial<Order>) => {
+const updateOrderService = async (id: OrderId, updates: Partial<Order>) => {
+    const parsedUpdates = OrderSchema.partial().safeParse(updates);
+    if (!parsedUpdates.success) {
+        throw new ValidationError('Invalid update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
+    }
     try {
         const updatedOrder = await queryDatabase('UPDATE orders SET type = $1, price = $2, quantity = $3, status = $4 WHERE id = $5 RETURNING *', [updates.type, updates.price, updates.quantity, updates.status, id]);
         if (updatedOrder.rowCount === 0) {
@@ -51,7 +55,7 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
     }
 };
 
-const deleteOrderService = async (id: string) => {
+const deleteOrderService = async (id: OrderId) => {
     try {
         const deletedOrder = await queryDatabase('DELETE FROM orders WHERE id = $1 RETURNING *', [id]);
         if (deletedOrder.rowCount === 0) {
