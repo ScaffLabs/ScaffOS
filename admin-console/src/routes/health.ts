@@ -3,30 +3,37 @@ import { logger } from '../middleware/logger';
 import os from 'os';
 import { healthCheck } from '../services/HealthService';
 import config from '../config';
-import axios from 'axios';
 
 const router = express.Router();
 
 router.get('/health', async (req, res) => {
     try {
-        const externalServiceStatus = await fetchHealthStatus();
-        res.status(200).json({
-            application: 'running',
-            externalService: externalServiceStatus,
-        });
+        const status = await healthCheck();
+        res.status(200).json(status);
     } catch (error) {
         logger.error(`Health check failed: ${error.message}`);
         res.status(500).json({ error: 'Health check failed' });
     }
 });
 
-const fetchHealthStatus = async () => {
+router.get('/ready', async (req, res) => {
     try {
-        const response = await axios.get(`${config.API_URL}/health`);
-        return response.data;
+        // Here we can check if essential services like DB are connected
+        const dbStatus = await checkDatabaseConnection(); // Implement this in your DB service
+        if (dbStatus) {
+            res.status(200).json({ status: 'ready' });
+        } else {
+            res.status(500).json({ status: 'not ready' });
+        }
     } catch (error) {
-        return 'down';
+        logger.error(`Readiness check failed: ${error.message}`);
+        res.status(500).json({ error: 'Readiness check failed' });
     }
+});
+
+const checkDatabaseConnection = async () => {
+    // Implement logic to check DB connection here
+    return true; // Replace with actual check
 };
 
 export default router;

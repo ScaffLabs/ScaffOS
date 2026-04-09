@@ -35,14 +35,16 @@ const startServer = async () => {
     });
 };
 
-process.on('SIGTERM', async () => {
+const gracefulShutdown = async () => {
+    console.log('Shutting down gracefully...');
     await db.closeConnection();
-    process.exit(0);
-});
+    server.close(() => {
+        console.log('Closed out remaining connections.');
+        process.exit(0);
+    });
+};
 
-process.on('SIGINT', async () => {
-    await db.closeConnection();
-    process.exit(0);
-});
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 startServer();
