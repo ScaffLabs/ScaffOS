@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import os from 'os';
+import logger from './logger';
 
 export class HealthCheck {
     static async checkServices(services: string[]): Promise<{ [key: string]: boolean }> {
@@ -10,7 +11,7 @@ export class HealthCheck {
                 const res = await axios.get(`${process.env[service + '_URL']}/health`);
                 results[service] = res.status === 200;
             } catch (error) {
-                console.error(`Health check for ${service} failed:`, error);
+                logger.error(`Health check for ${service} failed: ${error.message}`);
                 results[service] = false;
             }
         }));
@@ -37,8 +38,8 @@ export class HealthCheck {
     }
 
     static async checkReady(req: Request, res: Response) {
-        const dbStatus = true; // Mocked DB status
+        const dbStatus = true; // Mocked DB status, replace with actual DB check if needed
         const services = await this.checkServices(['WEBHOOK', 'EMAIL']);
         return res.json({ ready: dbStatus && services.WEBHOOK && services.EMAIL });
     }
-} 
+}

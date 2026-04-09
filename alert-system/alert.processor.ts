@@ -55,4 +55,4 @@ export class AlertProcessor {
         };
         await sendAlert();
     }
-} 
+}
