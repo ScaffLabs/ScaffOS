@@ -10,6 +10,7 @@ import { createConnectionPool } from './connectionPool';
 import { emitHealthCheckEvent, healthCheckServices } from './serviceHealth';
 import { generalLimiter } from './rateLimiter';
 import { sanitize } from './sanitize';
+import { auditLogger } from './auditLogger';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use(logRequest);
 app.use(generalLimiter);
 app.use(sanitize);
+app.use(auditLogger);
 
 // Health check endpoints
 app.get('/health', healthCheck);
