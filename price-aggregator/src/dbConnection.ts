@@ -10,7 +10,15 @@ const pool = new Pool({
 
 export const createConnectionPool = () => {
     return {
-        query: (text: string, params?: any[]) => pool.query(text, params),
+        query: async (text: string, params?: any[]) => {
+            try {
+                const res = await pool.query(text, params);
+                return res;
+            } catch (error) {
+                console.error('Database query error:', error);
+                throw error;
+            }
+        },
         drain: async () => {
             await pool.end();
         },
