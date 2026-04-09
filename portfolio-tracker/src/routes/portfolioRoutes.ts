@@ -3,6 +3,7 @@ import { body, param, query, validationResult } from 'express-validator';
 import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, deletePortfolio } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
+import { logPortfolioCreation, logPortfolioUpdate, logPortfolioDeletion } from '../services/auditService';
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
     try {
         const portfolio = await createPortfolio(req.body);
+        await logPortfolioCreation(portfolio);
         logger.info('Portfolio created', { portfolioId: portfolio.id });
         res.status(201).json(portfolio);
     } catch (error) {
@@ -41,6 +43,11 @@ router.post('/', portfolioValidation, async (req, res) => {
 });
 
 router.get('/:id', [param('id').isString().trim().escape()], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        logger.warn('Validation errors', { errors: errors.array() });
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const portfolio = await getPortfolio(req.params.id);
         logger.info('Fetched portfolio', { portfolioId: req.params.id });
@@ -62,6 +69,7 @@ router.put('/:id', portfolioValidation, async (req, res) => {
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
+        await logPortfolioUpdate(req.params.id, req.body);
         logger.info('Portfolio updated', { portfolioId: req.params.id });
         res.status(200).json(updatedPortfolio);
     } catch (error) {
@@ -74,8 +82,14 @@ router.put('/:id', portfolioValidation, async (req, res) => {
 });
 
 router.delete('/:id', [param('id').isString().trim().escape()], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        logger.warn('Validation errors', { errors: errors.array() });
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         await deletePortfolio(req.params.id);
+        await logPortfolioDeletion(req.params.id);
         logger.info('Portfolio deleted', { portfolioId: req.params.id });
         res.status(204).send();
     } catch (error) {

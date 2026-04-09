@@ -14,14 +14,27 @@ import csrfMiddleware from './middleware/csrfProtection';
 
 const app = express();
 
-app.use(json({ limit: '1mb' }));
+// CORS configuration
+const allowedOrigins = ['http://example.com', 'http://localhost:3000'];
+app.use(cors({ origin: allowedOrigins, optionsSuccessStatus: 200 }));
+
+// Security middleware
 app.use(helmet());
-app.use(cors({ origin: ['http://example.com', 'http://localhost:3000'], optionsSuccessStatus: 200 }));
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+app.use(json({ limit: '1mb' }));
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+// Logger middleware
 app.use(requestLogger);
 app.use(errorLogger);
 connectToEventBus();
 
+// Routes
 app.use('/api/portfolios', csrfMiddleware, portfolioRoutes);
 app.get('/health', healthCheck);
 app.get('/ready', readinessCheck);
