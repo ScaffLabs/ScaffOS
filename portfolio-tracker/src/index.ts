@@ -12,13 +12,10 @@ app.use(express.json());
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api', healthRoutes);
 
-const connectionPool = {}; // Placeholder for connection pooling logic
-
 const shutdown = (signal) => {
     logger.info(`Received ${signal}. Shutting down gracefully...`);
     server.close(() => {
         logger.info('Closed out remaining connections.');
-        // Close any connection pools here
         process.exit(0);
     });
     setTimeout(() => {
