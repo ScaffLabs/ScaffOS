@@ -37,7 +37,7 @@ const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunct
         errorMessage = err.message;
     }
 
-    logger.error({ message: errorMessage, error: err instanceof Error ? err.message : 'Unknown error', requestId: req.headers['x-request-id'], sensitiveData: undefined }); // Prevent logging sensitive data
+    logger.error({ message: errorMessage, error: err instanceof Error ? err.message : 'Unknown error', requestId: req.headers['x-request-id'], sensitiveData: undefined });
     res.status(statusCode).json({ error: errorMessage });
 };
 

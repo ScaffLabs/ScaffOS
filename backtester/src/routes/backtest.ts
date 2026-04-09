@@ -11,9 +11,7 @@ const store = new InMemoryStore();
 backtestRouter.post('/', async (req, res, next) => {
     const { strategyParams, historicalData } = req.body;
     try {
-        // Validate strategy parameters
         StrategyParametersSchema.parse(strategyParams);
-        // Validate historical data
         if (!Array.isArray(historicalData) || historicalData.length === 0) {
             throw new ValidationError('historicalData must be a non-empty array.');
         }

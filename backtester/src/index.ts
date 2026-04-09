@@ -8,8 +8,6 @@ import { logger } from './utils/logger';
 import healthCheckRouter from './routes/healthCheck';
 import { config } from '../config';
 import { monitorMemoryUsage } from './utils/monitor';
-import expressSanitizer from 'express-sanitizer';
-import csurf from 'csurf';
 
 const app = express();
 const PORT = config.port;
@@ -21,22 +19,15 @@ const limiter = rateLimit({
 });
 
 app.use(cors({
-    origin: ['http://example.com', 'http://anotherdomain.com'], // Allowed origins
+    origin: ['http://example.com', 'http://anotherdomain.com'],
 }));
 app.use(helmet());
 app.use(limiter);
 app.use(express.json({ limit: '1mb' }));
-app.use(expressSanitizer()); // Input sanitization middleware
-app.use(csurf({ cookie: true })); // CSRF protection
 
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);
 app.use(errorHandler);
-
-app.use((req, res, next) => {
-    logger.info(`Request: ${req.method} ${req.url}`);
-    next();
-});
 
 const server = app.listen(PORT, () => {
     logger.info(`Backtester service running on port ${PORT}`);
@@ -52,3 +43,11 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+process.on('uncaughtException', (err) => {
+    logger.error('Uncaught Exception: ', err);
+    shutdown();
+});
+process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled Rejection: ', reason);
+    shutdown();
+});
