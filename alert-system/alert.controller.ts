@@ -11,12 +11,14 @@ export class AlertController {
         this.alertStore = alertStore;
     }
 
-    async getActiveAlerts(req: Request, res: Response) {
+    async getActiveAlerts(req: Request, res: Response, pagination: { limit?: string; offset?: string } = {}) {
         const start = Date.now();
+        const { limit, offset } = pagination;
         try {
             const alerts = await this.alertStore.findIndex({});
-            if (!alerts.length) return res.status(204).send();
-            return res.json(alerts);
+            const paginatedAlerts = alerts.slice(Number(offset) || 0, (Number(offset) || 0) + (Number(limit) || alerts.length));
+            if (!paginatedAlerts.length) return res.status(204).send();
+            return res.json(paginatedAlerts);
         } catch (error) {
             logError(error);
             return res.status(500).json({ message: 'Failed to fetch active alerts.' });

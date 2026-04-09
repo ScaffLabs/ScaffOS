@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AlertController } from './alert.controller';
 import { HealthCheck } from './health-check';
 import rateLimit from 'express-rate-limit';
-import { validateAlertMessage } from './alert.schema';
+import { validateAlertMessage, validateCreateAlertRequest } from './alert.schema';
 import { AlertStore } from './storage';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -42,8 +42,9 @@ router.get('/ready', HealthCheck.checkReady);
 // Alert routes
 router.get('/api/alerts', async (req, res) => {
     const start = Date.now();
+    const { limit, offset } = req.query;
     try {
-        const alerts = await alertController.getActiveAlerts(req, res);
+        const alerts = await alertController.getActiveAlerts(req, res, { limit, offset });
         return res.json(alerts);
     } catch (error) {
         console.error('Failed to get alerts:', error);
@@ -56,7 +57,7 @@ router.get('/api/alerts', async (req, res) => {
 router.post('/api/alerts', async (req, res) => {
     const start = Date.now();
     try {
-        const alert = validateAlertMessage(req.body);
+        const alert = validateCreateAlertRequest(req.body);
         const createdAlert = await alertController.addAlert(req, res);
         logAudit('POST /api/alerts', { alertId: createdAlert.id });
         return res.status(201).json(createdAlert);
