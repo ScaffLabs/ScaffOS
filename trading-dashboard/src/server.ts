@@ -2,7 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { healthCheck, gracefulShutdown, registerShutdownHandlers } from './utils/healthCheck';
+import { registerHealthRoutes, gracefulShutdown, registerShutdownHandlers } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
@@ -25,8 +25,8 @@ app.use(limiter);
 
 app.use(express.json({ limit: '1mb' }));
 app.use(requestLogger);
-app.get('/api/health', healthCheck);
 
+registerHealthRoutes(app);
 registerRoutes(app);
 registerExternalApiRoutes(app);
 app.use(errorHandler);
