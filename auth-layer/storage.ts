@@ -1,54 +1,46 @@
 import { User, UserId } from './types';
 import { ValidationError, NotFoundError } from './errors';
+import InMemoryUserStore from './inMemoryStore';
 import { createConnectionPool } from './database';
 import { v4 as uuidv4 } from 'uuid';
 
 const pool = createConnectionPool();
+const userStore = new InMemoryUserStore();
 
 export const createUser = async (username: string, email: string): Promise<User> => {
-    const existingUser = await findUserByEmail(email);
+    const existingUser = await userStore.findByEmail(email);
     if (existingUser) {
         throw new ValidationError(['Email already in use.']);
     }
     const id: UserId = uuidv4() as UserId;
     const newUser: User = { id, username, email };
-    const query = 'INSERT INTO users (id, username, email) VALUES ($1, $2, $3) RETURNING *';
-    const result = await pool.query(query, [id, username, email]);
-    return result.rows[0];
+    return userStore.create(newUser);
 };
 
 export const findUserById = async (id: UserId): Promise<User | null> => {
-    const query = 'SELECT * FROM users WHERE id = $1';
-    const result = await pool.query(query, [id]);
-    if (result.rowCount === 0) {
+    const user = userStore.findById(id);
+    if (!user) {
         throw new NotFoundError('User not found.');
     }
-    return result.rows[0];
+    return user;
 };
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
-    const query = 'SELECT * FROM users WHERE email = $1';
-    const result = await pool.query(query, [email]);
-    return result.rowCount ? result.rows[0] : null;
+    return userStore.findByEmail(email);
 };
 
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
-    const user = await findUserById(id);
-    const updatedUserData = { ...user, ...userData };
-    const query = 'UPDATE users SET username = $1, email = $2 WHERE id = $3 RETURNING *';
-    const result = await pool.query(query, [updatedUserData.username, updatedUserData.email, id]);
-    if (result.rowCount === 0) {
+    const updatedUser = userStore.update(id, userData);
+    if (!updatedUser) {
         throw new NotFoundError('User not found for update');
     }
-    return result.rows[0];
+    return updatedUser;
 };
 
 export const deleteUser = async (id: UserId): Promise<boolean> => {
-    const result = await pool.query('DELETE FROM users WHERE id = $1', [id]);
-    return result.rowCount > 0;
+    return userStore.delete(id);
 };
 
 export const getAllUsers = async (): Promise<User[]> => {
-    const result = await pool.query('SELECT * FROM users');
-    return result.rows;
+    return userStore.findAll();
 };
