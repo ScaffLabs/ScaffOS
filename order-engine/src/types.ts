@@ -17,6 +17,8 @@ export interface Order {
 }
 
 // Zod schemas for runtime validation
+import { z } from 'zod';
+
 export const OrderSchema = z.object({
     id: z.string().transform((id) => id as OrderId),
     type: z.enum(['limit', 'market', 'stop']),

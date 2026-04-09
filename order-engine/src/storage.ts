@@ -15,12 +15,12 @@ class InMemoryStorage<T extends { id: string }> {
         return Promise.resolve(item);
     }
 
-    public read(id: string): Promise<T | null> {
+    public read(id: OrderId): Promise<T | null> {
         const item = this.items.find(i => i.id === id);
         return Promise.resolve(item || null);
     }
 
-    public update(id: string, updates: Partial<T>): Promise<T | null> {
+    public update(id: OrderId, updates: Partial<T>): Promise<T | null> {
         const index = this.items.findIndex(i => i.id === id);
         if (index === -1) return Promise.resolve(null);
 
@@ -30,7 +30,7 @@ class InMemoryStorage<T extends { id: string }> {
         return Promise.resolve(updatedItem);
     }
 
-    public delete(id: string): Promise<void> {
+    public delete(id: OrderId): Promise<void> {
         const index = this.items.findIndex(i => i.id === id);
         if (index === -1) return Promise.reject(new Error('Order not found.'));
         this.items.splice(index, 1);
@@ -42,22 +42,6 @@ class InMemoryStorage<T extends { id: string }> {
         return Promise.resolve(this.items);
     }
 
-    public transaction(callback: (storage: this) => Promise<void>): Promise<void> {
-        return callback(this);
-    }
-
-    public onOrderCreated(listener: (order: T) => void): void {
-        this.eventEmitter.on('ORDER_CREATED', listener);
-    }
-
-    public onOrderUpdated(listener: (order: T) => void): void {
-        this.eventEmitter.on('ORDER_UPDATED', listener);
-    }
-
-    public onOrderDeleted(listener: (id: string) => void): void {
-        this.eventEmitter.on('ORDER_DELETED', listener);
-    }
-
     public indexByStatus(): Record<string, T[]> {
         return this.items.reduce((acc, item) => {
             if (!acc[item.status]) {
@@ -66,18 +50,6 @@ class InMemoryStorage<T extends { id: string }> {
             acc[item.status].push(item);
             return acc;
         }, {} as Record<string, T[]>);
-    }
-
-    public migrateOrders(data: T[]): Promise<void> {
-        return Promise.all(data.map(order => this.create(order))).then(() => {});
-    }
-
-    public seedData(): Promise<void> {
-        const initialOrders: T[] = [
-            { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' } as unknown as T,
-            { id: '2' as OrderId, type: 'market', price: 0, quantity: 5, status: 'open' } as unknown as T
-        ];
-        return this.migrateOrders(initialOrders);
     }
 }
 

@@ -15,7 +15,7 @@ export const createOrderService = async (orderData: unknown) => {
     return createdOrder;
 };
 
-export const updateOrderService = async (id: string, updates: unknown) => {
+export const updateOrderService = async (id: OrderId, updates: unknown) => {
     const parsedUpdates = OrderSchema.partial().safeParse(updates);
     if (!parsedUpdates.success) {
         throw new ValidationError('Invalid order update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
@@ -29,7 +29,7 @@ export const updateOrderService = async (id: string, updates: unknown) => {
     return updatedOrder;
 };
 
-export const deleteOrderService = async (id: string) => {
+export const deleteOrderService = async (id: OrderId) => {
     const existingOrder = await storage.read(id);
     if (!existingOrder) {
         throw new NotFoundError('Order not found.');
@@ -38,24 +38,10 @@ export const deleteOrderService = async (id: string) => {
     await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
 };
 
-export const getOrdersService = async ({ limit, offset, status, sortBy, order }: { limit: number; offset: number; status?: string; sortBy?: string; order?: string; }) => {
+export const getOrdersService = async ({ limit, offset, status }: { limit: number; offset: number; status?: string; }) => {
     let orders = await storage.findAll();
     if (status) {
         orders = orders.filter(order => order.status === status);
     }
-    if (sortBy) {
-        orders.sort((a, b) => {
-            if (order === 'asc') {
-                return a[sortBy] > b[sortBy] ? 1 : -1;
-            } else {
-                return a[sortBy] < b[sortBy] ? 1 : -1;
-            }
-        });
-    }
     return orders.slice(offset, offset + limit);
-};
-
-export const getOrdersByStatusService = async (status: string) => {
-    const orders = await storage.indexByStatus();
-    return orders[status] || [];
 };
