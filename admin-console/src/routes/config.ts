@@ -1,3 +1,4 @@
+// Importing necessary modules
 import express from 'express';
 import { ConfigurationItem, ConfigurationItemSchema } from '../types';
 import Database from '../storage/Database';
@@ -81,13 +82,17 @@ router.put('/', async (req: Request, res: Response, next: NextFunction) => {
             key: sanitize(configItem.key),
             value: sanitize(configItem.value),
         };
+        const existingConfig = await db.readConfiguration(sanitizedConfigItem.key);
+        if (!existingConfig) {
+            throw new NotFoundError('Configuration not found');
+        }
         await db.updateConfiguration(sanitizedConfigItem);
         res.status(200).json({ message: 'Configuration updated successfully!' });
     } catch (error) {
         if (error instanceof ValidationError) {
             return next(new ValidationError('Invalid configuration data: ' + error.message));
         } else if (error instanceof NotFoundError) {
-            return next(new NotFoundError('Configuration not found')); 
+            return next(new NotFoundError('Configuration not found'));
         }
         return next(error);
     }
@@ -100,11 +105,15 @@ router.delete('/:key', async (req: Request, res: Response, next: NextFunction) =
         if (!key) {
             throw new ValidationError('Configuration key is required.');
         }
+        const existingConfig = await db.readConfiguration(key);
+        if (!existingConfig) {
+            throw new NotFoundError('Configuration not found');
+        }
         await db.deleteConfiguration(key);
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {
-            return next(new NotFoundError('Configuration not found')); 
+            return next(new NotFoundError('Configuration not found'));
         }
         return next(error);
     }
