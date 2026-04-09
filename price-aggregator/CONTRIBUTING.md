@@ -42,4 +42,5 @@ Thank you for your interest in contributing to the Price Aggregator project! Her
 ## Code of Conduct
 By participating in this project, you agree to abide by our Code of Conduct. Please read it before contributing!
 
-Thank you for contributing!
+## Additional Contributions
+If you have suggestions for improvements or additional features, feel free to open an issue or discuss it in the community forums!
