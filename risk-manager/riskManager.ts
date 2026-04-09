@@ -1,4 +1,4 @@
-import { RiskPosition, RiskPositionSchema, OrderId } from './sharedTypes';
+import { RiskPosition, RiskPositionSchema, OrderId, RiskEvent, RiskEventSchema } from './sharedTypes';
 import { RiskPositionStorage } from './storage';
 import logger from './logger';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
@@ -13,30 +13,10 @@ export default class RiskManager {
         this.positionLimits = new PositionLimits();
     }
 
-    async setPositionLimit(asset: string, limit: number): Promise<void> {
-        this.positionLimits.setLimit(asset, limit);
-    }
-
-    async getRiskPositions(limit: number, offset: number, sort?: string, filter?: string): Promise<RiskPosition[]> {
-        const positions = await this.storage.findAll(limit, offset);
-        let filteredPositions = positions;
-
-        if (filter) {
-            filteredPositions = filteredPositions.filter(position => position.asset.includes(filter));
-        }
-
-        if (sort) {
-            filteredPositions.sort((a, b) => {
-                if (sort === 'asc') return a.position - b.position;
-                if (sort === 'desc') return b.position - a.position;
-                return 0;
-            });
-        }
-        return filteredPositions;
-    }
-
     async createRiskPosition(asset: string, position: number): Promise<RiskPosition> {
         if (!this.positionLimits.checkLimit(asset, position)) {
+            const event: RiskEvent = { type: 'RiskPositionLimitExceeded', asset, attemptedPosition: position };
+            logger.warn('Risk position limit exceeded', event);
             throw new ValidationError('Position exceeds limit for asset: ' + asset);
         }
         const newPosition: RiskPosition = { id: this.generateId(), asset, position };
@@ -49,12 +29,14 @@ export default class RiskManager {
         return createdPosition;
     }
 
-    async updateRiskPosition(id: string, position: number): Promise<RiskPosition | null> {
+    async updateRiskPosition(id: OrderId, position: number): Promise<RiskPosition | null> {
         const existingPosition = await this.storage.read(id);
         if (!existingPosition) {
             throw new NotFoundError('Risk position not found.');
         }
         if (!this.positionLimits.checkLimit(existingPosition.asset, position)) {
+            const event: RiskEvent = { type: 'RiskPositionLimitExceeded', asset: existingPosition.asset, attemptedPosition: position };
+            logger.warn('Risk position limit exceeded on update', event);
             throw new ValidationError('Position exceeds limit for asset: ' + existingPosition.asset);
         }
         const updatedPosition: RiskPosition = { ...existingPosition, position };
@@ -65,15 +47,6 @@ export default class RiskManager {
         const result = await this.storage.update(id, updatedPosition);
         logger.info('Updated risk position', result);
         return result;
-    }
-
-    async deleteRiskPosition(id: OrderId): Promise<boolean> {
-        const deleted = await this.storage.delete(id);
-        if (!deleted) {
-            throw new NotFoundError('Risk position not found.');
-        }
-        logger.info('Deleted risk position with id:', id);
-        return true;
     }
 
     private generateId(): OrderId {

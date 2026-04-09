@@ -36,7 +36,8 @@ export const RiskPositionSchema = z.object({
 export type RiskEvent =  
   | { type: 'RiskPositionCreated'; position: RiskPosition }  
   | { type: 'RiskPositionUpdated'; position: RiskPosition }  
-  | { type: 'RiskPositionDeleted'; id: OrderId };  
+  | { type: 'RiskPositionDeleted'; id: OrderId }  
+  | { type: 'RiskPositionLimitExceeded'; asset: string; attemptedPosition: number };  
 
 /**  
  * Zod schema for validating risk-related events.  
@@ -45,6 +46,7 @@ export const RiskEventSchema = z.union([
   z.object({ type: z.literal('RiskPositionCreated'), position: RiskPositionSchema }),  
   z.object({ type: z.literal('RiskPositionUpdated'), position: RiskPositionSchema }),  
   z.object({ type: z.literal('RiskPositionDeleted'), id: z.string().brand<OrderId>() }),  
+  z.object({ type: z.literal('RiskPositionLimitExceeded'), asset: z.string(), attemptedPosition: z.number() })  
 ]);  
 
 // Export schemas for other services to use
