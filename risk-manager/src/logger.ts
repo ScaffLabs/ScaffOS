@@ -23,4 +23,12 @@ logger.add(new winston.transports.File({
   level: 'error',
 }));
 
+logger.sensitiveOperation = (operation: string, details: any) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn('Sensitive operation logged:', operation, details);
+  } else {
+    logger.info(`Sensitive operation: ${operation}`, details);
+  }
+};
+
 export default logger;

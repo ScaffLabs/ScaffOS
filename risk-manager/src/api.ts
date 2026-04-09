@@ -3,8 +3,24 @@ import riskManager from './riskManager';
 import logger from './logger';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import cors from 'cors';
 
 const router = express.Router();
+
+// CORS configuration
+const allowedOrigins = ['http://example.com', 'http://another-example.com'];
+router.use(cors({ origin: allowedOrigins }));
+router.use(helmet()); // Set secure HTTP headers
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later',
+});
+router.use(limiter);
 
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
@@ -25,7 +41,7 @@ router.get('/risk', [
 });
 
 router.post('/risk', [
-    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
+    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.').escape(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
@@ -35,6 +51,7 @@ router.post('/risk', [
     try {
         const { asset, position } = req.body;
         const newPosition = await riskManager.createRiskPosition(asset, position);
+        logger.info('Created new risk position:', newPosition);
         res.status(201).json(newPosition);
     } catch (error) {
         logger.error('Error creating risk position: ', error);
@@ -57,6 +74,7 @@ router.put('/risk/:id', [
         const { id } = req.params;
         const { position } = req.body;
         await riskManager.updateRiskPosition(id, position);
+        logger.info('Updated risk position with id:', id);
         res.status(204).send();
     } catch (error) {
         logger.error('Error updating risk position: ', error);
@@ -77,6 +95,7 @@ router.delete('/risk/:id', [
     try {
         const { id } = req.params;
         await riskManager.deleteRiskPosition(id);
+        logger.info('Deleted risk position with id:', id);
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting risk position: ', error);
