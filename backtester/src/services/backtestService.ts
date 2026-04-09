@@ -47,7 +47,7 @@ const simulateBacktest = circuitBreaker(async (params: StrategyParameters, histo
         const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
         if (trades > 0) {
             await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades }));
-            await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns })); // Notify data service
+            await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns }));
         }
         logger.info({ message: 'Backtest simulation completed', params, totalReturns });
         return result;
