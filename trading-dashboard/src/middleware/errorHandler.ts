@@ -5,9 +5,11 @@ import logger from '../utils/logger';
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
     const requestId = req.headers['x-request-id'] || 'N/A';
     if (err instanceof ValidationError) {
+        logger.warn('Validation error occurred', { message: err.message, requestId });
         return res.status(400).json({ message: err.message });
     }
     if (err instanceof NotFoundError) {
+        logger.info('Not found error', { message: err.message, requestId });
         return res.status(404).json({ message: err.message });
     }
     if (err instanceof ServiceError) {
