@@ -9,6 +9,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { requestIdMiddleware, errorHandlingMiddleware } from './middleware';
 import logger from './logger';
+import { setupRequestQueue } from './requestQueue';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,7 @@ app.use(limiter);
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 orderRouter(app);
+setupRequestQueue(app);
 
 const startServer = async () => {
     await migrateData();
