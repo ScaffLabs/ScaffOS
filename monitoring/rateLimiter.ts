@@ -1,13 +1,23 @@
 import rateLimit from 'express-rate-limit';
 
-export const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: 'Too many requests, please try again later.',
-    handler: (req, res) => {
-        res.status(429).json({
-            error: 'Rate limit exceeded',
-            message: 'Too many requests, please try again later.',
-        });
-    },
-});
+const createRateLimiter = (maxRequests: number, windowMs: number) => {
+    return rateLimit({
+        windowMs, // Time window in milliseconds
+        max: maxRequests, // Limit each IP to maxRequests per windowMs
+        message: 'Too many requests, please try again later.',
+        handler: (req, res) => {
+            res.status(429).json({
+                error: 'Rate limit exceeded',
+                message: 'Too many requests, please try again later.',
+            });
+        },
+    });
+};
+
+// Create a rate limiter for general usage
+const generalLimiter = createRateLimiter(100, 1 * 60 * 1000); // 100 requests per minute
+
+// Create a separate rate limiter for API key usage
+const apiKeyLimiter = createRateLimiter(50, 1 * 60 * 1000); // 50 requests per minute per API key
+
+export { generalLimiter, apiKeyLimiter };
