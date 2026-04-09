@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { body, validationResult } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
 import { ValidationError } from './errors';
@@ -11,6 +11,13 @@ export const createOrderValidators = [
     body('price').isNumeric().isPositive().withMessage('Price must be a positive number'),
     body('quantity').isInt({ gt: 0 }).withMessage('Quantity must be a positive integer'),
     body('status').isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled')
+];
+
+// Validation middleware for getting orders
+export const getOrdersValidators = [
+    query('limit').optional().isInt({ gt: 0 }).withMessage('Limit must be a positive integer'),
+    query('offset').optional().isInt({ gte: 0 }).withMessage('Offset must be a non-negative integer'),
+    query('status').optional().isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled')
 ];
 
 // Create Order
@@ -25,19 +32,23 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
         res.status(201).json(createdOrder);
         logger.info('Order created successfully', { order: createdOrder });
     } catch (error) {
+        logger.error('Error creating order', { error: error.message });
         if (error instanceof ValidationError) {
             return res.status(400).json({ message: error.message });
         }
-        logger.error('Error creating order', { error: error.message });
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }];
 
 // Get Orders
-export const getOrders = async (req: Request, res: Response): Promise<void> => {
-    const { limit = 10, offset = 0, status, sortBy = 'price', order = 'asc' } = req.query;
+export const getOrders = [getOrdersValidators, async (req: Request, res: Response): Promise<void> => {
+    const { limit = 10, offset = 0, status } = req.query;
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        return res.status(400).json({ errors: validationErrors.array() });
+    }
     try {
-        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), status, sortBy, order });
+        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), status });
         if (orders.length === 0) {
             return res.status(404).json({ message: 'No orders found.' });
         }
@@ -46,7 +57,7 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
         logger.error('Error retrieving orders', { error: error.message });
         res.status(500).json({ message: 'Internal Server Error' });
     }
-};
+}];
 
 // Update Order
 export const updateOrder = async (req: Request, res: Response): Promise<void> => {
