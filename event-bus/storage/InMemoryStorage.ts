@@ -41,12 +41,14 @@ export class InMemoryStorage<T> implements IStorage<T> {
 
     async migrate(): Promise<void> {
         console.log('Migration utility called.');
-        // Implement migration logic
+        // Implement migration logic as needed
     }
 
-    async seedData(): Promise<void> {
+    async seedData(data: T[]): Promise<void> {
         console.log('Seeding data...');
-        // Implement seeding logic
+        for (const item of data) {
+            await this.create(item);
+        }
     }
 
     async findByField(field: keyof T, value: any): Promise<T[]> {
