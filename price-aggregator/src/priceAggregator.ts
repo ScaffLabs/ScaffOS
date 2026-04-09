@@ -54,5 +54,37 @@ export class PriceAggregator {
         return { VWAP: vwap, ...prices.reduce((acc, price) => ({ ...acc, [price.exchange]: price.price }), {}) };
     }
 
-    // Additional methods and event handler implementation...
+    private async updateCurrentPrices() {
+        const prices = await storage.findAll();
+        this.currentPrices = this.calculateVWAP(prices);
+    }
+
+    public getCurrentPrices(): CurrentPrices {
+        return this.currentPrices;
+    }
+
+    public subscribe(client: WebSocket) {
+        this.clients.push(client);
+        client.on('close', () => this.unsubscribe(client));
+        this.broadcastPrices();
+    }
+
+    private unsubscribe(client: WebSocket) {
+        this.clients = this.clients.filter(c => c !== client);
+    }
+
+    private broadcastPrices() {
+        const message = JSON.stringify(this.currentPrices);
+        this.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
+    }
+
+    private handlePriceEvent(event: PriceEvent) {
+        // Handle price events (e.g., logging, additional processing)
+        console.log('Price event:', event);
+        this.broadcastPrices();
+    }
 }
