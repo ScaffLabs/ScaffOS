@@ -12,7 +12,7 @@ app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
 
 beforeAll(async () => {
-    await db.connect(process.env.DATABASE_URL);
+    await db.connect();
 });
 
 afterAll(async () => {
