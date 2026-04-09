@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { Order, OrderId } from './types';
+import { queryDatabase } from './db';
 
 class InMemoryStorage<T extends { id: string }> {
     private items: T[] = [];
@@ -50,6 +51,16 @@ class InMemoryStorage<T extends { id: string }> {
             acc[item.status].push(item);
             return acc;
         }, {} as Record<string, T[]>);
+    }
+
+    public async transaction(operations: () => Promise<void>): Promise<void> {
+        const originalItems = [...this.items];
+        try {
+            await operations();
+        } catch (error) {
+            this.items = originalItems; // Rollback on error
+            throw new Error('Transaction failed, rolled back');
+        }
     }
 }
 

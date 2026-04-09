@@ -39,14 +39,15 @@ export const closeDatabaseConnection = async () => {
 };
 
 export const queryDatabase = async (query: string, params: any[]) => {
-    const start = process.hrtime();
-    const client = await pool.connect();
+    const client = await connectToDatabase();
     try {
+        await client.query('BEGIN'); // Start transaction
         const res = await client.query(query, params);
-        const duration = process.hrtime(start);
-        const durationInMs = (duration[0] * 1e3 + duration[1] / 1e6).toFixed(2);
-        logger.logDatabaseQuery(query, params, durationInMs, client.processID);
+        await client.query('COMMIT'); // Commit transaction
         return res;
+    } catch (error) {
+        await client.query('ROLLBACK'); // Rollback on error
+        throw error;
     } finally {
         client.release();
     }
