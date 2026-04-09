@@ -1,11 +1,11 @@
-import { PriceData, PriceEvent } from './types';
+import { PriceData, PriceEvent, CurrentPrices } from './types';
 import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
 import { ValidationError, ServiceError } from './errors';
 
 export class PriceAggregator {
-    private currentPrices: { [key: string]: number } = {};
+    private currentPrices: CurrentPrices = {};
     private eventBus = new EventBus();
 
     constructor() {
@@ -20,12 +20,17 @@ export class PriceAggregator {
         try {
             const newPrice = await storage.create(priceData);
             this.currentPrices[priceData.exchange] = priceData.price;
+            this.currentPrices.VWAP = await this.calculateVWAP();
             await postHttpClient('/prices', newPrice);
             this.eventBus.emitPriceAdded(newPrice);
             return newPrice;
         } catch (error) {
             throw new ServiceError('Failed to add price: ' + error.message);
         }
+    }
+
+    public getCurrentPrices(): CurrentPrices {
+        return this.currentPrices;
     }
 
     public async checkDependencies() {
@@ -35,6 +40,15 @@ export class PriceAggregator {
         } catch (error) {
             throw new ServiceError('Dependency health check failed: ' + error.message);
         }
+    }
+
+    private async calculateVWAP(): Promise<number> {
+        const pricesData = await storage.findAll();
+        const totalVolume = pricesData.reduce((acc, price) => acc + price.volume, 0);
+        if (totalVolume === 0) throw new ValidationError('No volume available for VWAP calculation.');
+
+        const vwap = pricesData.reduce((acc, price) => acc + (price.price * price.volume), 0) / totalVolume;
+        return parseFloat(vwap.toFixed(2));
     }
 
     private handlePriceEvent(event: PriceEvent) {
