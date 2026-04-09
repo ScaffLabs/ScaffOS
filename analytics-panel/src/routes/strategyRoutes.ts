@@ -1,10 +1,18 @@
 // Import necessary modules
 import { Router } from 'express';
 import { getStrategiesHandler, createStrategyHandler, updateStrategyHandler, deleteStrategyHandler } from '../handlers/strategyHandler';
-import { validateInputBody, validateQueryParams } from '../middleware/inputValidator';
+import { validateInputBody, validateQueryParams, validateRequestSize } from '../middleware/inputValidator';
 import { validateStrategy, validateUpdateStrategy } from '../middleware/strategyValidator';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+// Rate limiter for strategy routes
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,  // 15 minutes
+    max: 100,
+    message: 'Too many requests, please try again later.',
+});
 
 /**
  * @swagger
@@ -34,7 +42,7 @@ const router = Router();
  *       200:
  *         description: A list of strategies
  */
-router.get('/', validateQueryParams, getStrategiesHandler);
+router.get('/', limiter, validateQueryParams, getStrategiesHandler);
 
 /**
  * @swagger
@@ -56,7 +64,7 @@ router.get('/', validateQueryParams, getStrategiesHandler);
  *       201:
  *         description: Strategy created
  */
-router.post('/', validateInputBody, validateStrategy, createStrategyHandler);
+router.post('/', limiter, validateInputBody, validateRequestSize, validateStrategy, createStrategyHandler);
 
 /**
  * @swagger
@@ -85,7 +93,7 @@ router.post('/', validateInputBody, validateStrategy, createStrategyHandler);
  *       200:
  *         description: Strategy updated
  */
-router.put('/:id', validateInputBody, validateUpdateStrategy, updateStrategyHandler);
+router.put('/:id', limiter, validateInputBody, validateUpdateStrategy, updateStrategyHandler);
 
 /**
  * @swagger
@@ -101,6 +109,6 @@ router.put('/:id', validateInputBody, validateUpdateStrategy, updateStrategyHand
  *       204:
  *         description: Strategy deleted
  */
-router.delete('/:id', deleteStrategyHandler);
+router.delete('/:id', limiter, deleteStrategyHandler);
 
 export default router;
