@@ -1,51 +1,50 @@
 import { InMemoryStore } from '../storage/inMemoryStore';
 import { Strategy } from '../types';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
+import { logPerformance } from '../logger';
 
 const strategyStore = new InMemoryStore<Strategy>();
 
-const initializeStore = async () => {
-    // Seed strategies if needed
-    const seedData: Strategy[] = [
-        { name: 'Strategy A', parameters: { param1: 'value1' } },
-        { name: 'Strategy B', parameters: { param1: 'value2' } },
-    ];
-    for (const strategy of seedData) {
-        await createStrategy(strategy);
-    }
-};
-
 const createStrategy = async (strategy: Strategy) => {
+    const start = Date.now();
     if (!strategy.name || !strategy.parameters) {
         throw new ValidationError('Strategy name and parameters are required.');
     }
-    return await strategyStore.create(strategy);
+    const result = await strategyStore.create(strategy);
+    logPerformance('Create Strategy', Date.now() - start);
+    return result;
 };
 
 const getStrategy = async (id: string) => {
+    const start = Date.now();
     const strategy = await strategyStore.read(id);
     if (!strategy) throw new NotFoundError('Strategy not found.');
+    logPerformance('Get Strategy', Date.now() - start);
     return strategy;
 };
 
 const updateStrategy = async (id: string, strategy: Strategy) => {
+    const start = Date.now();
     const existingStrategy = await getStrategy(id);
     const updated = { ...existingStrategy.data, ...strategy };
-    return await strategyStore.update(id, updated);
+    const result = await strategyStore.update(id, updated);
+    logPerformance('Update Strategy', Date.now() - start);
+    return result;
 };
 
 const deleteStrategy = async (id: string) => {
+    const start = Date.now();
     const deleted = await strategyStore.delete(id);
     if (!deleted) throw new NotFoundError('Strategy not found.');
+    logPerformance('Delete Strategy', Date.now() - start);
     return deleted;
 };
 
 const findStrategies = async (query: Partial<Strategy>) => {
-    return await strategyStore.find(query);
+    const start = Date.now();
+    const results = await strategyStore.find(query);
+    logPerformance('Find Strategies', Date.now() - start);
+    return results;
 };
 
-const performTransaction = async (operations: Array<() => Promise<any>>) => {
-    return await strategyStore.transaction(operations);
-};
-
-export { initializeStore, createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, performTransaction };
+export { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies };

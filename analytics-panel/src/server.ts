@@ -7,7 +7,6 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { logWithRequestId, logStartup } from './logger';
 import errorHandler from './middleware/errorHandler';
-import { validateInputBody, validateQueryParams } from './middleware/inputValidator';
 import { csrfMiddleware } from './middleware/csrfProtection';
 import config from './config';
 import { monitorMemoryUsage } from './utils/monitor';
@@ -31,13 +30,13 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Define API routes
-app.use('/api/strategies', validateQueryParams, strategyRoutes);
+app.use('/api/strategies', strategyRoutes);
 app.use('/api', healthRoutes);
 app.use(errorHandler);
 app.use(csrfMiddleware); // CSRF protection middleware
 
 // Memory monitoring
-const monitorInterval = setInterval(monitorMemoryUsage, 60000); // Monitor every minute
+const monitorInterval = setInterval(monitorMemoryUsage, 60000);
 
 // Graceful shutdown
 process.on('SIGTERM', () => gracefulShutdown(server, monitorInterval));
