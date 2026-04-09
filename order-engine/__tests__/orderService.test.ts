@@ -15,7 +15,7 @@ describe('Order Service Tests', () => {
     });
 
     test('createOrderService - should throw error for invalid order data', async () => {
-        const invalidOrder = { id: '1', type: 'limit', price: -100, quantity: 10, status: 'open' }; // Invalid price
+        const invalidOrder = { id: '1', type: 'limit', price: -100, quantity: 10, status: 'open' };
         await expect(createOrderService(invalidOrder)).rejects.toThrow(ValidationError);
     });
 

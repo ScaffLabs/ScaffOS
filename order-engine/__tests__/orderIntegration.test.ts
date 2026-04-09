@@ -19,14 +19,14 @@ describe('Order API Integration Tests', () => {
     });
 
     test('POST /orders - should create a new order', async () => {
-        const newOrder: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
+        const newOrder: Order = { id: '1', type: 'limit', price: 100, quantity: 10, status: 'open' };
         const response = await request(app).post('/orders').send(newOrder).expect(201);
         expect(response.body).toMatchObject(newOrder);
     });
 
     test('GET /orders - should return all orders', async () => {
-        const order1: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
-        const order2: Order = { id: '2' as OrderId, type: 'market', price: 0, quantity: 5, status: 'open' };
+        const order1: Order = { id: '1', type: 'limit', price: 100, quantity: 10, status: 'open' };
+        const order2: Order = { id: '2', type: 'market', price: 0, quantity: 5, status: 'open' };
         await storage.create(order1);
         await storage.create(order2);
         const response = await request(app).get('/orders').expect(200);
@@ -35,7 +35,7 @@ describe('Order API Integration Tests', () => {
     });
 
     test('PUT /orders/:id - should update an existing order', async () => {
-        const newOrder: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
+        const newOrder: Order = { id: '1', type: 'limit', price: 100, quantity: 10, status: 'open' };
         await storage.create(newOrder);
         const updatedData = { price: 150 };
         const response = await request(app).put('/orders/1').send(updatedData).expect(200);
@@ -43,7 +43,7 @@ describe('Order API Integration Tests', () => {
     });
 
     test('DELETE /orders/:id - should delete an existing order', async () => {
-        const newOrder: Order = { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' };
+        const newOrder: Order = { id: '1', type: 'limit', price: 100, quantity: 10, status: 'open' };
         await storage.create(newOrder);
         await request(app).delete('/orders/1').expect(204);
         const orders = await storage.findAll();
