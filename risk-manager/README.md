@@ -94,3 +94,7 @@ Contributions are welcome! Please refer to the CONTRIBUTING.md file for guidelin
 
 ## License
 This project is licensed under the MIT License.
+
+## Changelog
+- v1.1.0: Comprehensive documentation added
+- v1.0.0: Initial release.
