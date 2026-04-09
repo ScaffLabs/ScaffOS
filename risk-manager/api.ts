@@ -3,31 +3,25 @@ import riskManager from './riskManager';
 import logger from './logger';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import cors from 'cors';
 
 const router = express.Router();
 
-/**
- * @swagger
- * /risk:
- *   get:
- *     summary: Retrieve risk positions
- *     parameters:
- *       - in: query
- *         name: limit
- *         required: false
- *         description: Number of results to return
- *         schema:
- *           type: integer
- *       - in: query
- *         name: offset
- *         required: false
- *         description: Number of results to skip
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: A list of risk positions
- */
+// CORS configuration
+const allowedOrigins = ['http://example.com', 'http://another-example.com'];
+router.use(cors({ origin: allowedOrigins }));
+router.use(helmet()); // Set secure HTTP headers
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later'
+});
+router.use(limiter);
+
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
@@ -46,28 +40,6 @@ router.get('/risk', [
     }
 });
 
-/**
- * @swagger
- * /risk:
- *   post:
- *     summary: Create a new risk position
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               asset:
- *                 type: string
- *               position:
- *                 type: number
- *     responses:
- *       201:
- *         description: Risk position created successfully
- *       400:
- *         description: Invalid input
- */
 router.post('/risk', [
     body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
@@ -79,6 +51,7 @@ router.post('/risk', [
     try {
         const { asset, position } = req.body;
         const newPosition = await riskManager.createRiskPosition(asset, position);
+        logger.info('Created new risk position:', newPosition);
         res.status(201).json(newPosition);
     } catch (error) {
         logger.error('Error creating risk position: ', error);
@@ -89,33 +62,6 @@ router.post('/risk', [
     }
 });
 
-/**
- * @swagger
- * /risk/{id}:
- *   put:
- *     summary: Update a risk position
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: Risk position ID
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               position:
- *                 type: number
- *     responses:
- *       204:
- *         description: Risk position updated successfully
- *       404:
- *         description: Risk position not found
- */
 router.put('/risk/:id', [
     param('id').isString(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
@@ -128,6 +74,7 @@ router.put('/risk/:id', [
         const { id } = req.params;
         const { position } = req.body;
         await riskManager.updateRiskPosition(id, position);
+        logger.info('Updated risk position with id:', id);
         res.status(204).send();
     } catch (error) {
         logger.error('Error updating risk position: ', error);
@@ -138,24 +85,6 @@ router.put('/risk/:id', [
     }
 });
 
-/**
- * @swagger
- * /risk/{id}:
- *   delete:
- *     summary: Delete a risk position
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: Risk position ID
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Risk position deleted successfully
- *       404:
- *         description: Risk position not found
- */
 router.delete('/risk/:id', [
     param('id').isString(),
 ], async (req, res) => {
@@ -166,6 +95,7 @@ router.delete('/risk/:id', [
     try {
         const { id } = req.params;
         await riskManager.deleteRiskPosition(id);
+        logger.info('Deleted risk position with id:', id);
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting risk position: ', error);
