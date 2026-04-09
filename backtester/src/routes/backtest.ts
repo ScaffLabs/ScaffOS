@@ -10,7 +10,6 @@ import xss from 'xss';
 const backtestRouter = Router();
 const store = new InMemoryStore();
 
-// Middleware to sanitize input and log requests
 const sanitizeInput = (req, res, next) => {
     req.body = {
         strategyParams: req.body.strategyParams,
@@ -22,7 +21,6 @@ const sanitizeInput = (req, res, next) => {
     next();
 };
 
-// Create a backtest
 backtestRouter.post('/', [
     body('strategyParams').exists().custom((value) => StrategyParametersSchema.safeParse(value).success).withMessage('Invalid strategy parameters.'),
     body('historicalData').isArray().notEmpty().withMessage('Historical data must be a non-empty array.').custom((value) => value.every(item => HistoricalDataSchema.safeParse(item).success)).withMessage('Each historical data entry must be valid.')
@@ -47,7 +45,25 @@ backtestRouter.post('/', [
     }
 });
 
-// Get a backtest result by ID
+backtestRouter.get('/', async (req, res, next) => {
+    const { limit = 10, offset = 0, orderBy = 'createdAt', orderDirection = 'asc' } = req.query;
+    try {
+        const allResults = await store.findAll();
+        const sortedResults = allResults.sort((a, b) => {
+            if (orderDirection === 'asc') {
+                return a[orderBy] > b[orderBy] ? 1 : -1;
+            } else {
+                return a[orderBy] < b[orderBy] ? 1 : -1;
+            }
+        });
+        const paginatedResults = sortedResults.slice(Number(offset), Number(offset) + Number(limit));
+        res.status(200).json(paginatedResults);
+    } catch (error) {
+        logger.error('Error retrieving backtest results:', error);
+        next(new ServiceError('Error retrieving backtest results: ' + error.message));
+    }
+});
+
 backtestRouter.get('/:id', async (req, res, next) => {
     const { id } = req.params;
     try {

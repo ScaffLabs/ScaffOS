@@ -29,7 +29,6 @@ app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' })); // Limit request size
 app.use(requestLogger);
 
-// CSRF protection
 const csrfProtection = csrf({ cookie: true });
 app.use(csrfProtection);
 
