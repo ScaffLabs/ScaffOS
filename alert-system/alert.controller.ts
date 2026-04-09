@@ -4,6 +4,7 @@ import { AlertStore } from './storage';
 import { EventBus } from './event-bus';
 import { ValidationError, ServiceError, NotFoundError } from './error.types';
 import logger, { logRequest, logError } from './logger';
+import axios from 'axios';
 
 export class AlertController {
     private alertStore: AlertStore;
@@ -34,6 +35,7 @@ export class AlertController {
             const alertData = validateCreateAlertRequest(req.body);
             const createdAlert = await this.alertStore.create(alertData);
             this.eventBus.publish('alert.created', createdAlert);
+            await this.notifyServices(createdAlert);
             return res.status(201).json(createdAlert);
         } catch (error) {
             if (error instanceof ValidationError) {
@@ -43,6 +45,27 @@ export class AlertController {
             return res.status(500).json({ message: 'Failed to add alert.' });
         } finally {
             logRequest(req, res, start);
+        }
+    }
+
+    private async notifyServices(alert: AlertMessage) {
+        try {
+            const webhookUrl = process.env.WEBHOOK_URL;
+            await axios.post(webhookUrl, alert);
+        } catch (error) {
+            console.error('Failed to notify services:', error);
+            throw new ServiceError('Failed to notify services.');
+        }
+    }
+
+    async healthCheck(req: Request, res: Response) {
+        try {
+            const webhookResponse = await axios.get(`${process.env.WEBHOOK_URL}/health`);
+            const emailResponse = await axios.get(`${process.env.EMAIL_SERVICE_URL}/health`);
+            return res.json({ webhook: webhookResponse.status === 200, email: emailResponse.status === 200 });
+        } catch (error) {
+            logError(error);
+            return res.status(503).json({ message: 'One or more services are unavailable.' });
         }
     }
 
@@ -87,4 +110,4 @@ export class AlertController {
             logRequest(req, res, start);
         }
     }
-}
+} 
