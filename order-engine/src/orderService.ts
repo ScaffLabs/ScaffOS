@@ -1,4 +1,4 @@
-import { Order, OrderSchema, OrderEvent } from './types';
+import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
 import { postData } from './axiosClient';
