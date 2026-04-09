@@ -26,11 +26,15 @@ services:
       - '5432:5432'
 
   user-service:
-    image: user-service:latest
+    build:
+      context: ../user-service
+      dockerfile: Dockerfile
     ports:
       - '4000:4000'
 
   order-service:
-    image: order-service:latest
+    build:
+      context: ../order-service
+      dockerfile: Dockerfile
     ports:
       - '5000:5000'
