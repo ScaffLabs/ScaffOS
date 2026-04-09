@@ -18,4 +18,5 @@ module.exports = {
     },
     setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
     testMatch: ['**/__tests__/**/*.test.(ts|tsx|js)'],
+    reporters: ['default', 'jest-junit'],
 };
