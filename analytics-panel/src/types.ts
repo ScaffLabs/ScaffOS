@@ -55,20 +55,6 @@ export type AnalyticsEvent =
     | { type: 'STRATEGY_COMPARISON_RESULT'; betterStrategy: string };
 
 /**
- * Event representing a comparison between two strategies.
- */
-export interface StrategyComparisonEvent {
-    /** The type of event. */
-    type: 'STRATEGY_COMPARISON';
-    /** The identifier of the first strategy. */
-    strategyA: string;
-    /** The identifier of the second strategy. */
-    strategyB: string;
-    /** The result of the comparison. */
-    result: string;
-}
-
-/**
  * Schema for validating strategy comparison events.
  */
 export const StrategyComparisonEventSchema = z.object({
