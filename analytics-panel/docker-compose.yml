@@ -7,11 +7,11 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - NODE_ENV=development
-      - REACT_APP_API_BASE_URL=http://localhost:3000
-      - STRATEGY_SERVICE_URL=http://localhost:3001/api/health
-      - DB_URL=mongodb://mongo:27017/analytics-panel
-      - LOG_LEVEL=debug
+      - NODE_ENV=${NODE_ENV}
+      - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
+      - STRATEGY_SERVICE_URL=${STRATEGY_SERVICE_URL}
+      - DB_URL=${DB_URL}
+      - LOG_LEVEL=${LOG_LEVEL}
     volumes:
       - .:/app
 
