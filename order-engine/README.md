@@ -67,7 +67,7 @@ The service uses a REST API built with Express.js, utilizing an in-memory storag
   - Delete an order.
   - **Response:** `204 No Content` if successful.
 
-### Environment Variables
+## Environment Variables
 | Variable    | Description                       |
 |-------------|-----------------------------------|
 | PORT        | Port for the server to listen on  |

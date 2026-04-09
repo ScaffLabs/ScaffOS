@@ -28,3 +28,8 @@ All notable changes to this project will be documented in this file.
 ## [1.0.4] - 2023-11-20
 ### Added
 - Comprehensive documentation including API reference, environment variables table, and development guide.
+
+## [1.0.5] - 2023-11-25
+### Changed
+- Added detailed inline documentation to orderController.ts for better code understanding.
+- Improved overall code structure and readability.
