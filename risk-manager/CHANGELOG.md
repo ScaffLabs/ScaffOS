@@ -14,8 +14,3 @@ All notable changes to this project will be documented in this file.
 - Initial release of the Risk Manager Service.
 - API endpoints for risk position management.
 - Basic logging functionality using Winston.
-
-## [0.1.0] - 2023-09-15
-### Added
-- Project setup with Express.js and TypeScript.
-- Basic folder structure and initial files.
