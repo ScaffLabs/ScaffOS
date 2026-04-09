@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { backtestRouter } from './routes/backtest';
 import { errorHandler } from './middleware/errorHandler';
-import { logger } from './utils/logger';
+import { logger, requestLogger } from './utils/logger';
 import healthCheckRouter from './routes/healthCheck';
 import { config } from '../config';
 import { monitorMemoryUsage } from './utils/monitor';
@@ -27,6 +27,7 @@ app.use(helmet());
 app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(csurf());
+app.use(requestLogger); // Add request logging middleware
 
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);

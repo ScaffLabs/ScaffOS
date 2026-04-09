@@ -44,20 +44,12 @@ const logError = (err, req) => {
   });
 };
 
-const logRequestDuration = (req, res, next) => {
-  const start = process.hrtime();
-  res.on('finish', () => {
-    const duration = process.hrtime(start);
-    const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
-    logger.info({
-      message: 'Request duration',
-      duration: durationInMs,
-      method: req.method,
-      path: req.path,
-      requestId: req.headers['x-request-id'],
-    });
+const logPerformance = (operation, duration, requestId) => {
+  logger.info({
+    message: `${operation} completed`,
+    duration,
+    requestId,
   });
-  next();
 };
 
-export { logger, requestLogger, logError, logRequestDuration };
+export { logger, requestLogger, logError, logPerformance };
