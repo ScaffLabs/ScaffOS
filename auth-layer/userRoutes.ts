@@ -4,6 +4,7 @@ import { validateAndSanitizeUserInput, authMiddleware } from './middleware';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
 import { validateUser } from './userValidation';
+
 const router = express.Router();
 
 router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
@@ -23,16 +24,9 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
 });
 
 router.get('/users', authMiddleware, async (req, res) => {
-    const { limit = 10, offset = 0, sortBy = 'username', order = 'asc', filter = '' } = req.query;
     try {
         const users = await getAllUsers();
-        const filteredUsers = users.filter(user => user.username.includes(filter) || user.email.includes(filter));
-        const sortedUsers = filteredUsers.sort((a, b) => {
-            const comparison = a[sortBy].localeCompare(b[sortBy]);
-            return order === 'desc' ? -comparison : comparison;
-        });
-        const paginatedUsers = sortedUsers.slice(Number(offset), Number(offset) + Number(limit));
-        res.status(200).json(paginatedUsers);
+        res.status(200).json(users);
     } catch (error) {
         logger.error('Error retrieving users', { error: error.message });
         return res.status(500).json({ error: 'Internal Server Error' });
