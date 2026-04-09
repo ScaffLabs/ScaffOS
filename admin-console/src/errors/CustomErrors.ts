@@ -40,4 +40,18 @@ class EmptyArrayError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DatabaseError, UnauthorizedError, EmptyArrayError };
+class OverflowError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'OverflowError';
+    }
+}
+
+class DivisionByZeroError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'DivisionByZeroError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DatabaseError, UnauthorizedError, EmptyArrayError, OverflowError, DivisionByZeroError };

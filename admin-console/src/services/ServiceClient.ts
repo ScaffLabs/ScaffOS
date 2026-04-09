@@ -8,6 +8,9 @@ const BASE_URL = config.API_URL;
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
         const response = await axios.get(`${BASE_URL}/config`);
+        if (!response.data || !Array.isArray(response.data)) {
+            throw new ServiceError('Invalid response: Expected an array');
+        }
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -50,4 +53,4 @@ const updateConfiguration = async (configItem: ConfigurationItem): Promise<void>
     }
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration }; 
+export { fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration };
