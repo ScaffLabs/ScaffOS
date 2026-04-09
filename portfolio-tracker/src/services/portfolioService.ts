@@ -14,6 +14,7 @@ const circuit = circuitBreaker({
     resetTimeout: 30000,
 });
 
+// Notify external service of portfolio changes
 const notifyPortfolioService = async (portfolio: Portfolio) => {
     try {
         await circuit.call(() => axios.post(`${externalPortfolioServiceUrl}/notify`, portfolio));
@@ -22,6 +23,7 @@ const notifyPortfolioService = async (portfolio: Portfolio) => {
     }
 };
 
+// Validate position entries in portfolio
 const validatePositions = (positions) => {
     if (!Array.isArray(positions) || positions.length === 0) {
         throw new ValidationError('Positions must be a non-empty array.');
@@ -34,10 +36,12 @@ const validatePositions = (positions) => {
 };
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
+    // Validate the portfolio data against the schema
     const validation = PortfolioSchema.omit({ id: true }).safeParse(portfolioData);
     if (!validation.success) {
         throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
     }
+    // Validate positions if provided
     validatePositions(portfolioData.positions);
     try {
         const newPortfolio = storage.create(portfolioData);
@@ -50,14 +54,17 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
 };
 
 export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Promise<Portfolio> => {
+    // Check if the portfolio exists
     const existingPortfolio = storage.read(id);
     if (!existingPortfolio) {
         throw new NotFoundError('Portfolio not found');
     }
+    // Validate the provided updates
     const validation = PortfolioSchema.partial().safeParse(updates);
     if (!validation.success) {
         throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
     }
+    // Validate positions if updates include them
     if (updates.positions) {
         validatePositions(updates.positions);
     }
@@ -72,6 +79,7 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
 };
 
 export const deletePortfolio = async (id: string): Promise<void> => {
+    // Attempt to delete the portfolio
     const deleted = storage.delete(id);
     if (!deleted) {
         throw new NotFoundError('Portfolio not found');
