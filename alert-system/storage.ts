@@ -43,8 +43,14 @@ class InMemoryAlertStore implements AlertStoreInterface {
 
     async transaction(operations: () => Promise<void>): Promise<void> {
         console.log('Transaction started');
-        await operations();
-        console.log('Transaction completed');
+        try {
+            await operations();
+        } catch (error) {
+            console.error('Transaction failed:', error);
+            throw new Error('Transaction failed');
+        } finally {
+            console.log('Transaction completed');
+        }
     }
 }
 
