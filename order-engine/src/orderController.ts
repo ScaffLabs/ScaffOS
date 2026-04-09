@@ -17,77 +17,77 @@ export const createOrderValidators = [
 export const getOrdersValidators = [
     query('limit').optional().isInt({ gt: 0 }).withMessage('Limit must be a positive integer'),
     query('offset').optional().isInt({ gte: 0 }).withMessage('Offset must be a non-negative integer'),
-    query('status').optional().isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled')
+    query('status').optional().isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled'),
+    query('sort').optional().isIn(['asc', 'desc']).withMessage('Sort must be either asc or desc'),
 ];
 
 // Create Order
 export const createOrder = [createOrderValidators, async (req: Request, res: Response) => {
-    // Validate the incoming request against the defined validators above
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
-        return res.status(400).json({ errors: validationErrors.array() }); // If validation fails, return 400 with errors
+        return res.status(400).json({ errors: validationErrors.array() });
     }
     try {
-        const order = req.body; // Get the order data from the request body
-        const createdOrder = await createOrderService(order); // Call service to create the order
-        res.status(201).json(createdOrder); // Return the created order with a 201 status
-        logger.info('Order created successfully', { order: createdOrder }); // Log successful creation
+        const order = req.body;
+        const createdOrder = await createOrderService(order);
+        res.status(201).json(createdOrder);
+        logger.info('Order created successfully', { order: createdOrder });
     } catch (error) {
         logger.error('Error creating order', { error: error.message });
         if (error instanceof ValidationError) {
-            return res.status(400).json({ message: error.message }); // Handle validation errors specifically
+            return res.status(400).json({ message: error.message });
         }
-        res.status(500).json({ message: 'Internal Server Error' }); // General error handling
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 }];
 
 // Get Orders
 export const getOrders = [getOrdersValidators, async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, status } = req.query; // Destructure query parameters
+    const { limit = 10, offset = 0, status, sort = 'asc' } = req.query;
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
-        return res.status(400).json({ errors: validationErrors.array() }); // If validation fails, return 400 with errors
+        return res.status(400).json({ errors: validationErrors.array() });
     }
     try {
-        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), status }); // Get orders from service
+        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), status, sort });
         if (orders.length === 0) {
-            return res.status(404).json({ message: 'No orders found.' }); // Handle case where no orders are found
+            return res.status(404).json({ message: 'No orders found.' });
         }
-        res.status(200).json(orders); // Return orders with a 200 status
+        res.status(200).json(orders);
     } catch (error) {
         logger.error('Error retrieving orders', { error: error.message });
-        res.status(500).json({ message: 'Internal Server Error' }); // General error handling
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 }];
 
 // Update Order
 export const updateOrder = async (req: Request, res: Response) => {
-    const { id } = req.params; // Get the order ID from the request parameters
-    const updates = req.body; // Get the updates from the request body
+    const { id } = req.params;
+    const updates = req.body;
     try {
-        const updatedOrder = await updateOrderService(id, updates); // Call service to update the order
+        const updatedOrder = await updateOrderService(id, updates);
         if (!updatedOrder) {
-            return res.status(404).json({ message: 'Order not found.' }); // Handle case where order is not found
+            return res.status(404).json({ message: 'Order not found.' });
         }
-        res.status(200).json(updatedOrder); // Return updated order
+        res.status(200).json(updatedOrder);
     } catch (error) {
         logger.error('Error updating order', { error: error.message });
-        res.status(500).json({ message: 'Internal Server Error' }); // General error handling
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
 // Delete Order
 export const deleteOrder = async (req: Request, res: Response) => {
-    const { id } = req.params; // Get the order ID from the request parameters
+    const { id } = req.params;
     try {
-        await deleteOrderService(id); // Call service to delete the order
-        res.status(204).send(); // Respond with 204 No Content
+        await deleteOrderService(id);
+        res.status(204).send();
     } catch (error) {
         logger.error('Error deleting order', { error: error.message });
         if (error.message.includes('not found')) {
-            return res.status(404).json({ message: 'Order not found.' }); // Handle case where order is not found
+            return res.status(404).json({ message: 'Order not found.' });
         }
-        res.status(500).json({ message: 'Internal Server Error' }); // General error handling
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
