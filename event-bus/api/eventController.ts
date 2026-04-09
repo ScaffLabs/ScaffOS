@@ -6,6 +6,7 @@ import { NotFoundError } from '../errors/notFoundError';
 import logger from '../logger';
 import rateLimit from 'express-rate-limit';
 import { ServiceError } from '../errors/serviceError';
+import { sanitize } from 'express-validator';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -16,6 +17,10 @@ const createEventLimiter = rateLimit({
     message: 'Too many event creation requests, please try again later.',
 });
 
+const logAudit = (action: string, eventId?: string) => {
+    logger.info({ action, eventId, timestamp: new Date() });
+};
+
 export const createEvent = async (req: Request, res: Response): Promise<void> => {
     try {
         const validation = createEventSchema.safeParse(req.body);
@@ -23,6 +28,7 @@ export const createEvent = async (req: Request, res: Response): Promise<void> =>
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
         }
         const event = await storage.create(validation.data);
+        logAudit('create', event.id);
         res.status(201).json(event);
     } catch (error) {
         handleError(error, res);
@@ -57,6 +63,7 @@ export const updateEvent = async (req: Request, res: Response): Promise<void> =>
         if (!updatedEvent) {
             throw new NotFoundError(`Event with id ${eventId} not found`);
         }
+        logAudit('update', eventId);
         res.status(200).json(updatedEvent);
     } catch (error) {
         handleError(error, res);
@@ -70,6 +77,7 @@ export const deleteEvent = async (req: Request, res: Response): Promise<void> =>
         if (!deleted) {
             throw new NotFoundError(`Event with id ${eventId} not found`);
         }
+        logAudit('delete', eventId);
         res.status(204).send();
     } catch (error) {
         handleError(error, res);
@@ -93,8 +101,8 @@ const handleError = (error: Error, res: Response) => {
 };
 
 const router = Router();
-router.post('/', createEventLimiter, createEvent);
+router.post('/', createEventLimiter, [sanitize('title').escape(), sanitize('description').escape()], createEvent);
 router.get('/', getEvents);
-router.put('/:id', updateEvent);
+router.put('/:id', [sanitize('title').escape()], updateEvent);
 router.delete('/:id', deleteEvent);
 export default router;
