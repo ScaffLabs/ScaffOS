@@ -107,4 +107,15 @@ describe('AlertController', () => {
         expect(res.status).toHaveBeenCalledWith(500);
         expect(res.json).toHaveBeenCalledWith({ message: 'Failed to add alert.' });
     });
+
+    test('should handle unexpected errors gracefully', async () => {
+        jest.spyOn(alertStore, 'create').mockImplementation(() => { throw new Error('Unexpected error'); });
+        const req = { body: { type: 'price', threshold: 100, currentValue: 120 } } as any;
+        const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+        await alertController.addAlert(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Failed to add alert.' });
+    });
 });

@@ -70,4 +70,15 @@ describe('Alert API Integration Tests', () => {
         const deleteResponse = await request(app).delete(`/api/alerts/${alertId}`);
         expect(deleteResponse.status).toBe(204);
     });
+
+    test('should handle unexpected errors gracefully', async () => {
+        jest.spyOn(alertStore, 'create').mockImplementation(() => { throw new Error('Unexpected error'); });
+        const req = { body: { type: 'price', threshold: 100, currentValue: 120 } } as any;
+        const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+        const response = await request(app).post('/api/alerts').send(req.body);
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ message: 'Failed to create alert.' });
+    });
 });
