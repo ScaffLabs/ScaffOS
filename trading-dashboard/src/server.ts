@@ -1,7 +1,5 @@
 import express from 'express';
-import helmet from 'helmet';
-import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import { securityMiddleware, validateAndLog, validatePositionInput } from './middleware/securityMiddleware';
 import { registerHealthRoutes, gracefulShutdown, registerShutdownHandlers } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
@@ -13,20 +11,11 @@ import config from './config';
 const app = express();
 
 logger.logStartup(config);
-app.use(helmet());
-
-const allowedOrigins = ['http://localhost:3000', 'https://yourdomain.com'];
-app.use(cors({ origin: allowedOrigins }));
-
-const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests, please try again later.',
-});
-app.use(limiter);
-
 app.use(express.json({ limit: '1mb' }));
 app.use(requestLogger);
+
+// Apply security middleware
+securityMiddleware(app);
 
 registerHealthRoutes(app);
 registerRoutes(app);
