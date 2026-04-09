@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.3] - 2023-10-28
+### Added
+- Comprehensive API documentation in README.md, including request and response examples.
+- Environment variable descriptions and development/deployment guides in README.md.
+
 ## [1.4.2] - 2023-10-27
 ### Added
 - Comprehensive documentation in README.md, including project description, architecture overview, setup instructions, API reference, and environment variables.
