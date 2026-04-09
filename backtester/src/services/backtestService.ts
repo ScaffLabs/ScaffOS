@@ -39,9 +39,11 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 
 const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     try {
-        if (!params || typeof params.slippage !== 'number' || typeof params.buyThreshold !== 'number' || typeof params.sellThreshold !== 'number') {
-            throw new ValidationError('Strategy parameters are missing or invalid.');
+        const validation = StrategyParametersSchema.safeParse(params);
+        if (!validation.success) {
+            throw new ValidationError('Invalid strategy parameters: ' + validation.error.format());
         }
+
         const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
         const backtestId: BacktestId = uuidv4() as BacktestId;
         const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };

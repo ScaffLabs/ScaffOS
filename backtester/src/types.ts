@@ -49,7 +49,7 @@ export const HistoricalDataSchema = z.object({
 });
 
 export const StrategyParametersSchema = z.object({
-    slippage: z.number().nonnegative(),
+    slippage: z.number().min(0).max(1),
     buyThreshold: z.number().min(0).max(1),
     sellThreshold: z.number().min(0).max(1),
 });
