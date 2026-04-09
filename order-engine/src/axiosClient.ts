@@ -22,6 +22,7 @@ const circuitBreaker = new CircuitBreaker({
     resetTimeout: 30000
 });
 
+// Fetch data with retry and circuit breaker logic
 export const fetchData = async (url: string) => {
     return retry(() => circuitBreaker.fire(() => httpClient.get(url)));
 };
