@@ -41,6 +41,13 @@ class InMemoryStore<T> {
     async clear() {
         this.data.clear();
     }
+
+    async migrateData(targetDB: InMemoryStore<T>): Promise<void> {
+        const items = await this.findAll();
+        for (const item of items) {
+            await targetDB.create((item as any).key, item);
+        }
+    }
 }
 
 export default InMemoryStore;
