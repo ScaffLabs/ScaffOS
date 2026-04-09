@@ -25,8 +25,8 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data. Please provide valid path and duration.');
         }
-        const { path, duration, timestamp } = bodyValidation.data;
-        store.create({ path, duration, timestamp }, path);
+        const { path, duration } = bodyValidation.data;
+        store.create({ path, duration, timestamp: new Date() }, path);
         logger.info(`Created new entry: ${path}`);
         res.status(201).json({ message: 'Entry created', id: path });
     } catch (error) {
