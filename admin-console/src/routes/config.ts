@@ -10,11 +10,12 @@ const db = new Database('in-memory');
 
 router.post('/', async (req, res, next) => {
     const configItem: ConfigurationItem = req.body;
+    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(7);
     try {
         ConfigurationItemSchema.parse(configItem);
         await db.createConfiguration(configItem);
         emitEvent('CONFIGURATION_CREATED', configItem);
-        logRequest.info(`Configuration created: ${configItem.key}`);
+        logRequest.info({ message: 'Configuration created', configItem, requestId });
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
         next(error instanceof ValidationError ? new ValidationError('Invalid configuration data') : error);
@@ -23,10 +24,11 @@ router.post('/', async (req, res, next) => {
 
 router.delete('/:key', async (req, res, next) => {
     const { key } = req.params;
+    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(7);
     try {
         await db.deleteConfiguration(key);
         emitEvent('CONFIGURATION_DELETED', { key });
-        logRequest.info(`Configuration deleted: ${key}`);
+        logRequest.info({ message: 'Configuration deleted', key, requestId });
         res.status(204).send();
     } catch (error) {
         next(error instanceof NotFoundError ? new NotFoundError('Configuration not found') : error);
