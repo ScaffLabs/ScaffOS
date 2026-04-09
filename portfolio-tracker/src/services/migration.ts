@@ -28,3 +28,11 @@ export const transaction = async (actions: (id: string, data?: PortfolioUpdate) 
 export const indexBy = async (field: keyof Portfolio): Promise<{ [key: string]: Portfolio[] }> => {
     return storage.indexBy(field);
 };
+
+export const seedDevelopmentData = async (): Promise<void> => {
+    const devPortfolios: Portfolio[] = [
+        { id: '3', name: 'Development Portfolio 1', positions: [{ symbol: 'MSFT', quantity: 15, averagePrice: 250 }] },
+        { id: '4', name: 'Development Portfolio 2', positions: [{ symbol: 'TSLA', quantity: 8, averagePrice: 700 }] }
+    ];
+    storage.migrate(devPortfolios);
+};

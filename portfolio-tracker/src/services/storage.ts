@@ -61,9 +61,14 @@ class InMemoryStorage extends Storage {
 
     public transaction(actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): Portfolio[] {
         const results: Portfolio[] = [];
-        for (const id of portfolioIds) {
-            const result = actions(id);
-            if (result) results.push(result);
+        try {
+            for (const id of portfolioIds) {
+                const result = actions(id);
+                if (result) results.push(result);
+            }
+        } catch (error) {
+            console.error('Transaction failed:', error);
+            throw new Error('Transaction error');
         }
         return results;
     }
