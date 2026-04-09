@@ -10,10 +10,16 @@ import helmet from 'helmet';
 import cors from 'cors';
 import config from './config';
 import { sanitize } from './sanitize';
+import InMemoryStore from './dataStore';
+import { seedData } from './migrateData';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
+const store = new InMemoryStore();
+
+// Seed data for development
+seedData(store);
 
 // CORS Configuration
 app.use(cors({
