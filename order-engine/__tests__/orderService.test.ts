@@ -1,7 +1,7 @@
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from '../src/orderService';
 import { Order } from '../src/types';
-import { storage } from '../src/storage';
 import { ValidationError, NotFoundError } from '../src/errors';
+import { storage } from '../src/storage';
 
 describe('Order Service Tests', () => {
     beforeEach(() => {
