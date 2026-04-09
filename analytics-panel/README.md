@@ -37,8 +37,8 @@ The application is built using Node.js and Express for the backend, with MongoDB
 ## API Reference
 ### Performance Metrics
 - **GET /api/performance**  
-  Fetches the performance metrics for the strategies.
-  **Response:** 200 OK
+  Fetches the performance metrics for the strategies.  
+  **Response:** 200 OK  
   ```json
   {
       "drawdown": [10, 20, 30],
@@ -53,7 +53,7 @@ The application is built using Node.js and Express for the backend, with MongoDB
   **Query Parameters:**
   - `strategyA`: Name of the first strategy to compare.
   - `strategyB`: Name of the second strategy to compare.
-  **Response:** 200 OK
+  **Response:** 200 OK  
   ```json
   {
       "betterStrategy": "A"
@@ -63,7 +63,7 @@ The application is built using Node.js and Express for the backend, with MongoDB
 ### Health Check
 - **GET /api/health**  
   Checks the health status of the application.
-  **Response:** 200 OK
+  **Response:** 200 OK  
   ```json
   {
       "status": "ok",
