@@ -52,3 +52,18 @@ export const fetchRiskAlerts = async () => {
     const url = `${config.EVENT_BUS_URL}/risk-alerts`;
     return await fetchWithRetry(url);
 };
+
+export const emitRiskAlert = async (alertMessage: string) => {
+    try {
+        const url = `${config.EVENT_BUS_URL}/risk-alerts`;
+        await axios.post(url, { message: alertMessage });
+        logger.info('Risk alert emitted successfully.');
+    } catch (error) {
+        logger.error('Failed to emit risk alert:', error);
+    }
+};
+
+export const subscribeToRiskAlerts = (callback: (message: string) => void) => {
+    // Simulated subscription logic here, replace with actual event bus logic
+    logger.info('Subscribed to risk alerts.');
+};
