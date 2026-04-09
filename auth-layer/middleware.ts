@@ -1,83 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
-import { body, validationResult } from 'express-validator';
-import { verifyToken } from './jwt';
-import { validateApiKey } from './apiKey';
-import logger, { logError } from './logger';
-import csrf from 'csurf';
-import sanitizeHtml from 'sanitize-html';
-import rateLimit from './rateLimit';
-
-const csrfProtection = csrf({ cookie: true });
+import logger from './logger';
+import { ValidationError } from './errors';
 
 export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
     req.headers['x-request-id'] = req.headers['x-request-id'] || crypto.randomUUID();
     next();
 };
 
-export const sanitizeInput = (input: string) => {
-    return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} });
-};
-
-export const validateAndSanitizeUserInput = (req: Request, res: Response, next: NextFunction) => {
-    body('username')
-        .isString()
-        .trim()
-        .notEmpty()
-        .customSanitizer(value => sanitizeInput(value));
-    body('email')
-        .isEmail()
-        .normalizeEmail()
-        .customSanitizer(value => sanitizeInput(value));
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+export const logRequestMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        logger.info(`Request: ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms`, { requestId: req.headers['x-request-id'] });
+    });
     next();
 };
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers['authorization']?.split(' ')[1];
-    const apiKey = req.headers['x-api-key'];
-
-    if (!apiKey || !validateApiKey(apiKey)) {
-        logger.error(`Unauthorized access attempt`, { requestId: req.headers['x-request-id'] });
-        return res.status(401).json({ error: 'Invalid API key' });
+export const errorHandlingMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    logger.error(`Error occurred: ${err.message}`, { requestId: req.headers['x-request-id'], stack: err.stack });
+    if (err instanceof ValidationError) {
+        return res.status(400).json({ error: err.message, details: err.errors });
     }
-
-    if (!token) {
-        logger.error(`Token required`, { requestId: req.headers['x-request-id'] });
-        return res.status(401).json({ error: 'Token required' });
-    }
-
-    try {
-        const { userId } = verifyToken(token);
-        req.userId = userId;
-        next();
-    } catch (error) {
-        logError(error, req);
-        return res.status(401).json({ error: error.message });
-    }
+    return res.status(500).json({ error: 'Internal Server Error' });
 };
 
-export const csrfMiddleware = csrfProtection;
-
-export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const apiKey = req.headers['x-api-key'];
-    if (!rateLimit(apiKey as string)) {
-        return res.status(429).json({ error: 'Too many requests' });
-    }
-    next();
-};
-
-export const sanitizeOutput = (data: string) => {
-    return sanitizeHtml(data, { allowedTags: [], allowedAttributes: {} });
-};
-
-export const applySanitizationToResponse = (req: Request, res: Response, next: NextFunction) => {
-    const originalSend = res.send;
-    res.send = function (data) {
-        const sanitizedData = sanitizeOutput(data);
-        return originalSend.call(this, sanitizedData);
-    };
-    next();
-};
+export default { requestIdMiddleware, logRequestMiddleware, errorHandlingMiddleware };
