@@ -1,6 +1,5 @@
 import express from 'express';
 import { logger } from '../middleware/logger';
-import os from 'os';
 import { healthCheck } from '../services/HealthService';
 import config from '../config';
 
@@ -18,8 +17,7 @@ router.get('/health', async (req, res) => {
 
 router.get('/ready', async (req, res) => {
     try {
-        // Here we can check if essential services like DB are connected
-        const dbStatus = await checkDatabaseConnection(); // Implement this in your DB service
+        const dbStatus = await checkDatabaseConnection();
         if (dbStatus) {
             res.status(200).json({ status: 'ready' });
         } else {
