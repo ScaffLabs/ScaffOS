@@ -4,6 +4,7 @@ import axios from 'axios';
 import { logger } from '../utils/logger';
 import { withRetry, circuitBreaker } from './resilience';
 import { v4 as uuidv4 } from 'uuid';
+import { eventEmitter } from './resilience';
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
@@ -16,18 +17,14 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
 
-        // Validate price
         if (typeof currentPrice !== 'number' || currentPrice <= 0) {
             throw new ValidationError('Price must be a positive number.');
         }
 
-        // Buy Condition
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
             totalReturns += (currentPrice * (1 - slippage)) - previousPrice;
-        } 
-        // Sell Condition
-        else if (currentPrice < previousPrice * (1 - sellThreshold)) {
+        } else if (currentPrice < previousPrice * (1 - sellThreshold)) {
             trades++;
             totalReturns += previousPrice - (currentPrice * (1 + slippage));
         }
@@ -48,6 +45,8 @@ const simulateBacktest = circuitBreaker(async (params: StrategyParameters, histo
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
+    // Emit an event when backtest is created
+    eventEmitter.emit('BACKTEST_CREATED', { id: backtestId, result });
     return result;
 }, 3, { totalReturns: 0, trades: 0, winRate: 0, performanceMetrics: 'No trades simulated' });
 
