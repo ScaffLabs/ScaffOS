@@ -1,8 +1,6 @@
-// Order Service Implementation
 import { Order, OrderSchema } from './types';
-import { emitWithRetry } from './eventBus';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
-import { storage } from './storage';
+import { database } from './database';
 import logger from './logger';
 
 const createOrderService = async (orderData: unknown) => {
@@ -11,8 +9,7 @@ const createOrderService = async (orderData: unknown) => {
         throw new ValidationError('Invalid order data: ' + parsedOrder.error.errors.map(e => e.message).join(', '));
     }
     const order = parsedOrder.data;
-    const createdOrder = await storage.create(order);
-    await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder });
+    const createdOrder = await database.create(order);
     return createdOrder;
 };
 
@@ -21,30 +18,24 @@ const updateOrderService = async (id: string, updates: unknown) => {
     if (!parsedUpdates.success) {
         throw new ValidationError('Invalid order update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
     }
-    const existingOrder = await storage.read(id);
+    const existingOrder = await database.read(id);
     if (!existingOrder) {
         throw new NotFoundError('Order not found.');
     }
-    const updatedOrder = await storage.update(id, updates);
-    await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
+    const updatedOrder = await database.update(id, updates);
     return updatedOrder;
 };
 
 const deleteOrderService = async (id: string) => {
-    const existingOrder = await storage.read(id);
+    const existingOrder = await database.read(id);
     if (!existingOrder) {
         throw new NotFoundError('Order not found.');
     }
-    await storage.delete(id);
-    await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
+    await database.delete(id);
 };
 
-const getOrdersService = async ({ limit, offset, status }: { limit: number; offset: number; status?: string; }) => {
-    let orders = await storage.findAll();
-    if (status) {
-        orders = orders.filter(order => order.status === status);
-    }
-    return orders.slice(offset, offset + limit);
+const getOrdersService = async () => {
+    return await database.findAll();
 };
 
 export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };
