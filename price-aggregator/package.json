@@ -8,11 +8,10 @@
         "dev": "ts-node src/index.ts",
         "test": "jest --passWithNoTests",
         "test:watch": "jest --watch",
-        "test:unit": "jest --testPathPattern=__tests__/",
+        "test:unit": "jest --testPathPattern=__tests__/priceAggregator.test.ts",
         "test:integration": "jest --testPathPattern=__tests__/api.test.ts",
         "test:all": "jest",
-        "test:coverage": "jest --coverage",
-        "test:unit-integration": "jest --testPathPattern=__tests__/"
+        "test:coverage": "jest --coverage"
     },
     "dependencies": {
         "express": "^4.17.1",

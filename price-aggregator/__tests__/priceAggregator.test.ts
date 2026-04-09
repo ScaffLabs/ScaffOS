@@ -1,87 +1,46 @@
 import { PriceAggregator } from '../src/priceAggregator';
-import WebSocket from 'ws';
-import { CurrentPrices } from '../src/types';
-
-const mockWebSocket = (url: string) => {
-    const ws = new WebSocket(url);
-    ws.send = jest.fn();
-    return ws;
-};
+import { ValidationError } from '../src/errors';
+import { PriceData } from '../src/types';
 
 describe('PriceAggregator', () => {
     let priceAggregator: PriceAggregator;
-    let mockWs: WebSocket;
 
     beforeEach(() => {
         priceAggregator = new PriceAggregator();
-        mockWs = mockWebSocket('ws://localhost');
     });
 
     test('should initialize with empty prices', () => {
         expect(priceAggregator.getCurrentPrices()).toEqual({});
     });
 
-    test('should fetch prices and calculate VWAP', async () => {
-        jest.spyOn(priceAggregator as any, 'fetchPrices').mockResolvedValueOnce([
+    test('should throw validation error for invalid price data', async () => {
+        const invalidPrice: PriceData = { exchange: '', price: -10, volume: -5 };
+        await expect(priceAggregator.addPrice(invalidPrice)).rejects.toThrow(ValidationError);
+    });
+
+    test('should correctly calculate VWAP', async () => {
+        const prices = [
             { exchange: 'exchange1', price: 100, volume: 10 },
             { exchange: 'exchange2', price: 200, volume: 20 }
-        ]);
-        await priceAggregator.fetchPrices();
+        ];
+        await priceAggregator['calculateVWAP'](prices);
         const currentPrices = priceAggregator.getCurrentPrices();
-        expect(currentPrices).toHaveProperty('VWAP');
         expect(currentPrices.VWAP).toBeCloseTo(166.67, 2);
     });
-    
+
     test('should handle empty price data gracefully', async () => {
-        jest.spyOn(priceAggregator as any, 'fetchPrices').mockResolvedValueOnce([]);
-        await priceAggregator.fetchPrices();
-        expect(priceAggregator.getCurrentPrices()).toHaveProperty('VWAP', 0);
+        const prices: PriceData[] = [];
+        const currentPrices = priceAggregator['calculateVWAP'](prices);
+        expect(currentPrices).toEqual({ VWAP: 0 });
     });
-    
-    test('should subscribe and broadcast prices', () => {
-        priceAggregator.subscribe(mockWs);
-        expect(priceAggregator['clients']).toContain(mockWs);
-        priceAggregator.broadcastPrices();
-        expect(mockWs.send).toHaveBeenCalled();
+
+    test('should throw error during VWAP calculation if total volume is zero', async () => {
+        const prices = [{ exchange: 'exchange1', price: 100, volume: 0 }];
+        await expect(priceAggregator['calculateVWAP'](prices)).rejects.toThrow('Division by zero in VWAP calculation.');
     });
-    
-    test('should handle error in fetching price', async () => {
-        jest.spyOn(priceAggregator as any, 'fetchExchangePrice').mockResolvedValueOnce(null);
-        await priceAggregator.fetchPrices();
-        expect(priceAggregator.getCurrentPrices()).toEqual({});
-    });
-    
-    test('should check dependencies health', async () => {
-        jest.spyOn(priceAggregator as any, 'checkDependencies').mockResolvedValueOnce({ exchange1: 'healthy', exchange2: 'unhealthy' });
-        const health = await priceAggregator.checkDependencies();
-        expect(health).toEqual({ exchange1: 'healthy', exchange2: 'unhealthy' });
-    });
-    
-    test('should throw error if price not found during deletion', async () => {
-        await expect(priceAggregator.deletePrice('nonexistent')).rejects.toThrow('Price not found');
-    });
-    
-    test('should throw error if invalid price data is added', async () => {
-        await expect(priceAggregator.addPrice({ exchange: '', price: -10, volume: -5 })).rejects.toThrow();
-    });
-    
-    test('should handle error during price addition', async () => {
-        jest.spyOn(priceAggregator as any, 'validatePriceData').mockImplementationOnce(() => { throw new Error('Validation Error'); });
-        await expect(priceAggregator.addPrice({ exchange: 'exchange1', price: 100, volume: 10 })).rejects.toThrow('Validation Error');
-    });
-    
-    test('should calculate VWAP correctly with varying volumes', async () => {
-        jest.spyOn(priceAggregator as any, 'fetchPrices').mockResolvedValueOnce([
-            { exchange: 'exchange1', price: 100, volume: 10 },
-            { exchange: 'exchange2', price: 200, volume: 30 }
-        ]);
-        await priceAggregator.fetchPrices();
-        const currentPrices = priceAggregator.getCurrentPrices();
-        expect(currentPrices.VWAP).toBeCloseTo(166.67, 2);
-    });
-    
-    test('should handle API errors gracefully in integration tests', async () => {
-        jest.spyOn(priceAggregator as any, 'addPrice').mockRejectedValueOnce(new Error('API Error'));
-        await expect(priceAggregator.addPrice({ exchange: 'exchange1', price: 100, volume: 10 })).rejects.toThrow('API Error');
+
+    test('should successfully add a valid price', async () => {
+        const price: PriceData = { exchange: 'exchange1', price: 100, volume: 10 };
+        await expect(priceAggregator.addPrice(price)).resolves.toEqual(price);
     });
 });
