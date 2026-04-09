@@ -37,7 +37,7 @@ npm start
 ## API Reference
 ### Backtest
 - **POST /api/backtest**
-  - Request Body:
+  - **Request Body:**
     ```json
     {
       "strategyParams": {
@@ -51,7 +51,7 @@ npm start
       ]
     }
     ```
-  - Response:
+  - **Response:**
     - **201 Created**
       ```json
       {
@@ -68,7 +68,7 @@ npm start
 
 ### Get Backtest Result
 - **GET /api/backtest/:id**
-  - Response:
+  - **Response:**
     - **200 OK**
       ```json
       {
@@ -102,6 +102,7 @@ npm start
   ```
 
 ## Contributing
+We welcome contributions! To contribute:
 1. Fork the repository.
 2. Create a new branch for your feature.
 3. Make your changes and commit them.
