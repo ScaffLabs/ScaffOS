@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2023-12-20
+- Updated README.md with detailed project documentation, including setup instructions and API references.
+- Improved error handling in various API endpoints.
+
 ## [1.3.0] - 2023-12-15
 - Comprehensive documentation added, including README and CHANGELOG updates.
 - Improved error handling in the order API.
