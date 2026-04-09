@@ -20,15 +20,6 @@ export interface PerformanceMetrics {
 }
 
 /**
- * Schema for validating performance metrics using Zod.
- */
-export const PerformanceMetricsSchema = z.object({
-    drawdown: z.array(z.number()).nonempty(),
-    maxDrawdown: z.number().nonnegative(),
-    sharpeRatio: z.number().nonnegative(),
-});
-
-/**
  * Strategy type representing the structure of a trading strategy.
  */
 export interface Strategy {
@@ -37,6 +28,15 @@ export interface Strategy {
     /** The parameters for the strategy as an object. */
     parameters: Record<string, any>;
 }
+
+/**
+ * Schema for validating performance metrics using Zod.
+ */
+export const PerformanceMetricsSchema = z.object({
+    drawdown: z.array(z.number()).nonempty(),
+    maxDrawdown: z.number().nonnegative(),
+    sharpeRatio: z.number().nonnegative(),
+});
 
 /**
  * Schema for validating strategies using Zod.
