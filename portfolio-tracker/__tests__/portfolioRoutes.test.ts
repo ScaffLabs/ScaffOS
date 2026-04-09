@@ -65,4 +65,17 @@ describe('Portfolio Routes', () => {
         expect(response.status).toBe(400);
         expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Name is required' })]));
     });
+
+    // Additional tests for edge cases
+    it('should handle empty positions array', async () => {
+        const response = await request(app).post('/api/portfolios').send({ name: 'Empty Positions', positions: [] });
+        expect(response.status).toBe(400);
+        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Positions array cannot be empty.' })]));
+    });
+
+    it('should handle invalid symbol in positions', async () => {
+        const response = await request(app).post('/api/portfolios').send({ name: 'Invalid Symbol', positions: [{ symbol: '', quantity: 10, averagePrice: 150 }] });
+        expect(response.status).toBe(400);
+        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Invalid position data. Ensure symbol is provided and quantities are non-negative.' })]));
+    });
 });

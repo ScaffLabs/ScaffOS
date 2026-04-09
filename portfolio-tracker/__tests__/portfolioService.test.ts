@@ -43,7 +43,7 @@ describe('Portfolio Service', () => {
     });
 
     test('should return an empty array when fetching portfolios if none exist', async () => {
-        const portfolios = await fetchPortfolios({ limit: 10, offset: 0, sort: 'name', order: 'asc' });
+        const portfolios = await fetchAllData();
         expect(portfolios).toEqual([]);
     });
 
@@ -60,6 +60,15 @@ describe('Portfolio Service', () => {
 
     test('should throw an error for invalid position update data', async () => {
         await createPortfolio(testPortfolio);
-        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: '', quantity: -5, averagePrice: 150 }] })).rejects.toThrow('Invalid portfolio update data');
+        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: \'\', quantity: -5, averagePrice: 150 }] })).rejects.toThrow('Invalid portfolio update data');
+    });
+
+    // Additional test for edge cases
+    test('should throw an error for creating a portfolio with empty name', async () => {
+        await expect(createPortfolio({ name: '', positions: [] })).rejects.toThrow('Invalid portfolio data');
+    });
+
+    test('should throw an error for creating a portfolio with negative quantity', async () => {
+        await expect(createPortfolio({ name: 'Invalid Quantity', positions: [{ symbol: 'AAPL', quantity: -10, averagePrice: 150 }] })).rejects.toThrow('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
     });
 });
