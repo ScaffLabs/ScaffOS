@@ -9,6 +9,8 @@ services:
       - JWT_SECRET=your_jwt_secret
       - API_KEY_SECRET=your_api_key_secret
       - DATABASE_URL=your_database_url
+      - USER_SERVICE_URL=http://database:5432
+      - ORDER_SERVICE_URL=http://database:5432
     volumes:
       - .:/usr/src/app
     depends_on:
