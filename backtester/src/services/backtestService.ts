@@ -4,6 +4,14 @@ import axios from 'axios';
 import { logger } from '../utils/logger';
 import { withRetry, circuitBreaker } from './resilience';
 
+/**
+ * Calculates returns based on historical data and strategy parameters.
+ * @param historicalData - Array of historical price data.
+ * @param buyThreshold - Threshold for buying signals.
+ * @param sellThreshold - Threshold for selling signals.
+ * @param slippage - Slippage percentage.
+ * @returns An object containing totalReturns, trades, winRate, and performanceMetrics.
+ */
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');

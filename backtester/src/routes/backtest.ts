@@ -8,6 +8,39 @@ import { HistoricalDataSchema, StrategyParametersSchema, PaginationSchema } from
 const backtestRouter = Router();
 const store = new InMemoryStore();
 
+/**
+ * @swagger
+ * /api/backtest:
+ *   post:
+ *     summary: Create a backtest
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               strategyParams:
+ *                 type: object
+ *                 required:
+ *                   - slippage
+ *                   - buyThreshold
+ *                   - sellThreshold
+ *               historicalData:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     timestamp:
+ *                       type: integer
+ *                     price:
+ *                       type: number
+ *     responses:
+ *       201:
+ *         description: Backtest created successfully
+ *       400:
+ *         description: Invalid input
+ */
 backtestRouter.post('/', async (req, res, next) => {
     const { strategyParams, historicalData } = req.body;
     try {
@@ -32,6 +65,37 @@ backtestRouter.post('/', async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/backtest:
+ *   get:
+ *     summary: Get backtest results with pagination
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of results to return (default 10)
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *         description: Number of results to skip (default 0)
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: Field to sort by (default createdAt)
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sorting order (default asc)
+ *     responses:
+ *       200:
+ *         description: A list of backtest results
+ */
 backtestRouter.get('/', async (req, res, next) => {
     const { limit, offset, sort, order } = PaginationSchema.parse(req.query);
     try {
@@ -51,6 +115,22 @@ backtestRouter.get('/', async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/backtest/{id}:
+ *   get:
+ *     summary: Get a specific backtest result
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the backtest result
+ *     responses:
+ *       200:
+ *         description: Backtest result found
+ *       404:
+ *         description: Backtest result not found
+ */
 backtestRouter.get('/:id', async (req, res, next) => {
     const { id } = req.params;
     try {
