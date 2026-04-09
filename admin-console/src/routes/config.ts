@@ -4,12 +4,20 @@ import Database from '../storage/Database';
 import { ValidationError, NotFoundError } from '../errors/CustomErrors';
 import { Request, Response, NextFunction } from 'express';
 import sanitize from 'sanitize-html';
+import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
 const db = new Database();
 
+// Rate limiter for configuration endpoints
+const configRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests from this IP, please try again later.'
+});
+
 // Create Configuration
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', configRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
         if (!configItem || !configItem.key || !configItem.value) {
