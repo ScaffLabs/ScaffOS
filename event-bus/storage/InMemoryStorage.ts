@@ -30,4 +30,26 @@ export class InMemoryStorage<T> implements IStorage<T> {
     async findAll(limit: number = 10, offset: number = 0): Promise<T[]> {
         return Object.values(this.storage).slice(offset, offset + limit);
     }
+
+    async transaction(operations: (() => Promise<void>)[]): Promise<void> {
+        const results = [];
+        for (const operation of operations) {
+            results.push(await operation());
+        }
+        return results;
+    }
+
+    async migrate(): Promise<void> {
+        console.log('Migration utility called.');
+        // Implement migration logic
+    }
+
+    async seedData(): Promise<void> {
+        console.log('Seeding data...');
+        // Implement seeding logic
+    }
+
+    async findByField(field: keyof T, value: any): Promise<T[]> {
+        return Object.values(this.storage).filter(item => item[field] === value);
+    }
 }
