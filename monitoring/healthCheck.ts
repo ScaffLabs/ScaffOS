@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { checkServiceHealth } from './serviceHealth';
 import logger from './logger';
-import config from './config';
 
 const getMemoryUsage = () => {
     const memoryUsage = process.memoryUsage();
@@ -25,17 +24,6 @@ export const healthCheck = async (req: Request, res: Response) => {
         });
     } catch (error) {
         logger.error('Health check failed:', error);
-        res.status(500).json({ error: 'Internal Server Error', message: error.message });
-    }
-};
-
-export const readyCheck = async (req: Request, res: Response) => {
-    try {
-        const healthStatus = await checkServiceHealth();
-        const allServicesReady = Object.values(healthStatus).every(status => status);
-        res.status(allServicesReady ? 200 : 503).json({ status: allServicesReady ? 'READY' : 'NOT READY' });
-    } catch (error) {
-        logger.error('Ready check failed:', error);
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
