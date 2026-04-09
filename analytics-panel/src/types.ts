@@ -42,7 +42,8 @@ export interface Strategy {
  * Schema for validating strategies using Zod.
  */
 export const StrategySchema = z.object({
-    name: z.string().min(1, { message: 'Name must be at least 1 character long.' }).regex(/^[a-zA-Z0-9_]+$/, { message: 'Name must be alphanumeric.' }),
+    name: z.string().min(1, { message: 'Name must be at least 1 character long.' })
+        .regex(/^[a-zA-Z0-9_]+$/, { message: 'Name must be alphanumeric.' }),
     parameters: z.record(z.any()).optional(),
 });
 
