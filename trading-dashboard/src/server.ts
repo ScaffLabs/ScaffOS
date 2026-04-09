@@ -1,5 +1,5 @@
 import express from 'express';
-import { securityMiddleware, validateAndLog, validatePositionInput } from './middleware/securityMiddleware';
+import { securityMiddleware, validateAndLog } from './middleware/securityMiddleware';
 import { registerHealthRoutes, gracefulShutdown, registerShutdownHandlers } from './utils/healthCheck';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
