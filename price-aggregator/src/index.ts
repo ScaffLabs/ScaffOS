@@ -42,6 +42,40 @@ app.use((req, res, next) => {
     next();
 });
 
+/**
+ * @swagger
+ * /prices:
+ *   get:
+ *     summary: Retrieve a list of prices
+ *     parameters:
+ *       - name: limit
+ *         in: query
+ *         description: Limit the number of results
+ *         required: false
+ *         type: integer
+ *       - name: offset
+ *         in: query
+ *         description: Offset for pagination
+ *         required: false
+ *         type: integer
+ *       - name: sort
+ *         in: query
+ *         description: Sort by exchange or price
+ *         required: false
+ *         type: string
+ *       - name: order
+ *         in: query
+ *         description: Order of sorting (asc or desc)
+ *         required: false
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: A list of prices
+ *       204:
+ *         description: No content
+ *       500:
+ *         description: Internal server error
+ */
 app.get('/prices', validatePriceData, handleValidationErrors, async (req, res) => {
     const { limit = 10, offset = 0, sort = 'exchange', order = 'asc' } = req.query;
     try {
@@ -54,6 +88,32 @@ app.get('/prices', validatePriceData, handleValidationErrors, async (req, res) =
     }
 });
 
+/**
+ * @swagger
+ * /prices:
+ *   post:
+ *     summary: Add a new price
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               exchange:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               volume:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Price created successfully
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Internal server error
+ */
 app.post('/prices', validatePriceData, handleValidationErrors, async (req, res) => {
     try {
         const newPrice = await priceAggregator.addPrice(req.body);
@@ -64,6 +124,17 @@ app.post('/prices', validatePriceData, handleValidationErrors, async (req, res) 
     }
 });
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Check the health of the service
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ *       500:
+ *         description: Service is unhealthy
+ */
 app.get('/health', async (req, res) => {
     try {
         await dbPool.query('SELECT 1');
