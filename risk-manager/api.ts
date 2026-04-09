@@ -1,41 +1,44 @@
 import express from 'express';
 import riskManager from './riskManager';
 import logger from './logger';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
-import { RiskPositionSchema } from './sharedTypes';
 
 const router = express.Router();
 
-// CORS configuration
-const allowedOrigins = ['http://example.com', 'http://anotherdomain.com'];
-router.use(cors({ origin: allowedOrigins }));
-router.use(helmet()); // Set security-related HTTP headers
-
-// Rate limiting middleware
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests from this IP, please try again later.'
-});
-router.use(limiter);
-
+/**
+ * @swagger
+ * /risk:
+ *   get:
+ *     summary: Retrieve risk positions
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Number of results to return
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         description: Number of results to skip
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: A list of risk positions
+ */
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
-    query('sort').optional().isString(),
-    query('filter').optional().isString()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { limit = 10, offset = 0, sort, filter } = req.query;
-        const positions = await riskManager.getRiskPositions(limit, offset, sort, filter);
+        const { limit = 10, offset = 0 } = req.query;
+        const positions = await riskManager.getRiskPositions(limit, offset);
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
@@ -43,6 +46,28 @@ router.get('/risk', [
     }
 });
 
+/**
+ * @swagger
+ * /risk:
+ *   post:
+ *     summary: Create a new risk position
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               asset:
+ *                 type: string
+ *               position:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Risk position created successfully
+ *       400:
+ *         description: Invalid input
+ */
 router.post('/risk', [
     body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
@@ -64,6 +89,33 @@ router.post('/risk', [
     }
 });
 
+/**
+ * @swagger
+ * /risk/{id}:
+ *   put:
+ *     summary: Update a risk position
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Risk position ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               position:
+ *                 type: number
+ *     responses:
+ *       204:
+ *         description: Risk position updated successfully
+ *       404:
+ *         description: Risk position not found
+ */
 router.put('/risk/:id', [
     param('id').isString(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
@@ -75,10 +127,7 @@ router.put('/risk/:id', [
     try {
         const { id } = req.params;
         const { position } = req.body;
-        const updatedPosition = await riskManager.updateRiskPosition(id, position);
-        if (!updatedPosition) {
-            return res.status(404).send();
-        }
+        await riskManager.updateRiskPosition(id, position);
         res.status(204).send();
     } catch (error) {
         logger.error('Error updating risk position: ', error);
@@ -89,6 +138,24 @@ router.put('/risk/:id', [
     }
 });
 
+/**
+ * @swagger
+ * /risk/{id}:
+ *   delete:
+ *     summary: Delete a risk position
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Risk position ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Risk position deleted successfully
+ *       404:
+ *         description: Risk position not found
+ */
 router.delete('/risk/:id', [
     param('id').isString(),
 ], async (req, res) => {
@@ -98,10 +165,7 @@ router.delete('/risk/:id', [
     }
     try {
         const { id } = req.params;
-        const deleted = await riskManager.deleteRiskPosition(id);
-        if (!deleted) {
-            return res.status(404).send();
-        }
+        await riskManager.deleteRiskPosition(id);
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting risk position: ', error);
@@ -112,4 +176,4 @@ router.delete('/risk/:id', [
     }
 });
 
-export default router; 
+export default router;
