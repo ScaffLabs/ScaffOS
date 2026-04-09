@@ -1,6 +1,6 @@
 // Import necessary modules
 import { Router } from 'express';
-import { healthCheckHandler, dependentHealthCheckHandler, readyCheckHandler } from '../handlers/healthCheck';
+import { healthCheckHandler, dependentHealthCheckHandler } from '../handlers/healthCheck';
 import { healthCheckDependentServices } from '../api/analytics';
 
 const router = Router();

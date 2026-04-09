@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { AnalyticsEvent } from '../types';
 
 const eventBus = new EventEmitter();
-
 eventBus.setMaxListeners(20);
 
 /**
@@ -12,7 +11,6 @@ eventBus.setMaxListeners(20);
  * @param data - The event data matching the AnalyticsEvent type.
  */
 export const emitEvent = (event: AnalyticsEvent['type'], data: AnalyticsEvent['data']) => {
-    // Validate event data using Zod
     const eventSchema = getEventSchema(event);
     eventSchema.parse(data);
     eventBus.emit(event, data);

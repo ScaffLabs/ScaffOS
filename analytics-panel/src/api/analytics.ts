@@ -38,6 +38,7 @@ const fetchPerformanceMetrics = async () => {
 const fetchComparisonData = async (strategyA: string, strategyB: string) => {
     try {
         const response = await circuitBreaker.fire(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
+        emitEvent('STRATEGY_COMPARISON_RESULT', response);
         return response;
     } catch (error) {
         logError(error, 'Comparing strategies');
