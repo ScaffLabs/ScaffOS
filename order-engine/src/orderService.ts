@@ -3,6 +3,7 @@ import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
 import logger from './logger';
 import { emitOrderEvent } from './eventBus';
+import { fetchData } from './axiosClient';
 
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -14,10 +15,25 @@ const createOrderService = async (orderData: unknown) => {
         const createdOrder = await queryDatabase('INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5) RETURNING *', [order.id, order.type, order.price, order.quantity, order.status]);
         logger.info('Order created successfully', { order: createdOrder.rows[0] });
         emitOrderEvent({ type: 'ORDER_CREATED', payload: createdOrder.rows[0] });
+        await notifyOtherServices(order);
         return createdOrder.rows[0];
     } catch (error) {
         logger.error('Database error during order creation', { error });
         throw new ServiceError('Failed to create order due to database error.');
+    }
+};
+
+const notifyOtherServices = async (order: Order) => {
+    const urls = [
+        process.env.ANOTHER_SERVICE_URL + '/orders',
+        process.env.ORDER_SERVICE_URL + '/orders'
+    ];
+    const promises = urls.map(url => fetchData(url));
+    try {
+        await Promise.all(promises);
+        logger.info('Successfully notified other services.');
+    } catch (error) {
+        logger.error('Failed to notify other services', { error });
     }
 };
 

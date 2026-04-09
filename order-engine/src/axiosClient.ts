@@ -19,7 +19,7 @@ const retry = async (fn: Function, retries: number = 3) => {
 const circuitBreaker = new CircuitBreaker({
     timeout: 3000,
     errorThresholdPercentage: 50,
-    resetTimeout: 30000
+    resetTimeout: 30000,
 });
 
 // Fetch data with retry and circuit breaker logic
