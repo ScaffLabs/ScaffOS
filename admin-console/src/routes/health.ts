@@ -1,22 +1,24 @@
 import express from 'express';
 import { logger } from '../middleware/logger';
-import { healthCheck } from '../services/HealthService';
+import { fetchHealthStatus } from '../services/ServiceClient';
+import { ServiceError } from '../errors/CustomErrors';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
     try {
-        const status = await healthCheck();
+        const status = await fetchHealthStatus();
         res.status(200).json(status);
     } catch (error) {
         logger.error(`Health check failed: ${error.message}`);
-        res.status(500).json({ error: 'Health check failed' });
+        res.status(500).json({ error: 'Health check failed: ' + error.message });
     }
 });
 
 router.get('/ready', async (req, res) => {
     try {
-        const isReady = await checkDatabaseConnection();
+        const health = await fetchHealthStatus();
+        const isReady = health && health.application === 'running' && health.database === 'up';
         if (isReady) {
             res.status(200).json({ status: 'ready' });
         } else {
@@ -24,14 +26,8 @@ router.get('/ready', async (req, res) => {
         }
     } catch (error) {
         logger.error(`Readiness check failed: ${error.message}`);
-        res.status(500).json({ error: 'Readiness check failed' });
+        res.status(500).json({ error: 'Readiness check failed: ' + error.message });
     }
 });
-
-const checkDatabaseConnection = async () => {
-    // Implement logic to check DB connection here
-    // For example, ping the database or check a connection pool
-    return true; // Replace with actual check logic
-};
 
 export default router;

@@ -11,7 +11,7 @@ const fetchHealthStatus = async () => {
 const healthCircuitBreaker = new CircuitBreaker(fetchHealthStatus, {
     timeout: 3000,
     errorThresholdPercentage: 50,
-    resetTimeout: 30000
+    resetTimeout: 30000,
 });
 
 const retryWithExponentialBackoff = async (fn, retries = 5, delay = 1000) => {
@@ -35,7 +35,7 @@ export const healthCheck = async () => {
             externalService: result.externalService
         };
     } catch (error) {
-        throw new ServiceError('Health check failed');
+        throw new ServiceError('Health check failed: ' + error.message);
     }
 };
 

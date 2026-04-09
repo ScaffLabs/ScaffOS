@@ -4,12 +4,6 @@ import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
 import { CircuitBreaker } from 'opossum';
 
-const fetchConfigurationsCircuitBreaker = new CircuitBreaker(fetchConfigurations, {
-    timeout: 3000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000
-});
-
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
         const response = await axios.get(`${config.API_URL}/config`);
@@ -31,7 +25,7 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
     }, {
         timeout: 3000,
         errorThresholdPercentage: 50,
-        resetTimeout: 30000
+        resetTimeout: 30000,
     });
     try {
         await circuitBreaker.fire();
@@ -49,7 +43,7 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     }, {
         timeout: 3000,
         errorThresholdPercentage: 50,
-        resetTimeout: 30000
+        resetTimeout: 30000,
     });
     try {
         await circuitBreaker.fire();
@@ -61,4 +55,15 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     }
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration };
+const fetchHealthStatus = async () => {
+    const response = await axios.get(`${config.API_URL}/health`);
+    return response.data;
+};
+
+const healthCircuitBreaker = new CircuitBreaker(fetchHealthStatus, {
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000,
+});
+
+export { fetchConfigurations, postConfiguration, deleteConfiguration, fetchHealthStatus, healthCircuitBreaker };
