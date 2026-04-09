@@ -42,19 +42,6 @@ export const logError = (err: Error, req: Request, res: Response, next: NextFunc
     res.status(500).json({ error: 'Internal Server Error' });
 };
 
-export const logSuccess = (message: string) => {
-    logger.info(message);
-};
-
-export const logAudit = (req: Request, res: Response, next: NextFunction) => {
-    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(7);
-    res.on('finish', () => {
-        const { method, originalUrl } = req;
-        logger.info(`Audit Log: ${method} ${originalUrl} - Request ID: ${requestId}`);
-    });
-    next();
-};
-
 export const logPerformance = (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     res.on('finish', () => {
