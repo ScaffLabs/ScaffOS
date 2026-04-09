@@ -51,5 +51,6 @@ const startServer = async () => {
 
 startServer();
 
-process.on('SIGTERM', () => gracefulShutdown(server, setInterval(() => {}, 10000)));
-process.on('SIGINT', () => gracefulShutdown(server, setInterval(() => {}, 10000)));
+const handleShutdown = () => gracefulShutdown(server);
+process.on('SIGTERM', handleShutdown);
+process.on('SIGINT', handleShutdown);
