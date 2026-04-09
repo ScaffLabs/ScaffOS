@@ -41,4 +41,10 @@ const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunct
     res.status(statusCode).json({ error: errorMessage });
 };
 
-export { ServiceError, ValidationError, NotFoundError, errorHandler };
+const validateRequestBody = (body: any) => {
+    if (!body || typeof body !== 'object') {
+        throw new ValidationError('Request body must be a valid object.');
+    }
+};
+
+export { ServiceError, ValidationError, NotFoundError, errorHandler, validateRequestBody };
