@@ -23,18 +23,11 @@ class InMemoryStore<T> {
         return Array.from(this.data.values());
     }
 
-    async findByPredicate(predicate: (item: T) => boolean): Promise<T[]> {
-        return Array.from(this.data.values()).filter(predicate);
-    }
-
     async transaction(operations: Array<() => Promise<void>>): Promise<void> {
-        const results: Array<any> = [];
         const rollbackActions: Array<() => Promise<void>> = [];
         try {
             for (const operation of operations) {
-                const result = await operation();
-                results.push(result);
-                rollbackActions.push(() => this.delete((result as any).key));
+                await operation();
             }
         } catch (error) {
             await Promise.all(rollbackActions.reverse().map(fn => fn()));
