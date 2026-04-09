@@ -2,7 +2,7 @@ import express from 'express';
 import http from 'http';
 import apiRouter from './api';
 import healthRouter from './healthCheck';
-import logger from './logger';
+import logger, { logStartupConfig } from './logger';
 import { errorHandler } from './errors';
 import MemoryQueue from './memoryQueue';
 import loggingMiddleware from './middleware/loggingMiddleware';
@@ -14,7 +14,6 @@ import { healthCheckServices } from './externalService';
 const app = express();
 const server = http.createServer(app);
 
-// MySQL connection pooling
 const dbPool = createPool({
     host: 'localhost',
     user: 'root',
@@ -32,13 +31,13 @@ app.use('/health', healthRouter);
 app.use(errorHandler);
 
 const startServer = async () => {
+    logStartupConfig();
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
         logger.info(`Server is running on port ${PORT}`);
     });
 };
 
-// Health check interval to monitor service health
 setInterval(async () => {
     try {
         const healthStatus = await healthCheckServices();
@@ -48,8 +47,11 @@ setInterval(async () => {
     }
 }, 60000);
 
-// Graceful Shutdown
-process.on('SIGTERM', async () => await gracefulShutdown(dbPool));
-process.on('SIGINT', async () => await gracefulShutdown(dbPool));
+process.on('SIGTERM', async () => {
+    await gracefulShutdown(dbPool);
+});
+process.on('SIGINT', async () => {
+    await gracefulShutdown(dbPool);
+});
 
 startServer();
