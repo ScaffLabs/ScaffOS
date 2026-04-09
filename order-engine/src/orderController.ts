@@ -2,10 +2,6 @@ import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
-import csrf from 'csurf';
-
-// CSRF protection middleware
-const csrfProtection = csrf({ cookie: true });
 
 // Validation middleware for creating an order
 export const createOrderValidators = [
@@ -17,7 +13,7 @@ export const createOrderValidators = [
 ];
 
 // Create Order
-export const createOrder = [createOrderValidators, csrfProtection, async (req: Request, res: Response): Promise<void> => {
+export const createOrder = [createOrderValidators, async (req: Request, res: Response): Promise<void> => {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         return res.status(400).json({ errors: validationErrors.array() });

@@ -10,7 +10,9 @@ export const createOrderService = async (orderData: unknown) => {
         throw new ValidationError('Invalid order data: ' + parsedOrder.error.errors.map(e => e.message).join(', '));
     }
     const order = parsedOrder.data;
-    return storage.create(order);
+    const createdOrder = await storage.create(order);
+    await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder });
+    return createdOrder;
 };
 
 export const updateOrderService = async (id: string, updates: unknown) => {
@@ -22,7 +24,9 @@ export const updateOrderService = async (id: string, updates: unknown) => {
     if (!existingOrder) {
         throw new NotFoundError('Order not found.');
     }
-    return storage.update(id, updates);
+    const updatedOrder = await storage.update(id, updates);
+    await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
+    return updatedOrder;
 };
 
 export const deleteOrderService = async (id: string) => {
@@ -30,7 +34,8 @@ export const deleteOrderService = async (id: string) => {
     if (!existingOrder) {
         throw new NotFoundError('Order not found.');
     }
-    return storage.delete(id);
+    await storage.delete(id);
+    await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
 };
 
 export const getOrdersService = async ({ limit, offset }: { limit: number; offset: number; }) => {
