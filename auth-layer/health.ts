@@ -44,4 +44,6 @@ router.get('/ready', async (req, res) => {
     }
 });
 
+monitorMemoryUsage();
+
 export default router;

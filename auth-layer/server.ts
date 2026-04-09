@@ -11,6 +11,8 @@ import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 import { logRequest, requestIdMiddleware } from './middleware';
 import config from './config';
+import { checkUserServiceHealth, checkOrderServiceHealth } from './interServiceClient';
+import { emitUserCreatedEvent } from './eventBus';
 
 const app = express();
 const server = http.createServer(app);
@@ -55,6 +57,17 @@ const start = async () => {
     }
 };
 
+const checkServiceHealth = async () => {
+    try {
+        const userServiceHealthy = await checkUserServiceHealth();
+        const orderServiceHealthy = await checkOrderServiceHealth();
+        return userServiceHealthy && orderServiceHealthy;
+    } catch (error) {
+        logger.error('Service health check failed', { error: error.message });
+        return false;
+    }
+};
+
 process.on('SIGTERM', async () => {
     logger.info('SIGTERM signal received: closing HTTP server');
     await connectionPool.drain();
@@ -71,9 +84,6 @@ process.on('SIGINT', async () => {
     });
 });
 
-start();
-
-// Graceful shutdown for unexpected errors
 process.on('uncaughtException', async (err) => {
     logger.error('Uncaught Exception: ', err);
     await connectionPool.drain();
@@ -84,6 +94,15 @@ process.on('unhandledRejection', async (reason) => {
     logger.error('Unhandled Rejection: ', reason);
     await connectionPool.drain();
     process.exit(1);
+});
+
+start();
+
+// Emit user created event to notify other services
+app.post('/api/users', async (req, res) => {
+    const user = await createUser(req.body.username, req.body.email);
+    emitUserCreatedEvent(user);
+    res.status(201).json(user);
 });
 
 export default app;
