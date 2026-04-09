@@ -25,7 +25,7 @@ app.use(logWithRequestId);
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: 'Too many requests, please try again later.'
+    message: 'Too many requests, please try again later.',
 });
 app.use('/api/', limiter);
 
@@ -33,7 +33,7 @@ app.use('/api/', limiter);
 app.use('/api/strategies', strategyRoutes);
 app.use('/api', healthRoutes);
 app.use(errorHandler);
-app.use(csrfMiddleware); // CSRF protection middleware
+app.use(csrfMiddleware);
 
 // Memory monitoring
 const monitorInterval = setInterval(monitorMemoryUsage, 60000);
