@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { body, param, validationResult } from 'express-validator';
-import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios } from '../services/portfolioService';
+import { body, param, query, validationResult } from 'express-validator';
+import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios, deletePortfolio } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 
@@ -73,9 +73,35 @@ router.put('/:id', portfolioValidation, async (req, res) => {
     }
 });
 
-router.get('/', async (req, res) => {
+router.delete('/:id', [param('id').isString().trim().escape()], async (req, res) => {
     try {
-        const portfolios = await fetchPortfolios({ limit: 100, offset: 0, sort: 'name', order: 'asc' });
+        await deletePortfolio(req.params.id);
+        logger.info('Portfolio deleted', { portfolioId: req.params.id });
+        res.status(204).send();
+    } catch (error) {
+        logger.error('Error deleting portfolio', { error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.get('/', [
+    query('limit').optional().isInt({ min: 1 }).toInt(),
+    query('offset').optional().isInt({ min: 0 }).toInt(),
+    query('sort').optional().isIn(['name']).default('name'),
+    query('order').optional().isIn(['asc', 'desc']).default('asc')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        logger.warn('Validation errors', { errors: errors.array() });
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { limit = 10, offset = 0, sort = 'name', order = 'asc' } = req.query;
+    try {
+        const portfolios = await fetchPortfolios({ limit, offset, sort, order });
         res.status(200).json(portfolios);
     } catch (error) {
         logger.error('Error fetching portfolios', { error: error.message });
