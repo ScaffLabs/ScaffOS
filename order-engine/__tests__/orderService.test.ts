@@ -22,7 +22,7 @@ describe('Order Service Tests', () => {
     test('updateOrderService - should successfully update an existing order', async () => {
         const order: Order = { id: '1', type: 'limit', price: 100, quantity: 10, status: 'open' };
         await createOrderService(order);
-        const updates = { price: 150 }; 
+        const updates = { price: 150 };
         const updatedOrder = await updateOrderService('1', updates);
         expect(updatedOrder?.price).toBe(150);
     });

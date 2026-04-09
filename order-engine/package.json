@@ -10,7 +10,8 @@
     "test:unit": "jest --testPathPattern=unit",
     "test:integration": "jest --testPathPattern=integration",
     "test:all": "jest",
-    "test:setup": "jest --setupFilesAfterEnv jest.setup.ts"
+    "test:setup": "jest --setupFilesAfterEnv jest.setup.ts",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "express": "^4.17.1",
