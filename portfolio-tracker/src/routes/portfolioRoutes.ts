@@ -4,16 +4,18 @@ import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio } from 
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 import { auditLog } from '../services/auditService';
-import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
+// Validation rules for portfolio creation and updates
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
     body('positions').isArray().optional().custom((positions) => {
+        // Ensure positions array is not empty
         if (positions && positions.length === 0) {
             throw new ValidationError('Positions array cannot be empty.');
         }
+        // Validate each position entry
         positions.forEach(pos => {
             if (!pos.symbol || typeof pos.quantity !== 'number' || pos.quantity < 0 || typeof pos.averagePrice !== 'number' || pos.averagePrice < 0) {
                 throw new ValidationError('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
@@ -23,18 +25,11 @@ const portfolioValidation = [
     })
 ];
 
-// Rate limiting middleware for portfolio routes
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests from this IP, please try again later.'
-});
-
-router.use(limiter);
-
+// Route to create a new portfolio
 router.post('/', portfolioValidation, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        // Log validation errors
         logger.warn('Validation errors', { errors: errors.array(), requestId: req.headers['x-request-id'] });
         return res.status(400).json({ errors: errors.array() });
     }
@@ -52,9 +47,11 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
 });
 
+// Route to get a portfolio by ID
 router.get('/:id', [param('id').isString().trim().escape()], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        // Log validation errors
         logger.warn('Validation errors', { errors: errors.array(), requestId: req.headers['x-request-id'] });
         return res.status(400).json({ errors: errors.array() });
     }
@@ -71,9 +68,11 @@ router.get('/:id', [param('id').isString().trim().escape()], async (req, res) =>
     }
 });
 
+// Route to update an existing portfolio
 router.put('/:id', portfolioValidation, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        // Log validation errors
         logger.warn('Validation errors', { errors: errors.array(), requestId: req.headers['x-request-id'] });
         return res.status(400).json({ errors: errors.array() });
     }
@@ -91,9 +90,11 @@ router.put('/:id', portfolioValidation, async (req, res) => {
     }
 });
 
+// Route to delete a portfolio by ID
 router.delete('/:id', [param('id').isString().trim().escape()], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        // Log validation errors
         logger.warn('Validation errors', { errors: errors.array(), requestId: req.headers['x-request-id'] });
         return res.status(400).json({ errors: errors.array() });
     }
