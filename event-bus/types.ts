@@ -7,12 +7,12 @@ export type EventType = 'userCreated' | 'orderPlaced';
 
 /**
  * Event interface defining the structure of events in the system.
- * @property id - Unique identifier for the event.
+ * @property id - Unique identifier for the event, must be a valid UUID.
  * @property title - Title of the event. Must be a non-empty string.
  * @property description - Optional description of the event.
- * @property type - The type of event being represented.
- * @property createdAt - The date when the event was created.
- * @property updatedAt - The date when the event was last updated.
+ * @property type - The type of event being represented, must be one of the defined event types.
+ * @property createdAt - The date when the event was created, defaults to the current date.
+ * @property updatedAt - The date when the event was last updated, defaults to the current date when created.
  */
 export interface Event {
     id: OrderId;
@@ -31,15 +31,12 @@ export const eventSchema = z.object({
     title: z.string().min(1, { message: 'Title is required' }),
     description: z.string().optional(),
     type: z.enum(['userCreated', 'orderPlaced']),
-    createdAt: z.date(),
-    updatedAt: z.date(),
-});
-
-// Zod schema for incoming events
-export const createEventSchema = eventSchema.omit({ id: true }).extend({
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
 });
+
+// Zod schema for incoming events
+export const createEventSchema = eventSchema.omit({ id: true });
 
 // Zod schema for updating events
 export const updateEventSchema = z.object({
