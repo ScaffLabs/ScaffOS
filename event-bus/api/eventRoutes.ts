@@ -16,13 +16,16 @@ const limiter = rateLimit({
 
 router.use(limiter);
 
-router.get('/', getEvents);
+// Endpoint to handle event creation and retrieval
 router.post('/', [sanitize('title').escape(), sanitize('description').escape(), validateCreateEvent], createEvent);
+router.get('/', getEvents);
+
+// Endpoint to handle updates and deletions
 router.put('/:id', [sanitize('title').escape(), validateUpdateEvent], updateEvent);
 router.delete('/:id', deleteEvent);
-router.get('/health', checkHealthEndpoint);
 
-// Add health check endpoint
+// Health check endpoints
+router.get('/health', checkHealthEndpoint);
 router.get('/ready', async (req, res) => {
     const isHealthy = await checkServiceHealth();
     res.status(isHealthy ? 200 : 503).json({ ready: isHealthy });
