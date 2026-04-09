@@ -29,10 +29,10 @@ describe('API Endpoints', () => {
     });
 
     test('GET /health should return healthy status', async () => {
-        (priceAggregator.checkDependencies as jest.Mock).mockResolvedValueOnce({ exchange1: 'healthy' });
+        (priceAggregator.checkDependencies as jest.Mock).mockResolvedValueOnce({ database: 'healthy' });
         const response = await request(app).get('/health');
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ status: 'healthy', dependencies: { exchange1: 'healthy' }});
+        expect(response.body).toEqual({ status: 'healthy', dependencies: { database: 'healthy' }});
     });
 
     test('GET /health should return unhealthy status on error', async () => {
