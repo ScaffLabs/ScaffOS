@@ -73,4 +73,8 @@ export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
     async findByAsset(asset: string): Promise<RiskPosition[]> {
         return Array.from(this.indexByAsset.get(asset) || []);
     }
+
+    async findAll(limit?: number, offset?: number): Promise<RiskPosition[]> {
+        return super.findAll(limit, offset);
+    }
 }
