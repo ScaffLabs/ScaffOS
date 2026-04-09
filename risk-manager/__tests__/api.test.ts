@@ -4,9 +4,8 @@ import { createMockRiskPosition } from './fixtures';
 
 describe('Risk Manager API', () => {
     let validToken: string;
-
     beforeAll(() => {
-        validToken = 'Bearer valid_token'; // Assume a valid token is generated here for testing
+        validToken = 'Bearer valid_token';
     });
 
     it('should create a new risk position', async () => {
