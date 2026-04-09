@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { InMemoryStore } from '../storage/InMemoryStore';
 import { Position, validatePosition } from '../types';
-import { ServiceError, NotFoundError } from '../utils/errors';
+import { ServiceError, NotFoundError, ValidationError } from '../utils/errors';
 import { initializeStore } from '../storage/migrations';
 import rateLimit from 'express-rate-limit';
 
@@ -9,8 +9,8 @@ const positionStore = new InMemoryStore<Position>();
 initializeStore(positionStore);
 
 const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 1 * 60 * 1000,
+    max: 100,
     message: 'Too many requests, please try again later.',
 });
 
@@ -36,8 +36,8 @@ export const createPosition = async (req: Request, res: Response) => {
         const createdPosition = positionStore.create(positionData);
         res.status(201).json({ message: 'Position created successfully', position: createdPosition });
     } catch (error) {
-        if (error instanceof ServiceError) {
-            return res.status(400).json({ message: 'Invalid position data', errors: error.message });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ message: error.message });
         }
         console.error(error);
         res.status(500).json({ message: 'Error creating position' });
@@ -58,8 +58,8 @@ export const updatePosition = async (req: Request, res: Response) => {
         if (error instanceof NotFoundError) {
             return res.status(404).json({ message: error.message });
         }
-        if (error instanceof ServiceError) {
-            return res.status(400).json({ message: 'Invalid input data', errors: error.message });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ message: error.message });
         }
         console.error(error);
         res.status(500).json({ message: 'Error updating position' });

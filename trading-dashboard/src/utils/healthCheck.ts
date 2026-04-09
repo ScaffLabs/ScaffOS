@@ -13,19 +13,25 @@ export const healthCheck = async (req: Request, res: Response) => {
     }
 };
 
-export const readinessCheck = async (req: Request, res: Response) => {
-    try {
-        const health = await fetchServiceHealth();
-        if (health.status !== 'UP') {
-            return res.status(503).send({ status: 'DOWN', details: health });
-        }
-        res.status(200).send({ status: 'READY' });
-    } catch (err) {
-        res.status(503).send({ status: 'DOWN', error: err.message });
-    }
+export const gracefulShutdown = (server: any) => {
+    process.on('SIGTERM', async () => {
+        logger.info('SIGTERM signal received: closing HTTP server');
+        await closePool();
+        server.close(() => {
+            logger.info('HTTP server closed');
+            process.exit(0);
+        });
+    });
+    process.on('SIGINT', async () => {
+        logger.info('SIGINT signal received: closing HTTP server');
+        await closePool();
+        server.close(() => {
+            logger.info('HTTP server closed');
+            process.exit(0);
+        });
+    });
 };
 
 export const registerHealthRoutes = (app: any) => {
     app.get('/api/health', healthCheck);
-    app.get('/api/ready', readinessCheck);
 };
