@@ -1,3 +1,4 @@
+// serviceHealth.ts
 import { createConnectionPool, serviceEmitter } from './connectionPool';
 import logger from './logger';
 import config from './config';

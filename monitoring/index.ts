@@ -1,3 +1,4 @@
+// index.ts
 import express from 'express';
 import { createServer } from 'http';
 import { healthCheck, readyCheck } from './healthCheck';
@@ -41,6 +42,13 @@ app.use(sanitize);
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 app.get('/service-health', healthCheckServices);
+
+// Emit health check events every minute
+setInterval(() => {
+    healthCheckServices({}, {}).then(() => {
+        serviceEmitter.emit('healthCheck');
+    });
+}, 60000);
 
 // Error handling middleware
 app.use(errorMiddleware);
