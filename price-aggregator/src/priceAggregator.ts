@@ -1,6 +1,5 @@
-import WebSocket from 'ws';
 import { PriceData, PriceEvent } from './types';
-import { postHttpClient, checkHealth } from './httpClient';
+import { postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
 import { ValidationError, ServiceError } from './errors';
