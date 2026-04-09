@@ -41,4 +41,12 @@ export const logStartup = (config: any) => {
     logger.info('Starting Order Engine', { config });
 };
 
+export const logRequestDetails = (req: Request, res: Response, duration: number) => {
+    logger.info('Request details', { method: req.method, path: req.path, status: res.statusCode, duration });
+};
+
+export const logErrorWithContext = (error: Error, req: Request) => {
+    logger.error('Error occurred', { message: error.message, stack: error.stack, url: req.url, method: req.method });
+};
+
 export default logger;
