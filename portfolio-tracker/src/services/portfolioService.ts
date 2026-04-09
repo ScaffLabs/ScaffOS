@@ -14,16 +14,27 @@ const circuit = circuitBreaker({
     resetTimeout: 30000,
 });
 
-export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-    const validation = PortfolioSchema.omit({ id: true }).safeParse(portfolioData);
-    if (!validation.success) {
-        throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+const validatePositions = (positions: any[]) => {
+    if (!Array.isArray(positions) || positions.length === 0) {
+        throw new ValidationError('Positions must be a non-empty array.');
     }
-    validatePositions(portfolioData.positions);
-    const newPortfolio = storage.create(portfolioData);
-    await logPortfolioCreation(newPortfolio);
-    await notifyPortfolioService(newPortfolio);
-    return newPortfolio;
+    positions.forEach((pos) => {
+        if (!pos.symbol || typeof pos.quantity !== 'number' || pos.quantity < 0 || typeof pos.averagePrice !== 'number' || pos.averagePrice < 0) {
+            throw new ValidationError('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
+        }
+    });
+};
+
+export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
+    try {
+        validatePositions(portfolioData.positions);
+        const newPortfolio = storage.create(portfolioData);
+        await logPortfolioCreation(newPortfolio);
+        await notifyPortfolioService(newPortfolio);
+        return newPortfolio;
+    } catch (error) {
+        throw new ServiceError('Failed to create portfolio: ' + error.message);
+    }
 };
 
 export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Promise<Portfolio> => {
@@ -31,17 +42,17 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     if (!existingPortfolio) {
         throw new NotFoundError('Portfolio not found');
     }
-    const validation = PortfolioSchema.partial().safeParse(updates);
-    if (!validation.success) {
-        throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+    try {
+        if (updates.positions) {
+            validatePositions(updates.positions);
+        }
+        const updatedPortfolio = storage.update(id, updates);
+        await logPortfolioUpdate(id, updates);
+        await notifyPortfolioService(updatedPortfolio);
+        return updatedPortfolio;
+    } catch (error) {
+        throw new ServiceError('Failed to update portfolio: ' + error.message);
     }
-    if (updates.positions) {
-        validatePositions(updates.positions);
-    }
-    const updatedPortfolio = storage.update(id, updates);
-    await logPortfolioUpdate(id, updates);
-    await notifyPortfolioService(updatedPortfolio);
-    return updatedPortfolio;
 };
 
 export const deletePortfolio = async (id: string): Promise<void> => {

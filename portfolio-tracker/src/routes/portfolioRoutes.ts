@@ -10,11 +10,9 @@ const router = Router();
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
     body('positions').isArray().optional().custom((positions) => {
-        // Ensure positions array is not empty if provided
         if (positions && positions.length === 0) {
             throw new ValidationError('Positions array cannot be empty.');
         }
-        // Validate each position in the array
         positions.forEach(pos => {
             if (!pos.symbol || typeof pos.quantity !== 'number' || pos.quantity < 0 || typeof pos.averagePrice !== 'number' || pos.averagePrice < 0) {
                 throw new ValidationError('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
@@ -24,7 +22,6 @@ const portfolioValidation = [
     })
 ];
 
-// Route to create a new portfolio
 router.post('/', portfolioValidation, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -37,11 +34,13 @@ router.post('/', portfolioValidation, async (req, res) => {
         res.status(201).json(portfolio);
     } catch (error) {
         logger.error('Error creating portfolio', { error: error.message });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// Route to get a portfolio by ID
 router.get('/:id', [param('id').isString().trim().escape()], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -61,7 +60,6 @@ router.get('/:id', [param('id').isString().trim().escape()], async (req, res) =>
     }
 });
 
-// Route to update an existing portfolio
 router.put('/:id', portfolioValidation, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -81,7 +79,6 @@ router.put('/:id', portfolioValidation, async (req, res) => {
     }
 });
 
-// Route to delete a portfolio by ID
 router.delete('/:id', [param('id').isString().trim().escape()], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -101,21 +98,9 @@ router.delete('/:id', [param('id').isString().trim().escape()], async (req, res)
     }
 });
 
-// Route to fetch all portfolios with pagination, sorting, and filtering
-router.get('/', [
-    query('limit').optional().isInt({ min: 1 }).toInt(),
-    query('offset').optional().isInt({ min: 0 }).toInt(),
-    query('sortBy').optional().isString(),
-    query('filter').optional().isString()
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array() });
-        return res.status(400).json({ errors: errors.array() });
-    }
+router.get('/', async (req, res) => {
     try {
-        const { limit, offset, sortBy, filter } = req.query;
-        const portfolios = await fetchAllData(limit, offset, sortBy, filter);
+        const portfolios = await fetchAllData();
         logger.info('Fetched portfolios', { count: portfolios.length });
         res.status(200).json(portfolios);
     } catch (error) {
