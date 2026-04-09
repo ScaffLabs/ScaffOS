@@ -2,10 +2,14 @@ import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
+import csrf from 'csurf';
+
+// CSRF protection middleware
+const csrfProtection = csrf({ cookie: true });
 
 // Validation middleware for creating an order
 export const createOrderValidators = [
-    body('id').isString().withMessage('ID must be a string'),
+    body('id').isString().trim().escape().withMessage('ID must be a string'),
     body('type').isIn(['limit', 'market', 'stop']).withMessage('Type must be one of limit, market, or stop'),
     body('price').isNumeric().isPositive().withMessage('Price must be a positive number'),
     body('quantity').isInt({ gt: 0 }).withMessage('Quantity must be a positive integer'),
@@ -13,7 +17,7 @@ export const createOrderValidators = [
 ];
 
 // Create Order
-export const createOrder = [createOrderValidators, async (req: Request, res: Response): Promise<void> => {
+export const createOrder = [createOrderValidators, csrfProtection, async (req: Request, res: Response): Promise<void> => {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         return res.status(400).json({ errors: validationErrors.array() });
@@ -29,7 +33,7 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
     }
 }];
 
-// Get Orders with Pagination and Filtering
+// Get Orders
 export const getOrders = async (req: Request, res: Response): Promise<void> => {
     const { limit = 10, offset = 0, status } = req.query;
     try {

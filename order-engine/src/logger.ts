@@ -1,4 +1,6 @@
 import winston from 'winston';
+import { Request, Response } from 'express';
+import { escape } from 'html-escaper';
 
 const logFormat = winston.format.printf(({ level, message, timestamp, ...meta }) => {
     return `${timestamp} [${level}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
@@ -17,19 +19,16 @@ const logger = winston.createLogger({
     ],
 });
 
-export const logRequest = (req, res, next) => {
+export const logRequest = (req: Request, res: Response, next: Function) => {
     const start = process.hrtime();
     const requestId = req.headers['x-request-id'] || generateRequestId();
     res.on('finish', () => {
         const duration = process.hrtime(start);
         const durationInMs = (duration[0] * 1e3 + duration[1] / 1e6).toFixed(2);
-        logger.info(`Request: ${req.method} ${req.path} - ${res.statusCode} - ${durationInMs}ms`, { requestId });
+        const sanitizedPath = escape(req.path);
+        logger.info(`Request: ${req.method} ${sanitizedPath} - ${res.statusCode} - ${durationInMs}ms`, { requestId });
     });
     next();
-};
-
-export const logError = (error, req) => {
-    logger.error('Error occurred', { error: error.stack, requestId: req.headers['x-request-id'] });
 };
 
 const generateRequestId = () => {
@@ -37,19 +36,3 @@ const generateRequestId = () => {
 };
 
 export default logger;
-
-export const logDatabaseQuery = (query, params, duration, requestId) => {
-    logger.info('Database Query Executed', { query, params, durationInMs: duration, requestId });
-};
-
-export const logServiceCall = (serviceName, action, duration, success, requestId) => {
-    logger.info('Service Call', { serviceName, action, durationInMs: duration, success, requestId });
-};
-
-export const logStartup = (config) => {
-    logger.info('Service started', { config });
-};
-
-export const logShutdown = () => {
-    logger.info('Service shutting down');
-};
