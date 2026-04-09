@@ -50,14 +50,6 @@ export const logPerformance = (operation, duration) => {
     });
 };
 
-export const logSensitiveOperation = (operation, data) => {
-    logger.info({
-        message: 'Sensitive operation performed',
-        operation,
-        data: 'Sensitive data not logged',
-    });
-};
-
 const generateRequestId = () => {
     return 'req-' + Math.random().toString(36).substr(2, 9);
 };
