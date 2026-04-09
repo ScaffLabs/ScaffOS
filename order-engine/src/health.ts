@@ -15,9 +15,9 @@ const checkServiceHealth = async (url: string) => {
 export const healthCheck = async (req: Request, res: Response): Promise<void> => {
     try {
         const checks = await Promise.all([
-            checkServiceHealth(process.env.DATABASE_URL + '/health'),
-            checkServiceHealth(process.env.ANOTHER_SERVICE_URL + '/health'),
-            checkServiceHealth(process.env.ORDER_SERVICE_URL + '/health')
+            checkServiceHealth(`${process.env.DATABASE_URL}/health`),
+            checkServiceHealth(`${process.env.ANOTHER_SERVICE_URL}/health`),
+            checkServiceHealth(`${process.env.ORDER_SERVICE_URL}/health`)
         ]);
         if (checks.every(status => status)) {
             res.status(200).send('Order Engine is healthy!');
@@ -33,9 +33,9 @@ export const healthCheck = async (req: Request, res: Response): Promise<void> =>
 export const readyCheck = async (req: Request, res: Response): Promise<void> => {
     try {
         const readinessChecks = await Promise.all([
-            checkServiceHealth(process.env.DATABASE_URL + '/ready'),
-            checkServiceHealth(process.env.ANOTHER_SERVICE_URL + '/ready'),
-            checkServiceHealth(process.env.ORDER_SERVICE_URL + '/ready')
+            checkServiceHealth(`${process.env.DATABASE_URL}/ready`),
+            checkServiceHealth(`${process.env.ANOTHER_SERVICE_URL}/ready`),
+            checkServiceHealth(`${process.env.ORDER_SERVICE_URL}/ready`)
         ]);
         if (readinessChecks.every(status => status)) {
             res.status(200).send('Order Engine is ready!');

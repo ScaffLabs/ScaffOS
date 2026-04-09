@@ -25,8 +25,8 @@ const createOrderService = async (orderData: unknown) => {
 
 const notifyOtherServices = async (order: Order) => {
     const urls = [
-        process.env.ANOTHER_SERVICE_URL + '/orders',
-        process.env.ORDER_SERVICE_URL + '/orders'
+        `${process.env.ANOTHER_SERVICE_URL}/orders`,
+        `${process.env.ORDER_SERVICE_URL}/orders`
     ];
     const promises = urls.map(url => fetchData(url));
     try {
