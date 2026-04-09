@@ -11,16 +11,21 @@ const envSchema = z.object({
     OTHER_SERVICE_URL: z.string().url().default('http://localhost:4000'),
 });
 
-const env = envSchema.parse(process.env);
+const env = envSchema.safeParse(process.env);
+
+if (!env.success) {
+    console.error('Missing required environment variables:', env.error.errors);
+    process.exit(1);
+}
 
 export const config = {
-    environment: env.NODE_ENV,
-    port: env.PORT,
-    logLevel: env.LOG_LEVEL,
-    redisUrl: env.REDIS_URL,
-    otherServiceUrl: env.OTHER_SERVICE_URL,
+    environment: env.data.NODE_ENV,
+    port: env.data.PORT,
+    logLevel: env.data.LOG_LEVEL,
+    redisUrl: env.data.REDIS_URL,
+    otherServiceUrl: env.data.OTHER_SERVICE_URL,
 };
 
-export const isProduction = () => env.NODE_ENV === 'production';
-export const isDevelopment = () => env.NODE_ENV === 'development';
-export const isStaging = () => env.NODE_ENV === 'staging';
+export const isProduction = () => env.data.NODE_ENV === 'production';
+export const isDevelopment = () => env.data.NODE_ENV === 'development';
+export const isStaging = () => env.data.NODE_ENV === 'staging';
