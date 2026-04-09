@@ -3,7 +3,7 @@ import { simulateBacktest } from '../services/backtestService';
 import { ValidationError, NotFoundError, ServiceError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
-import { HistoricalDataSchema, StrategyParametersSchema, PaginationSchema } from '../types';
+import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();

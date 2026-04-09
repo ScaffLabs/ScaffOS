@@ -47,6 +47,9 @@ const simulateBacktest = circuitBreaker(async (params: StrategyParameters, histo
         return { totalReturns, trades, winRate, performanceMetrics };
     } catch (error) {
         logger.error({ message: 'Backtest simulation error', error: error.message });
+        if (error instanceof ValidationError) {
+            throw error;
+        }
         throw new ServiceError('An error occurred during backtesting: ' + error.message);
     }
 }, 3, { totalReturns: 0, trades: 0, winRate: 0, performanceMetrics: 'No trades simulated' });
