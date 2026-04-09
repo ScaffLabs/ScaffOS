@@ -32,4 +32,4 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     return res.status(500).json({ error: 'Internal Server Error' });
 };
 
-export default errorHandler; 
+export default errorHandler;
