@@ -8,9 +8,7 @@ import { logger, requestLogger } from './utils/logger';
 import healthCheckRouter from './routes/healthCheck';
 import { config } from '../config';
 import { monitorMemoryUsage } from './utils/monitor';
-import csurf from 'csurf';
-import bodyParser from 'body-parser';
-import { body, validationResult } from 'express-validator';
+import { gracefulShutdown } from './utils/gracefulShutdown';
 
 const app = express();
 const PORT = config.port;
@@ -26,23 +24,12 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(limiter);
-app.use(bodyParser.json({ limit: '1mb' }));
-app.use(csurf());
+app.use(express.json());
 app.use(requestLogger);
 
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);
 app.use(errorHandler);
-
-app.post('/api/sensitive-operation', [
-    body('data').isString().trim().escape(),
-], async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    // Handle sensitive operation...
-});
 
 const server = app.listen(PORT, () => {
     logger.info(`Backtester service running on port ${PORT}`);
@@ -50,10 +37,7 @@ const server = app.listen(PORT, () => {
 });
 
 const shutdown = async () => {
-    logger.info('Shutting down gracefully...');
-    await new Promise(resolve => server.close(resolve));
-    logger.info('Server closed');
-    process.exit(0);
+    await gracefulShutdown(server);
 };
 
 process.on('SIGTERM', shutdown);
