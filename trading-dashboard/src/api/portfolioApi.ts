@@ -2,11 +2,9 @@ import { Request, Response } from 'express';
 import { InMemoryStore } from '../storage/InMemoryStore';
 import { Position, validatePosition } from '../types';
 import { ServiceError, NotFoundError, ValidationError } from '../utils/errors';
-import { initializeStore } from '../storage/migrations';
 import rateLimit from 'express-rate-limit';
 
 const positionStore = new InMemoryStore<Position>();
-initializeStore(positionStore);
 
 const limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
@@ -14,6 +12,28 @@ const limiter = rateLimit({
     message: 'Too many requests, please try again later.',
 });
 
+/**
+ * @swagger
+ * /api/positions:
+ *   get:
+ *     summary: Retrieve all positions
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: A list of positions
+ *       400:
+ *         description: Invalid pagination parameters
+ */
 export const fetchPositions = async (req: Request, res: Response) => {
     try {
         const { limit = 10, offset = 0 } = req.query;
@@ -29,6 +49,30 @@ export const fetchPositions = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * @swagger
+ * /api/positions:
+ *   post:
+ *     summary: Create a new position
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               symbol:
+ *                 type: string
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Position created successfully
+ *       400:
+ *         description: Invalid position data
+ */
 export const createPosition = async (req: Request, res: Response) => {
     const positionData = req.body;
     try {
@@ -44,6 +88,35 @@ export const createPosition = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * @swagger
+ * /api/positions/{id}:
+ *   put:
+ *     summary: Update a position by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the position to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       204:
+ *         description: Successfully updated
+ *       404:
+ *         description: Position not found
+ *       400:
+ *         description: Invalid quantity
+ */
 export const updatePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
     const positionData = req.body;
@@ -66,6 +139,24 @@ export const updatePosition = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * @swagger
+ * /api/positions/{id}:
+ *   delete:
+ *     summary: Delete a position by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the position to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Successfully deleted
+ *       404:
+ *         description: Position not found
+ */
 export const deletePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
