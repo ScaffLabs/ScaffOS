@@ -1,6 +1,17 @@
-import { Portfolio, PortfolioUpdate } from '../types';
+import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
 import storage from './storage';
 import { ValidationError, NotFoundError } from '../errors';
+import axios from 'axios';
+import env from '../config';
+import circuitBreaker from 'circuit-breaker-js';
+
+const externalPortfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
+
+const circuit = circuitBreaker({
+    timeout: 5000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+});
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const { name, positions } = portfolioData;
@@ -11,6 +22,23 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
         return storage.create(portfolioData);
     } catch (error) {
         throw new Error('Error creating portfolio: ' + error.message);
+    }
+};
+
+export const fetchExternalPortfolios = async (): Promise<Portfolio[]> => {
+    return circuit.execute(async () => {
+        const response = await axios.get(`${externalPortfolioServiceUrl}`);
+        return response.data;
+    });
+};
+
+export const checkExternalPortfolioService = async (): Promise<boolean> => {
+    try {
+        await axios.get(`${externalPortfolioServiceUrl}/health`);
+        return true;
+    } catch (error) {
+        console.error('External portfolio service is down:', error.message);
+        return false;
     }
 };
 
