@@ -3,9 +3,9 @@ import type { Config } from 'jest';
 const config: Config = {
     testEnvironment: 'node',
     transform: {
-        '^.+\.ts$': 'ts-jest',
+        '^.+\.(ts|tsx)$': 'ts-jest',
     },
-    testRegex: '(/__tests__/.*|\.test|\.spec)\.ts$',
+    testRegex: '(/__tests__/.*|(\.|/))(test|spec)\.(ts|tsx)$',
     moduleFileExtensions: ['ts', 'js', 'json', 'node'],
     collectCoverage: true,
     coverageDirectory: 'coverage',
@@ -17,6 +17,7 @@ const config: Config = {
             statements: 80,
         },
     },
+    setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
 };
 
 export default config;
