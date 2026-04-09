@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
-import { PerformanceMetricsSchema, AnalyticsEventSchema } from '../types';
+import { PerformanceMetricsSchema } from '../types';
 import { logError } from '../utils/errorLogger';
 import { emitEvent } from '../api/eventBus';
 import { CircuitBreaker } from 'opossum';
@@ -37,6 +37,9 @@ const fetchPerformanceMetrics = async () => {
 
 const fetchComparisonData = async (strategyA: string, strategyB: string) => {
     try {
+        if (!strategyA || !strategyB) {
+            throw new ValidationError('Both strategies must be defined.');
+        }
         const response = await circuitBreaker.fire(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
         emitEvent('STRATEGY_COMPARISON_RESULT', response);
         return response;
