@@ -7,7 +7,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import config from './config';
 import { createConnectionPool } from './connectionPool';
-import { emitHealthCheckEvent, healthCheckServices } from './serviceHealth';
+import { emitHealthCheckEvent } from './serviceHealth';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,7 +21,7 @@ app.use(logRequest);
 
 // Health check endpoints
 app.get('/health', healthCheck);
-app.get('/health/services', healthCheckServices);
+app.get('/health/services', healthCheck);
 app.get('/ready', readinessCheck);
 app.get('/alive', livelinessCheck);
 app.use(errorMiddleware);
