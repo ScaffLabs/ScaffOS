@@ -8,7 +8,7 @@ import config from './config';
 import Database from './storage/Database';
 import http from 'http';
 import errorHandler from './middleware/errorHandler';
-import { logRequest } from './middleware/logger';
+import { logRequest, logError, logAudit } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 
 dotenv.config();
@@ -21,12 +21,13 @@ app.use(cors());
 app.use(rateLimiter);
 app.use(bodyParser.json());
 app.use(logRequest);
+app.use(logAudit);
+app.use(errorHandler);
 app.use((req, res, next) => {
     req.headers['x-request-id'] = Math.random().toString(36).substring(7);
     next();
 });
 app.use('/api/health', healthRouter);
-app.use(errorHandler);
 
 const startServer = async () => {
     await db.connect(config.databaseUrl);
