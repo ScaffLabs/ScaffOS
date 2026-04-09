@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.1] - 2023-10-26
+### Added
+- Detailed API reference for each endpoint in README.md.
+- Development and deployment guides in README.md for better onboarding.
+
 ## [1.4.0] - 2023-10-25
 ### Added
 - Comprehensive README.md documentation with detailed API reference and setup instructions.
