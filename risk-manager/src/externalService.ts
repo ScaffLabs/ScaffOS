@@ -47,3 +47,8 @@ export const fetchAnotherServiceData = async () => {
     const url = `${config.ANOTHER_SERVICE_URL}/data`;
     return await fetchWithRetry(url);
 };
+
+export const fetchRiskAlerts = async () => {
+    const url = `${config.EVENT_BUS_URL}/risk-alerts`;
+    return await fetchWithRetry(url);
+};

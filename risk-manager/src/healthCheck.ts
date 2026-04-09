@@ -17,4 +17,18 @@ router.get('/health', async (req, res) => {
     }
 });
 
+router.get('/ready', async (req, res) => {
+    try {
+        // Check if the service is ready to handle requests
+        const readyStatus = await healthCheckServices();
+        const isReady = Object.values(readyStatus).every(status => status);
+        const status = isReady ? 'ready' : 'not ready';
+        logger.info(`Readiness check status: ${status}`);
+        res.status(isReady ? 200 : 503).json({ status });
+    } catch (error) {
+        logger.error('Readiness check error: ', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 export default router;

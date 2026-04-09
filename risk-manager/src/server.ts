@@ -56,15 +56,14 @@ process.on('SIGINT', async () => {
     await gracefulShutdown(dbPool);
 });
 
-startServer();
-
+// Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (err) => {
-   logger.error('Uncaught Exception: ', err);
-   gracefulShutdown(dbPool);
+    logger.error('Uncaught Exception: ', err);
+    gracefulShutdown(dbPool);
 });
 
 process.on('unhandledRejection', (reason) => {
-   logger.error('Unhandled Rejection: ', reason);
+    logger.error('Unhandled Rejection: ', reason);
 });
 
 const healthCheckMiddleware = (req, res, next) => {
@@ -72,3 +71,5 @@ const healthCheckMiddleware = (req, res, next) => {
     next();
 };
 app.use('/health', healthCheckMiddleware);
+
+startServer();
