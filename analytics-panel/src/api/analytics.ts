@@ -34,4 +34,14 @@ const getStrategies = async () => {
     }
 };
 
-export { fetchPerformanceMetrics, fetchComparisonData, getStrategies };
+const createStrategy = async (strategy) => {
+    try {
+        const response = await axios.post(`/api/strategies`, strategy);
+        return response.data;
+    } catch (error) {
+        logError(error, 'Creating strategy');
+        throw new ServiceError('Failed to create strategy: ' + error.message);
+    }
+};
+
+export { fetchPerformanceMetrics, fetchComparisonData, getStrategies, createStrategy };
