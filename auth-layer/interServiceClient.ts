@@ -46,13 +46,28 @@ const fetchWithRetry = async (url: string) => {
 };
 
 export const checkUserServiceHealth = async () => {
-    return await fetchWithRetry(`${config.USER_SERVICE_URL}/health`);
+    try {
+        const healthUrl = `${config.USER_SERVICE_URL}/health`;
+        const healthCheck = await fetchWithRetry(healthUrl);
+        return healthCheck.status === 'healthy';
+    } catch (error) {
+        logger.error('User Service health check failed', { error: error.message });
+        return false;
+    }
 };
 
 export const checkOrderServiceHealth = async () => {
-    return await fetchWithRetry(`${config.ORDER_SERVICE_URL}/health`);
+    try {
+        const healthUrl = `${config.ORDER_SERVICE_URL}/health`;
+        const healthCheck = await fetchWithRetry(healthUrl);
+        return healthCheck.status === 'healthy';
+    } catch (error) {
+        logger.error('Order Service health check failed', { error: error.message });
+        return false;
+    }
 };
 
 export const fetchUserData = async (userId: string) => {
-    return await fetchWithRetry(`${config.USER_SERVICE_URL}/users/${userId}`);
+    const userUrl = `${config.USER_SERVICE_URL}/users/${userId}`;
+    return await fetchWithRetry(userUrl);
 };
