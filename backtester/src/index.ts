@@ -8,6 +8,8 @@ import { logger } from './utils/logger';
 import healthCheckRouter from './routes/healthCheck';
 import { config } from '../config';
 import { monitorMemoryUsage } from './utils/monitor';
+import csurf from 'csurf';
+import bodyParser from 'body-parser';
 
 const app = express();
 const PORT = config.port;
@@ -23,7 +25,8 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(limiter);
-app.use(express.json({ limit: '1mb' }));
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(csurf());
 
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);

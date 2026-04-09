@@ -11,6 +11,7 @@ const store = new InMemoryStore();
 backtestRouter.post('/', async (req, res, next) => {
     const { strategyParams, historicalData } = req.body;
     try {
+        // Validate and sanitize inputs
         StrategyParametersSchema.parse(strategyParams);
         if (!Array.isArray(historicalData) || historicalData.length === 0) {
             throw new ValidationError('historicalData must be a non-empty array.');
@@ -22,6 +23,8 @@ backtestRouter.post('/', async (req, res, next) => {
         const result = await simulateBacktest(strategyParams, historicalData);
         const entity = await store.create({ strategyParams, historicalData, result });
         logger.info({ message: 'Backtest created', id: entity.id });
+        // Log sensitive operations
+        logger.info({ message: 'Backtest run initiated', id: entity.id, strategyParams });
         res.status(201).json({ id: entity.id, result });
     } catch (error) {
         if (error instanceof ValidationError) {
