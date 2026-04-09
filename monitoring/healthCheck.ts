@@ -27,3 +27,14 @@ export const healthCheck = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
+
+// Add health check routes for readiness and liveliness
+export const readinessCheck = (req: Request, res: Response) => {
+    res.status(200).json({ status: 'READY' });
+};
+
+export const livelinessCheck = (req: Request, res: Response) => {
+    res.status(200).json({ status: 'ALIVE' });
+};
+
+// Update health check with new routes in index.ts

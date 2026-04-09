@@ -48,3 +48,20 @@ process.on('SIGINT', () => {
         console.log('HTTP server closed');
     });
 });
+
+// Graceful shutdown handling
+const shutdown = async () => {
+    console.log('Graceful shutdown initiated. Closing connection pool...');
+    await connectionPool.close();
+    console.log('Connection pool closed.');
+    process.exit(0);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+// Adding memory monitoring
+setInterval(() => {
+    const memoryUsage = process.memoryUsage();
+    console.log(`Memory Usage: RSS: ${memoryUsage.rss}, Heap Total: ${memoryUsage.heapTotal}, Heap Used: ${memoryUsage.heapUsed}`);
+}, 60000); // Log memory usage every minute
