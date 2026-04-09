@@ -43,4 +43,11 @@ describe('PriceAggregator', () => {
         const price: PriceData = { exchange: 'exchange1', price: 100, volume: 10 };
         await expect(priceAggregator.addPrice(price)).resolves.toEqual(price);
     });
+
+    test('should properly emit price added event', async () => {
+        const price: PriceData = { exchange: 'exchange1', price: 100, volume: 10 };
+        const eventSpy = jest.spyOn(priceAggregator['eventBus'], 'emitPriceAdded');
+        await priceAggregator.addPrice(price);
+        expect(eventSpy).toHaveBeenCalledWith(price);
+    });
 });
