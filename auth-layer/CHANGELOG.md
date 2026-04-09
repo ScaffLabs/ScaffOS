@@ -30,3 +30,8 @@
 ## [1.4.0] - 2023-11-02
 - Enhanced API documentation.
 - Improved deployment and setup instructions.
+
+## [1.5.0] - 2023-11-05
+- Added comprehensive README.md with detailed API reference.
+- Updated environment variables table for clarity and completeness.
+- Refined development and deployment guides to streamline onboarding.
