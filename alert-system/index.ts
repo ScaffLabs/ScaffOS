@@ -36,3 +36,14 @@ process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 process.on('uncaughtException', shutdown);
 process.on('unhandledRejection', shutdown);
+
+process.on('request', (req, res) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        logRequest(req, res, start);
+    });
+});
+
+process.on('error', (error) => {
+    logError(error, { context: 'Global Error Handler' });
+});
