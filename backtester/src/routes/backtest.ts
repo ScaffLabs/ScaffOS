@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { simulateBacktest } from '../services/backtestService';
-import { ValidationError, NotFoundError, ServiceError, validateRequestBody } from '../middleware/errorHandler';
+import { ValidationError, NotFoundError, ServiceError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
 import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
@@ -10,14 +10,14 @@ import xss from 'xss';
 const backtestRouter = Router();
 const store = new InMemoryStore();
 
-// Sanitize input and log requests
+// Middleware to sanitize input and log requests
 const sanitizeInput = (req, res, next) => {
     req.body = {
         strategyParams: req.body.strategyParams,
         historicalData: req.body.historicalData.map(data => ({
             timestamp: data.timestamp,
             price: data.price,
-        })),
+        }))
     };
     next();
 };
