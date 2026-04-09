@@ -22,13 +22,12 @@ router.use(limiter);
 router.post('/', async (req, res) => {
     const configItem: ConfigurationItem = req.body;
     try {
-        // Sanitize input
         configItem.key = sanitizeHtml(configItem.key);
         configItem.value = sanitizeHtml(configItem.value);
         ConfigurationItemSchema.parse(configItem);
         await db.createConfiguration(configItem);
         logger.info(`Configuration created: ${configItem.key}`);
-        logAudit(req, res, () => {});  // Log audit information
+        logAudit(req, res, () => {});
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -43,7 +42,6 @@ router.post('/', async (req, res) => {
 router.get('/:key', async (req, res) => {
     const { key } = req.params;
     try {
-        // Sanitize key parameter
         const sanitizedKey = sanitizeHtml(key);
         const config = await db.getConfigurationByKey(sanitizedKey);
         if (!config) {
@@ -62,10 +60,9 @@ router.get('/:key', async (req, res) => {
 router.delete('/:key', async (req, res) => {
     const { key } = req.params;
     try {
-        // Sanitize key parameter
         const sanitizedKey = sanitizeHtml(key);
         await db.deleteConfiguration(sanitizedKey);
-        logAudit(req, res, () => {});  // Log audit information
+        logAudit(req, res, () => {});
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {

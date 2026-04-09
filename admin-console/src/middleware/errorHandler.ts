@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError, ServiceError, NotFoundError } from '../errors/CustomErrors';
-import { logger } from './logger';
+import winston from 'winston';
+
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [new winston.transports.Console()],
+});
 
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
     logger.error({
@@ -20,10 +26,6 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     if (err instanceof ServiceError) {
         return res.status(500).json({ error: 'Service Error: ' + err.message });
     }
-    if (err instanceof Error) {
-        return res.status(500).json({ error: 'Internal Server Error' });
-    }
-    console.error(err);
     return res.status(500).json({ error: 'Internal Server Error' });
 };
 

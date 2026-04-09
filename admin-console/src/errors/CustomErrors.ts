@@ -33,4 +33,11 @@ class UnauthorizedError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DatabaseError, UnauthorizedError };
+class EmptyArrayError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'EmptyArrayError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DatabaseError, UnauthorizedError, EmptyArrayError };
