@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
-import { PerformanceMetricsSchema } from '../types';
+import { PerformanceMetricsSchema, AnalyticsEventSchema } from '../types';
 import { logError } from '../utils/errorLogger';
 import { emitEvent } from '../api/eventBus';
 import { CircuitBreaker } from 'opossum';
@@ -46,21 +46,4 @@ const fetchComparisonData = async (strategyA: string, strategyB: string) => {
     }
 };
 
-const healthCheckDependentServices = async () => {
-    const dependencies = [
-        { name: 'Strategy Service', url: process.env.STRATEGY_SERVICE_URL },
-    ];
-
-    const healthResults = await Promise.all(dependencies.map(async (service) => {
-        try {
-            const response = await circuitBreaker.fire(service.url);
-            return { serviceName: service.name, healthy: response.status === 200 };
-        } catch (error) {
-            return { serviceName: service.name, healthy: false };
-        }
-    }));
-
-    return healthResults;
-};
-
-export { fetchPerformanceMetrics, fetchComparisonData, healthCheckDependentServices };
+export { fetchPerformanceMetrics, fetchComparisonData };

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { fetchComparisonData, getStrategies } from '../api/analytics';
+import { fetchComparisonData, fetchStrategies } from '../api/analytics';
 import { ValidationError } from '../errors/customErrors';
+import { Strategy } from '../types';
 
 export const ComparisonTool: React.FC = () => {
-    const [strategies, setStrategies] = useState<string[]>([]);
-    const [strategyA, setStrategyA] = useState('');
-    const [strategyB, setStrategyB] = useState('');
+    const [strategies, setStrategies] = useState<Strategy[]>([]);
+    const [strategyA, setStrategyA] = useState<string>('');
+    const [strategyB, setStrategyB] = useState<string>('');
     const [comparisonResult, setComparisonResult] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -13,7 +14,7 @@ export const ComparisonTool: React.FC = () => {
     useEffect(() => {
         const loadStrategies = async () => {
             try {
-                const data = await getStrategies();
+                const data = await fetchStrategies();
                 setStrategies(data);
             } catch (err) {
                 setError('Failed to load strategies: ' + err.message);
@@ -48,16 +49,16 @@ export const ComparisonTool: React.FC = () => {
             <div>
                 <select value={strategyA} onChange={(e) => setStrategyA(e.target.value)}>
                     <option value='' disabled>Select Strategy A</option>
-                    {strategies.map(strategy => <option key={strategy} value={strategy}>{strategy}</option>)}
+                    {strategies.map(strategy => <option key={strategy.name} value={strategy.name}>{strategy.name}</option>)}
                 </select>
                 <select value={strategyB} onChange={(e) => setStrategyB(e.target.value)}>
                     <option value='' disabled>Select Strategy B</option>
-                    {strategies.map(strategy => <option key={strategy} value={strategy}>{strategy}</option>)}
+                    {strategies.map(strategy => <option key={strategy.name} value={strategy.name}>{strategy.name}</option>)}
                 </select>
                 <button onClick={handleCompare} disabled={loading}>Compare</button>
             </div>
             {loading && <div>Loading comparison...</div>}
-            {error && <div>{error}</div>}
+            {error && <div style={{ color: 'red' }}>{error}</div>}
             {comparisonResult && <div>Better Strategy: {comparisonResult.betterStrategy}</div>}
         </div>
     );
