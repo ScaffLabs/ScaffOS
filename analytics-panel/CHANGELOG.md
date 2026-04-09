@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2023-11-01
+- Added comprehensive documentation including detailed README.md and API reference.
+- Enhanced inline code comments throughout the codebase for clarity.
+- Improved setup instructions in README.md for easier onboarding.
+
 ## [1.4.0] - 2023-11-01
 - Added comprehensive documentation including API reference and setup instructions.
 - Enhanced error handling with additional logging for health checks.

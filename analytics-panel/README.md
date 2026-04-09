@@ -37,6 +37,7 @@ The application is built using Node.js and Express for the backend, with MongoDB
 ## API Reference
 ### Performance Metrics
 - **GET /api/performance**  
+  Fetches the performance metrics for the strategies.
   **Response:** 200 OK
   ```json
   {
@@ -48,6 +49,7 @@ The application is built using Node.js and Express for the backend, with MongoDB
 
 ### Strategy Comparison
 - **GET /api/compare**  
+  Compares two strategies based on their names.  
   **Query Parameters:**
   - `strategyA`: Name of the first strategy to compare.
   - `strategyB`: Name of the second strategy to compare.
@@ -60,6 +62,7 @@ The application is built using Node.js and Express for the backend, with MongoDB
 
 ### Health Check
 - **GET /api/health**  
+  Checks the health status of the application.
   **Response:** 200 OK
   ```json
   {
@@ -88,3 +91,8 @@ For deployment in a production environment, consider using Docker containers for
 
 ## License
 This project is licensed under the MIT License.
+
+## Change Log
+- Updated to include detailed API documentation.
+- Refined setup instructions for clarity.
+- Added detailed environment variable descriptions.
