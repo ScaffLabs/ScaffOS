@@ -7,7 +7,8 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "docker:build": "docker build -t portfolio-tracker .",
-    "docker:up": "docker-compose up"
+    "docker:up": "docker-compose up",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "express": "^4.17.1",

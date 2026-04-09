@@ -65,7 +65,7 @@ describe('Portfolio Service', () => {
 
     // Additional test for edge cases
     test('should throw an error for creating a portfolio with empty name', async () => {
-        await expect(createPortfolio({ name: '', positions: [] })).rejects.toThrow('Invalid portfolio data');
+        await expect(createPortfolio({ name: \'\', positions: [] })).rejects.toThrow('Invalid portfolio data');
     });
 
     test('should throw an error for creating a portfolio with negative quantity', async () => {
