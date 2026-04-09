@@ -3,6 +3,7 @@ import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { logger } from '../utils/logger';
 import { withRetry, circuitBreaker } from './resilience';
+import { v4 as uuidv4 } from 'uuid';
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
@@ -14,10 +15,6 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     for (let i = 1; i < historicalData.length; i++) {
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
-
-        if (typeof currentPrice !== 'number' || currentPrice <= 0) {
-            throw new ValidationError('Price must be a positive number.');
-        }
 
         // Buy Condition
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
@@ -43,7 +40,7 @@ const simulateBacktest = circuitBreaker(async (params: StrategyParameters, histo
         const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
         if (trades > 0) {
             await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades }));
-            await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns })); // Notify data service
+            await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns }));
         }
         logger.info({ message: 'Backtest simulation completed', params, totalReturns });
         return result;
