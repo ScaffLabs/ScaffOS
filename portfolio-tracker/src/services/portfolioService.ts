@@ -14,6 +14,14 @@ const circuit = circuitBreaker({
     resetTimeout: 30000,
 });
 
+const notifyPortfolioService = async (portfolio: Portfolio) => {
+    try {
+        await circuit.call(() => axios.post(`${externalPortfolioServiceUrl}/notify`, portfolio));
+    } catch (error) {
+        console.error('Error notifying external portfolio service:', error);
+    }
+};
+
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const validation = PortfolioSchema.safeParse(portfolioData);
     if (!validation.success) {
@@ -22,7 +30,7 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
     try {
         const newPortfolio = storage.create(portfolioData);
         await logPortfolioCreation(newPortfolio);
-        await notifyPortfolioUpdate(newPortfolio);
+        await notifyPortfolioService(newPortfolio);
         return newPortfolio;
     } catch (error) {
         throw new ServiceError('Error creating portfolio: ' + error.message);
@@ -41,7 +49,7 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     try {
         const updatedPortfolio = storage.update(id, updates);
         await logPortfolioUpdate(id, updates);
-        await notifyPortfolioUpdate(updatedPortfolio);
+        await notifyPortfolioService(updatedPortfolio);
         return updatedPortfolio;
     } catch (error) {
         throw new ServiceError('Error updating portfolio: ' + error.message);
@@ -54,4 +62,21 @@ export const deletePortfolio = async (id: string): Promise<void> => {
         throw new NotFoundError('Portfolio not found');
     }
     await logPortfolioDeletion(id);
+};
+
+export const fetchExternalPortfolioData = async () => {
+    try {
+        const response = await circuit.call(() => axios.get(`${externalPortfolioServiceUrl}/data`));
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch external portfolio data:', error);
+        throw new ServiceError('Could not fetch external data');
+    }
+};
+
+export const syncWithExternalService = async () => {
+    const externalData = await fetchExternalPortfolioData();
+    externalData.forEach(portfolio => {
+        storage.create(portfolio);
+    });
 };
