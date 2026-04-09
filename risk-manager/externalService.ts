@@ -9,24 +9,33 @@ const exponentialBackoff = (retryCount: number) => {
 const fetchWithRetry = async (url: string, retries: number = 5): Promise<any> => {
     for (let i = 0; i < retries; i++) {
         try {
-            const response = await axios.get(url);
+            const response = await axios.get(url, { timeout: 5000 });
             return response.data;
         } catch (error) {
             logger.warn(`Attempt ${i + 1} failed: ${error.message}`);
-            if (i === retries - 1) throw error;
+            if (i === retries - 1) {
+                logger.error('Final attempt failed:', error);
+                throw error;
+            }
             await exponentialBackoff(i);
         }
     }
 };
 
-export const checkServiceHealth = async (url: string): Promise<boolean> => {
+const checkServiceHealth = async (url: string): Promise<boolean> => {
     try {
-        const response = await axios.get(url);
+        const response = await axios.get(url, { timeout: 5000 });
         return response.status === 200;
     } catch (error) {
         logger.error(`Health check failed for ${url}: ${error.message}`);
         return false;
     }
+};
+
+export const healthCheckServices = async () => {
+    const eventBusHealth = await checkServiceHealth(config.EVENT_BUS_URL);
+    const anotherServiceHealth = await checkServiceHealth(config.ANOTHER_SERVICE_URL);
+    return { eventBus: eventBusHealth, anotherService: anotherServiceHealth };
 };
 
 export const fetchEventBusData = async () => {
@@ -39,9 +48,7 @@ export const fetchAnotherServiceData = async () => {
     return await fetchWithRetry(url);
 };
 
-export const healthCheckServices = async () => {
-    const eventBusHealth = await checkServiceHealth(config.EVENT_BUS_URL);
-    const anotherServiceHealth = await checkServiceHealth(config.ANOTHER_SERVICE_URL);
-
-    return { eventBus: eventBusHealth, anotherService: anotherServiceHealth };
+export const fetchRiskAlerts = async () => {
+    const url = `${config.EVENT_BUS_URL}/risk-alerts`;
+    return await fetchWithRetry(url);
 };
