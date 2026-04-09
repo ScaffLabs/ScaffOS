@@ -11,6 +11,7 @@ const envSchema = z.object({
   ORDER_SERVICE_URL: z.string().url().nonempty(),
   MEMORY_LIMIT: z.string().default('80%'),
   LOG_LEVEL: z.string().default('info'),
+  NODE_ENV: z.enum(['development', 'staging', 'production']).default('development')
 });
 
 const env = envSchema.safeParse(process.env);
