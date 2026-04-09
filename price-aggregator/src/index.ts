@@ -5,21 +5,21 @@ import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logStartup } from './logger';
 import { httpClient } from './httpClient';
-import { requestQueueMiddleware } from './middleware/requestQueueingMiddleware';
+import { PriceAggregator } from './priceAggregator';
 
 const app = express();
 const server = http.createServer(app);
 const dbPool = createConnectionPool();
+const priceAggregator = new PriceAggregator();
 
 app.use(express.json());
-app.use(requestQueueMiddleware);
 app.use(errorMiddleware);
 
 app.get('/health', async (req, res) => {
     try {
         await dbPool.query('SELECT 1');
-        const externalServiceHealth = await httpClient('/external-service/health');
-        return res.status(200).json({ status: 'healthy', dependencies: { externalService: externalServiceHealth } });
+        const dependenciesHealth = await priceAggregator.checkDependencies();
+        return res.status(200).json({ status: 'healthy', dependencies: dependenciesHealth });
     } catch (error) {
         return res.status(500).json({ status: 'unhealthy', error: error.message });
     }

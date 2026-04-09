@@ -3,7 +3,8 @@ import { PriceData, PriceEvent } from './types';
 import { postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
-import { ValidationError, ServiceError, DivisionByZeroError } from './errors';
+import { ValidationError, ServiceError } from './errors';
+import { httpClient } from './httpClient';
 
 export class PriceAggregator {
     private currentPrices: { [key: string]: number } = {};
@@ -26,9 +27,6 @@ export class PriceAggregator {
             this.eventBus.emitPriceAdded(newPrice);
             return newPrice;
         } catch (error) {
-            if (error instanceof DivisionByZeroError) {
-                throw new ServiceError('Division by zero error in price addition.');
-            }
             throw new ServiceError('Failed to add price: ' + error.message);
         }
     }
@@ -38,6 +36,14 @@ export class PriceAggregator {
             return false;
         }
         return true;
+    }
+
+    public async checkDependencies() {
+        const healthChecks = await Promise.all([
+            httpClient('/external-service/health'),
+            httpClient('/another-external-service/health')
+        ]);
+        return healthChecks;
     }
 
     private handlePriceEvent(event: PriceEvent) {
