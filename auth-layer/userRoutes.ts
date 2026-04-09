@@ -25,11 +25,11 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
     }
 });
 
-// Route to get all users with pagination, filtering, and sorting
+// Route to get all users
 router.get('/users', authMiddleware, async (req, res) => {
-    const { limit = 10, offset = 0, sortBy = 'username', order = 'asc', emailFilter } = req.query;
+    const { limit = 10, offset = 0 } = req.query;
     try {
-        const users = await getAllUsers({ limit: Number(limit), offset: Number(offset), sortBy, order, emailFilter });
+        const users = await getAllUsers();
         res.status(200).json(users);
     } catch (error) {
         logger.error('Error retrieving users', { error: error.message });
@@ -65,6 +65,21 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting user', { error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Route to get a user by ID
+router.get('/users/:id', authMiddleware, async (req, res) => {
+    const userId = req.params.id;
+    try {
+        const user = await findUserById(userId);
+        res.status(200).json(user);
+    } catch (error) {
+        logger.error('Error retrieving user', { error: error.message });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
