@@ -22,6 +22,7 @@ class NotFoundError extends Error {
 }
 
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error(err);
     switch (err.name) {
         case 'ValidationError':
             return res.status(400).json({ error: err.message });
