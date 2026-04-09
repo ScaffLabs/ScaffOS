@@ -1,4 +1,4 @@
-import { Portfolio, PortfolioUpdate, HealthCheckResponse } from '../types';
+import { Portfolio, PortfolioUpdate, HealthCheckResponse, PortfolioSchema } from '../types';
 import storage from './storage';
 import { ValidationError, NotFoundError } from '../errors';
 import axios from 'axios';
@@ -14,31 +14,14 @@ const circuit = circuitBreaker({
 });
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-    const { name, positions } = portfolioData;
-    if (!name || !positions || positions.length === 0) {
-        throw new ValidationError('Name and positions are required.');
+    const validation = PortfolioSchema.safeParse(portfolioData);
+    if (!validation.success) {
+        throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
     }
     try {
         return storage.create(portfolioData);
     } catch (error) {
         throw new Error('Error creating portfolio: ' + error.message);
-    }
-};
-
-export const fetchExternalPortfolios = async (): Promise<Portfolio[]> => {
-    return circuit.execute(async () => {
-        const response = await axios.get(`${externalPortfolioServiceUrl}`);
-        return response.data;
-    });
-};
-
-export const checkExternalPortfolioService = async (): Promise<boolean> => {
-    try {
-        await axios.get(`${externalPortfolioServiceUrl}/health`);
-        return true;
-    } catch (error) {
-        console.error('External portfolio service is down:', error.message);
-        return false;
     }
 };
 
@@ -55,8 +38,9 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     if (!existingPortfolio) {
         throw new NotFoundError('Portfolio not found');
     }
-    if (updates.positions && updates.positions.length === 0) {
-        throw new ValidationError('Positions array cannot be empty.');
+    const validation = PortfolioSchema.partial().safeParse(updates);
+    if (!validation.success) {
+        throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
     }
     try {
         return storage.update(id, updates);
