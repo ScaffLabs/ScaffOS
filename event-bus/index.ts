@@ -8,6 +8,7 @@ import eventRoutes from './api/eventRoutes';
 import logger from './logger';
 import { config } from './config';
 import { errorHandler } from './middleware/errorHandler';
+import { gracefulShutdown } from './api/healthCheck';
 
 const app = express();
 
@@ -32,15 +33,15 @@ const main = async () => {
         logger.info(`Server is running on port ${config.port}`);
     });
 
-    const gracefulShutdown = async () => {
-        logger.info('Shutting down gracefully...');
+    const gracefulShutdownHandler = async () => {
+        await gracefulShutdown();
         await server.close();
         logger.info('HTTP server closed');
         process.exit(0);
     };
 
-    process.on('SIGTERM', gracefulShutdown);
-    process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdownHandler);
+    process.on('SIGINT', gracefulShutdownHandler);
 };
 
 main();

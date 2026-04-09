@@ -24,6 +24,19 @@ redisClient.on('error', (err) => {
     logger.error('Redis Client Error', err);
 });
 
+const timeout = promisify(setTimeout);
+
+const executeWithTimeout = async (command, args, timeoutMs = 5000) => {
+    let timeoutId;
+    const promise = command(...args);
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+            reject(new Error('Operation timed out'));
+        }, timeoutMs);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+};
+
 (async () => {
     try {
         await connectWithRetry();
@@ -33,25 +46,8 @@ redisClient.on('error', (err) => {
     }
 })();
 
-const timeout = promisify(setTimeout);
-redisClient.on('commandError', async (command) => {
-    logger.error(`Command ${command} failed due to timeout`);
-    await timeout(5000); // Retry mechanism or error handling can be implemented here
-});
-
-export default redisClient;
-
-const gracefulShutdown = async () => {
-    try {
-        logger.info('Shutting down Redis client gracefully...');
-        await redisClient.quit();
-        logger.info('Redis client closed');
-        process.exit(0);
-    } catch (error) {
-        logger.error('Error during Redis shutdown:', error);
-        process.exit(1);
-    }
+export const publishWithTimeout = async (topic, message) => {
+    return await executeWithTimeout(redisClient.publish.bind(redisClient), [topic, JSON.stringify(message)]);
 };
 
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);
+export default redisClient;
