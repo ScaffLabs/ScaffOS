@@ -6,8 +6,8 @@ dotenv.config();
 const envSchema = Joi.object({
     PORT: Joi.number().default(3000),
     NODE_ENV: Joi.string().valid('development', 'staging', 'production').default('development'),
-    ORDER_SERVICE_URL: Joi.string().required(),
-    DATA_SERVICE_URL: Joi.string().required(),
+    ORDER_SERVICE_URL: Joi.string().uri().required(),
+    DATA_SERVICE_URL: Joi.string().uri().required(),
     DATABASE_URL: Joi.string().required(),
     LOG_LEVEL: Joi.string().valid('info', 'warn', 'error').default('info'),
 }).unknown();
