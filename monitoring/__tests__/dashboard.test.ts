@@ -2,7 +2,6 @@ import request from 'supertest';
 import express from 'express';
 import { listDashboardEntries, createDashboardEntry, updateDashboardEntry, deleteDashboardEntry } from '../dashboard';
 import errorMiddleware from '../errorMiddleware';
-import { ValidationError, NotFoundError } from '../errorClasses';
 import InMemoryStore from '../dataStore';
 
 const app = express();
