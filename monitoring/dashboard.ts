@@ -6,83 +6,77 @@ import { LatencyData, LatencyDataSchema } from './types';
 
 const store = new InMemoryStore<LatencyData>();
 
-// List all dashboard entries with pagination support
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
-        const limit = parseInt(req.query.limit as string) || 10; // Default limit is 10
-        const offset = parseInt(req.query.offset as string) || 0; // Default offset is 0
-        const entries = store.getAll().slice(offset, offset + limit); // Fetch entries with pagination
+        const entries = store.getAll();
         if (entries.length === 0) {
-            return res.status(204).json([]); // No content if no entries found
+            return res.status(204).json([]);
         }
-        res.status(200).json(entries); // Return the entries found
+        res.status(200).json(entries);
     } catch (error) {
         logger.error(error, req);
-        res.status(500).json({ error: 'Failed to fetch entries.' }); // Handle unexpected errors
+        res.status(500).json({ error: 'Failed to fetch entries.' });
     }
 };
 
-// Create a new entry in the dashboard
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
-        const bodyValidation = LatencyDataSchema.safeParse({ ...req.body, timestamp: new Date() }); // Validate request body
+        const bodyValidation = LatencyDataSchema.safeParse({ ...req.body, timestamp: new Date() });
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data. Please provide valid path and duration.'); // Throw if validation fails
+            throw new ValidationError('Invalid input data. Please provide valid path and duration.');
         }
         const { path, duration, timestamp } = bodyValidation.data;
-        store.create({ path, duration, timestamp }, path); // Store the new entry
+        store.create({ path, duration, timestamp }, path);
         logger.info(`Created new entry: ${path}`);
-        res.status(201).json({ message: 'Entry created', id: path }); // Return success message
+        res.status(201).json({ message: 'Entry created', id: path });
     } catch (error) {
         logger.error(error, req);
         if (error instanceof ValidationError) {
-            return res.status(400).json({ error: error.message }); // Return error message if validation error
+            return res.status(400).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' }); // Handle unexpected errors
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
-// Update an existing dashboard entry
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const bodyValidation = LatencyDataSchema.partial().safeParse(req.body); // Validate partial update
+        const bodyValidation = LatencyDataSchema.partial().safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data. Please ensure the fields are correct.'); // Throw if validation fails
+            throw new ValidationError('Invalid input data. Please ensure the fields are correct.');
         }
-        const existingEntry = store.read(id); // Check for existing entry
+        const existingEntry = store.read(id);
         if (!existingEntry) {
-            throw new NotFoundError('Entry not found.'); // Throw if entry not found
+            throw new NotFoundError('Entry not found.');
         }
-        const updatedData = { ...existingEntry, ...bodyValidation.data }; // Merge existing and new data
-        store.update(id, updatedData); // Update the store
+        const updatedData = { ...existingEntry, ...bodyValidation.data };
+        store.update(id, updatedData);
         logger.info(`Updated entry: ${id}`);
-        res.status(204).send(); // Return no content on success
+        res.status(204).send();
     } catch (error) {
         logger.error(error, req);
         if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message }); // Return error if entry not found
+            return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' }); // Handle unexpected errors
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
-// Delete a dashboard entry
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const existingEntry = store.read(id); // Check for existing entry
+        const existingEntry = store.read(id);
         if (!existingEntry) {
-            throw new NotFoundError('Entry not found.'); // Throw if entry not found
+            throw new NotFoundError('Entry not found.');
         }
-        store.delete(id); // Delete from store
+        store.delete(id);
         logger.info(`Deleted entry: ${id}`);
-        res.status(204).send(); // Return no content on success
+        res.status(204).send();
     } catch (error) {
         logger.error(error, req);
         if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message }); // Return error if entry not found
+            return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' }); // Handle unexpected errors
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
