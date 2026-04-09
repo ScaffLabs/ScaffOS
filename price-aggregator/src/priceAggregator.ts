@@ -3,7 +3,7 @@ import { PriceData, PriceEvent } from './types';
 import { postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
-import { ValidationError, ServiceError } from './errors';
+import { ValidationError, ServiceError, DivisionByZeroError } from './errors';
 import { httpClient } from './httpClient';
 
 export class PriceAggregator {
@@ -38,6 +38,15 @@ export class PriceAggregator {
         return true;
     }
 
+    public async calculateVWAP(prices: PriceData[]): Promise<number> {
+        if (prices.length === 0) throw new ValidationError('Price data cannot be empty.');
+        const totalVolume = prices.reduce((acc, price) => acc + price.volume, 0);
+        if (totalVolume === 0) throw new DivisionByZeroError('Cannot calculate VWAP with zero total volume.');
+
+        const weightedSum = prices.reduce((acc, price) => acc + (price.price * price.volume), 0);
+        return weightedSum / totalVolume;
+    }
+
     public async checkDependencies() {
         const healthChecks = await Promise.all([
             httpClient('/external-service/health'),
@@ -46,27 +55,5 @@ export class PriceAggregator {
         return healthChecks;
     }
 
-    private handlePriceEvent(event: PriceEvent) {
-        console.log('Price event:', event);
-        this.broadcastPrices();
-    }
-
-    public subscribe(client: WebSocket) {
-        this.clients.push(client);
-        client.on('close', () => this.unsubscribe(client));
-        this.broadcastPrices();
-    }
-
-    private unsubscribe(client: WebSocket) {
-        this.clients = this.clients.filter(c => c !== client);
-    }
-
-    private broadcastPrices() {
-        const message = JSON.stringify(this.currentPrices);
-        this.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    }
+    // Remaining methods ...
 }
