@@ -13,7 +13,6 @@ Thank you for considering contributing to the Event Bus service! We appreciate y
 ## Code Style
 - Follow the existing code style and structure. Consistency helps maintain readability.
 - Write meaningful commit messages that describe the changes made.
-- Ensure consistent use of semicolons and indentation.
 
 ## Testing
 - Ensure all new features and bug fixes are covered by tests. Use Jest for unit testing, and ensure integration tests are also passing.
@@ -24,8 +23,3 @@ Thank you for considering contributing to the Event Bus service! We appreciate y
 
 ## Contact
 For any questions or suggestions, please feel free to reach out to the maintainers via GitHub issues or discussions. Your feedback is valuable!
-
-## Style Guide
-- Use TypeScript for all new code.
-- Follow SOLID principles and aim for high cohesion and low coupling in your code.
-- Ensure that your code is well-documented, especially for public APIs and complex logic.
