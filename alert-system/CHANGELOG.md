@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.7] - 2023-10-24
+### Added
+- Comprehensive README documentation with project description, architecture overview, setup instructions, API reference, environment variables table, development guide, and deployment guide.
+- CHANGELOG.md to maintain version history and track changes.
+
 ## [1.0.6] - 2023-10-23
 ### Added
 - Comprehensive README documentation with detailed API reference for each endpoint.
