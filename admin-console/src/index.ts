@@ -12,10 +12,21 @@ import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
 import { logAudit } from './middleware/auditLogger';
 import { sanitizeQueryParams } from './middleware/sanitization';
+import { createPool } from 'mysql2/promise';
+import { CircuitBreaker } from 'opossum';
 
 dotenv.config();
 const app = express();
 const db = new Database();
+
+const pool = createPool({
+    host: 'localhost',
+    user: 'root',
+    database: 'admin_console',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
 const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.com'];
 app.use(cors({ origin: allowedOrigins }));
@@ -24,11 +35,23 @@ app.use(bodyParser.json({ limit: '1mb' }));
 app.use(rateLimiter);
 app.use(logRequest);
 app.use(sanitizeQueryParams);
-app.use(logAudit);  
+app.use(logAudit);
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
 app.use(logError);
 app.use(errorHandler);
+
+const gracefulShutdown = (signal) => {
+    console.log(`Received ${signal}. Shutting down gracefully...`);
+    app.close(async () => {
+        console.log('Closed out remaining connections.');
+        await db.closeConnection();
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 const startServer = async () => {
     try {
@@ -36,18 +59,6 @@ const startServer = async () => {
         const server = app.listen(config.port, () => {
             console.log(`Server running on http://localhost:${config.port}`);
         });
-
-        const gracefulShutdown = (signal) => {
-            console.log(`Received ${signal}. Shutting down gracefully...`);
-            server.close(async () => {
-                console.log('Closed out remaining connections.');
-                await db.closeConnection();
-                process.exit(0);
-            });
-        };
-
-        process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-        process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     } catch (error) {
         console.error(`Failed to start server: ${error.message}`);
     }
