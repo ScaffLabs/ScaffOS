@@ -72,4 +72,18 @@ describe('Portfolio API Endpoints', () => {
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('Invalid position data');
     });
+
+    // Edge case tests
+    it('GET /api/positions should return empty array when no positions exist', async () => {
+        await store.delete('1');
+        const response = await request(app).get('/api/positions');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([]);
+    });
+    
+    it('PUT /api/positions/:id with non-existent ID should return 404', async () => {
+        const response = await request(app).put('/api/positions/nonexistent-id').send({ quantity: 10 });
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('Position not found');
+    });
 });
