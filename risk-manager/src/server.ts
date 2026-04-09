@@ -4,9 +4,6 @@ import apiRouter from './api';
 import healthRouter from './healthCheck';
 import logger from './logger';
 import { errorHandler } from './errors';
-import MemoryQueue from './memoryQueue';
-import loggingMiddleware from './middleware/loggingMiddleware';
-import requestIdMiddleware from './middleware/requestIdMiddleware';
 import gracefulShutdown from './gracefulShutdown';
 import { createPool } from 'mysql2/promise';
 import { healthCheckServices } from './externalService';
@@ -14,7 +11,6 @@ import { healthCheckServices } from './externalService';
 const app = express();
 const server = http.createServer(app);
 
-// MySQL connection pooling
 const dbPool = createPool({
     host: 'localhost',
     user: 'root',
@@ -25,8 +21,6 @@ const dbPool = createPool({
 });
 
 app.use(express.json());
-app.use(requestIdMiddleware);
-app.use(loggingMiddleware);
 app.use('/api', apiRouter);
 app.use('/health', healthRouter);
 app.use(errorHandler);
@@ -38,17 +32,6 @@ const startServer = async () => {
     });
 };
 
-// Health check interval to monitor service health
-setInterval(async () => {
-    try {
-        const healthStatus = await healthCheckServices();
-        logger.info('Health check status: ', healthStatus);
-    } catch (error) {
-        logger.error('Health check failed: ', error);
-    }
-}, 60000);
-
-// Graceful Shutdown with memory queue
 process.on('SIGTERM', async () => {
     await gracefulShutdown(dbPool);
 });
@@ -56,7 +39,6 @@ process.on('SIGINT', async () => {
     await gracefulShutdown(dbPool);
 });
 
-// Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (err) => {
     logger.error('Uncaught Exception: ', err);
     gracefulShutdown(dbPool);
@@ -65,11 +47,5 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason) => {
     logger.error('Unhandled Rejection: ', reason);
 });
-
-const healthCheckMiddleware = (req, res, next) => {
-    logger.info('Health check endpoint hit');
-    next();
-};
-app.use('/health', healthCheckMiddleware);
 
 startServer();
