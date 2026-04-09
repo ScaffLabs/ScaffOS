@@ -18,23 +18,23 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message, details: error.errors });
         }
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 router.get('/users', authMiddleware, async (req, res) => {
+    const { limit = 10, offset = 0, sortBy = 'username', order = 'asc', filter = '' } = req.query;
     try {
         const users = await getAllUsers();
-        if (!users || users.length === 0) throw new NotFoundError('No users found.');
-        res.status(200).json(users);
+        const filteredUsers = users.filter(user => user.username.includes(filter) || user.email.includes(filter));
+        const sortedUsers = filteredUsers.sort((a, b) => {
+            const comparison = a[sortBy].localeCompare(b[sortBy]);
+            return order === 'desc' ? -comparison : comparison;
+        });
+        const paginatedUsers = sortedUsers.slice(Number(offset), Number(offset) + Number(limit));
+        res.status(200).json(paginatedUsers);
     } catch (error) {
         logger.error('Error retrieving users', { error: error.message });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
