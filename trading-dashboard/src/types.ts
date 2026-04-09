@@ -54,7 +54,6 @@ export const TradingEventSchema = z.union([
 /**
  * Validates an order data structure
  * @param data - The data to validate
- * @returns The validated order
  * @throws Will throw an error if validation fails
  */
 export const validateOrder = (data: unknown): Order => {
@@ -66,7 +65,6 @@ export const validateOrder = (data: unknown): Order => {
 /**
  * Validates a position data structure
  * @param data - The data to validate
- * @returns The validated position
  * @throws Will throw an error if validation fails
  */
 export const validatePosition = (data: unknown): Position => {
@@ -78,7 +76,6 @@ export const validatePosition = (data: unknown): Position => {
 /**
  * Validates a trading event data structure
  * @param data - The data to validate
- * @returns The validated trading event
  * @throws Will throw an error if validation fails
  */
 export const validateTradingEvent = (data: unknown): TradingEvent => {
