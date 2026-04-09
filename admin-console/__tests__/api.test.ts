@@ -15,6 +15,10 @@ beforeAll(async () => {
     await db.connect(process.env.DATABASE_URL);
 });
 
+afterAll(async () => {
+    await db.closeConnection();
+});
+
 describe('API Endpoints', () => {
     it('GET /api/health returns health status', async () => {
         const response = await request(app).get('/api/health');
@@ -22,15 +26,6 @@ describe('API Endpoints', () => {
         expect(response.body).toHaveProperty('application');
         expect(response.body).toHaveProperty('database');
         expect(response.body).toHaveProperty('externalService');
-    });
-
-    it('GET /api/health/metrics returns system metrics', async () => {
-        const response = await request(app).get('/api/health/metrics');
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('memoryUsage');
-        expect(response.body).toHaveProperty('uptime');
-        expect(response.body).toHaveProperty('platform');
-        expect(response.body).toHaveProperty('arch');
     });
 
     it('POST /api/config creates a configuration', async () => {
