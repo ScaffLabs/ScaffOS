@@ -21,7 +21,6 @@ The Alert System leverages Node.js and Express, organized under a microservices 
    git clone <repository-url>
    cd alert-system
    ```
-
 2. Install dependencies:
    ```bash
    npm install
@@ -83,6 +82,6 @@ Please refer to the `CONTRIBUTING.md` file for guidelines on contributing to thi
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ## Changelog
-### [1.0.4] - 2023-10-21
-- Added comprehensive README documentation including setup instructions, API reference, and development guide.
-- Introduced deployment guide for better production readiness.
+### [1.0.5] - 2023-10-22
+- Comprehensive README documentation with detailed API reference for each endpoint.
+- Documentation for environment variables and setup instructions.
