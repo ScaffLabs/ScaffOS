@@ -1,6 +1,6 @@
 import { Portfolio, PortfolioUpdate, PortfolioSchema } from '../types';
 import storage from './storage';
-import { ValidationError, NotFoundError } from '../errors';
+import { ValidationError, NotFoundError, ServiceError } from '../errors';
 import axios from 'axios';
 import env from '../config';
 import circuitBreaker from 'circuit-breaker-js';
@@ -29,7 +29,7 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
 
 const notifyPortfolioUpdate = async (portfolio: Portfolio) => {
     try {
-        await axios.post(`${externalPortfolioServiceUrl}/updates`, portfolio);
+        await circuit.run(() => axios.post(`${externalPortfolioServiceUrl}/updates`, portfolio));
     } catch (error) {
         console.error('Failed to notify portfolio update:', error);
     }
