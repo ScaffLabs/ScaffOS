@@ -52,4 +52,17 @@ describe('Portfolio Routes', () => {
         expect(response.status).toBe(404);
         expect(response.body.error).toBe('Portfolio not found');
     });
+
+    it('should return 400 for invalid portfolio update', async () => {
+        const createResponse = await request(app).post('/api/portfolios').send(validPortfolio);
+        const response = await request(app).put(`/api/portfolios/${createResponse.body.id}`).send({ name: '', positions: [] });
+        expect(response.status).toBe(400);
+        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Name is required' })]));
+    });
+
+    it('should return 400 for invalid portfolio creation', async () => {
+        const response = await request(app).post('/api/portfolios').send({ positions: [] });
+        expect(response.status).toBe(400);
+        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Name is required' })]));
+    });
 });
