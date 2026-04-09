@@ -55,14 +55,18 @@ export type AnalyticsEvent =
     | { type: 'STRATEGY_COMPARISON_RESULT'; betterStrategy: string };
 
 /**
- * Schema for validating strategy comparison events.
+ * Schema for validating event data using Zod for each event type.
  */
-export const StrategyComparisonEventSchema = z.object({
-    type: z.literal('STRATEGY_COMPARISON'),
-    strategyA: z.string().min(1),
-    strategyB: z.string().min(1),
-    result: z.string(),
-});
+export const AnalyticsEventSchema = z.union([
+    z.object({
+        type: z.literal('PERFORMANCE_METRICS_FETCHED'),
+        data: PerformanceMetricsSchema,
+    }),
+    z.object({
+        type: z.literal('STRATEGY_COMPARISON_RESULT'),
+        betterStrategy: z.string().min(1),
+    }),
+]);
 
 /**
  * Type for error handling in service calls.
