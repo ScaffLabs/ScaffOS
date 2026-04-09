@@ -12,6 +12,8 @@ const envSchema = z.object({
     DB_HOST: z.string().nonempty(),
     DB_NAME: z.string().nonempty(),
     DB_PORT: z.number().int().default(5432),
+    LOG_LEVEL: z.enum(['info', 'warn', 'error']).default('info'),
+    DOCKER: z.boolean().default(false),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -32,6 +34,8 @@ export const config = {
     dbHost: env.DB_HOST,
     dbName: env.DB_NAME,
     dbPort: env.DB_PORT,
+    logLevel: env.LOG_LEVEL,
+    docker: env.DOCKER,
 };
 
 export const isProduction = env.NODE_ENV === 'production';

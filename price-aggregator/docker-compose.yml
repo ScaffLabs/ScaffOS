@@ -13,6 +13,8 @@ services:
       - DB_HOST=${DB_HOST}
       - DB_NAME=${DB_NAME}
       - DB_PORT=${DB_PORT}
+      - LOG_LEVEL=info
+      - DOCKER=true
     volumes:
       - .:/usr/src/app
     networks:

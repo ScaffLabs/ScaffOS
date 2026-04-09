@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
 
-# Bundle app source
+# Copy all source files
 COPY . .
 
 # Build the TypeScript files
