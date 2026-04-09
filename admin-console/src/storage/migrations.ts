@@ -1,21 +1,15 @@
-import Database from './Database';
 import { ConfigurationItem } from '../types';
+import Database from './Database';
 
-const migrateData = async (sourceDb: Database, targetDb: Database) => {
-    const configurations = await sourceDb.getConfigurations({ limit: 1000, offset: 0, sortBy: 'key', order: 'asc' });
+const migrateData = async (sourceDb: Database, targetDb: Database): Promise<void> => {
+    const configurations = await sourceDb.findAllConfigurations();
     for (const config of configurations) {
         await targetDb.createConfiguration(config);
     }
 };
 
-const runMigrations = async (sourceDbUrl: string, targetDbUrl: string) => {
-    const sourceDb = new Database('sqlite'); // Example for SQLite
-    const targetDb = new Database('postgres'); // Example for PostgreSQL
-    await sourceDb.connect(sourceDbUrl);
-    await targetDb.connect(targetDbUrl);
+const runMigrations = async (sourceDb: Database, targetDb: Database): Promise<void> => {
     await migrateData(sourceDb, targetDb);
-    await sourceDb.closeConnection();
-    await targetDb.closeConnection();
 };
 
 export { runMigrations };
