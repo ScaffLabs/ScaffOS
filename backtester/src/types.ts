@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
+export type BacktestId = string & { readonly brand: unique symbol };
 
 export interface HistoricalData {
     timestamp: number;
@@ -16,6 +17,7 @@ export interface StrategyParameters {
 }
 
 export interface BacktestResult {
+    id: BacktestId;
     totalReturns: number;
     trades: number;
     winRate: number;
@@ -34,6 +36,7 @@ export const StrategyParametersSchema = z.object({
 });
 
 export const BacktestResultSchema = z.object({
+    id: z.string().uuid(),
     totalReturns: z.number(),
     trades: z.number().int().nonnegative(),
     winRate: z.number().min(0).max(100),
@@ -46,3 +49,15 @@ export const PaginationSchema = z.object({
     sort: z.string().default('createdAt'),
     order: z.enum(['asc', 'desc']).default('asc'),
 });
+
+// Discriminated Union for Event Types
+export type BacktestEvent =
+    | { type: 'BACKTEST_CREATED'; data: BacktestResult }
+    | { type: 'BACKTEST_UPDATED'; data: BacktestResult }
+    | { type: 'BACKTEST_ERROR'; message: string };
+
+export const BacktestEventSchema = z.union([
+    z.object({ type: z.literal('BACKTEST_CREATED'), data: BacktestResultSchema }),
+    z.object({ type: z.literal('BACKTEST_UPDATED'), data: BacktestResultSchema }),
+    z.object({ type: z.literal('BACKTEST_ERROR'), message: z.string() }),
+]);

@@ -1,4 +1,4 @@
-import { HistoricalData, StrategyParameters, BacktestResult } from '../types';
+import { HistoricalData, StrategyParameters, BacktestResult, BacktestId } from '../types';
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { logger } from '../utils/logger';
@@ -39,12 +39,14 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     try {
         const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+        const backtestId: BacktestId = uuidv4() as BacktestId;
+        const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
         if (trades > 0) {
             await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades }));
             await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns })); // Notify data service
         }
         logger.info({ message: 'Backtest simulation completed', params, totalReturns });
-        return { totalReturns, trades, winRate, performanceMetrics };
+        return result;
     } catch (error) {
         logger.error({ message: 'Backtest simulation error', error: error.message });
         if (error instanceof ValidationError) {
