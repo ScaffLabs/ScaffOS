@@ -8,6 +8,8 @@ const config: Config = {
     collectCoverage: true,
     collectCoverageFrom: ['**/*.ts', '!**/node_modules/**'],
     testTimeout: 10000,
+    watchPathIgnorePatterns: ['<rootDir>/dist/'],
+    watch: true,
 };
 
 export default config;
