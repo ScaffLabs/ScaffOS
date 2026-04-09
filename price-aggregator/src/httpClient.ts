@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { CircuitBreaker } from 'circuit-breaker-js';
+import { logError } from './logger';
 
 const BASE_URL = process.env.BASE_URL || 'https://api.example.com';
 const MAX_RETRIES = 3;
@@ -23,7 +24,7 @@ export const httpClient = async (path: string, config?: AxiosRequestConfig) => {
             return response.data;
         } catch (error) {
             lastError = error;
-            console.error(`Request failed (attempt ${attempt + 1}):`, error);
+            logError(error, { message: `Request failed (attempt ${attempt + 1})` });
             await delay(Math.pow(2, attempt) * 1000); // exponential backoff
         }
     }
@@ -41,7 +42,7 @@ export const postHttpClient = async (path: string, data: any, config?: AxiosRequ
             return response.data;
         } catch (error) {
             lastError = error;
-            console.error(`Request failed (attempt ${attempt + 1}):`, error);
+            logError(error, { message: `Request failed (attempt ${attempt + 1})` });
             await delay(Math.pow(2, attempt) * 1000); // exponential backoff
         }
     }
@@ -54,7 +55,7 @@ export const checkHealth = async () => {
         const healthCheck = await httpClient('/health');
         return healthCheck;
     } catch (error) {
-        console.error('Health check failed:', error);
+        logError(error, { message: 'Health check failed.' });
         throw new Error('Health check failed.');
     }
 };

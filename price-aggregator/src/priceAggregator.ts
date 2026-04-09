@@ -1,5 +1,5 @@
 import { PriceData, PriceEvent } from './types';
-import { postHttpClient } from './httpClient';
+import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
 import { ValidationError, ServiceError } from './errors';
@@ -28,10 +28,13 @@ export class PriceAggregator {
         }
     }
 
-    public async getPrices({ limit = 10, offset = 0, sort = 'exchange', order = 'asc' }): Promise<PriceData[]> {
-        let prices = await storage.findAll();
-        prices = this.sortPrices(prices, sort, order);
-        return prices.slice(offset, offset + limit);
+    public async checkDependencies() {
+        try {
+            const dbHealth = await checkHealth();
+            return { database: dbHealth.status };
+        } catch (error) {
+            throw new ServiceError('Dependency health check failed: ' + error.message);
+        }
     }
 
     private handlePriceEvent(event: PriceEvent) {
@@ -50,15 +53,5 @@ export class PriceAggregator {
 
     private validatePriceData(priceData: PriceData): boolean {
         return priceData.exchange.trim() !== '' && priceData.price > 0 && priceData.volume > 0;
-    }
-
-    private sortPrices(prices: PriceData[], sort: string, order: string): PriceData[] {
-        return prices.sort((a, b) => {
-            if (order === 'asc') {
-                return a[sort] > b[sort] ? 1 : -1;
-            } else {
-                return a[sort] < b[sort] ? 1 : -1;
-            }
-        });
     }
 }
