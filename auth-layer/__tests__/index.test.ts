@@ -95,4 +95,17 @@ describe('Integration Tests', () => {
         expect(res.status).toBe(401);
         expect(res.body).toEqual({ error: 'Invalid API key' });
     });
+
+    it('should return healthy status from health check endpoint', async () => {
+        const res = await request(app).get('/health');
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({ status: 'healthy' });
+    });
+
+    it('should handle service unavailability gracefully', async () => {
+        jest.spyOn(global, 'fetch').mockImplementationOnce(() => Promise.reject(new Error('Service unavailable')));
+        const res = await request(app).get('/health');
+        expect(res.status).toBe(500);
+        expect(res.body).toEqual({ status: 'unhealthy', error: 'Service unavailable' });
+    });
 });
