@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { checkAllHealth, checkReadiness } from '../services/healthCheckService';
 import logger from '../utils/logger';
-import { monitorMemoryUsage } from '../utils/monitor';
 
 const healthCheckRouter = Router();
 
@@ -23,17 +22,6 @@ healthCheckRouter.get('/ready', async (req, res) => {
     logger.error('Readiness check failed:', error);
     res.status(500).json({ status: 'not ready', error: error.message });
   }
-});
-
-healthCheckRouter.get('/memory', (req, res) => {
-  const used = process.memoryUsage();
-  res.status(200).json({
-    memory: {
-      heapTotal: Math.round(used.heapTotal / 1024 / 1024),
-      heapUsed: Math.round(used.heapUsed / 1024 / 1024),
-      external: Math.round(used.external / 1024 / 1024),
-    }
-  });
 });
 
 export default healthCheckRouter;
