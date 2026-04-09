@@ -1,60 +1,48 @@
 import { HistoricalData, StrategyParameters, BacktestResult, BacktestId } from '../types';
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
-import axios from 'axios';
 import { logger } from '../utils/logger';
-import { withRetry, circuitBreaker } from './resilience';
 import { v4 as uuidv4 } from 'uuid';
-import { eventEmitter } from './resilience';
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
-    // Validate historical data
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
     }
     let totalReturns = 0;
     let trades = 0;
 
-    // Iterate through historical data to calculate returns based on strategy parameters
     for (let i = 1; i < historicalData.length; i++) {
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
 
-        // Validate price
         if (typeof currentPrice !== 'number' || currentPrice <= 0) {
             throw new ValidationError('Price must be a positive number.');
         }
 
-        // Buy condition based on threshold
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
-            totalReturns += (currentPrice * (1 - slippage)) - previousPrice; // Calculate profit after slippage
+            totalReturns += (currentPrice * (1 - slippage)) - previousPrice;
         } else if (currentPrice < previousPrice * (1 - sellThreshold)) {
             trades++;
-            totalReturns += previousPrice - (currentPrice * (1 + slippage)); // Calculate loss after slippage
+            totalReturns += previousPrice - (currentPrice * (1 + slippage));
         }
     }
 
-    // Calculate win rate
     const winRate = trades > 0 ? (totalReturns > 0 ? (trades / (trades * 2)) * 100 : 0) : 0;
     const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate}%`;
     return { totalReturns, trades, winRate, performanceMetrics };
 }
 
-const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
-    // Validate strategy parameters using Zod schema
+const simulateBacktest = async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     const validation = StrategyParametersSchema.safeParse(params);
     if (!validation.success) {
         throw new ValidationError('Invalid strategy parameters: ' + validation.error.format());
     }
 
-    // Calculate returns based on historical data and strategy parameters
     const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
-    // Emit an event when backtest is created
-    eventEmitter.emit('BACKTEST_CREATED', { id: backtestId, result });
     return result;
-}, 3, { totalReturns: 0, trades: 0, winRate: 0, performanceMetrics: 'No trades simulated' });
+};
 
 export { simulateBacktest };
