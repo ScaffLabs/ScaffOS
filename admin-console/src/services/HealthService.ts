@@ -1,6 +1,12 @@
 import axios from 'axios';
 import config from '../config';
 import { CircuitBreaker } from 'opossum';
+import { ServiceError } from '../errors/CustomErrors';
+
+const fetchHealthStatus = async () => {
+    const response = await axios.get(`${config.API_URL}/health`);
+    return response.data;
+};
 
 const healthCircuitBreaker = new CircuitBreaker(fetchHealthStatus, {
     timeout: 3000,
@@ -8,9 +14,16 @@ const healthCircuitBreaker = new CircuitBreaker(fetchHealthStatus, {
     resetTimeout: 30000
 });
 
-const fetchHealthStatus = async () => {
-    const response = await axios.get(`${config.API_URL}/health`);
-    return response.data;
+const retryWithExponentialBackoff = async (fn, retries = 5, delay = 1000) => {
+    try {
+        return await fn();
+    } catch (error) {
+        if (retries > 0) {
+            await new Promise(res => setTimeout(res, delay));
+            return retryWithExponentialBackoff(fn, retries - 1, delay * 2);
+        }
+        throw error;
+    }
 };
 
 export const healthCheck = async () => {
@@ -22,19 +35,7 @@ export const healthCheck = async () => {
             externalService: result.externalService
         };
     } catch (error) {
-        throw new Error('Health check failed');
-    }
-};
-
-const retryWithExponentialBackoff = async (fn, retries = 5, delay = 1000) => {
-    try {
-        return await fn();
-    } catch (error) {
-        if (retries > 0) {
-            await new Promise(res => setTimeout(res, delay));
-            return retryWithExponentialBackoff(fn, retries - 1, delay * 2);
-        }
-        throw error;
+        throw new ServiceError('Health check failed');
     }
 };
 

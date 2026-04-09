@@ -4,8 +4,6 @@ import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
 import { CircuitBreaker } from 'opossum';
 
-const BASE_URL = config.API_URL;
-
 const fetchConfigurationsCircuitBreaker = new CircuitBreaker(fetchConfigurations, {
     timeout: 3000,
     errorThresholdPercentage: 50,
@@ -14,7 +12,7 @@ const fetchConfigurationsCircuitBreaker = new CircuitBreaker(fetchConfigurations
 
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
-        const response = await axios.get(`${BASE_URL}/config`);
+        const response = await axios.get(`${config.API_URL}/config`);
         if (!response.data || !Array.isArray(response.data)) {
             throw new ServiceError('Invalid response: Expected an array');
         }
@@ -28,8 +26,15 @@ const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
 };
 
 const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
+    const circuitBreaker = new CircuitBreaker(async () => {
+        await axios.post(`${config.API_URL}/config`, configItem);
+    }, {
+        timeout: 3000,
+        errorThresholdPercentage: 50,
+        resetTimeout: 30000
+    });
     try {
-        await axios.post(`${BASE_URL}/config`, configItem);
+        await circuitBreaker.fire();
     } catch (error) {
         if (axios.isAxiosError(error)) {
             throw new ServiceError(`Failed to create configuration: ${error.response?.data?.error || error.message}`);
@@ -39,8 +44,15 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
 };
 
 const deleteConfiguration = async (key: string): Promise<void> => {
+    const circuitBreaker = new CircuitBreaker(async () => {
+        await axios.delete(`${config.API_URL}/config/${key}`);
+    }, {
+        timeout: 3000,
+        errorThresholdPercentage: 50,
+        resetTimeout: 30000
+    });
     try {
-        await axios.delete(`${BASE_URL}/config/${key}`);
+        await circuitBreaker.fire();
     } catch (error) {
         if (axios.isAxiosError(error)) {
             throw new ServiceError(`Failed to delete configuration: ${error.response?.data?.error || error.message}`);
@@ -49,28 +61,4 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     }
 };
 
-const fetchHealthStatus = async () => {
-    const response = await axios.get(`${BASE_URL}/health`);
-    return response.data;
-};
-
-const healthCircuitBreaker = new CircuitBreaker(fetchHealthStatus, {
-    timeout: 3000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000
-});
-
-export const healthCheck = async () => {
-    try {
-        const result = await healthCircuitBreaker.fire();
-        return {
-            application: 'running',
-            database: result.database,
-            externalService: result.externalService
-        };
-    } catch (error) {
-        throw new ServiceError('Health check failed');
-    }
-};
-
-export { fetchConfigurations, postConfiguration, deleteConfiguration }; 
+export { fetchConfigurations, postConfiguration, deleteConfiguration };
