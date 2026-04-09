@@ -12,11 +12,13 @@ const app = express();
 const eventBus = new EventBus();
 const alertProcessor = new AlertProcessor(eventBus);
 
-app.use(bodyParser.json({ limit: '1mb' })); // Limit request size
+app.use(bodyParser.json({ limit: '1mb' }));
+
+// Health check routes
 app.get('/health', HealthCheck.checkHealth);
 app.get('/ready', HealthCheck.checkReady);
 
-app.use(errorMiddleware); // Use error handling middleware after all routes
+app.use(errorMiddleware);
 
 const server = app.listen(config.PORT, () => {
     logStartup(config);
@@ -25,7 +27,7 @@ const server = app.listen(config.PORT, () => {
 
 const shutdown = async () => {
     logger.info('Shutting down gracefully...');
-    await mongoose.connection.close(); // Close mongoose connections
+    await mongoose.connection.close();
     server.close(() => {
         logger.info('Server closed');
         process.exit(0);
