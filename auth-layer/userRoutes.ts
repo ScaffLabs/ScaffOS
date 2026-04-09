@@ -3,9 +3,7 @@ import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from '.
 import { validateAndSanitizeUserInput, authMiddleware } from './middleware';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
-import { emitUserCreated } from './eventBus';
 import { validateUser } from './userValidation';
-
 const router = express.Router();
 
 router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
@@ -13,7 +11,6 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
     try {
         validateUser({ username, email });
         const user = await createUser(username, email);
-        emitUserCreated(user);
         logger.info('User created', { userId: user.id, username: user.username });
         res.status(201).json(user);
     } catch (error) {
@@ -21,10 +18,10 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message, details: error.errors });
         }
-        if (error.message === 'Email already in use') {
-            return res.status(409).json({ error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -38,7 +35,7 @@ router.get('/users', authMiddleware, async (req, res) => {
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -55,7 +52,7 @@ router.put('/users/:id', authMiddleware, validateAndSanitizeUserInput, async (re
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -71,7 +68,7 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
