@@ -67,20 +67,18 @@ class InMemoryStorage<T extends { id: string }> {
             return acc;
         }, {} as Record<string, T[]>);
     }
+
+    public migrateOrders(data: T[]): Promise<void> {
+        return Promise.all(data.map(order => this.create(order))).then(() => {});
+    }
+
+    public seedData(): Promise<void> {
+        const initialOrders: T[] = [
+            { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' } as unknown as T,
+            { id: '2' as OrderId, type: 'market', price: 0, quantity: 5, status: 'open' } as unknown as T
+        ];
+        return this.migrateOrders(initialOrders);
+    }
 }
 
 export const storage = new InMemoryStorage<Order>();
-
-export const migrateOrders = async (data: Order[]): Promise<void> => {
-    for (const order of data) {
-        await storage.create(order);
-    }
-};
-
-export const seedData = async (): Promise<void> => {
-    const initialOrders: Order[] = [
-        { id: '1' as OrderId, type: 'limit', price: 100, quantity: 10, status: 'open' },
-        { id: '2' as OrderId, type: 'market', price: 0, quantity: 5, status: 'open' }
-    ];
-    await migrateOrders(initialOrders);
-};
