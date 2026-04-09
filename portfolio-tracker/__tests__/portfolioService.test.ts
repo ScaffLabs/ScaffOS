@@ -1,4 +1,4 @@
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, clearPortfolios } from '../src/services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData, clearPortfolios } from '../src/services/portfolioService';
 import { Portfolio } from '../src/types';
 import { validPortfolio, invalidPortfolio, existingPortfolioId, nonExistentPortfolioId, portfolioWithMultiplePositions } from './fixtures/portfolioFixtures';
 
@@ -60,11 +60,11 @@ describe('Portfolio Service', () => {
 
     test('should throw an error for invalid position update data', async () => {
         await createPortfolio(testPortfolio);
-        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: \'\', quantity: -5, averagePrice: 150 }] })).rejects.toThrow('Invalid portfolio update data');
+        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: '', quantity: -5, averagePrice: 150 }] })).rejects.toThrow('Invalid portfolio update data');
     });
 
     test('should throw an error for creating a portfolio with empty name', async () => {
-        await expect(createPortfolio({ name: \'\', positions: [] })).rejects.toThrow('Invalid portfolio data');
+        await expect(createPortfolio({ name: '', positions: [] })).rejects.toThrow('Invalid portfolio data');
     });
 
     test('should throw an error for creating a portfolio with negative quantity', async () => {

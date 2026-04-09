@@ -59,4 +59,11 @@ describe('Portfolio Routes', () => {
         expect(response.status).toBe(400);
         expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Name is required' })]));
     });
+
+    it('should return 500 for server error on create', async () => {
+        jest.spyOn(global.console, 'error').mockImplementation(() => {});
+        const response = await request(app).post('/api/portfolios').send({});
+        expect(response.status).toBe(500);
+        expect(response.body.error).toBe('Internal Server Error');
+    });
 });
