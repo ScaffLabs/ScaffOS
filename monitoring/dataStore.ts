@@ -1,4 +1,5 @@
 import { ValidationError } from './errorClasses';
+import { LatencyData } from './types';
 
 interface Entity<T> {
     id: string;

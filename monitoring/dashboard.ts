@@ -25,7 +25,7 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const bodyValidation = LatencyDataSchema.safeParse({ ...req.body, timestamp: new Date() });
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data. Both path and duration are required.');
+            throw new ValidationError('Invalid input data. Please provide valid path and duration.');
         }
         const { path, duration, timestamp } = bodyValidation.data;
         store.create({ path, duration, timestamp }, path);
@@ -45,7 +45,7 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         const { id } = req.params;
         const bodyValidation = LatencyDataSchema.partial().safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data.');
+            throw new ValidationError('Invalid input data. Please ensure the fields are correct.');
         }
         const existingEntry = store.read(id);
         if (!existingEntry) {
