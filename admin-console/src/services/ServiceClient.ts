@@ -49,12 +49,28 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     }
 };
 
-const fetchConfigurationsWithRetry = async (): Promise<ConfigurationItem[]> => {
+const fetchHealthStatus = async () => {
+    const response = await axios.get(`${BASE_URL}/health`);
+    return response.data;
+};
+
+const healthCircuitBreaker = new CircuitBreaker(fetchHealthStatus, {
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+});
+
+export const healthCheck = async () => {
     try {
-        return await fetchConfigurationsCircuitBreaker.fire();
+        const result = await healthCircuitBreaker.fire();
+        return {
+            application: 'running',
+            database: result.database,
+            externalService: result.externalService
+        };
     } catch (error) {
-        throw new ServiceError('Failed to fetch configurations after retries');
+        throw new ServiceError('Health check failed');
     }
 };
 
-export { fetchConfigurationsWithRetry as fetchConfigurations, postConfiguration, deleteConfiguration }; 
+export { fetchConfigurations, postConfiguration, deleteConfiguration }; 

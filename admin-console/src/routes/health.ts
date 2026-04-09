@@ -1,11 +1,10 @@
 import express from 'express';
 import { logger } from '../middleware/logger';
 import { healthCheck } from '../services/HealthService';
-import config from '../config';
 
 const router = express.Router();
 
-router.get('/health', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const status = await healthCheck();
         res.status(200).json(status);
