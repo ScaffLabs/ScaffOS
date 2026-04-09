@@ -9,7 +9,7 @@ export const getStrategiesHandler = async (req: Request, res: Response) => {
         const { limit = 10, offset = 0, name } = req.query;
         const query: any = {};
         // If a name query parameter is provided, add it to the search query
-        if (name) query.name = name;
+        if (name) query.name = new RegExp(name, 'i'); // Case-insensitive search
         const strategies = await findStrategies(query);
         // Paginate strategies based on limit and offset parameters
         const paginatedStrategies = strategies.slice(Number(offset), Number(offset) + Number(limit));

@@ -24,6 +24,12 @@ const router = Router();
  *         required: false
  *         schema:
  *           type: integer
+ *       - name: name
+ *         in: query
+ *         description: Filter strategies by name
+ *         required: false
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: A list of strategies
