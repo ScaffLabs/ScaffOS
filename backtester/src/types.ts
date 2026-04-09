@@ -44,18 +44,18 @@ export interface BacktestResult {
 }
 
 export const HistoricalDataSchema = z.object({
-    timestamp: z.number().nonnegative(),
-    price: z.number().positive(),
+    timestamp: z.number().nonnegative().describe('Timestamp in seconds since the epoch, must be non-negative.'),
+    price: z.number().positive().describe('Price at the timestamp, must be a positive number.'),
 });
 
 export const StrategyParametersSchema = z.object({
-    slippage: z.number().min(0).max(1),
-    buyThreshold: z.number().min(0).max(1),
-    sellThreshold: z.number().min(0).max(1),
+    slippage: z.number().min(0).max(1).describe('Slippage percentage, must be between 0 and 1.'),
+    buyThreshold: z.number().min(0).max(1).describe('Threshold for buying, must be between 0 and 1.'),
+    sellThreshold: z.number().min(0).max(1).describe('Threshold for selling, must be between 0 and 1.'),
 });
 
 export const BacktestResultSchema = z.object({
-    id: z.string().uuid(),
+    id: z.string().uuid().transform((id) => id as BacktestId),
     totalReturns: z.number(),
     trades: z.number().int().nonnegative(),
     winRate: z.number().min(0).max(100),

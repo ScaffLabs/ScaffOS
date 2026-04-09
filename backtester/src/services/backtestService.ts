@@ -1,4 +1,4 @@
-import { HistoricalData, StrategyParameters, BacktestResult, BacktestId } from '../types';
+import { HistoricalData, StrategyParameters, BacktestResult, BacktestId, BacktestResultSchema } from '../types';
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -50,7 +50,7 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
-    return result;
+    return BacktestResultSchema.parse(result);
 };
 
 export { simulateBacktest, fetchOrderData };
