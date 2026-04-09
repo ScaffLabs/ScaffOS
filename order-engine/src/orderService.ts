@@ -51,4 +51,9 @@ const deleteOrderService = async (id: string) => {
     }
 };
 
-export { createOrderService, updateOrderService, deleteOrderService };
+const getOrdersService = async ({ limit, offset }: { limit: number; offset: number }) => {
+    const orders = await queryDatabase('SELECT * FROM orders LIMIT $1 OFFSET $2', [limit, offset]);
+    return orders.rows;
+};
+
+export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };
