@@ -8,8 +8,6 @@ services:
       - '3000:3000'
     env_file:
       - .env
-    environment:
-      - NODE_ENV=${NODE_ENV}
   order_service:
     image: your_order_service_image
     ports:
