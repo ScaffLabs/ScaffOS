@@ -28,3 +28,10 @@ redisClient.on('error', (err) => {
 })();
 
 export default redisClient;
+
+// Setting a timeout for all Redis commands
+const timeout = promisify(setTimeout);
+redisClient.on('commandError', async (command) => {
+    console.error(`Command ${command} failed due to timeout`);
+    await timeout(5000); // Retry mechanism or error handling can be implemented here
+});

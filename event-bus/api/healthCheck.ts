@@ -1,3 +1,4 @@
+// healthCheck.ts
 import redisClient from './redisClient';
 import axios from 'axios';
 import { config } from './config';
