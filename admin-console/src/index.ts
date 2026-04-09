@@ -8,17 +8,23 @@ import healthRouter from './routes/health';
 import configRouter from './routes/config';
 import errorHandler from './middleware/errorHandler';
 import { logRequest } from './middleware/logger';
+import rateLimiter from './middleware/rateLimiter';
+import cors from 'cors';
+import { logAudit } from './middleware/auditLogger';
 
 dotenv.config();
 const app = express();
 const db = new Database();
 
+const allowedOrigins = ['http://localhost:3000'];
+app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(rateLimiter);
 app.use(logRequest);
+app.use(logAudit);
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
-
 app.use(errorHandler);
 
 const startServer = async () => {
