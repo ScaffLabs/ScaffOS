@@ -19,20 +19,6 @@ class NotFoundError extends Error {
     }
 }
 
-class DatabaseError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'DatabaseError';
-    }
-}
-
-class UnauthorizedError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'UnauthorizedError';
-    }
-}
-
 class EmptyArrayError extends Error {
     constructor(message: string) {
         super(message);
@@ -61,4 +47,4 @@ class NullValueError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DatabaseError, UnauthorizedError, EmptyArrayError, OverflowError, DivisionByZeroError, NullValueError }; 
+export { ServiceError, ValidationError, NotFoundError, EmptyArrayError, OverflowError, DivisionByZeroError, NullValueError }; 
