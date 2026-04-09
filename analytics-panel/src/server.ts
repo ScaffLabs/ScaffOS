@@ -12,6 +12,7 @@ import config from './config';
 import { monitorMemoryUsage } from './utils/monitor';
 import { gracefulShutdown } from './utils/shutdown';
 import { initializeStore } from './storage/strategyStore';
+import { auditLogger } from './middleware/auditLogger';
 
 const app = express();
 const server = createServer(app);
@@ -21,6 +22,7 @@ app.use(helmet());
 app.use(cors({ origin: ['http://example.com', 'http://localhost:3000'] }));
 app.use(express.json());
 app.use(logWithRequestId);
+app.use(auditLogger); // Add audit logger middleware
 
 // Rate limiter
 const limiter = rateLimit({

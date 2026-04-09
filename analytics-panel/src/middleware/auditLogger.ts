@@ -43,3 +43,4 @@ export const validateQueryParams = (req: Request, res: Response, next: NextFunct
     req.query.strategyB = validator.escape(strategyB.toString());
     next();
 };
+
