@@ -4,7 +4,7 @@
 The Monitoring Service provides health checks and dashboard monitoring for various microservices in the application ecosystem. It aggregates data related to service health, request latency, and error handling to ensure a robust and reliable system.
 
 ## Architecture Overview
-The service is built using Node.js and Express, using an in-memory data store for simplicity. It interfaces with other services through HTTP requests and employs middleware for logging, error handling, and input sanitization.
+The service is built using Node.js and Express, utilizing an in-memory data store for simplicity. It interfaces with other services through HTTP requests and employs middleware for logging, error handling, and input sanitization.
 
 ## Setup Instructions
 ### Prerequisites
