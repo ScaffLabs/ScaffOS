@@ -18,7 +18,10 @@ router.post('/', async (req, res, next) => {
         logRequest.info({ message: 'Configuration created', configItem, requestId });
         res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
-        next(error instanceof ValidationError ? new ValidationError('Invalid configuration data') : error);
+        if (error instanceof ValidationError) {
+            return next(new ValidationError('Invalid configuration data')); // Custom error handling
+        }
+        return next(error);
     }
 });
 
@@ -31,8 +34,23 @@ router.delete('/:key', async (req, res, next) => {
         logRequest.info({ message: 'Configuration deleted', key, requestId });
         res.status(204).send();
     } catch (error) {
-        next(error instanceof NotFoundError ? new NotFoundError('Configuration not found') : error);
+        if (error instanceof NotFoundError) {
+            return next(new NotFoundError('Configuration not found')); // Custom error handling
+        }
+        return next(error);
     }
 });
 
-export default router;
+router.get('/', async (req, res, next) => {
+    try {
+        const configs = await db.findAll();
+        if (!configs || configs.length === 0) {
+            throw new EmptyArrayError('No configurations found.');
+        }
+        res.status(200).json(configs);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+export default router; 
