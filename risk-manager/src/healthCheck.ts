@@ -19,7 +19,6 @@ router.get('/health', async (req, res) => {
 
 router.get('/ready', async (req, res) => {
     try {
-        // Check if the service is ready to handle requests
         const readyStatus = await healthCheckServices();
         const isReady = Object.values(readyStatus).every(status => status);
         const status = isReady ? 'ready' : 'not ready';

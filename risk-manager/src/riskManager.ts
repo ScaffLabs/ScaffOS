@@ -2,7 +2,10 @@ import { RiskPosition, RiskPositionSchema, OrderId } from './sharedTypes';
 import { RiskPositionStorage } from './storage';
 import logger from './logger';
 import { ValidationError, NotFoundError, ServiceError } from './errors';
-import { PositionLimits } from './positionLimits';
+import { fetchEventBusData } from './externalService';
+import { EventEmitter } from 'events';
+
+const eventEmitter = new EventEmitter();
 
 export default class RiskManager {
     private storage: RiskPositionStorage;
@@ -29,6 +32,7 @@ export default class RiskManager {
             }
             const createdPosition = await this.storage.create(newPosition);
             logger.info(`Created new risk position: ${JSON.stringify(createdPosition)}`);
+            eventEmitter.emit('RiskPositionCreated', createdPosition);
             return createdPosition;
         } catch (error) {
             logger.error('Error creating risk position:', error);
@@ -36,44 +40,12 @@ export default class RiskManager {
         }
     }
 
-    async updateRiskPosition(id: OrderId, position: number): Promise<RiskPosition | null> {
+    async fetchExternalData() {
         try {
-            const existingPosition = await this.storage.read(id);
-            if (!existingPosition) {
-                throw new NotFoundError(`Risk position with id ${id} not found.`);
-            }
-            const validationResult = RiskPositionSchema.safeParse({
-                ...existingPosition,
-                position,
-            });
-            if (!validationResult.success) {
-                throw new ValidationError(`Invalid risk position data: ${JSON.stringify(validationResult.error.errors)}`);
-            }
-            const updatedPosition = validationResult.data;
-            if (!this.positionLimits.checkLimit(updatedPosition.asset, updatedPosition.position)) {
-                throw new ValidationError(`Position exceeds limit for asset: ${updatedPosition.asset}`);
-            }
-            const result = await this.storage.update(id, updatedPosition);
-            logger.info(`Updated risk position with id ${id}: ${JSON.stringify(result)}`);
-            return result;
+            const data = await fetchEventBusData();
+            logger.info('Fetched external data:', data);
         } catch (error) {
-            logger.error('Error updating risk position:', error);
-            throw new ServiceError('Error updating risk position.');
-        }
-    }
-
-    async deleteRiskPosition(id: OrderId): Promise<boolean> {
-        try {
-            const existingPosition = await this.storage.read(id);
-            if (!existingPosition) {
-                throw new NotFoundError(`Risk position with id ${id} not found.`);
-            }
-            const result = await this.storage.delete(id);
-            logger.info(`Deleted risk position with id ${id}`);
-            return result;
-        } catch (error) {
-            logger.error('Error deleting risk position:', error);
-            throw new ServiceError('Error deleting risk position.');
+            logger.error('Failed to fetch external data:', error);
         }
     }
 
