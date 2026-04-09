@@ -1,9 +1,14 @@
 import { Request, Response } from 'express';
 import { fetchServiceHealth } from '../api/externalApi';
+import { closePool } from '../utils/connectionPool';
 
 export const healthCheck = async (req: Request, res: Response) => {
-    const serviceHealth = await fetchServiceHealth();
-    res.status(serviceHealth.status === 'UP' ? 200 : 500).send(serviceHealth);
+    try {
+        const serviceHealth = await fetchServiceHealth();
+        res.status(serviceHealth.status === 'UP' ? 200 : 500).send(serviceHealth);
+    } catch (error) {
+        res.status(500).send({ status: 'DOWN', error: error.message });
+    }
 };
 
 export const readinessCheck = async (req: Request, res: Response) => {
@@ -18,7 +23,31 @@ export const readinessCheck = async (req: Request, res: Response) => {
     }
 };
 
+export const gracefulShutdown = async () => {
+    console.log('Graceful shutdown initiated. Closing database connections.');
+    await closePool();
+    console.log('Database connections closed.');
+};
+
 export const registerHealthRoutes = (app: any) => {
     app.get('/api/health', healthCheck);
     app.get('/api/ready', readinessCheck);
+};
+
+export const registerShutdownHandlers = (server: any) => {
+    process.on('SIGTERM', async () => {
+        await gracefulShutdown();
+        server.close(() => {
+            console.log('HTTP server closed.');
+            process.exit(0);
+        });
+    });
+
+    process.on('SIGINT', async () => {
+        await gracefulShutdown();
+        server.close(() => {
+            console.log('HTTP server closed.');
+            process.exit(0);
+        });
+    });
 };
