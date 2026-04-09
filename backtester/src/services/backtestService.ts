@@ -2,6 +2,8 @@ import { HistoricalData, StrategyParameters, BacktestResult, BacktestId } from '
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
+import { withRetry } from './resilience';
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
@@ -32,6 +34,12 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     return { totalReturns, trades, winRate, performanceMetrics };
 }
 
+const fetchOrderData = async (orderId: string) => {
+    const orderServiceUrl = process.env.ORDER_SERVICE_URL;
+    const response = await withRetry(() => axios.get(`${orderServiceUrl}/orders/${orderId}`));
+    return response.data;
+};
+
 const simulateBacktest = async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     const validation = StrategyParametersSchema.safeParse(params);
     if (!validation.success) {
@@ -45,4 +53,4 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     return result;
 };
 
-export { simulateBacktest };
+export { simulateBacktest, fetchOrderData };
