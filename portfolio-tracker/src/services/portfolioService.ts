@@ -1,4 +1,4 @@
-import { Portfolio, PortfolioUpdate } from '../types';
+import { Portfolio, PortfolioUpdate, PortfolioSchema } from '../types';
 import storage from './storage';
 import { ValidationError, NotFoundError, ServiceError } from '../errors';
 import axios from 'axios';
@@ -23,7 +23,7 @@ const notifyPortfolioService = async (portfolio: Portfolio) => {
 };
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-    const validation = PortfolioSchema.safeParse(portfolioData);
+    const validation = PortfolioSchema.omit({ id: true }).safeParse(portfolioData);
     if (!validation.success) {
         throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
     }
