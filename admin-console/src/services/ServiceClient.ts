@@ -15,8 +15,7 @@ const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     }
 };
 
-const postConfiguration = async (key: string, value: string): Promise<ConfigurationItem> => {
-    const configItem: ConfigurationItem = { key, value };
+const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
     try {
         const response = await axios.post(`${BASE_URL}/config`, configItem);
         return response.data;
@@ -33,8 +32,7 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     }
 };
 
-const updateConfiguration = async (key: string, value: string): Promise<void> => {
-    const configItem: ConfigurationItem = { key, value };
+const updateConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
     try {
         await axios.put(`${BASE_URL}/config`, configItem);
     } catch (error) {
