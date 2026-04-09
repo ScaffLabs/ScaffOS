@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
+import { escape } from 'html-escaper';
 
 // Validation middleware for creating an order
 export const createOrderValidators = [
@@ -23,7 +24,7 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
         const order = req.body;
         const createdOrder = await createOrderService(order);
         res.status(201).json(createdOrder);
-        logger.info('Order created successfully', { order: createdOrder });
+        logger.info('Order created successfully', { order: escape(JSON.stringify(createdOrder)) });
     } catch (error) {
         logger.error('Error creating order', { error: error.message });
         if (error instanceof ValidationError) {
