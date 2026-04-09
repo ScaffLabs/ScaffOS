@@ -36,4 +36,4 @@ export const logStartup = (config: any) => {
 
 export const generateRequestId = () => uuidv4();
 
-export default logger; 
+export default logger;
