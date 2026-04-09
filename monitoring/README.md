@@ -31,8 +31,8 @@ The service is built using Node.js and Express, utilizing an in-memory data stor
 
 ## API Reference
 ### Health Check
-- **Method**: GET
-- **Path**: /health
+- **Method**: `GET`
+- **Path**: `/health`
 - **Request**: No body required
 - **Response**:
   - **Body**: `{ "status": "UP" }`
@@ -41,8 +41,8 @@ The service is built using Node.js and Express, utilizing an in-memory data stor
     - `500`: Internal server error
 
 ### Dashboard
-- **Method**: GET
-- **Path**: /dashboard
+- **Method**: `GET`
+- **Path**: `/dashboard`
 - **Request**: No parameters
 - **Response**:
   - **Body**: Array of dashboard entries (e.g., `[{ "id": "1", "data": { "value": 100 } }, ...]`)
@@ -52,8 +52,8 @@ The service is built using Node.js and Express, utilizing an in-memory data stor
     - `500`: Internal server error
 
 ### Create Dashboard Entry
-- **Method**: POST
-- **Path**: /dashboard
+- **Method**: `POST`
+- **Path**: `/dashboard`
 - **Request Body**:
   ```json
   {
@@ -68,8 +68,8 @@ The service is built using Node.js and Express, utilizing an in-memory data stor
     - `400`: Invalid input data
 
 ### Update Dashboard Entry
-- **Method**: PUT
-- **Path**: /dashboard/:id
+- **Method**: `PUT`
+- **Path**: `/dashboard/:id`
 - **Request Body**:
   ```json
   {
@@ -83,8 +83,8 @@ The service is built using Node.js and Express, utilizing an in-memory data stor
     - `404`: Entry not found
 
 ### Delete Dashboard Entry
-- **Method**: DELETE
-- **Path**: /dashboard/:id
+- **Method**: `DELETE`
+- **Path**: `/dashboard/:id`
 - **Response**:
   - **Status Codes**:
     - `204`: Entry successfully deleted
