@@ -42,7 +42,6 @@ class InMemoryAlertStore implements AlertStoreInterface {
     }
 
     async transaction(operations: () => Promise<void>): Promise<void> {
-        // In-memory store does not support transactions, but we can log operations for debug.
         console.log('Transaction started');
         await operations();
         console.log('Transaction completed');

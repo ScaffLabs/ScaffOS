@@ -1,28 +1,25 @@
 import express, { Request, Response } from 'express';
-import { AlertMessage, validateAlertMessage, validateCreateAlertRequest } from './alert.schema';
+import { AlertMessage, validateCreateAlertRequest } from './alert.schema';
 import { AlertStore } from './storage';
+import { EventBus } from './event-bus';
 import { ValidationError, ServiceError, NotFoundError } from './error.types';
 import logger, { logRequest, logError } from './logger';
 
 export class AlertController {
     private alertStore: AlertStore;
+    private eventBus: EventBus;
 
-    constructor(alertStore: AlertStore) {
+    constructor(alertStore: AlertStore, eventBus: EventBus) {
         this.alertStore = alertStore;
+        this.eventBus = eventBus;
     }
 
-    async getActiveAlerts(req: Request, res: Response, pagination: { limit?: string; offset?: string; type?: string; threshold?: number } = {}) {
+    async getActiveAlerts(req: Request, res: Response) {
         const start = Date.now();
-        const { limit, offset, type, threshold } = pagination;
         try {
-            const query = {};
-            if (type) query.type = type;
-            if (threshold !== undefined) query.threshold = { $gte: threshold };
-
-            const alerts = await this.alertStore.findIndex(query);
-            const paginatedAlerts = alerts.slice(Number(offset) || 0, (Number(offset) || 0) + (Number(limit) || alerts.length));
-            if (!paginatedAlerts.length) return res.status(204).send();
-            return res.json(paginatedAlerts);
+            const alerts = await this.alertStore.findIndex({});
+            if (!alerts.length) return res.status(204).send();
+            return res.json(alerts);
         } catch (error) {
             logError(error);
             return res.status(500).json({ message: 'Failed to fetch active alerts.' });
@@ -36,6 +33,7 @@ export class AlertController {
         try {
             const alertData = validateCreateAlertRequest(req.body);
             const createdAlert = await this.alertStore.create(alertData);
+            this.eventBus.publish('alert.created', createdAlert);
             return res.status(201).json(createdAlert);
         } catch (error) {
             if (error instanceof ValidationError) {
@@ -52,11 +50,11 @@ export class AlertController {
         const alertId = req.params.id;
         const start = Date.now();
         try {
-            const alertData = validateAlertMessage(req.body);
-            const updatedAlert = await this.alertStore.update(alertId, alertData);
+            const updatedAlert = await this.alertStore.update(alertId, req.body);
             if (!updatedAlert) {
                 throw new NotFoundError('Alert not found.');
             }
+            this.eventBus.publish('alert.updated', updatedAlert);
             return res.json(updatedAlert);
         } catch (error) {
             if (error instanceof NotFoundError) {
@@ -77,6 +75,7 @@ export class AlertController {
             if (!deleted) {
                 throw new NotFoundError('Alert not found.');
             }
+            this.eventBus.publish('alert.deleted', alertId);
             return res.status(204).send();
         } catch (error) {
             if (error instanceof NotFoundError) {
