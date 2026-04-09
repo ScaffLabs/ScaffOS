@@ -38,3 +38,13 @@ export async function checkReadiness() {
   const allHealthy = servicesHealth.every(result => result.healthy);
   return { healthy: allHealthy };
 }
+
+export async function healthCheckController(req, res) {
+  try {
+    const health = await checkAllHealth();
+    res.status(200).json(health);
+  } catch (error) {
+    logger.error('Health check failed:', error);
+    res.status(500).json({ status: 'unhealthy', error: error.message });
+  }
+}
