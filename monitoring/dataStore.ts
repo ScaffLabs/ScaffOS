@@ -60,6 +60,16 @@ class InMemoryStore<T> {
             throw error;
         }
     }
+    
+    public clearData(): void {
+        this.storage.clear();
+    }
+
+    public migrateData(targetStore: InMemoryStore<T>): void {
+        for (const [id, entity] of this.storage.entries()) {
+            targetStore.create(entity.data, id);
+        }
+    }
 }
 
 export default InMemoryStore;
