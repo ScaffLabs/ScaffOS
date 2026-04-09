@@ -8,55 +8,55 @@ The service is built using Node.js, Express for the API, and WebSocket for real-
 
 ## Setup Instructions
 ### Prerequisites
-- Node.js (version 14 or higher)
+- Node.js (version 14 or higher)  
 - npm (Node package manager)
 
 ### Install
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/price-aggregator.git
-   cd price-aggregator
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
+1. Clone the repository:  
+   ```bash  
+   git clone https://github.com/yourusername/price-aggregator.git  
+   cd price-aggregator  
+   ```  
+2. Install dependencies:  
+   ```bash  
+   npm install  
    ```
 
 ### Run
-To start the application:
-```bash
-npm start
+To start the application:  
+```bash  
+npm start  
 ```
 
 ### Testing
-To run the tests:
-```bash
-npm test
+To run the tests:  
+```bash  
+npm test  
 ```
-To run tests in watch mode:
-```bash
-npm run test:watch
+To run tests in watch mode:  
+```bash  
+npm run test:watch  
 ```
 
 ## API Reference
 ### GET /prices
-- **Request Body**: None
-- **Response**: Returns current prices and VWAP.
-  - **200 OK**: Successful retrieval of prices.
-  - **204 No Content**: No prices available.
+- **Request Body**: None  
+- **Response**: Returns current prices and VWAP.  
+  - **200 OK**: Successful retrieval of prices.  
+  - **204 No Content**: No prices available.  
   - **500 Internal Server Error**: Failed to fetch prices.
 
 ### POST /prices
-- **Request Body**: { "exchange": "string", "price": number, "volume": number }
-- **Response**: Returns the added price data.
-  - **201 Created**: Successfully added price.
-  - **400 Bad Request**: Validation errors occurred.
+- **Request Body**: { "exchange": "string", "price": number, "volume": number }  
+- **Response**: Returns the added price data.  
+  - **201 Created**: Successfully added price.  
+  - **400 Bad Request**: Validation errors occurred.  
   - **500 Internal Server Error**: Failed to add price.
 
 ### GET /health
-- **Request Body**: None
-- **Response**: Returns the health status of the service.
-  - **200 OK**: Service is healthy.
+- **Request Body**: None  
+- **Response**: Returns the health status of the service.  
+  - **200 OK**: Service is healthy.  
   - **500 Internal Server Error**: Service is unhealthy.
 
 ## Environment Variables
@@ -95,3 +95,6 @@ Error handling is implemented through a centralized middleware that captures and
 
 ## License
 This project is licensed under the MIT License.
+
+## How to Contribute
+For any contributions, please follow the guidelines outlined in the [CONTRIBUTING.md](CONTRIBUTING.md) file. We welcome any improvements, whether they be bug fixes, new features, or documentation enhancements.
