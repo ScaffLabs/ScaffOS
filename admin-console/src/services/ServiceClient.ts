@@ -12,58 +12,40 @@ const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
         }
         return response.data;
     } catch (error) {
-        if (axios.isAxiosError(error)) {
-            throw new ServiceError(`Failed to fetch configurations: ${error.response?.data?.error || error.message}`);
-        }
-        throw new ServiceError('Failed to fetch configurations');
+        handleAxiosError(error, 'fetch configurations');
     }
 };
 
 const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
-    const circuitBreaker = new CircuitBreaker(async () => {
-        await axios.post(`${config.API_URL}/config`, configItem);
-    }, {
-        timeout: 3000,
-        errorThresholdPercentage: 50,
-        resetTimeout: 30000,
-    });
     try {
-        await circuitBreaker.fire();
+        await axios.post(`${config.API_URL}/config`, configItem);
     } catch (error) {
-        if (axios.isAxiosError(error)) {
-            throw new ServiceError(`Failed to create configuration: ${error.response?.data?.error || error.message}`);
-        }
-        throw new ServiceError('Failed to create configuration');
+        handleAxiosError(error, 'create configuration');
     }
 };
 
 const deleteConfiguration = async (key: string): Promise<void> => {
-    const circuitBreaker = new CircuitBreaker(async () => {
-        await axios.delete(`${config.API_URL}/config/${key}`);
-    }, {
-        timeout: 3000,
-        errorThresholdPercentage: 50,
-        resetTimeout: 30000,
-    });
     try {
-        await circuitBreaker.fire();
+        await axios.delete(`${config.API_URL}/config/${key}`);
     } catch (error) {
-        if (axios.isAxiosError(error)) {
-            throw new ServiceError(`Failed to delete configuration: ${error.response?.data?.error || error.message}`);
-        }
-        throw new ServiceError('Failed to delete configuration');
+        handleAxiosError(error, 'delete configuration');
     }
 };
 
 const fetchHealthStatus = async () => {
-    const response = await axios.get(`${config.API_URL}/health`);
-    return response.data;
+    try {
+        const response = await axios.get(`${config.API_URL}/health`);
+        return response.data;
+    } catch (error) {
+        handleAxiosError(error, 'fetch health status');
+    }
 };
 
-const healthCircuitBreaker = new CircuitBreaker(fetchHealthStatus, {
-    timeout: 3000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000,
-});
+const handleAxiosError = (error: unknown, operation: string) => {
+    if (axios.isAxiosError(error)) {
+        throw new ServiceError(`Failed to ${operation}: ${error.response?.data?.error || error.message}`);
+    }
+    throw new ServiceError(`Failed to ${operation}`);
+};
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration, fetchHealthStatus, healthCircuitBreaker };
+export { fetchConfigurations, postConfiguration, deleteConfiguration, fetchHealthStatus };
