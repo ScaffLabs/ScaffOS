@@ -18,7 +18,6 @@ app.use(express.json());
 app.use(logRequest); // Add logging middleware
 
 app.get('/health', healthCheck);
-
 app.use(errorMiddleware);
 
 const server = createServer(app);
