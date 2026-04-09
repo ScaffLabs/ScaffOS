@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { postConfiguration, fetchConfigurations, updateConfiguration, deleteConfiguration } from '../services/ServiceClient';
+import { postConfiguration, fetchConfigurations, deleteConfiguration } from '../services/ServiceClient';
 import { ConfigurationItem, ConfigurationItemSchema } from '../types';
 import { ValidationError } from '../errors/CustomErrors';
 
@@ -17,7 +17,7 @@ const Configuration: React.FC = () => {
             const configs = await fetchConfigurations();
             setConfigurations(configs);
         } catch (err) {
-            setError('Error fetching configurations');
+            setError(`Error fetching configurations: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -36,7 +36,7 @@ const Configuration: React.FC = () => {
             const configItem: ConfigurationItem = { key, value };
             ConfigurationItemSchema.parse(configItem);
             setLoading(true);
-            await postConfiguration(configItem.key, configItem.value);
+            await postConfiguration(configItem);
             setSuccessMessage('Configuration created successfully!');
             setKey('');
             setValue('');
@@ -45,7 +45,7 @@ const Configuration: React.FC = () => {
             if (err instanceof ValidationError) {
                 setError(err.message);
             } else {
-                setError('Failed to create configuration. Please try again.');
+                setError(`Failed to create configuration: ${err.message}`);
             }
         } finally {
             setLoading(false);
@@ -59,7 +59,7 @@ const Configuration: React.FC = () => {
             setSuccessMessage('Configuration deleted successfully!');
             fetchAllConfigurations();
         } catch (err) {
-            setError('Failed to delete configuration.');
+            setError(`Failed to delete configuration: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -95,7 +95,7 @@ const Configuration: React.FC = () => {
             {successMessage && <div style={{ color: 'green' }}>{successMessage}</div>}
             <h2>Existing Configurations:</h2>
             <ul>
-                {configurations.map(config => (
+                {configurations.map((config) => (
                     <li key={config.key}>
                         {config.key}: {config.value} 
                         <button onClick={() => handleDelete(config.key)}>Delete</button>
