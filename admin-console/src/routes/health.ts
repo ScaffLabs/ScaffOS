@@ -4,17 +4,6 @@ import { healthCheck } from '../services/HealthService';
 
 const router = express.Router();
 
-/**
- * @swagger
- * /api/health:
- *   get:
- *     summary: Health check for the application
- *     responses:
- *       200:
- *         description: Health check successful
- *       500:
- *         description: Health check failed
- */
 router.get('/', async (req, res) => {
     try {
         const status = await healthCheck();
@@ -25,29 +14,24 @@ router.get('/', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/health/ready:
- *   get:
- *     summary: Readiness check for the application
- *     responses:
- *       200:
- *         description: Application is ready
- *       500:
- *         description: Application is not ready
- */
 router.get('/ready', async (req, res) => {
-    const dbStatus = await checkDatabaseConnection();
-    if (dbStatus) {
-        res.status(200).json({ status: 'ready' });
-    } else {
-        res.status(500).json({ status: 'not ready' });
+    try {
+        const isReady = await checkDatabaseConnection();
+        if (isReady) {
+            res.status(200).json({ status: 'ready' });
+        } else {
+            res.status(500).json({ status: 'not ready' });
+        }
+    } catch (error) {
+        logger.error(`Readiness check failed: ${error.message}`);
+        res.status(500).json({ error: 'Readiness check failed' });
     }
 });
 
 const checkDatabaseConnection = async () => {
     // Implement logic to check DB connection here
-    return true; // Replace with actual check
+    // For example, ping the database or check a connection pool
+    return true; // Replace with actual check logic
 };
 
 export default router;
