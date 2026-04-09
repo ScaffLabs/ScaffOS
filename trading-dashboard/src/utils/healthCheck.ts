@@ -25,26 +25,7 @@ export const readinessCheck = async (req: Request, res: Response) => {
     }
 };
 
-export const gracefulShutdown = async () => {
-    logger.info('Graceful shutdown initiated. Closing database connections.');
-    await closePool();
-    logger.info('Database connections closed.');
-};
-
 export const registerHealthRoutes = (app: any) => {
     app.get('/api/health', healthCheck);
     app.get('/api/ready', readinessCheck);
-};
-
-export const registerShutdownHandlers = (server: any) => {
-    const shutdown = async () => {
-        await gracefulShutdown();
-        server.close(() => {
-            logger.info('HTTP server closed.');
-            process.exit(0);
-        });
-    };
-
-    process.on('SIGTERM', shutdown);
-    process.on('SIGINT', shutdown);
 };
