@@ -34,9 +34,10 @@ app.use((req, res, next) => {
 });
 
 app.get('/prices', async (req, res, next) => {
+    const { limit = 10, offset = 0, sortBy = 'price', order = 'asc' } = req.query;
     try {
-        const prices = await priceAggregator.getCurrentPrices();
-        if (Object.keys(prices).length === 0) return res.status(204).send();
+        const prices = await priceAggregator.getPrices({ limit: Number(limit), offset: Number(offset), sortBy, order });
+        if (prices.length === 0) return res.status(204).send();
         res.status(200).json(prices);
     } catch (error) {
         logError(error, { method: req.method, path: req.path });
@@ -48,6 +49,29 @@ app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, 
     try {
         const newPrice = await priceAggregator.addPrice(req.body);
         res.status(201).json(newPrice);
+    } catch (error) {
+        logError(error, { method: req.method, path: req.path });
+        next(error);
+    }
+});
+
+app.put('/prices/:id', validatePriceData, handleValidationErrors, async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const updatedPrice = await priceAggregator.updatePrice(id, req.body);
+        if (!updatedPrice) return res.status(404).send();
+        res.status(200).json(updatedPrice);
+    } catch (error) {
+        logError(error, { method: req.method, path: req.path });
+        next(error);
+    }
+});
+
+app.delete('/prices/:id', async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        await priceAggregator.deletePrice(id);
+        res.status(204).send();
     } catch (error) {
         logError(error, { method: req.method, path: req.path });
         next(error);
