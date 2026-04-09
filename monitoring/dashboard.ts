@@ -6,12 +6,6 @@ import { LatencyData, LatencyDataSchema } from './types';
 
 const store = new InMemoryStore<LatencyData>();
 
-/**
- * List all dashboard entries.
- * @param req - The request object.
- * @param res - The response object.
- * @returns A JSON array of dashboard entries or a 204 status if none.
- */
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
         const entries = store.getAll();
@@ -25,12 +19,6 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * Create a new dashboard entry.
- * @param req - The request object containing the entry data.
- * @param res - The response object.
- * @returns A message confirming the entry creation or an error status.
- */
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const bodyValidation = LatencyDataSchema.safeParse({ ...req.body, timestamp: new Date() });
@@ -50,12 +38,6 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * Update an existing dashboard entry.
- * @param req - The request object containing the entry ID and update data.
- * @param res - The response object.
- * @returns A 204 status for successful updates or an error status.
- */
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -80,12 +62,6 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * Delete a dashboard entry.
- * @param req - The request object containing the entry ID.
- * @param res - The response object.
- * @returns A 204 status for successful deletion or an error status.
- */
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
