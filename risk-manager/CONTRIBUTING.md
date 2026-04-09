@@ -9,7 +9,7 @@ Thank you for considering contributing to the Risk Manager service! We appreciat
    git checkout -b feature/my-feature
    ```
 3. **Make Your Changes**: Implement the feature or fix the bug. Ensure you adhere to the coding standards and conventions.
-4. **Write Tests**: Add unit tests for any new functionality or to verify bug fixes.
+4. **Write Tests**: Add unit tests for any new functionality or to verify bug fixes. Testing is crucial to maintain the service's integrity and reliability.
 5. **Commit Your Changes**: Use clear and concise commit messages. Example formats:
    ```bash
    git commit -m "Fix: description of the bug"

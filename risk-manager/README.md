@@ -1,13 +1,13 @@
 # Risk Manager Service
 
 ## Project Description
-The Risk Manager service is a backend application that helps organizations manage and assess their risk positions in trading systems. It allows users to create, read, update, and delete risk positions associated with various assets, enabling better risk management and reporting.
+The Risk Manager service is a backend application designed to assist organizations in managing and assessing their risk positions in trading systems. It provides functionalities to create, read, update, and delete risk positions associated with various assets, thereby facilitating better risk management and reporting.
 
 ## Architecture Overview
-The service is built using Node.js and Express, with TypeScript for type safety. It utilizes an in-memory storage solution for simplicity and allows for easy testing. Key components include:
+The service is built using Node.js and Express, with TypeScript utilized for type safety. The key components include:
 - **API**: RESTful endpoints for managing risk positions.
 - **Storage**: In-memory storage for quick access and manipulation of risk data.
-- **Logging**: Winston for logging application events and errors.
+- **Logging**: Winston is employed for logging application events and errors.
 
 ## Setup Instructions
 ### Prerequisites
@@ -46,10 +46,10 @@ The service is built using Node.js and Express, with TypeScript for type safety.
 - **Description**: Create a new risk position.
 - **Request Body**:
   - `asset` (string): The asset for the risk position.
-  - `position` (number): The position size.
+  - `position` (number): The position size, must be a non-negative number.
 - **Responses**:
   - `201 Created`: Risk position created successfully.
-  - `400 Bad Request`: Invalid input.
+  - `400 Bad Request`: Invalid input, such as negative position or missing asset.
   - `500 Internal Server Error`: An error occurred while creating.
 
 ### PUT /api/risk/{id}
@@ -57,7 +57,7 @@ The service is built using Node.js and Express, with TypeScript for type safety.
 - **Parameters**:
   - `id` (string): Risk position ID.
 - **Request Body**:
-  - `position` (number): The updated position size.
+  - `position` (number): The updated position size, must be a non-negative number.
 - **Responses**:
   - `204 No Content`: Risk position updated successfully.
   - `404 Not Found`: Risk position not found.
