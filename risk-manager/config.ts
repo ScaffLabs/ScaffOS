@@ -12,11 +12,11 @@ interface Config {
 }
 
 const envSchema = z.object({
-  JWT_SECRET: z.string().nonempty(),
-  EVENT_BUS_URL: z.string().url(),
-  ANOTHER_SERVICE_URL: z.string().url(),
-  NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
-  PORT: z.coerce.number().default(3000),
+  JWT_SECRET: z.string().nonempty().describe('JWT Secret for signing tokens'),
+  EVENT_BUS_URL: z.string().url().describe('URL for the event bus service'),
+  ANOTHER_SERVICE_URL: z.string().url().describe('URL for another dependent service'),
+  NODE_ENV: z.enum(['development', 'staging', 'production']).default('development').describe('Environment type'),
+  PORT: z.coerce.number().default(3000).describe('Server port number'),
 });
 
 const parseEnv = () => {
