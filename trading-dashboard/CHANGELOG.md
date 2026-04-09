@@ -19,3 +19,7 @@ All notable changes to this project will be documented in this file.
 ## [1.2.0] - 2023-12-01
 - Introduced a new order submission feature.
 - Added tests for critical functionalities.
+
+## [1.3.0] - 2023-12-15
+- Comprehensive documentation added, including README and CHANGELOG updates.
+- Improved error handling in the order API.

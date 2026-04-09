@@ -1,15 +1,15 @@
 # Trading Dashboard
 
 ## Project Description
-This is a trading dashboard application that allows users to manage their trading positions and place orders. It provides real-time charting functionality and integrates with an external service for real-time data.
+This trading dashboard application enables users to manage their trading positions and place orders. It offers real-time charting functionality and integrates with external services to fetch real-time data. Users can create, update, and delete positions, while also submitting buy and sell orders.
 
 ## Architecture Overview
-The application is built using Node.js and Express for the backend, with a React frontend. It utilizes an in-memory store for managing positions and integrates with external APIs for data fetching.
+The application is structured using Node.js and Express for the backend, while the frontend is built using React. The backend consists of various modules handling different functionalities, such as position management, order processing, and data fetching from external APIs. A MySQL database is utilized to persist data, and an in-memory store is used for quick access during runtime.
 
 ## Setup Instructions
 ### Prerequisites
 - Node.js (v14 or higher)
-- Docker (optional for containerized setup)
+- Docker (optional, for containerized setup)
 - MySQL (for the database)
 
 ### Install
@@ -22,7 +22,7 @@ The application is built using Node.js and Express for the backend, with a React
    ```bash
    npm install
    ```
-3. Create a `.env` file based on `.env.example` and update the values.
+3. Create a `.env` file based on `.env.example` and update the values as necessary.
 
 ### Run
 1. Start the application:
@@ -38,32 +38,32 @@ The application is built using Node.js and Express for the backend, with a React
 ### Health Check
 - **GET** `/api/health`
   - **Response:** `200 OK`
-  - **Description:** Check the health of the service.
+  - **Description:** Checks the health of the service.
 
 ### Positions
 - **GET** `/api/positions`
   - **Response:** `200 OK`
-  - **Description:** Retrieve all positions.
+  - **Description:** Retrieves all positions.
 
 - **POST** `/api/positions`
   - **Request Body:** `{ "id": "string", "symbol": "string", "quantity": number }`
   - **Response:** `201 Created`
-  - **Description:** Create a new position.
+  - **Description:** Creates a new position.
 
 - **PUT** `/api/positions/:id`
   - **Request Body:** `{ "quantity": number }`
   - **Response:** `204 No Content`
-  - **Description:** Update a position by ID.
+  - **Description:** Updates a position by ID.
 
 - **DELETE** `/api/positions/:id`
   - **Response:** `204 No Content`
-  - **Description:** Delete a position by ID.
+  - **Description:** Deletes a position by ID.
 
 ### Orders
 - **POST** `/api/orders`
   - **Request Body:** `{ "id": "string", "symbol": "string", "quantity": number, "type": "buy|sell" }`
   - **Response:** `201 Created`
-  - **Description:** Submit a new order.
+  - **Description:** Submits a new order.
 
 ## Environment Variables
 | Variable          | Description                        |
@@ -87,7 +87,7 @@ The application is built using Node.js and Express for the backend, with a React
 - Use Docker for containerization if required.
 
 ## Contributing
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests.
+Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ## Changelog
 See [CHANGELOG.md](./CHANGELOG.md) for the version history.
