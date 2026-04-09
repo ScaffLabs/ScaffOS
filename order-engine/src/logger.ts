@@ -35,4 +35,8 @@ const generateRequestId = () => {
     return 'req-' + Math.random().toString(36).substr(2, 9);
 };
 
+export const logError = (error: Error, req: Request) => {
+    logger.error(error.message, { stack: error.stack, url: req.url });
+};
+
 export default logger;

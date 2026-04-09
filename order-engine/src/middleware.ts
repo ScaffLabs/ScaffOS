@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError, ServiceError, NotFoundError } from './errors';
 import logger from './logger';
-import { check, validationResult } from 'express-validator';
 
 // Input Validation Middleware
 export const validateInput = (schema: any) => {
@@ -22,7 +21,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
 
 // Error Handling Middleware
 export const errorHandlingMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    logger.error(err.message, { stack: err.stack });
+    logger.logError(err, req);
     if (err instanceof ValidationError) {
         return res.status(400).json({ message: err.message });
     }
