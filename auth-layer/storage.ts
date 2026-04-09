@@ -17,10 +17,6 @@ export const createUser = async (username: string, email: string): Promise<User>
     return newUser;
 };
 
-export const findUserById = async (id: UserId): Promise<User | null> => {
-    return userStore.findById(id);
-};
-
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
     const sanitizedInput = sanitizeUserInput(userData);
     validateUser(sanitizedInput);
@@ -35,10 +31,10 @@ export const deleteUser = async (id: UserId): Promise<boolean> => {
     return userStore.delete(id);
 };
 
-export const getAllUsers = async (): Promise<User[]> => {
-    return userStore.findAll();
-};
-
-export const findUserByEmail = async (email: string): Promise<User | null> => {
-    return userStore.findByEmail(email);
+export const performTransaction = async (operations: (() => Promise<any>)[]): Promise<void> => {
+    try {
+        await Promise.all(operations.map(op => op()));
+    } catch (error) {
+        throw new Error('Transaction failed, rolling back');
+    }
 };
