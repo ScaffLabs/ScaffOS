@@ -1,4 +1,3 @@
-// Order service with actual database interaction and error handling
 import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
