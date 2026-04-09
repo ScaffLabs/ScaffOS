@@ -84,4 +84,4 @@ export class AlertController {
             logRequest(req, res, start);
         }
     }
-} 
+}

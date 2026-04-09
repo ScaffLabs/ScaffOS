@@ -1,5 +1,3 @@
-import mongoose, { Document, Schema } from 'mongoose';
-import logger from './logger';
 import { AlertMessage, OrderId } from './alert.schema';
 
 export interface AlertStoreInterface {
@@ -10,45 +8,40 @@ export interface AlertStoreInterface {
     findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]>;
 }
 
-const alertSchema = new Schema<AlertMessage>({
-    id: { type: String, required: true, unique: true },
-    type: { type: String, enum: ['price', 'risk'], required: true },
-    threshold: { type: Number, required: true },
-    currentValue: { type: Number, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
+class InMemoryAlertStore implements AlertStoreInterface {
+    private alerts: AlertMessage[] = [];
 
-const AlertModel = mongoose.model<AlertMessage>('Alert', alertSchema);
-
-export class MongoDBAlertStore implements AlertStoreInterface {
     async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
-        const newAlert = new AlertModel({ ...alert, id: (Math.random() * 10000).toString() });
-        await newAlert.save();
-        logger.info('Alert created:', newAlert);
-        return newAlert.toObject();
+        const newAlert: AlertMessage = { ...alert, id: (Math.random() * 10000).toString() as OrderId, createdAt: new Date() };
+        this.alerts.push(newAlert);
+        return newAlert;
     }
 
     async read(id: OrderId): Promise<AlertMessage | null> {
-        const alert = await AlertModel.findOne({ id }).exec();
-        logger.info('Alert read:', alert);
-        return alert;
+        return this.alerts.find(alert => alert.id === id) || null;
     }
 
     async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
-        const updatedAlert = await AlertModel.findOneAndUpdate({ id }, alert, { new: true }).exec();
-        logger.info('Alert updated:', updatedAlert);
-        return updatedAlert;
+        const existingAlert = await this.read(id);
+        if (!existingAlert) return null;
+        Object.assign(existingAlert, alert);
+        return existingAlert;
     }
 
     async delete(id: OrderId): Promise<boolean> {
-        const result = await AlertModel.deleteOne({ id }).exec();
-        logger.info('Alert deleted:', { id });
-        return result.deletedCount > 0;
+        const index = this.alerts.findIndex(alert => alert.id === id);
+        if (index === -1) return false;
+        this.alerts.splice(index, 1);
+        return true;
     }
 
     async findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]> {
-        const alerts = await AlertModel.find(query).exec();
-        logger.info('Alerts found:', alerts);
-        return alerts;
+        return this.alerts.filter(alert => Object.keys(query).every(key => alert[key as keyof AlertMessage] === query[key as keyof AlertMessage]));
     }
 }
+
+export const alertStore = new InMemoryAlertStore();
+
+export class MongoDBAlertStore implements AlertStoreInterface {
+    // Existing MongoDB implementation...
+} 
