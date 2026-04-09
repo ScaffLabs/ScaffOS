@@ -1,5 +1,5 @@
 import { AlertController } from '../alert.controller';
-import { AlertMessage, validateAlertMessage } from '../alert.schema';
+import { AlertMessage, validateCreateAlertRequest } from '../alert.schema';
 import { AlertStore } from '../storage';
 import { ServiceError, ValidationError } from '../error.types';
 
