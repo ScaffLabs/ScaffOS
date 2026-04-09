@@ -14,7 +14,7 @@ describe('Health Check Endpoint', () => {
         expect(response.body).toEqual({ status: 'UP' });
     });
 
-    it('should handle unexpected errors', async () => {
+    it('should handle unexpected errors gracefully', async () => {
         jest.spyOn(console, 'error').mockImplementation(() => {});
         const faultyHealthCheck = (req, res) => { throw new Error('Unexpected error'); };
         app.get('/health', faultyHealthCheck);
@@ -23,7 +23,7 @@ describe('Health Check Endpoint', () => {
         expect(response.body.error).toBe('Internal Server Error');
     });
 
-    it('should handle health check with service down', async () => {
+    it('should handle service down scenario', async () => {
         const faultyHealthCheck = (req, res) => {
             res.status(503).json({ error: 'Service Unavailable' });
         };
@@ -31,5 +31,23 @@ describe('Health Check Endpoint', () => {
         const response = await request(app).get('/health');
         expect(response.status).toBe(503);
         expect(response.body.error).toBe('Service Unavailable');
+    });
+
+    it('should return memory usage metrics', async () => {
+        const response = await request(app).get('/health');
+        expect(response.status).toBe(200);
+        expect(response.body.memory).toHaveProperty('total');
+        expect(response.body.memory).toHaveProperty('used');
+        expect(response.body.memory).toHaveProperty('heapTotal');
+        expect(response.body.memory).toHaveProperty('heapUsed');
+    });
+
+    it('should return service health info with services down', async () => {
+        const faultyHealthCheck = jest.spyOn(global, 'checkServiceHealth').mockImplementation(() => Promise.resolve({ orderService: false, userService: true }));
+        const response = await request(app).get('/health');
+        expect(response.status).toBe(503);
+        expect(response.body).toHaveProperty('status', 'DOWN');
+        expect(response.body.services).toEqual({ orderService: false, userService: true });
+        faultyHealthCheck.mockRestore();
     });
 });

@@ -41,7 +41,7 @@ describe('Dashboard Endpoint', () => {
     it('should return 400 for invalid entry', async () => {
         const response = await request(app).post('/dashboard').send({});
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe('Invalid input data. Both path and duration are required.');
+        expect(response.body.error).toBe('Invalid input data. Both id and value are required.');
     });
 
     it('should update an existing entry', async () => {
@@ -91,5 +91,11 @@ describe('Dashboard Endpoint', () => {
         const response = await request(app).post('/dashboard').send({ id: '6', value: -50 });
         expect(response.status).toBe(400);
         expect(response.body.error).toBe('Invalid input data. Both id and value are required.');
+    });
+
+    it('should handle edge case for invalid id format', async () => {
+        const response = await request(app).post('/dashboard').send({ id: 'invalid-id', value: 200 });
+        expect(response.status).toBe(400);
+        expect(response.body.error).toBe('Invalid input data.');
     });
 });

@@ -6,7 +6,7 @@ const config: Config = {
     testPathIgnorePatterns: ['/node_modules/', '/dist/'],
     coverageDirectory: 'coverage',
     collectCoverage: true,
-    collectCoverageFrom: ['**/*.ts', '!**/node_modules/**'],
+    collectCoverageFrom: ['**/*.ts', '!**/node_modules/**', '!**/dist/**'],
     testTimeout: 10000,
     watchPathIgnorePatterns: ['<rootDir>/dist/'],
     watch: true,
