@@ -1,6 +1,6 @@
 import express from 'express';
 import { createServer } from 'http';
-import { healthCheck } from './healthCheck';
+import { healthCheck, readinessCheck, livelinessCheck } from './healthCheck';
 import errorMiddleware from './errorMiddleware';
 import { logRequest, logStartup } from './logger';
 import helmet from 'helmet';
@@ -18,7 +18,10 @@ app.use(helmet());
 app.use(express.json());
 app.use(logRequest);
 
+// Health check endpoints
 app.get('/health', healthCheck);
+app.get('/ready', readinessCheck);
+app.get('/alive', livelinessCheck);
 app.use(errorMiddleware);
 
 const server = createServer(app);

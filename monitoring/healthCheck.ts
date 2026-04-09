@@ -28,7 +28,6 @@ export const healthCheck = async (req: Request, res: Response) => {
     }
 };
 
-// Add health check routes for readiness and liveliness
 export const readinessCheck = (req: Request, res: Response) => {
     res.status(200).json({ status: 'READY' });
 };
@@ -36,5 +35,3 @@ export const readinessCheck = (req: Request, res: Response) => {
 export const livelinessCheck = (req: Request, res: Response) => {
     res.status(200).json({ status: 'ALIVE' });
 };
-
-// Update health check with new routes in index.ts
