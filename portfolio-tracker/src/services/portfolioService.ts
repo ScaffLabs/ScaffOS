@@ -22,11 +22,23 @@ const notifyPortfolioService = async (portfolio: Portfolio) => {
     }
 };
 
+const validatePositions = (positions) => {
+    if (!Array.isArray(positions) || positions.length === 0) {
+        throw new ValidationError('Positions must be a non-empty array.');
+    }
+    positions.forEach(position => {
+        if (!position.symbol || typeof position.quantity !== 'number' || position.quantity < 0 || typeof position.averagePrice !== 'number' || position.averagePrice < 0) {
+            throw new ValidationError('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
+        }
+    });
+};
+
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const validation = PortfolioSchema.omit({ id: true }).safeParse(portfolioData);
     if (!validation.success) {
         throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
     }
+    validatePositions(portfolioData.positions);
     try {
         const newPortfolio = storage.create(portfolioData);
         await logPortfolioCreation(newPortfolio);
@@ -45,6 +57,9 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     const validation = PortfolioSchema.partial().safeParse(updates);
     if (!validation.success) {
         throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+    }
+    if (updates.positions) {
+        validatePositions(updates.positions);
     }
     try {
         const updatedPortfolio = storage.update(id, updates);
