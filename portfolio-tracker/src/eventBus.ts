@@ -25,3 +25,7 @@ export const getPortfolioUpdates = () => {
         });
     });
 };
+
+export const notifyPortfolioUpdate = async (portfolio) => {
+    publishPortfolioUpdate(portfolio);
+};

@@ -19,9 +19,30 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
         throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
     }
     try {
-        return storage.create(portfolioData);
+        const newPortfolio = storage.create(portfolioData);
+        // Notify other services about the new portfolio
+        await notifyPortfolioUpdate(newPortfolio);
+        return newPortfolio;
     } catch (error) {
         throw new Error('Error creating portfolio: ' + error.message);
+    }
+};
+
+const notifyPortfolioUpdate = async (portfolio: Portfolio) => {
+    try {
+        await axios.post(`${externalPortfolioServiceUrl}/updates`, portfolio);
+    } catch (error) {
+        console.error('Failed to notify portfolio update:', error);
+    }
+};
+
+export const healthCheckExternalService = async (): Promise<boolean> => {
+    try {
+        const response = await axios.get(`${externalPortfolioServiceUrl}/health`);
+        return response.data.status === 'UP';
+    } catch (error) {
+        console.error('Health check failed:', error);
+        return false;
     }
 };
 
@@ -43,30 +64,11 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
         throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
     }
     try {
-        return storage.update(id, updates);
+        const updatedPortfolio = storage.update(id, updates);
+        // Notify about the portfolio update
+        await notifyPortfolioUpdate(updatedPortfolio);
+        return updatedPortfolio;
     } catch (error) {
         throw new Error('Error updating portfolio: ' + error.message);
-    }
-};
-
-export const deletePortfolio = async (id: string): Promise<void> => {
-    const deleted = storage.delete(id);
-    if (!deleted) {
-        throw new NotFoundError('Portfolio not found');
-    }
-};
-
-export const fetchPortfolios = async (options: { limit: number; offset: number; sort: string; order: string; }): Promise<Portfolio[]> => {
-    try {
-        const portfolios = storage.getAll();
-        const sortedPortfolios = portfolios.sort((a, b) => {
-            if (options.sort === 'name') {
-                return options.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-            }
-            return 0;
-        });
-        return sortedPortfolios.slice(options.offset, options.offset + options.limit);
-    } catch (error) {
-        throw new Error('Error fetching portfolios: ' + error.message);
     }
 };
