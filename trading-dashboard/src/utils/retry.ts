@@ -38,16 +38,3 @@ export const circuitBreaker = (fn: Function, failureThreshold: number = 5, coold
         }
     };
 };
-
-export const withTimeout = async (fn: Function, timeout: number) => {
-    let timeoutHandler: NodeJS.Timeout;
-    const promise = fn();
-
-    return new Promise((resolve, reject) => {
-        timeoutHandler = setTimeout(() => {
-            reject(new Error('Operation timed out')); // Handle timeout
-        }, timeout);
-
-        promise.then(resolve).catch(reject).finally(() => clearTimeout(timeoutHandler));
-    });
-};

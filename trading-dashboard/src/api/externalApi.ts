@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { retry, circuitBreaker } from '../utils/retry';
-import config from '../config';
 import { ServiceError } from '../utils/errors';
+import config from '../config';
+import { retry, circuitBreaker } from '../utils/retry';
 
 const BASE_URL = process.env.EXTERNAL_API_URL;
 
