@@ -1,22 +1,22 @@
 import WebSocket from 'ws';
-import { PriceData, CurrentPrices, PriceEvent } from './types';
-import { httpClient, postHttpClient } from './httpClient';
+import { PriceData, PriceEvent } from './types';
+import { postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
 
 export class PriceAggregator {
-    private currentPrices: CurrentPrices = {};
+    private currentPrices: { [key: string]: number } = {};
     private clients: WebSocket[] = [];
     private eventBus = new EventBus();
 
     constructor() {
         this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
-        this.fetchPricesFromExchanges();
     }
 
     public async addPrice(priceData: PriceData): Promise<PriceData> {
         try {
             const newPrice = await storage.create(priceData);
+            await postHttpClient('/prices', newPrice);
             this.eventBus.emitPriceAdded(newPrice);
             return newPrice;
         } catch (error) {

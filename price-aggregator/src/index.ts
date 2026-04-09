@@ -2,24 +2,22 @@ import express from 'express';
 import http from 'http';
 import { createConnectionPool } from './dbConnection';
 import errorMiddleware from './errorMiddleware';
-import { MemoryMonitor } from './memoryMonitor';
 import { config } from './config';
 import { logStartup } from './logger';
-import { requestQueueMiddleware } from './middleware/requestQueueingMiddleware';
+import { httpClient } from './httpClient';
 
 const app = express();
 const server = http.createServer(app);
 const dbPool = createConnectionPool();
-const memoryMonitor = new MemoryMonitor();
 
 app.use(express.json());
-app.use(requestQueueMiddleware);
 app.use(errorMiddleware);
 
 app.get('/health', async (req, res) => {
     try {
         await dbPool.query('SELECT 1');
-        return res.status(200).json({ status: 'healthy' });
+        const externalServiceHealth = await httpClient('/external-service/health');
+        return res.status(200).json({ status: 'healthy', dependencies: { externalService: externalServiceHealth } });
     } catch (error) {
         return res.status(500).json({ status: 'unhealthy', error: error.message });
     }
@@ -42,7 +40,4 @@ process.on('SIGINT', shutdown);
 
 server.listen(config.port, () => {
     logStartup({ port: config.port });
-    setInterval(() => {
-        memoryMonitor.logMemoryUsage();
-    }, 60000);
 });
