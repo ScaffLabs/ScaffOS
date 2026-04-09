@@ -6,11 +6,21 @@ import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
 import { PriceAggregator } from './priceAggregator';
 import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import helmet from 'helmet';
+import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
 
 const app = express();
 const server = http.createServer(app);
 const dbPool = createConnectionPool();
 const priceAggregator = new PriceAggregator();
+
+// CORS configuration
+const allowedOrigins = ['https://example.com', 'https://another-example.com'];
+app.use(cors({ origin: allowedOrigins }));
+
+// Helmet for security headers
+app.use(helmet());
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -32,7 +42,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/prices', async (req, res) => {
+app.get('/prices', validatePriceData, handleValidationErrors, async (req, res) => {
     const { limit = 10, offset = 0, sort = 'exchange', order = 'asc' } = req.query;
     try {
         const prices = await priceAggregator.getPrices({ limit: Number(limit), offset: Number(offset), sort, order });
@@ -44,7 +54,7 @@ app.get('/prices', async (req, res) => {
     }
 });
 
-app.post('/prices', async (req, res) => {
+app.post('/prices', validatePriceData, handleValidationErrors, async (req, res) => {
     try {
         const newPrice = await priceAggregator.addPrice(req.body);
         return res.status(201).json(newPrice);

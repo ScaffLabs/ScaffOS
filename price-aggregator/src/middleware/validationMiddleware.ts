@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { body, param, validationResult } from 'express-validator';
+import { body, validationResult } from 'express-validator';
 import { ValidationError } from '../errors';
 
 export const validatePriceData = [
     body('exchange')
         .isString()
         .notEmpty()
+        .trim()
         .escape()
         .withMessage('Exchange must be a non-empty string'),
     body('price')
@@ -14,18 +15,6 @@ export const validatePriceData = [
     body('volume')
         .isFloat({ gt: 0 })
         .withMessage('Volume must be a positive number'),
-];
-
-export const validatePriceUpdate = [
-    param('exchange').isString().notEmpty().withMessage('Exchange parameter must be a non-empty string'),
-    body('price')
-        .optional()
-        .isFloat({ gt: 0 })
-        .withMessage('If provided, price must be a positive number'),
-    body('volume')
-        .optional()
-        .isFloat({ gt: 0 })
-        .withMessage('If provided, volume must be a positive number'),
 ];
 
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
