@@ -11,17 +11,19 @@ import http from 'http';
 import errorHandler from './middleware/errorHandler';
 import csrfMiddleware from './middleware/csrfProtection';
 import { sanitize } from './middleware/sanitization';
+import auditLogger from './middleware/auditLogger';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: 'https://your-allowed-origin.com' }));
 app.use(helmet());
 app.use(json());
 app.use(requestLogger);
+app.use(auditLogger);
 app.use(errorLogger);
 app.use(sanitize);
 
-// Rate limiting middleware
+// Rate limiting middleware for the entire app
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,

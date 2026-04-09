@@ -4,6 +4,7 @@ import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio } from 
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 import { auditLog } from '../services/auditService';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
@@ -21,6 +22,15 @@ const portfolioValidation = [
         return true;
     })
 ];
+
+// Rate limiting middleware for portfolio routes
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests from this IP, please try again later.'
+});
+
+router.use(limiter);
 
 router.post('/', portfolioValidation, async (req, res) => {
     const errors = validationResult(req);
