@@ -106,3 +106,7 @@ Contributions are welcome! Please open an issue or submit a pull request.
 
 ### [1.0.4] - 2023-11-20
 - Comprehensive documentation including API reference, environment variables table, and development guide.
+
+### [1.0.5] - 2023-11-25
+- Added detailed inline documentation to orderController.ts for better code understanding.
+- Improved overall code structure and readability.
