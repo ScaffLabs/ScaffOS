@@ -4,6 +4,8 @@ import { getStrategiesHandler, createStrategyHandler, updateStrategyHandler, del
 import { validateInputBody, validateQueryParams, validateRequestSize } from '../middleware/inputValidator';
 import { validateStrategy, validateUpdateStrategy } from '../middleware/strategyValidator';
 import rateLimit from 'express-rate-limit';
+import swaggerJsDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 const router = Router();
 
@@ -13,6 +15,22 @@ const limiter = rateLimit({
     max: 100,
     message: 'Too many requests, please try again later.',
 });
+
+// Swagger setup
+const swaggerOptions = {
+    swaggerDefinition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Analytics Panel API',
+            version: '1.0.0',
+            description: 'API documentation for the Analytics Panel',
+        },
+    },
+    apis: ['./src/routes/*.ts'],
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 /**
  * @swagger
