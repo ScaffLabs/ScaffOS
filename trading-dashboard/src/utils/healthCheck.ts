@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import { fetchServiceHealth } from '../api/externalApi';
 import { closePool } from '../utils/connectionPool';
+import logger from '../utils/logger';
 
 export const healthCheck = async (req: Request, res: Response) => {
     try {
         const serviceHealth = await fetchServiceHealth();
         res.status(serviceHealth.status === 'UP' ? 200 : 500).send(serviceHealth);
     } catch (error) {
+        logger.error('Health check failed', { error: error.message });
         res.status(500).send({ status: 'DOWN', error: error.message });
     }
 };
@@ -24,9 +26,9 @@ export const readinessCheck = async (req: Request, res: Response) => {
 };
 
 export const gracefulShutdown = async () => {
-    console.log('Graceful shutdown initiated. Closing database connections.');
+    logger.info('Graceful shutdown initiated. Closing database connections.');
     await closePool();
-    console.log('Database connections closed.');
+    logger.info('Database connections closed.');
 };
 
 export const registerHealthRoutes = (app: any) => {
@@ -35,19 +37,14 @@ export const registerHealthRoutes = (app: any) => {
 };
 
 export const registerShutdownHandlers = (server: any) => {
-    process.on('SIGTERM', async () => {
+    const shutdown = async () => {
         await gracefulShutdown();
         server.close(() => {
-            console.log('HTTP server closed.');
+            logger.info('HTTP server closed.');
             process.exit(0);
         });
-    });
+    };
 
-    process.on('SIGINT', async () => {
-        await gracefulShutdown();
-        server.close(() => {
-            console.log('HTTP server closed.');
-            process.exit(0);
-        });
-    });
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 };
