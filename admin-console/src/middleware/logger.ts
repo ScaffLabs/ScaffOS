@@ -37,7 +37,8 @@ export const logError = (err: Error, req: Request, res: Response, next: NextFunc
         error: err.message,
         stack: err.stack,
         path: req.originalUrl,
-        method: req.method
+        method: req.method,
+        requestId: req.headers['x-request-id'] || Math.random().toString(36).substring(7)
     });
     res.status(500).json({ error: 'Internal Server Error' });
 };

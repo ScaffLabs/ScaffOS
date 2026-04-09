@@ -10,19 +10,16 @@ import errorHandler from './middleware/errorHandler';
 import { logRequest } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
-import { logAudit } from './middleware/auditLogger';
 
 dotenv.config();
 const app = express();
 const db = new Database();
 
-const allowedOrigins = ['http://localhost:3000'];
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors());
 app.use(helmet());
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(rateLimiter);
 app.use(logRequest);
-app.use(logAudit);
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
 app.use(errorHandler);
@@ -34,6 +31,9 @@ const startServer = async () => {
             console.log(`Server running on http://localhost:${config.port}`);
             console.log(`Configuration: ${JSON.stringify(config)}`);
         });
+
+        // Log connected services
+        console.log(`Connected to database: ${config.databaseUrl}`);
 
         const gracefulShutdown = (signal) => {
             console.log(`Received ${signal}. Shutting down gracefully...`);
