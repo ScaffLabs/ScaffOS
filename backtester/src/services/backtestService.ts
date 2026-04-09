@@ -20,10 +20,13 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
             throw new ValidationError('Price must be a positive number.');
         }
 
+        // Buy logic
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
             totalReturns += (currentPrice * (1 - slippage)) - previousPrice;
-        } else if (currentPrice < previousPrice * (1 - sellThreshold)) {
+        } 
+        // Sell logic
+        else if (currentPrice < previousPrice * (1 - sellThreshold)) {
             trades++;
             totalReturns += previousPrice - (currentPrice * (1 + slippage));
         }
