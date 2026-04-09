@@ -4,8 +4,8 @@ import config from './config';
 const logFormat = config.NODE_ENV === 'production' ? winston.format.json() : winston.format.combine(
     winston.format.colorize(),
     winston.format.timestamp(),
-    winston.format.printf(({ timestamp, level, message }) => {
-        return `${timestamp} [${level}]: ${message}`;
+    winston.format.printf(({ timestamp, level, message, ...meta }) => {
+        return `${timestamp} [${level}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
     })
 );
 

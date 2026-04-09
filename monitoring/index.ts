@@ -5,7 +5,7 @@ import { healthCheckServices } from './serviceHealth';
 import errorMiddleware from './errorMiddleware';
 import { createConnectionPool, serviceEmitter } from './connectionPool';
 import { auditLogger } from './auditLogger';
-import { logRequest } from './logger';
+import { logRequest, logStartup } from './logger';
 import { limiter } from './rateLimiter';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -40,7 +40,7 @@ app.use(sanitize);
 // Health Check Endpoints
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
-app.get('/service-health', healthCheckServices); // New service health check endpoint
+app.get('/service-health', healthCheckServices);
 
 // Error handling middleware
 app.use(errorMiddleware);
@@ -59,6 +59,7 @@ process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 server.listen(PORT, () => {
+    logStartup();
     console.log(`Monitoring service running on port ${PORT}`);
 });
 
