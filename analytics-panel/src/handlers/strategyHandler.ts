@@ -1,6 +1,6 @@
 // Import necessary modules
 import { Request, Response } from 'express';
-import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies } from '../services/strategyService';
+import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics } from '../services/strategyService';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
 
 // Handler to fetch all strategies based on query parameters
@@ -10,7 +10,6 @@ export const getStrategiesHandler = async (req: Request, res: Response) => {
         const query: any = {};
         if (name) query.name = new RegExp(name, 'i'); // Case-insensitive search for strategies
         const strategies = await findStrategies(query);
-        // Paginate strategies based on limit and offset parameters
         const paginatedStrategies = strategies.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedStrategies);
     } catch (error) {
@@ -24,10 +23,10 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
     const { name, parameters } = req.body;
     try {
         if (!name || !parameters) {
-            throw new ValidationError('Strategy name and parameters are required.'); // Validate input to ensure necessary fields are provided
+            throw new ValidationError('Strategy name and parameters are required.');
         }
         const newStrategy = await createStrategy({ name, parameters });
-        res.status(201).json(newStrategy); // Respond with the created strategy
+        res.status(201).json(newStrategy);
     } catch (error) {
         if (error instanceof ValidationError) {
             res.status(400).json({ error: error.message });
@@ -38,6 +37,17 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
     }
 };
 
+// Handler to get performance metrics
+export const getPerformanceMetricsHandler = async (req: Request, res: Response) => {
+    try {
+        const metrics = await getPerformanceMetrics();
+        res.status(200).json(metrics);
+    } catch (error) {
+        console.error('Error fetching performance metrics:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 // Handler to update an existing strategy
 export const updateStrategyHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -45,9 +55,9 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
     try {
         const updatedStrategy = await updateStrategy(id, { name, parameters });
         if (!updatedStrategy) {
-            throw new NotFoundError('Strategy not found.'); // Handle case where strategy does not exist
+            throw new NotFoundError('Strategy not found.');
         }
-        res.status(200).json(updatedStrategy); // Respond with the updated strategy
+        res.status(200).json(updatedStrategy);
     } catch (error) {
         if (error instanceof NotFoundError) {
             res.status(404).json({ error: error.message });
@@ -64,9 +74,9 @@ export const deleteStrategyHandler = async (req: Request, res: Response) => {
     try {
         const deleted = await deleteStrategy(id);
         if (!deleted) {
-            throw new NotFoundError('Strategy not found.'); // Ensure the strategy exists before attempting to delete
+            throw new NotFoundError('Strategy not found.');
         }
-        res.status(204).send(); // No content to return on successful deletion
+        res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {
             res.status(404).json({ error: error.message });
