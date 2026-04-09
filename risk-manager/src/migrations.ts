@@ -1,9 +1,9 @@
-import { RiskPosition } from './sharedTypes';
 import { RiskPositionStorage } from './storage';
+import { RiskPosition } from './sharedTypes';
 
 export const migrateData = async (storage: RiskPositionStorage) => {
-    // Migration logic can be implemented here
     console.log('Migrating data...');
+    // Implement migration logic if necessary, e.g., data transformation
 };
 
 export const seedData = async (storage: RiskPositionStorage) => {
