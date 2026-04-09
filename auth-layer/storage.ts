@@ -8,7 +8,7 @@ const pool = createConnectionPool();
 
 export const createUser = async (username: string, email: string): Promise<User> => {
     const sanitizedInput = sanitizeUserInput({ username, email });
-    validateUser(sanitizedInput);  // Validate input
+    validateUser(sanitizedInput);
     const existingUser = await findUserByEmail(sanitizedInput.email);
     if (existingUser) {
         throw new ValidationError(['Email already in use.']);
@@ -45,4 +45,10 @@ export const deleteUser = async (id: UserId): Promise<boolean> => {
 export const getAllUsers = async (): Promise<User[]> => {
     const res = await pool.query('SELECT * FROM users');
     return res.rows;
+};
+
+export const findUserByEmail = async (email: string): Promise<User | null> => {
+    const res = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (res.rows.length === 0) return null;
+    return res.rows[0];
 };
