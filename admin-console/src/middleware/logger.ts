@@ -50,17 +50,3 @@ export const logPerformance = (req: Request, res: Response, next: NextFunction) 
     });
     next();
 };
-
-export const logAudit = (req: Request, res: Response, next: NextFunction) => {
-    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(7);
-    res.on('finish', () => {
-        if (req.method === 'POST' && req.path === '/api/config') {
-            const { key } = req.body;
-            logger.info(`Audit Log: Configuration created: {key: ${key}, requestId: ${requestId}}`);
-        } else if (req.method === 'DELETE' && req.path.startsWith('/api/config/')) {
-            const key = req.path.split('/').pop();
-            logger.info(`Audit Log: Configuration deleted: {key: ${key}, requestId: ${requestId}}`);
-        }
-    });
-    next();
-};

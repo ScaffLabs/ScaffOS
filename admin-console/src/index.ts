@@ -7,7 +7,7 @@ import Database from './storage/Database';
 import healthRouter from './routes/health';
 import configRouter from './routes/config';
 import errorHandler from './middleware/errorHandler';
-import { ServiceError } from './errors/CustomErrors';
+import { logRequest } from './middleware/logger';
 
 dotenv.config();
 const app = express();
@@ -15,6 +15,7 @@ const db = new Database();
 
 app.use(helmet());
 app.use(bodyParser.json());
+app.use(logRequest);
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
 
@@ -25,6 +26,7 @@ const startServer = async () => {
         await db.connect();
         const server = app.listen(config.port, () => {
             console.log(`Server running on http://localhost:${config.port}`);
+            console.log(`Configuration: ${JSON.stringify(config)}`);
         });
 
         const gracefulShutdown = (signal) => {

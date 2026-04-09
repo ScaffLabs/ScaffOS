@@ -3,7 +3,7 @@ import { ValidationError, ServiceError, NotFoundError, EmptyArrayError } from '.
 import winston from 'winston';
 
 const logger = winston.createLogger({
-    level: 'info',
+    level: 'error',
     format: winston.format.json(),
     transports: [new winston.transports.Console()],
 });
@@ -14,7 +14,8 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
         error: err.message,
         stack: err.stack,
         path: req.originalUrl,
-        method: req.method
+        method: req.method,
+        requestId: req.headers['x-request-id'] || Math.random().toString(36).substring(7)
     });
 
     if (err instanceof ValidationError) {
