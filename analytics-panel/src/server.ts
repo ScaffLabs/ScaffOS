@@ -9,10 +9,6 @@ import { logWithRequestId, logStartup } from './logger';
 import errorHandler from './middleware/errorHandler';
 import { csrfMiddleware } from './middleware/csrfProtection';
 import config from './config';
-import { monitorMemoryUsage } from './utils/monitor';
-import { gracefulShutdown } from './utils/shutdown';
-import { initializeStore } from './storage/strategyStore';
-import { auditLogger } from './middleware/auditLogger';
 import mongoose from 'mongoose';
 
 const app = express();
@@ -23,7 +19,6 @@ app.use(helmet());
 app.use(cors({ origin: ['http://example.com', 'http://localhost:3000'] }));
 app.use(express.json());
 app.use(logWithRequestId);
-app.use(auditLogger);
 
 // Rate limiter
 const limiter = rateLimit({
@@ -39,26 +34,9 @@ app.use('/api', healthRoutes);
 app.use(errorHandler);
 app.use(csrfMiddleware);
 
-// Memory monitoring
-const monitorInterval = setInterval(monitorMemoryUsage, 60000);
-
-// Graceful shutdown handling
-const shutdownHandler = async () => {
-    clearInterval(monitorInterval); // Clear the memory monitoring interval
-    await mongoose.connection.close();
-    server.close(() => {
-        console.log('Closed all connections.');
-        process.exit(0);
-    });
-};
-
-process.on('SIGTERM', shutdownHandler);
-process.on('SIGINT', shutdownHandler);
-
 const startServer = async () => {
     try {
         await mongoose.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
-        await initializeStore();
         const PORT = process.env.PORT || 3000;
         logStartup(config);
         server.listen(PORT, () => {
