@@ -17,7 +17,8 @@ export const fetchPositions = async (req: Request, res: Response) => {
         const paginatedPositions = positions.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedPositions);
     } catch (error) {
-        throw new ServiceError('Error fetching positions: ' + error.message);
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching positions' });
     }
 };
 
@@ -31,7 +32,8 @@ export const createPosition = async (req: Request, res: Response) => {
         if (error instanceof ServiceError) {
             return res.status(400).json({ message: 'Invalid position data', errors: error.message });
         }
-        throw new ServiceError('Error creating position: ' + error.message);
+        console.error(error);
+        res.status(500).json({ message: 'Error creating position' });
     }
 };
 
@@ -52,6 +54,24 @@ export const updatePosition = async (req: Request, res: Response) => {
         if (error instanceof ServiceError) {
             return res.status(400).json({ message: 'Invalid input data', errors: error.message });
         }
-        return res.status(500).json({ message: 'Error updating position' });
+        console.error(error);
+        res.status(500).json({ message: 'Error updating position' });
+    }
+};
+
+export const deletePosition = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const deleted = positionStore.delete(id);
+        if (!deleted) {
+            throw new NotFoundError('Position not found');
+        }
+        res.status(204).send();
+    } catch (error) {
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ message: error.message });
+        }
+        console.error(error);
+        res.status(500).json({ message: 'Error deleting position' });
     }
 };
