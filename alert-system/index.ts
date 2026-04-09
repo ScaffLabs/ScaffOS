@@ -18,17 +18,13 @@ app.use(cors()); // Enable all CORS requests
 app.use(bodyParser.json());
 app.use(errorMiddleware);
 
-// MongoDB connection with connection pooling
 const mongoOptions = { useNewUrlParser: true, useUnifiedTopology: true, poolSize: 5 };
 mongoose.connect(config.MONGO_URI, mongoOptions)
     .then(() => logger.info('Connected to MongoDB'))
     .catch(err => logger.error('MongoDB connection error:', err));
 
-// Health check routes
 app.get('/health', HealthCheck.checkHealth);
 app.get('/ready', HealthCheck.checkReady);
-
-// Alert routes
 app.use('/api/alerts', alertRoutes);
 
 const server = app.listen(config.PORT, () => {
