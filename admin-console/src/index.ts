@@ -32,7 +32,6 @@ const startServer = async () => {
             console.log(`Configuration: ${JSON.stringify(config)}`);
         });
 
-        // Log connected services
         console.log(`Connected to database: ${config.databaseUrl}`);
 
         const gracefulShutdown = (signal) => {
