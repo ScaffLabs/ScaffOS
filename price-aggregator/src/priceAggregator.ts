@@ -3,7 +3,7 @@ import { PriceData, PriceEvent } from './types';
 import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
-import { ValidationError, ServiceError, DivisionByZeroError } from './errors';
+import { ValidationError, ServiceError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: { [key: string]: number } = {};
@@ -29,12 +29,35 @@ export class PriceAggregator {
         }
     }
 
-    public async checkDependencies() {
-        const healthChecks = await Promise.all([
-            checkHealth(),
-            httpClient('/another-external-service/health')
-        ]);
-        return healthChecks;
+    public async getPrices({ limit = 10, offset = 0, sort = 'exchange', order = 'asc' }): Promise<PriceData[]> {
+        let prices = await storage.findAll();
+        prices = this.sortPrices(prices, sort, order);
+        return prices.slice(offset, offset + limit);
+    }
+
+    public async updatePrice(exchange: string, priceData: Partial<PriceData>): Promise<PriceData | null> {
+        const existingPrice = await storage.findAll({ exchange });
+        if (!existingPrice) return null;
+        const updatedPrice = { ...existingPrice, ...priceData } as PriceData;
+        await storage.update(exchange, updatedPrice);
+        return updatedPrice;
+    }
+
+    public async deletePrice(exchange: string): Promise<boolean> {
+        const existingPrice = await storage.findAll({ exchange });
+        if (!existingPrice) return false;
+        await storage.delete(existingPrice.id);
+        return true;
+    }
+
+    private sortPrices(prices: PriceData[], sort: string, order: string): PriceData[] {
+        return prices.sort((a, b) => {
+            if (order === 'asc') {
+                return a[sort] > b[sort] ? 1 : -1;
+            } else {
+                return a[sort] < b[sort] ? 1 : -1;
+            }
+        });
     }
 
     // Other methods remain unchanged...
