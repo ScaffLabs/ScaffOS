@@ -1,5 +1,5 @@
 import express from 'express';
-import { ConfigurationItem } from '../types';
+import { ConfigurationItem, ConfigurationItemSchema } from '../types';
 import Database from '../storage/Database';
 import { ValidationError, NotFoundError } from '../errors/CustomErrors';
 import { logRequest } from '../middleware/logger';
