@@ -1,33 +1,17 @@
 import { Portfolio, PortfolioUpdate } from '../types';
 import storage from './storage';
 import { ValidationError, NotFoundError } from '../errors';
-import axios from 'axios';
-import env from '../config';
-import { CircuitBreaker } from 'circuit-breaker-js';
-
-const axiosInstance = axios.create({
-    baseURL: env.PORTFOLIO_SERVICE_URL,
-    timeout: 5000,
-});
-
-const circuitBreaker = new CircuitBreaker();
-
-const retryRequest = async (fn, retries = 3) => {
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await fn();
-        } catch (error) {
-            if (i === retries - 1) throw error;
-        }
-    }
-};
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const { name, positions } = portfolioData;
-    if (!name || positions.length === 0) {
+    if (!name || !positions || positions.length === 0) {
         throw new ValidationError('Name and positions are required.');
     }
-    return storage.create(portfolioData);
+    try {
+        return storage.create(portfolioData);
+    } catch (error) {
+        throw new Error('Error creating portfolio: ' + error.message);
+    }
 };
 
 export const getPortfolio = async (id: string): Promise<Portfolio> => {
@@ -46,7 +30,11 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     if (updates.positions && updates.positions.length === 0) {
         throw new ValidationError('Positions array cannot be empty.');
     }
-    return storage.update(id, updates);
+    try {
+        return storage.update(id, updates);
+    } catch (error) {
+        throw new Error('Error updating portfolio: ' + error.message);
+    }
 };
 
 export const deletePortfolio = async (id: string): Promise<void> => {
@@ -57,33 +45,16 @@ export const deletePortfolio = async (id: string): Promise<void> => {
 };
 
 export const fetchPortfolios = async (options: { limit: number; offset: number; sort: string; order: string; }): Promise<Portfolio[]> => {
-    const { limit, offset, sort, order } = options;
-    const portfolios = storage.getAll();
-    const sortedPortfolios = portfolios.sort((a, b) => {
-        if (sort === 'name') {
-            return order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-        }
-        return 0;
-    });
-    return sortedPortfolios.slice(offset, offset + limit);
-};
-
-export const clearPortfolios = () => {
-    storage.clear();
-};
-
-export const healthCheckExternalService = async () => {
     try {
-        await axiosInstance.get('/health');
-        return true;
+        const portfolios = storage.getAll();
+        const sortedPortfolios = portfolios.sort((a, b) => {
+            if (options.sort === 'name') {
+                return options.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+            }
+            return 0;
+        });
+        return sortedPortfolios.slice(options.offset, options.offset + options.limit);
     } catch (error) {
-        return false;
+        throw new Error('Error fetching portfolios: ' + error.message);
     }
-};
-
-export const fetchHealthStatus = async () => {
-    const status = await healthCheckExternalService();
-    return {
-        portfolioService: status,
-    };
 };

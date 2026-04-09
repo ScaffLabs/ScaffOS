@@ -19,4 +19,11 @@ class NotFoundError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError };
+class InternalServerError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'InternalServerError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, InternalServerError };

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import { createPortfolio, getPortfolio, updatePortfolio, fetchPortfolios } from '../services/portfolioService';
 import logger from '../services/logger';
-import { ValidationError } from '../errors';
+import { ValidationError, NotFoundError } from '../errors';
 
 const router = Router();
 
@@ -22,18 +22,17 @@ const portfolioValidation = [
 ];
 
 router.post('/', portfolioValidation, async (req, res) => {
-    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(2);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array(), requestId });
+        logger.warn('Validation errors', { errors: errors.array() });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         const portfolio = await createPortfolio(req.body);
-        logger.info('Portfolio created', { portfolioId: portfolio.id, requestId });
+        logger.info('Portfolio created', { portfolioId: portfolio.id });
         res.status(201).json(portfolio);
     } catch (error) {
-        logger.error('Error creating portfolio', { error: error.message, requestId });
+        logger.error('Error creating portfolio', { error: error.message });
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
         }
@@ -42,18 +41,12 @@ router.post('/', portfolioValidation, async (req, res) => {
 });
 
 router.get('/:id', [param('id').isString().trim().escape()], async (req, res) => {
-    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(2);
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array(), requestId });
-        return res.status(400).json({ errors: errors.array() });
-    }
     try {
         const portfolio = await getPortfolio(req.params.id);
-        logger.info('Fetched portfolio', { portfolioId: req.params.id, requestId });
+        logger.info('Fetched portfolio', { portfolioId: req.params.id });
         res.status(200).json(portfolio);
     } catch (error) {
-        logger.error('Error fetching portfolio', { error: error.message, requestId });
+        logger.error('Error fetching portfolio', { error: error.message });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
@@ -62,18 +55,17 @@ router.get('/:id', [param('id').isString().trim().escape()], async (req, res) =>
 });
 
 router.put('/:id', portfolioValidation, async (req, res) => {
-    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(2);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array(), requestId });
+        logger.warn('Validation errors', { errors: errors.array() });
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
-        logger.info('Portfolio updated', { portfolioId: req.params.id, requestId });
+        logger.info('Portfolio updated', { portfolioId: req.params.id });
         res.status(200).json(updatedPortfolio);
     } catch (error) {
-        logger.error('Error updating portfolio', { error: error.message, requestId });
+        logger.error('Error updating portfolio', { error: error.message });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
@@ -82,12 +74,11 @@ router.put('/:id', portfolioValidation, async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(2);
     try {
         const portfolios = await fetchPortfolios({ limit: 100, offset: 0, sort: 'name', order: 'asc' });
         res.status(200).json(portfolios);
     } catch (error) {
-        logger.error('Error fetching portfolios', { error: error.message, requestId });
+        logger.error('Error fetching portfolios', { error: error.message });
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
