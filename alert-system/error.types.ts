@@ -45,8 +45,4 @@ export interface ErrorResponse {
     code?: number;
 }
 
-export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError; 
-
-export const createCustomError = (message: string, code?: number): CustomError => {
-    return new CustomError(code || 500, message);
-};
+export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError;
