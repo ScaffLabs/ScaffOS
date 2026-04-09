@@ -1,3 +1,4 @@
+// Importing necessary modules and functions
 import express from 'express';
 import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from './storage';
 import { validateAndSanitizeUserInput, authMiddleware } from './middleware';
@@ -11,7 +12,6 @@ const router = express.Router();
 router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
     const { username, email } = req.body;
     try {
-        // Validate user input
         validateUser({ username, email });
         const user = await createUser(username, email);
         logger.info('User created', { userId: user.id, username: user.username });
@@ -21,15 +21,15 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message, details: error.errors });
         }
-        // Handle unexpected errors
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// Route to get all users
+// Route to get all users with pagination, filtering, and sorting
 router.get('/users', authMiddleware, async (req, res) => {
+    const { limit = 10, offset = 0, sortBy = 'username', order = 'asc', emailFilter } = req.query;
     try {
-        const users = await getAllUsers();
+        const users = await getAllUsers({ limit: Number(limit), offset: Number(offset), sortBy, order, emailFilter });
         res.status(200).json(users);
     } catch (error) {
         logger.error('Error retrieving users', { error: error.message });
@@ -41,7 +41,7 @@ router.get('/users', authMiddleware, async (req, res) => {
 router.put('/users/:id', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
     const userId = req.params.id;
     try {
-        validateUser(req.body); // Validate input
+        validateUser(req.body);
         const updatedUser = await updateUser(userId, req.body);
         if (!updatedUser) throw new NotFoundError('User not found for update');
         logger.info('User updated', { userId });
