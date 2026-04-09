@@ -71,14 +71,14 @@ describe('Backtest API', () => {
 });
 
 describe('simulateBacktest function', () => {
-    it('should return correct backtest results', () => {
+    it('should return correct backtest results', async () => {
         const params: StrategyParameters = { slippage: 0.01, buyThreshold: 0.5, sellThreshold: 0.5 };
         const historicalData: HistoricalData[] = [
             { timestamp: 1620000000, price: 100 },
             { timestamp: 1620000060, price: 101 },
         ];
 
-        const result = simulateBacktest(params, historicalData);
+        const result = await simulateBacktest(params, historicalData);
         expect(result).toEqual({
             totalReturns: 0,
             trades: 0,
@@ -87,9 +87,9 @@ describe('simulateBacktest function', () => {
         });
     });
 
-    it('should handle edge cases with empty historical data', () => {
+    it('should handle edge cases with empty historical data', async () => {
         const params: StrategyParameters = { slippage: 0.01, buyThreshold: 0.5, sellThreshold: 0.5 };
-        const result = simulateBacktest(params, []);
+        const result = await simulateBacktest(params, []);
         expect(result).toEqual({
             totalReturns: 0,
             trades: 0,
