@@ -3,6 +3,7 @@ import { PriceData, PriceEvent } from './types';
 import { postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
+import { ValidationError, DivisionByZeroError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: { [key: string]: number } = {};
@@ -14,18 +15,26 @@ export class PriceAggregator {
     }
 
     public async addPrice(priceData: PriceData): Promise<PriceData> {
+        if (!this.validatePriceData(priceData)) {
+            throw new ValidationError('Invalid price data.');
+        }
+
         try {
             const newPrice = await storage.create(priceData);
+            this.currentPrices[priceData.exchange] = priceData.price;
             await postHttpClient('/prices', newPrice);
             this.eventBus.emitPriceAdded(newPrice);
             return newPrice;
         } catch (error) {
-            throw new Error('Failed to add price.');
+            throw new ServiceError('Failed to add price: ' + error.message);
         }
     }
 
+    private validatePriceData(priceData: PriceData): boolean {
+        return priceData.exchange && priceData.price > 0 && priceData.volume > 0;
+    }
+
     private handlePriceEvent(event: PriceEvent) {
-        // Handle price events (e.g., logging, additional processing)
         console.log('Price event:', event);
         this.broadcastPrices();
     }
