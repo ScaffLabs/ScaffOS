@@ -73,4 +73,11 @@ describe('EventBus', () => {
     test('should throw error when publishing invalid message', async () => {
         await expect(eventBus.publish(testTopic, null)).rejects.toThrow();
     });
+
+    test('should publish with retry on failure', async () => {
+        const publishMock = jest.spyOn(eventBus, 'publish').mockImplementationOnce(() => { throw new Error('Publish error'); });
+        await expect(eventBus.publishWithRetry(testTopic, testData)).rejects.toThrow('Publish error');
+        expect(publishMock).toHaveBeenCalledTimes(2);
+        publishMock.mockRestore();
+    });
 });
