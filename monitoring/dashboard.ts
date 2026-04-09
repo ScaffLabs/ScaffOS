@@ -8,11 +8,13 @@ const store = new InMemoryStore<LatencyData>();
 
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
+        const { limit, offset } = req.query;
         const entries = store.getAll();
-        if (entries.length === 0) {
+        const paginatedEntries = entries.slice(offset ? Number(offset) : 0, limit ? Number(limit) + (offset ? Number(offset) : 0) : undefined);
+        if (paginatedEntries.length === 0) {
             return res.status(204).json([]);
         }
-        res.status(200).json(entries);
+        res.status(200).json(paginatedEntries);
     } catch (error) {
         logger.error(error, req);
         res.status(500).json({ error: 'Failed to fetch entries.' });
