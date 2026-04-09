@@ -23,20 +23,19 @@ describe('PriceAggregator', () => {
             { exchange: 'exchange1', price: 100, volume: 10 },
             { exchange: 'exchange2', price: 200, volume: 20 }
         ];
-        await priceAggregator['calculateVWAP'](prices);
-        const currentPrices = priceAggregator.getCurrentPrices();
-        expect(currentPrices.VWAP).toBeCloseTo(166.67, 2);
+        const vwap = await priceAggregator.calculateVWAP(prices);
+        expect(vwap).toBeCloseTo(166.67, 2);
     });
 
     test('should handle empty price data gracefully', async () => {
         const prices: PriceData[] = [];
-        const currentPrices = priceAggregator['calculateVWAP'](prices);
-        expect(currentPrices).toEqual({ VWAP: 0 });
+        const vwap = await priceAggregator.calculateVWAP(prices);
+        expect(vwap).toEqual({ VWAP: 0 });
     });
 
     test('should throw error during VWAP calculation if total volume is zero', async () => {
         const prices = [{ exchange: 'exchange1', price: 100, volume: 0 }];
-        await expect(priceAggregator['calculateVWAP'](prices)).rejects.toThrow('Division by zero in VWAP calculation.');
+        await expect(priceAggregator.calculateVWAP(prices)).rejects.toThrow('Division by zero in VWAP calculation.');
     });
 
     test('should successfully add a valid price', async () => {
@@ -49,5 +48,11 @@ describe('PriceAggregator', () => {
         const eventSpy = jest.spyOn(priceAggregator['eventBus'], 'emitPriceAdded');
         await priceAggregator.addPrice(price);
         expect(eventSpy).toHaveBeenCalledWith(price);
+    });
+
+    test('should return current prices after adding a price', async () => {
+        const price: PriceData = { exchange: 'exchange1', price: 100, volume: 10 };
+        await priceAggregator.addPrice(price);
+        expect(priceAggregator.getCurrentPrices()).toEqual({ VWAP: expect.any(Number), exchange1: 100 });
     });
 });

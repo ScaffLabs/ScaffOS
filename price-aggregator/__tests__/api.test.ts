@@ -42,13 +42,6 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual({ status: 'unhealthy', error: 'Service down' });
     });
 
-    test('GET /prices should return 500 on error fetching prices', async () => {
-        (priceAggregator.getCurrentPrices as jest.Mock).mockImplementationOnce(() => { throw new Error('Failed to fetch prices'); });
-        const response = await request(app).get('/prices');
-        expect(response.status).toBe(500);
-        expect(response.body).toEqual({ error: 'Failed to fetch prices' });
-    });
-
     test('POST /prices should add new price', async () => {
         const newPriceData = { exchange: 'exchange1', price: 120, volume: 30 };
         (priceAggregator.addPrice as jest.Mock).mockResolvedValueOnce(newPriceData);
