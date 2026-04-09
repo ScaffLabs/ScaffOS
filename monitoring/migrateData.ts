@@ -13,12 +13,10 @@ export const migrateData = async <T>(sourceStore: InMemoryStore<T>, targetStore:
 
 export const seedData = <T>(store: InMemoryStore<T>): void => {
     const sampleData: T[] = [
-        { id: '1', value: 100 } as unknown as T,
-        { id: '2', value: 200 } as unknown as T,
-        { id: '3', value: 300 } as unknown as T,
-        { id: '4', value: 400 } as unknown as T,
-        { id: '5', value: 500 } as unknown as T,
-        { id: '6', value: 600 } as unknown as T,
+        { id: '1', path: '/api/test1', duration: 100 } as unknown as T,
+        { id: '2', path: '/api/test2', duration: 200 } as unknown as T,
+        { id: '3', path: '/api/test3', duration: 300 } as unknown as T,
+        { id: '4', path: '/api/test4', duration: 400 } as unknown as T,
     ];
 
     sampleData.forEach(data => {
