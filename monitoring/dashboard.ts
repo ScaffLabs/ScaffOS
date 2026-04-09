@@ -67,6 +67,10 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        const existingEntry = store.read(id);
+        if (!existingEntry) {
+            throw new NotFoundError('Entry not found.');
+        }
         store.delete(id);
         logger.info(`Deleted entry: ${id}`);
         res.status(204).send();
