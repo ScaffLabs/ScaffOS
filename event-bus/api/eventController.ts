@@ -5,6 +5,7 @@ import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
 import logger from '../logger';
 import rateLimit from 'express-rate-limit';
+import { ServiceError } from '../errors/serviceError';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -82,6 +83,9 @@ const handleError = (error: Error, res: Response) => {
     } else if (error instanceof NotFoundError) {
         logger.warn({ message: error.message });
         res.status(404).json({ message: error.message });
+    } else if (error instanceof ServiceError) {
+        logger.error(error);
+        res.status(500).json({ message: error.message });
     } else {
         logger.error(error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
