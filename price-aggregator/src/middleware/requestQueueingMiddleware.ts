@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 
 const requestQueue: Array<{ req: Request; res: Response; next: NextFunction }> = [];
 let processing = false;
+const MAX_QUEUE_SIZE = 100;
 
 const processQueue = () => {
     if (requestQueue.length === 0) {
@@ -18,8 +19,12 @@ const processQueue = () => {
 };
 
 export const requestQueueMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    requestQueue.push({ req, res, next });
-    if (!processing) {
-        processQueue();
+    if (requestQueue.length < MAX_QUEUE_SIZE) {
+        requestQueue.push({ req, res, next });
+        if (!processing) {
+            processQueue();
+        }
+    } else {
+        res.status(429).json({ error: 'Too many requests, please try again later.' });
     }
 };

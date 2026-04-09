@@ -5,12 +5,14 @@ import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logStartup } from './logger';
 import { httpClient } from './httpClient';
+import { requestQueueMiddleware } from './middleware/requestQueueingMiddleware';
 
 const app = express();
 const server = http.createServer(app);
 const dbPool = createConnectionPool();
 
 app.use(express.json());
+app.use(requestQueueMiddleware);
 app.use(errorMiddleware);
 
 app.get('/health', async (req, res) => {
