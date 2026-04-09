@@ -15,7 +15,7 @@ abstract class Storage {
 class InMemoryStorage extends Storage {
     private portfolios: Portfolio[] = [];
     private idCounter: number = 1;
-    
+
     public create(portfolioData: Omit<Portfolio, 'id'>): Portfolio {
         const newPortfolio: Portfolio = { id: String(this.idCounter++), ...portfolioData };
         this.portfolios.push(newPortfolio);
