@@ -31,6 +31,6 @@ const logger = winston.createLogger({
     transports: [new winston.transports.Console()],
 });
 
-logger.info(`Configuration loaded: ${JSON.stringify(config)}`);
+logger.info(`Configuration loaded for environment: ${config.nodeEnv}`);
 
 export default config;
