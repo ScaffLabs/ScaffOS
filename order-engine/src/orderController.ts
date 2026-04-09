@@ -8,7 +8,7 @@ import { ValidationError } from './errors';
 export const createOrderValidators = [
     body('id').isString().trim().escape().withMessage('ID must be a string'),
     body('type').isIn(['limit', 'market', 'stop']).withMessage('Type must be one of limit, market, or stop'),
-    body('price').isNumeric().isPositive().withMessage('Price must be a positive number'),
+    body('price').isNumeric().isFloat({ gt: 0 }).withMessage('Price must be a positive number'),
     body('quantity').isInt({ gt: 0 }).withMessage('Quantity must be a positive integer'),
     body('status').isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled')
 ];
@@ -21,7 +21,7 @@ export const getOrdersValidators = [
 ];
 
 // Create Order
-export const createOrder = [createOrderValidators, async (req: Request, res: Response): Promise<void> => {
+export const createOrder = [createOrderValidators, async (req: Request, res: Response) => {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         return res.status(400).json({ errors: validationErrors.array() });
@@ -41,7 +41,7 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
 }];
 
 // Get Orders
-export const getOrders = [getOrdersValidators, async (req: Request, res: Response): Promise<void> => {
+export const getOrders = [getOrdersValidators, async (req: Request, res: Response) => {
     const { limit = 10, offset = 0, status } = req.query;
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
@@ -60,7 +60,7 @@ export const getOrders = [getOrdersValidators, async (req: Request, res: Respons
 }];
 
 // Update Order
-export const updateOrder = async (req: Request, res: Response): Promise<void> => {
+export const updateOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
     const updates = req.body;
     try {
@@ -76,7 +76,7 @@ export const updateOrder = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Delete Order
-export const deleteOrder = async (req: Request, res: Response): Promise<void> => {
+export const deleteOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
         await deleteOrderService(id);
