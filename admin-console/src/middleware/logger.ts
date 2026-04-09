@@ -35,7 +35,9 @@ export const logError = (err: Error, req: Request, res: Response, next: NextFunc
     logger.error({
         message: 'Error occurred',
         error: err.message,
-        stack: err.stack
+        stack: err.stack,
+        path: req.originalUrl,
+        method: req.method
     });
     res.status(500).json({ error: 'Internal Server Error' });
 };
