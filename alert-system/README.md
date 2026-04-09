@@ -82,6 +82,6 @@ Please refer to the `CONTRIBUTING.md` file for guidelines on contributing to thi
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ## Changelog
-### [1.0.5] - 2023-10-22
-- Comprehensive README documentation with detailed API reference for each endpoint.
-- Documentation for environment variables and setup instructions.
+### [1.0.7] - 2023-10-24
+- Comprehensive README documentation with project description, architecture overview, setup instructions, API reference, environment variables table, development guide, and deployment guide.
+- CHANGELOG.md to maintain version history and track changes.

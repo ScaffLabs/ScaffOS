@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.8] - 2023-10-25
+### Added
+- Detailed README.md with project description, architecture overview, setup instructions, API reference, environment variables table, development guide, and deployment guide.
+- Inline comments in alert processing logic to explain complex operations.
+
 ## [1.0.7] - 2023-10-24
 ### Added
 - Comprehensive README documentation with project description, architecture overview, setup instructions, API reference, environment variables table, development guide, and deployment guide.

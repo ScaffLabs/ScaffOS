@@ -13,7 +13,7 @@ Thank you for considering contributing to the Alert System! We appreciate your h
    git checkout -b feature/my-feature
    ```
 4. **Make your changes**: Implement your changes in the codebase.
-5. **Add tests**: Ensure your changes are covered by tests.
+5. **Add tests**: Ensure your changes are covered by tests. We maintain a high level of test coverage to ensure the reliability of the service.
 6. **Commit your changes**: Commit your changes with a descriptive message:
    ```bash
    git commit -m "Add my feature"
@@ -22,10 +22,10 @@ Thank you for considering contributing to the Alert System! We appreciate your h
    ```bash
    git push origin feature/my-feature
    ```
-8. **Create a pull request**: Navigate to the original repository and create a pull request. Include a description of your changes and why they are necessary.
+8. **Create a pull request**: Navigate to the original repository and create a pull request. Include a description of your changes and why they are necessary. Make sure to reference any relevant issues.
 
 ## Code of Conduct
-Please adhere to the project's code of conduct in all interactions.
+Please adhere to the project's code of conduct in all interactions. We strive to maintain a welcoming and inclusive community.
 
 ## Questions?
 If you have any questions about contributing, feel free to ask in the GitHub issue tracker.
