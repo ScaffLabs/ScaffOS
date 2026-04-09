@@ -10,16 +10,21 @@ import errorHandler from './middleware/errorHandler';
 import { logRequest } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
+import { logAudit } from './middleware/auditLogger';
+import { sanitizeQueryParams } from './middleware/sanitization';
 
 dotenv.config();
 const app = express();
 const db = new Database();
 
-app.use(cors());
+const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.com'];
+app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(rateLimiter);
 app.use(logRequest);
+app.use(sanitizeQueryParams);
+app.use(logAudit);  
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
 app.use(errorHandler);
