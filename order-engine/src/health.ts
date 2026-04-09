@@ -1,13 +1,14 @@
 import { Request, Response } from 'express';
 import { fetchData } from './axiosClient';
 import { performance } from 'perf_hooks';
+import logger from './logger';
 
 const checkServiceHealth = async (url: string) => {
     try {
         const response = await fetchData(url);
         return response.status === 200;
     } catch (error) {
-        console.error(`Service at ${url} is down:`, error);
+        logger.error(`Service at ${url} is down:`, error);
         return false;
     }
 };
@@ -25,7 +26,7 @@ export const healthCheck = async (req: Request, res: Response): Promise<void> =>
             res.status(503).send('Dependent services are down.');
         }
     } catch (error) {
-        console.error('Health check failed:', error);
+        logger.error('Health check failed:', error);
         res.status(500).send('Health check error.');
     }
 };
@@ -39,14 +40,14 @@ export const readyCheck = async (req: Request, res: Response): Promise<void> => 
             checkServiceHealth(process.env.ORDER_SERVICE_URL + '/ready')
         ]);
         const duration = performance.now() - start;
-        console.log(`Readiness check duration: ${duration}ms`);
+        logger.info(`Readiness check duration: ${duration}ms`);
         if (readinessChecks.every(status => status)) {
             res.status(200).send('Order Engine is ready!');
         } else {
             res.status(503).send('Dependent services are not ready.');
         }
     } catch (error) {
-        console.error('Readiness check failed:', error);
+        logger.error('Readiness check failed:', error);
         res.status(500).send('Readiness check error.');
     }
 };

@@ -1,16 +1,17 @@
 import { EventEmitter } from 'events';
+import { OrderEvent, OrderCreatedEvent, OrderUpdatedEvent, OrderDeletedEvent } from './types';
 
 const eventBus = new EventEmitter();
 
-export const emitOrderEvent = (event: any) => {
+export const emitOrderEvent = (event: OrderEvent) => {
     eventBus.emit(event.type, event);
 };
 
-export const subscribeToOrderEvents = (eventType: string, listener: (event: any) => void) => {
+export const subscribeToOrderEvents = (eventType: string, listener: (event: OrderEvent) => void) => {
     eventBus.on(eventType, listener);
 };
 
-export const emitWithRetry = async (event: any, retries: number = 3) => {
+export const emitWithRetry = async (event: OrderEvent, retries: number = 3) => {
     let lastError;
     for (let i = 0; i < retries; i++) {
         try {
@@ -24,11 +25,11 @@ export const emitWithRetry = async (event: any, retries: number = 3) => {
     throw new Error(`Failed to emit event after ${retries} attempts: ${lastError.message}`);
 };
 
-export const onOrderCreated = (listener: (order: any) => void) => {
+export const onOrderCreated = (listener: (order: OrderCreatedEvent) => void) => {
     eventBus.on('ORDER_CREATED', listener);
 };
 
-export const onOrderUpdated = (listener: (order: any) => void) => {
+export const onOrderUpdated = (listener: (order: OrderUpdatedEvent) => void) => {
     eventBus.on('ORDER_UPDATED', listener);
 };
 

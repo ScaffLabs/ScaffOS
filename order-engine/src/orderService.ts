@@ -2,6 +2,7 @@ import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
 import logger from './logger';
+import { fetchData } from './axiosClient';
 
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -39,4 +40,14 @@ const getOrdersService = async ({ limit = 10, offset = 0, status }: { limit?: nu
     return orders.rows;
 };
 
-export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };
+const checkOtherServices = async () => {
+    try {
+        await fetchData(process.env.ANOTHER_SERVICE_URL + '/health');
+        await fetchData(process.env.ORDER_SERVICE_URL + '/health');
+    } catch (error) {
+        logger.error('Dependent services are not reachable:', error);
+        throw new ServiceError('Dependent services are down.');
+    }
+};
+
+export { createOrderService, updateOrderService, deleteOrderService, getOrdersService, checkOtherServices };
