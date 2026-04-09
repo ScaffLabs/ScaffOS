@@ -25,9 +25,9 @@ class InMemoryStorage<T extends { id: string }> {
         const index = this.items.findIndex(i => i.id === id);
         if (index === -1) return Promise.resolve(null);
 
-        const updatedItem = { ...this.items[index], ...updates };
-        this.items[index] = updatedItem;
-        this.eventEmitter.emit('ORDER_UPDATED', updatedItem);
+        const updatedItem = { ...this.items[index], ...updates }; 
+        this.items[index] = updatedItem; 
+        this.eventEmitter.emit('ORDER_UPDATED', updatedItem); 
         return Promise.resolve(updatedItem);
     }
 
@@ -43,24 +43,12 @@ class InMemoryStorage<T extends { id: string }> {
         return Promise.resolve(this.items);
     }
 
-    public indexByStatus(): Record<string, T[]> {
-        return this.items.reduce((acc, item) => {
-            if (!acc[item.status]) {
-                acc[item.status] = [];
-            }
-            acc[item.status].push(item);
-            return acc;
-        }, {} as Record<string, T[]>);
+    public on(event: string, listener: (item: T) => void): void {
+        this.eventEmitter.on(event, listener);
     }
 
-    public async transaction(operations: () => Promise<void>): Promise<void> {
-        const originalItems = [...this.items];
-        try {
-            await operations();
-        } catch (error) {
-            this.items = originalItems; // Rollback on error
-            throw new Error('Transaction failed, rolled back');
-        }
+    public off(event: string, listener: (item: T) => void): void {
+        this.eventEmitter.off(event, listener);
     }
 }
 
