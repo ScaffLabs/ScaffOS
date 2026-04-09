@@ -57,4 +57,20 @@ const start = async () => {
     }
 };
 
+process.on('SIGTERM', async () => {
+    logger.info('SIGTERM signal received: closing HTTP server');
+    await connectionPool.drain();
+    server.close(() => {
+        logger.info('HTTP server closed');
+    });
+});
+
+process.on('SIGINT', async () => {
+    logger.info('SIGINT signal received: closing HTTP server');
+    await connectionPool.drain();
+    server.close(() => {
+        logger.info('HTTP server closed');
+    });
+});
+
 start();

@@ -1,6 +1,7 @@
 import express from 'express';
 import { checkUserServiceHealth, checkOrderServiceHealth } from './interServiceClient';
 import logger from './logger';
+import { monitorMemoryUsage } from './monitor';
 
 const router = express.Router();
 
@@ -14,12 +15,30 @@ router.get('/health', async (req, res) => {
             status,
             services: [
                 { service: 'User Service', status: userServiceHealthy ? 'healthy' : 'unhealthy' },
-                { service: 'Order Service', status: orderServiceHealthy ? 'healthy' : 'unhealthy' }
+                { service: 'Order Service', status: orderServiceHealthy ? 'healthy' : 'unhealthy' },
             ],
         });
     } catch (error) {
         logger.error('Health check error', { error: error.message });
         res.status(500).json({ status: 'unhealthy', error: error.message });
+    }
+});
+
+router.get('/ready', async (req, res) => {
+    try {
+        const userServiceHealthy = await checkUserServiceHealth();
+        const orderServiceHealthy = await checkOrderServiceHealth();
+        const isReady = userServiceHealthy && orderServiceHealthy;
+        res.status(isReady ? 200 : 503).json({
+            ready: isReady,
+            services: [
+                { service: 'User Service', ready: userServiceHealthy },
+                { service: 'Order Service', ready: orderServiceHealthy },
+            ],
+        });
+    } catch (error) {
+        logger.error('Readiness check error', { error: error.message });
+        res.status(500).json({ ready: false, error: error.message });
     }
 });
 
