@@ -10,4 +10,11 @@ export const validateUser = (user: Partial<User>) => {
     return userSchema.parse(user);
 };
 
-export default validateUser;
+export const sanitizeUserInput = (user: Partial<User>) => {
+    return {
+        username: user.username ? user.username.trim() : '',
+        email: user.email ? user.email.trim() : '',
+    };
+};
+
+export default { validateUser, sanitizeUserInput };

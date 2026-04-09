@@ -2,17 +2,20 @@ import { User, UserId } from './types';
 import { ValidationError, NotFoundError } from './errors';
 import { createConnectionPool } from './database';
 import { v4 as uuidv4 } from 'uuid';
+import { validateUser, sanitizeUserInput } from './userValidation';
 
 const pool = createConnectionPool();
 
 export const createUser = async (username: string, email: string): Promise<User> => {
-    const existingUser = await findUserByEmail(email);
+    const sanitizedInput = sanitizeUserInput({ username, email });
+    validateUser(sanitizedInput); // Validate sanitized input
+    const existingUser = await findUserByEmail(sanitizedInput.email);
     if (existingUser) {
         throw new ValidationError(['Email already in use.']);
     }
     const id: UserId = uuidv4() as UserId;
-    const newUser: User = { id, username, email };
-    await pool.query('INSERT INTO users (id, username, email) VALUES ($1, $2, $3)', [id, username, email]);
+    const newUser: User = { id, username: sanitizedInput.username, email: sanitizedInput.email };
+    await pool.query('INSERT INTO users (id, username, email) VALUES ($1, $2, $3)', [id, sanitizedInput.username, sanitizedInput.email]);
     return newUser;
 };
 
@@ -25,7 +28,9 @@ export const findUserById = async (id: UserId): Promise<User | null> => {
 };
 
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
-    const updatedUser = await pool.query('UPDATE users SET username = $1, email = $2 WHERE id = $3 RETURNING *', [userData.username, userData.email, id]);
+    const sanitizedInput = sanitizeUserInput(userData);
+    validateUser(sanitizedInput);
+    const updatedUser = await pool.query('UPDATE users SET username = $1, email = $2 WHERE id = $3 RETURNING *', [sanitizedInput.username, sanitizedInput.email, id]);
     if (updatedUser.rowCount === 0) {
         throw new NotFoundError('User not found for update');
     }
