@@ -1,10 +1,7 @@
 import { User, UserId, UserSchema } from './types';
 import { ValidationError, NotFoundError } from './errors';
 import userStore from './inMemoryStore';
-import { createConnectionPool } from './database';
 import crypto from 'crypto';
-
-const pool = createConnectionPool();
 
 export const createUser = async (username: string, email: string): Promise<User> => {
     const userInput = { username, email };

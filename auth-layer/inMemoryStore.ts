@@ -14,6 +14,9 @@ class InMemoryUserStore implements InMemoryStore<User> {
     private users: Map<UserId, User> = new Map();
 
     create(user: User): User {
+        if (this.users.has(user.id)) {
+            throw new ValidationError(['User already exists.']);
+        }
         this.users.set(user.id, user);
         return user;
     }
@@ -50,4 +53,4 @@ class InMemoryUserStore implements InMemoryStore<User> {
 }
 
 const userStore = new InMemoryUserStore();
-export default userStore;  
+export default userStore;
