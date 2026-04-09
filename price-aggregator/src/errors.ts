@@ -40,4 +40,11 @@ class NullValueError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError, NullValueError };
+class InvalidTypeError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'InvalidTypeError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError, NullValueError, InvalidTypeError };

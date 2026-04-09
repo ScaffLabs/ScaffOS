@@ -3,7 +3,7 @@ import { PriceData, PriceEvent } from './types';
 import { postHttpClient } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
-import { ValidationError, DivisionByZeroError } from './errors';
+import { ValidationError, ServiceError, DivisionByZeroError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: { [key: string]: number } = {};
@@ -26,12 +26,18 @@ export class PriceAggregator {
             this.eventBus.emitPriceAdded(newPrice);
             return newPrice;
         } catch (error) {
+            if (error instanceof DivisionByZeroError) {
+                throw new ServiceError('Division by zero error in price addition.');
+            }
             throw new ServiceError('Failed to add price: ' + error.message);
         }
     }
 
     private validatePriceData(priceData: PriceData): boolean {
-        return priceData.exchange && priceData.price > 0 && priceData.volume > 0;
+        if (!priceData.exchange || priceData.price <= 0 || priceData.volume <= 0) {
+            return false;
+        }
+        return true;
     }
 
     private handlePriceEvent(event: PriceEvent) {
