@@ -35,3 +35,5 @@ class MongoDBAlertStore implements AlertStoreInterface {
         return await connectionPool.model('Alert').find(query);
     }
 }
+
+export const alertStore = new MongoDBAlertStore();
