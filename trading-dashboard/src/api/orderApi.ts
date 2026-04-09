@@ -12,16 +12,16 @@ const submitOrderRequest = async (order: Order) => {
     return response.data;
 };
 
-export const submitOrder = circuitBreaker(retry(async (order: Order) => {
+const submitOrderWithRetry = async (order: Order) => {
     const validationResult = OrderSchema.safeParse(order);
     if (!validationResult.success) {
         throw new ServiceError('Invalid order details');
     }
-    try {
-        const result = await submitOrderRequest(validationResult.data);
-        publishEvent('ORDER_SUBMITTED', { type: 'ORDER_SUBMITTED', order: result });
-        return result;
-    } catch (error) {
-        throw new ServiceError('Failed to submit order: ' + error.message);
-    }
-}));
+    return await submitOrderRequest(validationResult.data);
+};
+
+export const submitOrder = circuitBreaker(retry(submitOrderWithRetry));
+
+export const notifyOrderSubmitted = (order: Order) => {
+    publishEvent('ORDER_SUBMITTED', { type: 'ORDER_SUBMITTED', order });
+};
