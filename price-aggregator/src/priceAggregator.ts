@@ -35,19 +35,22 @@ export class PriceAggregator {
         return prices.slice(offset, offset + limit);
     }
 
-    public async updatePrice(exchange: string, priceData: Partial<PriceData>): Promise<PriceData | null> {
-        const existingPrice = await storage.findAll({ exchange });
-        if (!existingPrice) return null;
-        const updatedPrice = { ...existingPrice, ...priceData } as PriceData;
-        await storage.update(exchange, updatedPrice);
-        return updatedPrice;
+    private handlePriceEvent(event: PriceEvent) {
+        switch (event.type) {
+            case 'PRICE_ADDED':
+                console.log('New price added:', event.data);
+                break;
+            case 'PRICE_UPDATED':
+                console.log('Price updated:', event.data);
+                break;
+            case 'PRICE_DELETED':
+                console.log('Price deleted for exchange:', event.exchange);
+                break;
+        }
     }
 
-    public async deletePrice(exchange: string): Promise<boolean> {
-        const existingPrice = await storage.findAll({ exchange });
-        if (!existingPrice) return false;
-        await storage.delete(existingPrice.id);
-        return true;
+    private validatePriceData(priceData: PriceData): boolean {
+        return priceData.exchange.trim() !== '' && priceData.price > 0 && priceData.volume > 0;
     }
 
     private sortPrices(prices: PriceData[], sort: string, order: string): PriceData[] {
@@ -59,6 +62,4 @@ export class PriceAggregator {
             }
         });
     }
-
-    // Other methods remain unchanged...
 }

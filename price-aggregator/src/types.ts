@@ -2,6 +2,8 @@
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
 
+import { z } from 'zod';
+
 /**
  * Represents price data for an exchange.
  * @property exchange - The name of the exchange, must be a non-empty string.
