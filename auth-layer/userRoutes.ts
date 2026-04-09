@@ -7,9 +7,11 @@ import { validateUser } from './userValidation';
 
 const router = express.Router();
 
+// Route to create a new user
 router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
     const { username, email } = req.body;
     try {
+        // Validate user input
         validateUser({ username, email });
         const user = await createUser(username, email);
         logger.info('User created', { userId: user.id, username: user.username });
@@ -19,10 +21,12 @@ router.post('/users', authMiddleware, validateAndSanitizeUserInput, async (req, 
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message, details: error.errors });
         }
+        // Handle unexpected errors
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
+// Route to get all users
 router.get('/users', authMiddleware, async (req, res) => {
     try {
         const users = await getAllUsers();
@@ -33,10 +37,11 @@ router.get('/users', authMiddleware, async (req, res) => {
     }
 });
 
+// Route to update an existing user
 router.put('/users/:id', authMiddleware, validateAndSanitizeUserInput, async (req, res) => {
     const userId = req.params.id;
     try {
-        validateUser(req.body);
+        validateUser(req.body); // Validate input
         const updatedUser = await updateUser(userId, req.body);
         if (!updatedUser) throw new NotFoundError('User not found for update');
         logger.info('User updated', { userId });
@@ -50,6 +55,7 @@ router.put('/users/:id', authMiddleware, validateAndSanitizeUserInput, async (re
     }
 });
 
+// Route to delete a user
 router.delete('/users/:id', authMiddleware, async (req, res) => {
     const userId = req.params.id;
     try {

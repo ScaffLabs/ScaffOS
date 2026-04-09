@@ -26,3 +26,7 @@
 ## [1.3.0] - 2023-10-30
 - Added detailed inline comments for complex logic to README.md.
 - Improved error handling across all routes.
+
+## [1.4.0] - 2023-11-02
+- Enhanced API documentation.
+- Improved deployment and setup instructions.
