@@ -23,7 +23,7 @@ export class AlertController {
             const alerts = await this.alertStore.findIndex(filters);
             const sortedAlerts = sort ? alerts.sort((a, b) => a[sort] > b[sort] ? 1 : -1) : alerts;
             const paginatedAlerts = sortedAlerts.slice(Number(offset), Number(offset) + Number(limit));
-            return res.status(200).json(paginatedAlerts);
+            return paginatedAlerts.length ? res.status(200).json(paginatedAlerts) : res.status(204).send();
         } catch (error) {
             logError(error);
             return res.status(500).json({ message: 'Failed to retrieve alerts.' });
