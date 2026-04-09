@@ -8,6 +8,8 @@ import { logRequestMiddleware, errorHandlingMiddleware } from './middleware';
 import logger, { startupLog } from './logger';
 import { createConnectionPool } from './database';
 import { rateLimit } from './rateLimit';
+import { sanitizeUserInput } from './userValidation';
+import { ValidationError } from './errors';
 
 const app = express();
 const server = http.createServer(app);
@@ -20,10 +22,6 @@ app.use(helmet());
 app.use(express.json());
 app.use(logRequestMiddleware);
 
-app.use('/health', healthRouter);
-app.use('/api', userRoutes);
-app.use(errorHandlingMiddleware);
-
 app.use((req, res, next) => {
     const apiKey = req.headers['x-api-key'];
     if (!apiKey || !rateLimit(apiKey)) {
@@ -32,11 +30,30 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use('/health', healthRouter);
+app.use('/api', userRoutes);
+app.use(errorHandlingMiddleware);
+
+app.post('/api/users', async (req, res) => {
+    const { username, email } = sanitizeUserInput(req.body);
+    try {
+        const user = await createUser(username, email);
+        logger.info('User created', { userId: user.id, username: user.username });
+        res.status(201).json(user);
+    } catch (error) {
+        logger.error('Error creating user', { error: error.message });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message, details: error.errors });
+        }
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 const start = async () => {
     try {
         await connectionPool.isReady();
         server.listen(PORT, () => {
-            startupLog(`Auth Layer Service`);
+            startupLog('Auth Layer Service');
             logger.info(`Server listening on port ${PORT}`);
         });
     } catch (error) {

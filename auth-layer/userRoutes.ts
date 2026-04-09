@@ -16,7 +16,7 @@ router.post('/users', async (req, res) => {
         logger.info('User created', { userId: user.id, username: user.username });
         res.status(201).json(user);
     } catch (error) {
-        logger.error('Error creating user', { error: error.message });
+        logger.error('Error creating user', { error: error.message, stack: error.stack });
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message, details: error.errors });
         }
@@ -30,7 +30,7 @@ router.get('/users', async (req, res) => {
         const users = await getAllUsers();
         res.status(200).json(users);
     } catch (error) {
-        logger.error('Error fetching users', { error: error.message });
+        logger.error('Error fetching users', { error: error.message, stack: error.stack });
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
