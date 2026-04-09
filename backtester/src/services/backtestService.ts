@@ -22,16 +22,16 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         // Buy Condition
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
-            totalReturns += (currentPrice * (1 - slippage)) - previousPrice; // Calculate profit after slippage
+            totalReturns += (currentPrice * (1 - slippage)) - previousPrice;
         } 
         // Sell Condition
         else if (currentPrice < previousPrice * (1 - sellThreshold)) {
             trades++;
-            totalReturns += previousPrice - (currentPrice * (1 + slippage)); // Calculate profit after slippage
+            totalReturns += previousPrice - (currentPrice * (1 + slippage));
         }
     }
 
-    const winRate = trades > 0 ? (totalReturns > 0 ? (trades / (trades * 2)) * 100 : 0) : 0; // Simple win rate calculation
+    const winRate = trades > 0 ? (totalReturns > 0 ? (trades / (trades * 2)) * 100 : 0) : 0;
     const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate}%`;
     return { totalReturns, trades, winRate, performanceMetrics };
 }
@@ -40,7 +40,8 @@ const simulateBacktest = circuitBreaker(async (params: StrategyParameters, histo
     try {
         const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
         if (trades > 0) {
-            await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades })); // Notify order service
+            await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades }));
+            await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns })); // Notify data service
         }
         logger.info({ message: 'Backtest simulation completed', params, totalReturns });
         return { totalReturns, trades, winRate, performanceMetrics };
