@@ -42,14 +42,6 @@ export const logStartup = (config) => {
     });
 };
 
-export const logPerformance = (operation, duration) => {
-    logger.info({
-        message: 'Performance log',
-        operation,
-        duration,
-    });
-};
-
 const generateRequestId = () => {
     return 'req-' + Math.random().toString(36).substr(2, 9);
 };
