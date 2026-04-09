@@ -4,7 +4,6 @@ import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
-import { escape } from 'html-escaper';
 
 // Validation middleware for creating an order
 export const createOrderValidators = [
@@ -25,7 +24,7 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
         const order = req.body;
         const createdOrder = await createOrderService(order);
         res.status(201).json(createdOrder);
-        logger.info('Order created successfully', { order: escape(JSON.stringify(createdOrder)) });
+        logger.info('Order created successfully', { order });
     } catch (error) {
         logger.error('Error creating order', { error: error.message });
         if (error instanceof ValidationError) {
@@ -35,11 +34,11 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
     }
 }];
 
-// Get Orders
+// Get Orders with Pagination and Sorting
 export const getOrders = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0 } = req.query;
+    const { limit = 10, offset = 0, sort = 'id', order = 'asc' } = req.query;
     try {
-        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset) });
+        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), sort, order });
         if (orders.length === 0) {
             return res.status(404).json({ message: 'No orders found.' });
         }

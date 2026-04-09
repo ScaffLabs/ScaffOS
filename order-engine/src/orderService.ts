@@ -68,8 +68,8 @@ const deleteOrderService = async (id: OrderId) => {
     }
 };
 
-const getOrdersService = async ({ limit, offset }: { limit: number; offset: number }) => {
-    const orders = await queryDatabase('SELECT * FROM orders LIMIT $1 OFFSET $2', [limit, offset]);
+const getOrdersService = async ({ limit, offset, sort, order }: { limit: number; offset: number; sort: string; order: 'asc' | 'desc' }) => {
+    const orders = await queryDatabase(`SELECT * FROM orders ORDER BY ${sort} ${order} LIMIT $1 OFFSET $2`, [limit, offset]);
     return orders.rows;
 };
 
