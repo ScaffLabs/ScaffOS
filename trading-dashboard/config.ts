@@ -13,6 +13,8 @@ const envSchema = Joi.object({
     DB_NAME: Joi.string().required(),
     EXTERNAL_API_URL: Joi.string().uri().required(),
     LOG_LEVEL: Joi.string().valid('debug', 'info', 'warn', 'error').default('info'),
+    CORS_ORIGINS: Joi.string().optional(),
+    LOG_FORMAT: Joi.string().valid('combined', 'common', 'short', 'tiny').default('combined')
 }).unknown();
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -32,6 +34,8 @@ const config = {
     },
     externalApiUrl: envVars.EXTERNAL_API_URL,
     logLevel: envVars.LOG_LEVEL,
+    corsOrigins: envVars.CORS_ORIGINS ? envVars.CORS_ORIGINS.split(',') : [],
+    logFormat: envVars.LOG_FORMAT,
 };
 
 export default config;
