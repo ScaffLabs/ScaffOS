@@ -1,26 +1,25 @@
 import express from 'express';
 import riskManager from './riskManager';
-import logger from './logger';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
+import { logger, requestLogger } from './logger';
 
 const router = express.Router();
 
-// CORS configuration
 const allowedOrigins = ['http://example.com', 'http://another-example.com'];
 router.use(cors({ origin: allowedOrigins }));
-router.use(helmet()); // Set secure HTTP headers
+router.use(helmet());
 
-// Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later'
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests from this IP, please try again later',
 });
 router.use(limiter);
+router.use(requestLogger);
 
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
@@ -28,6 +27,7 @@ router.get('/risk', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        logger.warn('Validation errors:', errors.array());
         return res.status(400).json({ errors: errors.array() });
     }
     try {
@@ -35,17 +35,18 @@ router.get('/risk', [
         const positions = await riskManager.getRiskPositions(limit, offset);
         res.status(200).json(positions);
     } catch (error) {
-        logger.error('Error retrieving risk positions: ', error);
+        logger.error('Error retrieving risk positions:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 router.post('/risk', [
-    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
+    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.').escape(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        logger.warn('Validation errors:', errors.array());
         return res.status(400).json({ errors: errors.array() });
     }
     try {
@@ -54,7 +55,7 @@ router.post('/risk', [
         logger.info('Created new risk position:', newPosition);
         res.status(201).json(newPosition);
     } catch (error) {
-        logger.error('Error creating risk position: ', error);
+        logger.error('Error creating risk position:', error);
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
         }
@@ -68,6 +69,7 @@ router.put('/risk/:id', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        logger.warn('Validation errors:', errors.array());
         return res.status(400).json({ errors: errors.array() });
     }
     try {
@@ -77,7 +79,7 @@ router.put('/risk/:id', [
         logger.info('Updated risk position with id:', id);
         res.status(204).send();
     } catch (error) {
-        logger.error('Error updating risk position: ', error);
+        logger.error('Error updating risk position:', error);
         if (error instanceof NotFoundError) {
             return res.status(404).send();
         }
@@ -90,6 +92,7 @@ router.delete('/risk/:id', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        logger.warn('Validation errors:', errors.array());
         return res.status(400).json({ errors: errors.array() });
     }
     try {
@@ -98,7 +101,7 @@ router.delete('/risk/:id', [
         logger.info('Deleted risk position with id:', id);
         res.status(204).send();
     } catch (error) {
-        logger.error('Error deleting risk position: ', error);
+        logger.error('Error deleting risk position:', error);
         if (error instanceof NotFoundError) {
             return res.status(404).send();
         }
