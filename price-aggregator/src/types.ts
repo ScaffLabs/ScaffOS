@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 // Branded types for IDs
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
