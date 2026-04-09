@@ -34,5 +34,17 @@ export const MonitoringEventSchema = z.union([
     }),
 ]);
 
+// Additional types for shared messages
+export type DashboardEntry = {
+    id: string; // Unique identifier for the dashboard entry
+    data: LatencyData; // Data associated with the entry
+};
+
+// Zod schema for DashboardEntry validation
+export const DashboardEntrySchema = z.object({
+    id: z.string().nonempty().trim(),
+    data: LatencyDataSchema,
+});
+
 // Exporting the schemas for use in other services
-export { LatencyDataSchema, MonitoringEventSchema };
+export { LatencyDataSchema, MonitoringEventSchema, DashboardEntrySchema };
