@@ -1,10 +1,14 @@
+// Import necessary modules
 import { Router } from 'express';
-import { healthCheckHandler, dependentHealthCheckHandler } from '../handlers/healthCheck';
+import { healthCheckHandler, dependentHealthCheckHandler, readyCheckHandler } from '../handlers/healthCheck';
 import { healthCheckDependentServices } from '../api/analytics';
 
 const router = Router();
 
+// Health check endpoint for application status
 router.get('/health', healthCheckHandler);
+
+// Health check endpoint for dependent services
 router.get('/health/dependencies', async (req, res) => {
     try {
         const healthResults = await healthCheckDependentServices();
@@ -14,6 +18,8 @@ router.get('/health/dependencies', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+// Ready check endpoint to determine if application is ready to receive requests
 router.get('/ready', async (req, res) => {
     try {
         const services = await healthCheckDependentServices();

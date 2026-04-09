@@ -42,9 +42,18 @@ app.use(csrfMiddleware);
 // Memory monitoring
 const monitorInterval = setInterval(monitorMemoryUsage, 60000);
 
-// Graceful shutdown
-process.on('SIGTERM', () => gracefulShutdown(server, monitorInterval));
-process.on('SIGINT', () => gracefulShutdown(server, monitorInterval));
+// Graceful shutdown handling
+const shutdownHandler = async () => {
+    clearInterval(monitorInterval); // Clear the memory monitoring interval
+    await mongoose.connection.close();
+    server.close(() => {
+        console.log('Closed all connections.');
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', shutdownHandler);
+process.on('SIGINT', shutdownHandler);
 
 const startServer = async () => {
     try {
