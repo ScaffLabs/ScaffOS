@@ -10,9 +10,11 @@ const router = Router();
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
     body('positions').isArray().optional().custom((positions) => {
+        // Ensure positions array is not empty if provided
         if (positions && positions.length === 0) {
             throw new ValidationError('Positions array cannot be empty.');
         }
+        // Validate each position in the array
         positions.forEach(pos => {
             if (!pos.symbol || typeof pos.quantity !== 'number' || pos.quantity < 0 || typeof pos.averagePrice !== 'number' || pos.averagePrice < 0) {
                 throw new ValidationError('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
