@@ -5,7 +5,8 @@ const logFile = path.join(__dirname, 'audit.log');
 
 export const logAudit = (action: string, details: any) => {
     const timestamp = new Date().toISOString();
-    const logEntry = `${timestamp} - ${action}: ${JSON.stringify(details)}\n`;
+    const filteredDetails = filterSensitiveData(details);
+    const logEntry = `${timestamp} - ${action}: ${JSON.stringify(filteredDetails)}\n`;
     fs.appendFile(logFile, logEntry, (err) => {
         if (err) {
             console.error('Failed to write to audit log:', err);
@@ -13,8 +14,10 @@ export const logAudit = (action: string, details: any) => {
     });
 };
 
-export const logSensitiveAction = (action: string, details: any) => {
-    console.warn('Sensitive action logged:', action, details);
+const filterSensitiveData = (data: any) => {
+    // Implement filtering logic to remove sensitive information
+    const { password, token, ...filteredData } = data;
+    return filteredData;
 };
 
 export const logError = (error: Error) => {
