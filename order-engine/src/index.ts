@@ -9,7 +9,6 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { requestIdMiddleware, errorHandlingMiddleware } from './middleware';
 import logger from './logger';
-import { sanitize } from 'express-validator';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,16 +27,6 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again later'
 });
 app.use(limiter);
-
-// Sanitize input for all routes
-app.use((req, res, next) => {
-    if (req.body) {
-        Object.keys(req.body).forEach(key => {
-            req.body[key] = sanitize(req.body[key]);
-        });
-    }
-    next();
-});
 
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
