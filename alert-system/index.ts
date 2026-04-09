@@ -7,12 +7,29 @@ import { config } from './config';
 import logger, { logStartup } from './logger';
 import bodyParser from 'body-parser';
 import { errorMiddleware } from './error.middleware';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { logAudit } from './audit.logger';
 
 const app = express();
 const eventBus = new EventBus();
 const alertProcessor = new AlertProcessor(eventBus);
 
-app.use(bodyParser.json({ limit: '1mb' }));
+app.use(helmet()); // Set security headers
+app.use(cors({ origin: ['http://your-allowed-origin.com'] })); // CORS configuration
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    handler: (req, res) => {
+        return res.status(429).json({ message: 'Too many requests, please try again later.' });
+    }
+});
+app.use(limiter);
+
+app.use(bodyParser.json({ limit: '1mb' })); // Limit request size
 
 // Health check routes
 app.get('/health', HealthCheck.checkHealth);
@@ -39,13 +56,13 @@ process.on('SIGINT', shutdown);
 process.on('uncaughtException', shutdown);
 process.on('unhandledRejection', shutdown);
 
-process.on('request', (req, res) => {
-    const start = Date.now();
+app.use((req, res, next) => {
     res.on('finish', () => {
-        logRequest(req, res, start);
+        logAudit(req.method + ' ' + req.path, { status: res.statusCode });
     });
+    next();
 });
 
 process.on('error', (error) => {
-    logError(error, { context: 'Global Error Handler' });
+    logger.error(error, { context: 'Global Error Handler' });
 });

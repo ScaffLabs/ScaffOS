@@ -4,6 +4,7 @@ import { HealthCheck } from './health-check';
 import { validateCreateAlertRequest } from './alert.schema';
 import { AlertStore } from './storage';
 import { ValidationError } from './error.types';
+import { sanitize } from './sanitization';
 
 const alertStore = new AlertStore();
 const alertController = new AlertController(alertStore);
@@ -13,8 +14,12 @@ const router = Router();
 router.get('/health', (req, res) => alertController.healthCheck(req, res));
 
 // Alert routes
-router.get('/api/alerts', async (req, res) => await alertController.getActiveAlerts(req, res));
+router.get('/api/alerts', async (req, res) => {
+    req.query = sanitize(req.query);
+    await alertController.getActiveAlerts(req, res);
+});
 router.post('/api/alerts', async (req, res) => {
+    req.body = sanitize(req.body);
     try {
         const alert = validateCreateAlertRequest(req.body);
         const createdAlert = await alertController.addAlert(req, res);
@@ -27,7 +32,10 @@ router.post('/api/alerts', async (req, res) => {
     }
 });
 
-router.put('/api/alerts/:id', async (req, res) => await alertController.updateAlert(req, res));
+router.put('/api/alerts/:id', async (req, res) => {
+    req.body = sanitize(req.body);
+    await alertController.updateAlert(req, res);
+});
 router.delete('/api/alerts/:id', async (req, res) => await alertController.deleteAlert(req, res));
 
 export default router;
