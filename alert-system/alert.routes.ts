@@ -10,8 +10,9 @@ const alertStore = new AlertStore();
 const alertController = new AlertController(alertStore);
 const router = Router();
 
-// Health check route
-router.get('/health', (req, res) => alertController.healthCheck(req, res));
+// Health check routes
+router.get('/health', HealthCheck.checkHealth);
+router.get('/ready', HealthCheck.checkReady);
 
 // Alert routes
 router.get('/api/alerts', async (req, res) => {
