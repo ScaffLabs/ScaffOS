@@ -10,6 +10,7 @@ import { config } from '../config';
 import { monitorMemoryUsage } from './utils/monitor';
 import csurf from 'csurf';
 import bodyParser from 'body-parser';
+import { body, validationResult } from 'express-validator';
 
 const app = express();
 const PORT = config.port;
@@ -27,11 +28,21 @@ app.use(helmet());
 app.use(limiter);
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(csurf());
-app.use(requestLogger); // Add request logging middleware
+app.use(requestLogger);
 
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);
 app.use(errorHandler);
+
+app.post('/api/sensitive-operation', [
+    body('data').isString().trim().escape(),
+], async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    // Handle sensitive operation...
+});
 
 const server = app.listen(PORT, () => {
     logger.info(`Backtester service running on port ${PORT}`);
