@@ -72,4 +72,14 @@ describe('API Endpoints', () => {
         const response = await request(app).delete('/api/config/nonExistingKey');
         expect(response.status).toBe(404);
     });
+
+    it('POST /api/config returns 400 for missing key', async () => {
+        const response = await request(app).post('/api/config').send({ value: 'testValue' });
+        expect(response.status).toBe(400);
+    });
+
+    it('POST /api/config returns 400 for missing value', async () => {
+        const response = await request(app).post('/api/config').send({ key: 'testKey' });
+        expect(response.status).toBe(400);
+    });
 });

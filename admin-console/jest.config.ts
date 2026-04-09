@@ -23,6 +23,16 @@ const config: Config = {
             tsconfig: '<rootDir>/tsconfig.json',
         },
     },
+    reporters: [
+        'default',
+        [
+            'jest-junit',
+            {
+                outputDirectory: 'test-results',
+                outputName: 'junit.xml',
+            },
+        ],
+    ],
 };
 
 export default config;
