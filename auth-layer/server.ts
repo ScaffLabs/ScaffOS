@@ -72,3 +72,18 @@ process.on('SIGINT', async () => {
 });
 
 start();
+
+// Graceful shutdown for unexpected errors
+process.on('uncaughtException', async (err) => {
+    logger.error('Uncaught Exception: ', err);
+    await connectionPool.drain();
+    process.exit(1);
+});
+
+process.on('unhandledRejection', async (reason) => {
+    logger.error('Unhandled Rejection: ', reason);
+    await connectionPool.drain();
+    process.exit(1);
+});
+
+export default app;
