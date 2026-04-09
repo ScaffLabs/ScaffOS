@@ -8,19 +8,24 @@ import cors from 'cors';
 import config from './config';
 import { createConnectionPool } from './connectionPool';
 import { emitHealthCheckEvent, healthCheckServices } from './serviceHealth';
+import { generalLimiter } from './rateLimiter';
+import { sanitize } from './sanitize';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
 
-app.use(cors());
+const allowedOrigins = ['http://example.com', 'http://another-example.com'];
+app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
 app.use(express.json());
 app.use(logRequest);
+app.use(generalLimiter);
+app.use(sanitize);
 
 // Health check endpoints
-app.get('/health', healthCheck); // Original health check
-app.get('/health/services', healthCheckServices); // New endpoint for service health checks
+app.get('/health', healthCheck);
+app.get('/health/services', healthCheckServices);
 app.get('/ready', readinessCheck);
 app.get('/alive', livelinessCheck);
 app.use(errorMiddleware);
@@ -30,13 +35,7 @@ const server = createServer(app);
 server.listen(PORT, () => {
     logStartup();
     console.log(`Monitoring service running on port ${PORT}`);
-    setInterval(emitHealthCheckEvent, 60000); // Emit health check every minute
-});
-
-// Middleware to generate request IDs
-app.use((req, res, next) => {
-    req.headers['x-request-id'] = req.headers['x-request-id'] || require('crypto').randomBytes(16).toString('hex');
-    next();
+    setInterval(emitHealthCheckEvent, 60000);
 });
 
 process.on('SIGTERM', () => {
@@ -53,7 +52,6 @@ process.on('SIGINT', () => {
     });
 });
 
-// Graceful shutdown handling
 const shutdown = async () => {
     console.log('Graceful shutdown initiated. Closing connection pool...');
     await connectionPool.close();
@@ -64,8 +62,7 @@ const shutdown = async () => {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
-// Adding memory monitoring
 setInterval(() => {
     const memoryUsage = process.memoryUsage();
     console.log(`Memory Usage: RSS: ${memoryUsage.rss}, Heap Total: ${memoryUsage.heapTotal}, Heap Used: ${memoryUsage.heapUsed}`);
-}, 60000); // Log memory usage every minute
+}, 60000);
