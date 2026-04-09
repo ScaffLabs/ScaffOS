@@ -65,7 +65,7 @@ export default class RiskManager {
         const newPosition: RiskPosition = { id: this.generateId(), asset, position };
         const validationResult = RiskPositionSchema.safeParse(newPosition);
         if (!validationResult.success) {
-            throw new ValidationError(`Invalid risk position data: ${validationResult.error.errors}`);
+            throw new ValidationError(`Invalid risk position data: ${JSON.stringify(validationResult.error.errors)}`);
         }
         const createdPosition = await this.storage.create(newPosition);
         logger.info(`Created new risk position: ${JSON.stringify(createdPosition)}`);
@@ -91,7 +91,7 @@ export default class RiskManager {
         const updatedPosition: RiskPosition = { ...existingPosition, position };
         const validationResult = RiskPositionSchema.safeParse(updatedPosition);
         if (!validationResult.success) {
-            throw new ValidationError(`Invalid risk position data: ${validationResult.error.errors}`);
+            throw new ValidationError(`Invalid risk position data: ${JSON.stringify(validationResult.error.errors)}`);
         }
         const result = await this.storage.update(id, updatedPosition);
         logger.info(`Updated risk position with id ${id}: ${JSON.stringify(result)}`);
