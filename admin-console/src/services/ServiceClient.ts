@@ -49,17 +49,6 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     }
 };
 
-const updateConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
-    try {
-        await axios.put(`${BASE_URL}/config`, configItem);
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            throw new ServiceError(`Failed to update configuration: ${error.response?.data?.error || error.message}`);
-        }
-        throw new ServiceError('Failed to update configuration');
-    }
-};
-
 const fetchConfigurationsWithRetry = async (): Promise<ConfigurationItem[]> => {
     try {
         return await fetchConfigurationsCircuitBreaker.fire();
@@ -68,4 +57,4 @@ const fetchConfigurationsWithRetry = async (): Promise<ConfigurationItem[]> => {
     }
 };
 
-export { fetchConfigurationsWithRetry as fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration };
+export { fetchConfigurationsWithRetry as fetchConfigurations, postConfiguration, deleteConfiguration }; 
