@@ -1,6 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { healthCheck, readyCheck } from './healthCheck';
+import { healthCheckServices } from './serviceHealth';
 import errorMiddleware from './errorMiddleware';
 import { createConnectionPool, serviceEmitter } from './connectionPool';
 import { auditLogger } from './auditLogger';
@@ -39,6 +40,7 @@ app.use(sanitize);
 // Health Check Endpoints
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
+app.get('/service-health', healthCheckServices); // New service health check endpoint
 
 // Error handling middleware
 app.use(errorMiddleware);
@@ -66,8 +68,3 @@ setInterval(() => {
     const usedMemory = memoryUsage.heapUsed / (1024 * 1024);
     console.log(`Memory Usage: Total - ${totalMemory.toFixed(2)} MB, Used - ${usedMemory.toFixed(2)} MB`);
 }, 60000);
-
-// Health check event emission
-setInterval(async () => {
-    await emitHealthCheckEvent();
-}, 60000); // Emit every minute

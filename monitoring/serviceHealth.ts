@@ -1,5 +1,4 @@
-import { createConnectionPool } from './connectionPool';
-import { serviceEmitter } from './connectionPool';
+import { createConnectionPool, serviceEmitter } from './connectionPool';
 import logger from './logger';
 import config from './config';
 import axios from 'axios';
