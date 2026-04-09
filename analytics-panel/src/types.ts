@@ -1,3 +1,4 @@
+// analytics-panel/src/types.ts
 import { z } from 'zod';
 
 /**
@@ -23,7 +24,7 @@ export interface PerformanceMetrics {
  */
 export const PerformanceMetricsSchema = z.object({
     drawdown: z.array(z.number()).nonempty(),
-    maxDrawdown: z.number().min(0),
+    maxDrawdown: z.number().nonnegative(),
     sharpeRatio: z.number(),
 });
 
