@@ -34,5 +34,25 @@ export class PriceAggregator {
         }
     }
 
-    // ... rest of the class remains unchanged
+    public async fetchPricesFromExchanges(): Promise<void> {
+        try {
+            const prices = await httpClient('/prices');
+            this.currentPrices = this.calculateVWAP(prices);
+        } catch (error) {
+            logError(error, 'Error fetching prices from exchanges');
+            throw new ServiceError('Failed to fetch prices.');
+        }
+    }
+
+    private calculateVWAP(prices: PriceData[]): CurrentPrices {
+        if (!prices || prices.length === 0) return { VWAP: 0 }; // Handle empty array
+
+        const totalVolume = prices.reduce((acc, price) => acc + price.volume, 0);
+        if (totalVolume === 0) throw new Error('Division by zero in VWAP calculation.');
+
+        const vwap = prices.reduce((acc, price) => acc + (price.price * price.volume), 0) / totalVolume;
+        return { VWAP: vwap, ...prices.reduce((acc, price) => ({ ...acc, [price.exchange]: price.price }), {}) };
+    }
+
+    // Additional methods and event handler implementation...
 }
