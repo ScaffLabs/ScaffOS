@@ -1,7 +1,6 @@
 import express from 'express';
 import { checkUserServiceHealth, checkOrderServiceHealth } from './interServiceClient';
 import logger from './logger';
-import { monitorMemoryUsage } from './monitor';
 
 const router = express.Router();
 
@@ -43,7 +42,5 @@ router.get('/ready', async (req, res) => {
         res.status(500).json({ ready: false, error: error.message });
     }
 });
-
-monitorMemoryUsage();
 
 export default router;

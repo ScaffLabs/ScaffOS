@@ -71,3 +71,16 @@ export const fetchUserData = async (userId: string) => {
     const userUrl = `${config.USER_SERVICE_URL}/users/${userId}`;
     return await fetchWithRetry(userUrl);
 };
+
+export const fetchOrderData = async (orderId: string) => {
+    const orderUrl = `${config.ORDER_SERVICE_URL}/orders/${orderId}`;
+    return await fetchWithRetry(orderUrl);
+};
+
+export const emitUserCreatedEvent = (user) => {
+    // Logic to emit user created event to event bus
+};
+
+export const subscribeToUserCreatedEvent = (listener) => {
+    // Logic to subscribe to user created event from event bus
+};

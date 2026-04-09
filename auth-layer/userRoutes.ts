@@ -1,18 +1,18 @@
 import express from 'express';
-import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from './storage';
-import { validateUser } from './userValidation';
+import { createUser, getAllUsers } from './storage';
+import { emitUserCreatedEvent } from './interServiceClient';
 import logger from './logger';
-import { ValidationError, NotFoundError } from './errors';
-import { sanitizeUserInput } from './userValidation'; // Importing the sanitize function
+import { ValidationError } from './errors';
+import { sanitizeUserInput } from './userValidation';
 
 const router = express.Router();
 
 // Route to create a new user
 router.post('/users', async (req, res) => {
-    const { username, email } = sanitizeUserInput(req.body); // Sanitize inputs
+    const { username, email } = sanitizeUserInput(req.body);
     try {
-        validateUser({ username, email });
         const user = await createUser(username, email);
+        emitUserCreatedEvent(user); // Emit event on user creation
         logger.info('User created', { userId: user.id, username: user.username });
         res.status(201).json(user);
     } catch (error) {
@@ -34,7 +34,5 @@ router.get('/users', async (req, res) => {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
-// Other routes remain unchanged, ensuring they also handle validation errors appropriately.
 
 export default router;
