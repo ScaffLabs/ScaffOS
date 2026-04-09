@@ -16,7 +16,7 @@ app.use(bodyParser.json({ limit: '1mb' }));
 
 // Health check routes
 app.get('/health', HealthCheck.checkHealth);
-ap.get('/ready', HealthCheck.checkReady);
+app.get('/ready', HealthCheck.checkReady);
 
 app.use(errorMiddleware);
 

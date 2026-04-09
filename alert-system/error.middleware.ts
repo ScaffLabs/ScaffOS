@@ -3,6 +3,7 @@ import { ServiceError, ValidationError, NotFoundError } from './error.types';
 import logger from './logger';
 
 export const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    logger.error(err.stack);
     if (err instanceof ValidationError) {
         return res.status(400).json({ message: 'Validation Error: ' + err.message });
     }

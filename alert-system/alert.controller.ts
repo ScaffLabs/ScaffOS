@@ -19,7 +19,7 @@ export class AlertController {
         const start = Date.now();
         try {
             const alerts = await this.alertStore.findIndex({});
-            if (!alerts.length) return res.status(204).send();
+            if (!alerts || alerts.length === 0) return res.status(204).send();
             return res.json(alerts);
         } catch (error) {
             logError(error);
@@ -58,25 +58,12 @@ export class AlertController {
         }
     }
 
-    async healthCheck(req: Request, res: Response) {
-        try {
-            const webhookResponse = await axios.get(`${process.env.WEBHOOK_URL}/health`);
-            const emailResponse = await axios.get(`${process.env.EMAIL_SERVICE_URL}/health`);
-            return res.json({ webhook: webhookResponse.status === 200, email: emailResponse.status === 200 });
-        } catch (error) {
-            logError(error);
-            return res.status(503).json({ message: 'One or more services are unavailable.' });
-        }
-    }
-
     async updateAlert(req: Request, res: Response) {
-        const alertId = req.params.id;
         const start = Date.now();
         try {
+            const alertId = req.params.id;
             const updatedAlert = await this.alertStore.update(alertId, req.body);
-            if (!updatedAlert) {
-                throw new NotFoundError('Alert not found.');
-            }
+            if (!updatedAlert) throw new NotFoundError('Alert not found.');
             this.eventBus.publish('alert.updated', updatedAlert);
             return res.json(updatedAlert);
         } catch (error) {
@@ -91,13 +78,11 @@ export class AlertController {
     }
 
     async deleteAlert(req: Request, res: Response) {
-        const alertId = req.params.id;
         const start = Date.now();
         try {
+            const alertId = req.params.id;
             const deleted = await this.alertStore.delete(alertId);
-            if (!deleted) {
-                throw new NotFoundError('Alert not found.');
-            }
+            if (!deleted) throw new NotFoundError('Alert not found.');
             this.eventBus.publish('alert.deleted', alertId);
             return res.status(204).send();
         } catch (error) {
@@ -110,4 +95,4 @@ export class AlertController {
             logRequest(req, res, start);
         }
     }
-} 
+}
