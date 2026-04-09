@@ -5,17 +5,36 @@ export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
 export type BacktestId = string & { readonly brand: unique symbol };
 
+/**
+ * Represents historical price data for backtesting.
+ * @property {number} timestamp - The timestamp in seconds since the epoch.
+ * @property {number} price - The price at the given timestamp, must be a positive number.
+ */
 export interface HistoricalData {
     timestamp: number;
     price: number;
 }
 
+/**
+ * Represents the parameters for a trading strategy in backtesting.
+ * @property {number} slippage - The slippage percentage (0 to 1).
+ * @property {number} buyThreshold - The threshold for buying (0 to 1).
+ * @property {number} sellThreshold - The threshold for selling (0 to 1).
+ */
 export interface StrategyParameters {
     slippage: number;
     buyThreshold: number;
     sellThreshold: number;
 }
 
+/**
+ * Represents the result of a backtest.
+ * @property {BacktestId} id - Unique identifier for the backtest result.
+ * @property {number} totalReturns - The total returns from the backtest.
+ * @property {number} trades - The number of trades executed during the backtest.
+ * @property {number} winRate - The win rate percentage of the trades.
+ * @property {string} performanceMetrics - A string summarizing performance metrics.
+ */
 export interface BacktestResult {
     id: BacktestId;
     totalReturns: number;
@@ -42,19 +61,6 @@ export const BacktestResultSchema = z.object({
     winRate: z.number().min(0).max(100),
     performanceMetrics: z.string(),
 });
-
-export const PaginationSchema = z.object({
-    limit: z.number().int().min(1).max(100).default(10),
-    offset: z.number().int().min(0).default(0),
-    sort: z.string().default('createdAt'),
-    order: z.enum(['asc', 'desc']).default('asc'),
-});
-
-// Discriminated Union for Event Types
-export type BacktestEvent =
-    | { type: 'BACKTEST_CREATED'; data: BacktestResult }
-    | { type: 'BACKTEST_UPDATED'; data: BacktestResult }
-    | { type: 'BACKTEST_ERROR'; message: string };
 
 export const BacktestEventSchema = z.union([
     z.object({ type: z.literal('BACKTEST_CREATED'), data: BacktestResultSchema }),
