@@ -10,6 +10,7 @@ import errorHandler from './middleware/errorHandler';
 import { csrfMiddleware } from './middleware/csrfProtection';
 import config from './config';
 import mongoose from 'mongoose';
+import { gracefulShutdown } from './utils/shutdown';
 
 const app = express();
 const server = createServer(app);
@@ -49,3 +50,6 @@ const startServer = async () => {
 };
 
 startServer();
+
+process.on('SIGTERM', () => gracefulShutdown(server, setInterval(() => {}, 10000)));
+process.on('SIGINT', () => gracefulShutdown(server, setInterval(() => {}, 10000)));
