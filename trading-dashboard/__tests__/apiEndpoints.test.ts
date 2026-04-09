@@ -1,10 +1,7 @@
 import request from 'supertest';
 import app from '../src/server';
-import { fetchPositions, createPosition, updatePosition, deletePosition } from '../src/api/portfolioApi';
 import { InMemoryStore } from '../src/storage/InMemoryStore';
 import { Position } from '../src/types';
-
-jest.mock('../src/api/portfolioApi');
 
 describe('API Endpoints Integration Tests', () => {
     let store: InMemoryStore<Position>;
@@ -44,9 +41,10 @@ describe('API Endpoints Integration Tests', () => {
         expect(deletedPositionResponse.body.length).toBe(0);
     });
 
-    it('GET /api/positions returns 404 for non-existing position', async () => {
-        const response = await request(app).delete('/api/positions/99');
-        expect(response.status).toBe(404);
+    it('GET /api/positions with invalid pagination should return 400', async () => {
+        const response = await request(app).get('/api/positions?limit=invalid');
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ message: 'Invalid pagination parameters' });
     });
 
     it('POST /api/positions without required fields should return 400', async () => {
@@ -59,5 +57,10 @@ describe('API Endpoints Integration Tests', () => {
         const response = await request(app).put('/api/positions/1').send({ quantity: -1 });
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('Invalid quantity');
+    });
+
+    it('DELETE /api/positions/:id should return 404 for non-existing position', async () => {
+        const response = await request(app).delete('/api/positions/99');
+        expect(response.status).toBe(404);
     });
 });
