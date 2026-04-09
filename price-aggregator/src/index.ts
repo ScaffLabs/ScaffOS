@@ -7,7 +7,7 @@ import http from 'http';
 import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
-import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
+import { validatePriceData, handleValidationErrors, validatePriceUpdate } from './middleware/validationMiddleware';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -35,8 +35,10 @@ app.use((req, res, next) => {
 
 app.get('/prices', async (req, res, next) => {
     const { limit = 10, offset = 0, sortBy = 'price', order = 'asc' } = req.query;
+    const numericLimit = Math.min(Number(limit), 100); // limit to 100 max
+    const numericOffset = Number(offset);
     try {
-        const prices = await priceAggregator.getPrices({ limit: Number(limit), offset: Number(offset), sortBy, order });
+        const prices = await priceAggregator.getPrices({ limit: numericLimit, offset: numericOffset, sortBy, order });
         if (prices.length === 0) return res.status(204).send();
         res.status(200).json(prices);
     } catch (error) {
@@ -55,7 +57,7 @@ app.post('/prices', validatePriceData, handleValidationErrors, async (req, res, 
     }
 });
 
-app.put('/prices/:id', validatePriceData, handleValidationErrors, async (req, res, next) => {
+app.put('/prices/:id', validatePriceUpdate, handleValidationErrors, async (req, res, next) => {
     const { id } = req.params;
     try {
         const updatedPrice = await priceAggregator.updatePrice(id, req.body);
