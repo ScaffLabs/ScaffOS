@@ -17,3 +17,5 @@ export const monitorMemoryUsage = () => {
         external: memoryUsage.external,
     });
 };
+
+setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute

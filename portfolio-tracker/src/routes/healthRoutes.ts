@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { healthCheck, readinessCheck } from '../services/healthService';
 import logger from '../services/logger';
+import { monitorMemoryUsage } from '../services/memoryMonitor';
 
 const router = Router();
 
@@ -21,5 +22,9 @@ router.get('/ready', async (req, res) => {
         res.status(500).json({ status: 'NOT READY', error: error.message });
     }
 });
+
+setInterval(() => {
+    monitorMemoryUsage();
+}, 60000); // Monitor memory usage every minute
 
 export default router;
