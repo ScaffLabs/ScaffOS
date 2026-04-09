@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.6] - 2023-10-23
+### Added
+- Comprehensive README documentation with detailed API reference for each endpoint.
+- Detailed environment variables documentation and setup instructions.
+
 ## [1.0.5] - 2023-10-22
 ### Added
 - Comprehensive README documentation with detailed API reference for each endpoint.
