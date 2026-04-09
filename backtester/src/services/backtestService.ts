@@ -16,6 +16,7 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
 
+        // Validate price
         if (typeof currentPrice !== 'number' || currentPrice <= 0) {
             throw new ValidationError('Price must be a positive number.');
         }
@@ -38,28 +39,16 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
 }
 
 const simulateBacktest = circuitBreaker(async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
-    try {
-        const validation = StrategyParametersSchema.safeParse(params);
-        if (!validation.success) {
-            throw new ValidationError('Invalid strategy parameters: ' + validation.error.format());
-        }
-
-        const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
-        const backtestId: BacktestId = uuidv4() as BacktestId;
-        const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
-        if (trades > 0) {
-            await withRetry(() => axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, { trades }));
-            await withRetry(() => axios.post(`${process.env.DATA_SERVICE_URL}/data-update`, { totalReturns }));
-        }
-        logger.info({ message: 'Backtest simulation completed', params, totalReturns });
-        return result;
-    } catch (error) {
-        logger.error({ message: 'Backtest simulation error', error: error.message });
-        if (error instanceof ValidationError) {
-            throw error;
-        }
-        throw new ServiceError('An error occurred during backtesting: ' + error.message);
+    const validation = StrategyParametersSchema.safeParse(params);
+    if (!validation.success) {
+        throw new ValidationError('Invalid strategy parameters: ' + validation.error.format());
     }
+
+    const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+    const backtestId: BacktestId = uuidv4() as BacktestId;
+    const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
+    logger.info({ message: 'Backtest simulation completed', params, totalReturns });
+    return result;
 }, 3, { totalReturns: 0, trades: 0, winRate: 0, performanceMetrics: 'No trades simulated' });
 
 export { simulateBacktest };
