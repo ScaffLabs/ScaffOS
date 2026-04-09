@@ -27,6 +27,8 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
     try {
         const response = await fetchUserServiceWithRetry(message.data.userId);
         logger.info('Fetched user data:', response.data);
+        // Emit the event to the event bus
+        eventBus.publish('userDataFetched', response.data);
     } catch (error) {
         logger.error('Error fetching user data:', error.message);
     }
