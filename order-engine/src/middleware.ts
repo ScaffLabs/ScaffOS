@@ -13,12 +13,6 @@ export const validateInput = (schema: any) => {
     };
 };
 
-// CSRF Protection
-export const csrfProtection = (req: Request, res: Response, next: NextFunction) => {
-    // CSRF logic here
-    next();
-};
-
 // Error Handling Middleware
 export const errorHandlingMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
     logger.logError(err, req);

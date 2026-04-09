@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
+import { ValidationError } from './errors';
 
 // Validation middleware for creating an order
 export const createOrderValidators = [
@@ -24,6 +25,9 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
         res.status(201).json(createdOrder);
         logger.info('Order created successfully', { order: createdOrder });
     } catch (error) {
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ message: error.message });
+        }
         logger.error('Error creating order', { error: error.message });
         res.status(500).json({ message: 'Internal Server Error' });
     }
