@@ -1,13 +1,13 @@
 {
   "name": "event-bus",
-  "version": "1.0.4",
+  "version": "1.0.3",
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "node index.js",
     "test:watch": "jest --watch",
+    "test:unit": "jest --testPathPattern=./__tests__/eventBus.unit.test.ts",
     "test:integration": "jest --testPathPattern=./__tests__/eventApi.integration.test.ts",
-    "test:unit": "jest --testPathPattern=./__tests__/eventBus.unit.test.ts"
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "axios": "^0.27.2",

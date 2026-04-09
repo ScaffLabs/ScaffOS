@@ -69,4 +69,8 @@ describe('EventBus', () => {
         eventBus.publish(testTopic, testData);
         expect(mockListener).toHaveBeenCalledTimes(1);
     });
+
+    test('should throw error when publishing invalid message', async () => {
+        await expect(eventBus.publish(testTopic, null)).rejects.toThrow();
+    });
 });
