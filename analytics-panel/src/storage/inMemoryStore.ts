@@ -12,6 +12,7 @@ interface Store<T> {
     delete(id: string): Promise<boolean>;
     find(query: Partial<T>): Promise<Record<T>[]>;
     transaction(operations: Array<() => Promise<any>>): Promise<void>;
+    runMigrations(): Promise<void>;
 }
 
 export class InMemoryStore<T> implements Store<T> {
@@ -78,7 +79,8 @@ export class InMemoryStore<T> implements Store<T> {
         }
     }
 
-    async findByIndex(key: keyof T, value: any): Promise<Record<T>[]> {
-        return this.indexes[key]?.get(value) || [];
+    async runMigrations() {
+        // Placeholder for migration logic
+        console.log('Running migrations...');
     }
 }

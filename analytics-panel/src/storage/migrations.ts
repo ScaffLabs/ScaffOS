@@ -14,6 +14,7 @@ export const migrateData = async (store: InMemoryStore<Strategy>) => {
 
 export const runMigrations = async (store: InMemoryStore<Strategy>) => {
     try {
+        console.log('Starting data migration...');
         await migrateData(store);
         console.log('Migration completed successfully.');
     } catch (error) {

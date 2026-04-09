@@ -1,9 +1,13 @@
 import { InMemoryStore } from '../storage/inMemoryStore';
 import { Strategy, PerformanceMetrics } from '../types';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
-import { logPerformance } from '../logger';
+import { runMigrations } from '../storage/migrations';
 
 const strategyStore = new InMemoryStore<Strategy>();
+
+const initializeStore = async () => {
+    await runMigrations(strategyStore);
+};
 
 const calculatePerformanceMetrics = (strategies: Strategy[]): PerformanceMetrics => {
     const drawdown = strategies.map(strategy => Math.random() * 100);
@@ -16,8 +20,7 @@ const createStrategy = async (strategy: Strategy) => {
     if (!strategy.name || !strategy.parameters) {
         throw new ValidationError('Strategy name and parameters are required.');
     }
-    const result = await strategyStore.create(strategy);
-    return result;
+    return await strategyStore.create(strategy);
 };
 
 const getPerformanceMetrics = async () => {
@@ -46,5 +49,7 @@ const deleteStrategy = async (id: string) => {
 const findStrategies = async (query: Partial<Strategy>) => {
     return await strategyStore.find(query);
 };
+
+initializeStore();
 
 export { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics };
