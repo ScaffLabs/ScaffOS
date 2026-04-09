@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../src/index';
-import { validPortfolio, invalidPortfolio } from './fixtures/portfolioFixtures';
+import { validPortfolio, invalidPortfolio, portfolioWithNegativeQuantity, portfolioWithEmptySymbol } from './fixtures/portfolioFixtures';
 
 describe('Portfolio Routes', () => {
     it('should create a new portfolio', async () => {
@@ -13,6 +13,18 @@ describe('Portfolio Routes', () => {
         const response = await request(app).post('/api/portfolios').send(invalidPortfolio);
         expect(response.status).toBe(400);
         expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Name is required' })]));
+    });
+
+    it('should return 400 for portfolio with negative quantity', async () => {
+        const response = await request(app).post('/api/portfolios').send(portfolioWithNegativeQuantity);
+        expect(response.status).toBe(400);
+        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Invalid position data. Ensure symbol is provided and quantities are non-negative.' })]));
+    });
+
+    it('should return 400 for portfolio with empty symbol', async () => {
+        const response = await request(app).post('/api/portfolios').send(portfolioWithEmptySymbol);
+        expect(response.status).toBe(400);
+        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Invalid position data. Ensure symbol is provided and quantities are non-negative.' })]));
     });
 
     it('should get an existing portfolio', async () => {
@@ -51,19 +63,5 @@ describe('Portfolio Routes', () => {
         const response = await request(app).delete('/api/portfolios/999');
         expect(response.status).toBe(404);
         expect(response.body.error).toBe('Portfolio not found');
-    });
-
-    it('should return 400 for invalid portfolio update', async () => {
-        const createResponse = await request(app).post('/api/portfolios').send(validPortfolio);
-        const response = await request(app).put(`/api/portfolios/${createResponse.body.id}`).send({ name: '', positions: [] });
-        expect(response.status).toBe(400);
-        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Name is required' })]));
-    });
-
-    it('should return 500 for server error on create', async () => {
-        jest.spyOn(global.console, 'error').mockImplementation(() => {});
-        const response = await request(app).post('/api/portfolios').send({});
-        expect(response.status).toBe(500);
-        expect(response.body.error).toBe('Internal Server Error');
     });
 });

@@ -9,5 +9,9 @@ module.exports = {
     'ts-jest': {
       isolatedModules: true
     }
-  }
+  },
+  moduleNameMapper: {
+    '\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
+  setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
 };
