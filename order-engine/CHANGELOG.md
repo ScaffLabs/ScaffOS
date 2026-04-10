@@ -33,3 +33,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Added detailed inline documentation to orderController.ts for better code understanding.
 - Improved overall code structure and readability.
+
+## [1.0.6] - 2023-11-30
+### Added
+- Detailed CONTRIBUTING.md to guide contributors on best practices.
+- Enhanced error messages throughout the application for better debugging.
