@@ -24,23 +24,4 @@ router.get('/health', async (req, res) => {
     }
 });
 
-// Readiness check endpoint
-router.get('/ready', async (req, res) => {
-    try {
-        const userServiceHealthy = await checkUserServiceHealth();
-        const orderServiceHealthy = await checkOrderServiceHealth();
-        const isReady = userServiceHealthy && orderServiceHealthy;
-        res.status(isReady ? 200 : 503).json({
-            ready: isReady,
-            services: [
-                { service: 'User Service', ready: userServiceHealthy },
-                { service: 'Order Service', ready: orderServiceHealthy },
-            ],
-        });
-    } catch (error) {
-        logger.error('Readiness check error', { error: error.message });
-        res.status(500).json({ ready: false, error: error.message });
-    }
-});
-
 export default router;

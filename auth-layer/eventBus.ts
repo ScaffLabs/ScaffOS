@@ -12,4 +12,8 @@ export const subscribeToUserCreatedEvent = (listener: (event: UserCreatedEvent) 
     eventBus.on('userCreated', listener);
 };
 
+export const unsubscribeFromUserCreatedEvent = (listener: (event: UserCreatedEvent) => void): void => {
+    eventBus.off('userCreated', listener);
+};
+
 export default eventBus;

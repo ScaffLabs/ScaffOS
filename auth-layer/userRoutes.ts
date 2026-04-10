@@ -4,7 +4,6 @@ import { emitUserCreatedEvent } from './eventBus';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
 import { sanitizeUserInput } from './userValidation';
-import { rateLimit } from './rateLimit';
 
 const router = express.Router();
 
@@ -29,29 +28,11 @@ router.post('/users', async (req, res) => {
     }
 });
 
-// Get All Users with Pagination, Sorting, and Filtering
+// Get All Users
 router.get('/users', async (req, res) => {
-    const { limit = 10, offset = 0, sort = 'username', order = 'asc', filter } = req.query;
     try {
         const users = await getAllUsers();
-        let filteredUsers = users;
-
-        if (filter) {
-            filteredUsers = filteredUsers.filter(user => user.username.includes(filter) || user.email.includes(filter));
-        }
-
-        filteredUsers.sort((a, b) => {
-            const keyA = a[sort];
-            const keyB = b[sort];
-            if (order === 'asc') {
-                return keyA < keyB ? -1 : (keyA > keyB ? 1 : 0);
-            } else {
-                return keyA > keyB ? -1 : (keyA < keyB ? 1 : 0);
-            }
-        });
-
-        const paginatedUsers = filteredUsers.slice(Number(offset), Number(offset) + Number(limit));
-        res.status(200).json(paginatedUsers);
+        res.status(200).json(users);
     } catch (error) {
         logger.error('Error fetching users', { error: error.message });
         return res.status(500).json({ error: 'Internal Server Error' });
