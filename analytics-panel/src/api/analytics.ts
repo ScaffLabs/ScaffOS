@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ServiceError } from '../errors/customErrors';
+import { ServiceError, ValidationError } from '../errors/customErrors';
 import { PerformanceMetricsSchema } from '../types';
 import { logError } from '../utils/errorLogger';
 import { emitEvent } from './eventBus';
@@ -31,6 +31,9 @@ const fetchPerformanceMetrics = async () => {
         return validatedData;
     } catch (error) {
         logError(error, 'Fetching performance metrics');
+        if (error instanceof ValidationError) {
+            throw new ServiceError('Validation failed: ' + error.message);
+        }
         throw new ServiceError('Failed to fetch performance metrics: ' + error.message);
     }
 };
@@ -45,6 +48,9 @@ const fetchComparisonData = async (strategyA: string, strategyB: string) => {
         return response;
     } catch (error) {
         logError(error, 'Comparing strategies');
+        if (error instanceof ValidationError) {
+            throw new ServiceError('Validation failed: ' + error.message);
+        }
         throw new ServiceError('Failed to fetch comparison data: ' + error.message);
     }
 };

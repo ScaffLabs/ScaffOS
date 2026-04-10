@@ -25,6 +25,9 @@ const createStrategy = async (strategy: Strategy) => {
 
 const getPerformanceMetrics = async () => {
     const strategies = await strategyStore.find({});
+    if (strategies.length === 0) {
+        throw new ValidationError('No strategies available for performance metrics calculation.');
+    }
     return calculatePerformanceMetrics(strategies.map(s => s.data));
 };
 
