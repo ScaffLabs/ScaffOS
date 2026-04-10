@@ -34,4 +34,16 @@ const fetchComparisonData = async (strategyA: string, strategyB: string) => {
     }
 };
 
-export { fetchPerformanceMetrics, fetchComparisonData };
+const fetchStrategies = async () => {
+    try {
+        const response = await circuitBreaker.execute(() =>
+            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`)
+        );
+        return response.data;
+    } catch (error) {
+        logError(error, 'Fetching strategies');
+        throw new ServiceError('Failed to fetch strategies: ' + error.message);
+    }
+};
+
+export { fetchPerformanceMetrics, fetchComparisonData, fetchStrategies };
