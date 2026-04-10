@@ -23,30 +23,54 @@ export interface AlertStoreInterface {
 
 class MongoAlertStore implements AlertStoreInterface {
     async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
-        const newAlert = new AlertModel({ ...alert, id: new mongoose.Types.ObjectId().toString() });
-        await newAlert.save();
-        return newAlert;
+        try {
+            const newAlert = new AlertModel({ ...alert, id: new mongoose.Types.ObjectId().toString() });
+            await newAlert.save();
+            return newAlert;
+        } catch (error) {
+            throw new Error('Failed to create alert: ' + error.message);
+        }
     }
 
     async read(id: OrderId): Promise<AlertMessage | null> {
-        return AlertModel.findById(id).exec();
+        try {
+            return await AlertModel.findById(id).exec();
+        } catch (error) {
+            throw new Error('Failed to read alert: ' + error.message);
+        }
     }
 
     async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
-        return AlertModel.findByIdAndUpdate(id, alert, { new: true }).exec();
+        try {
+            return await AlertModel.findByIdAndUpdate(id, alert, { new: true }).exec();
+        } catch (error) {
+            throw new Error('Failed to update alert: ' + error.message);
+        }
     }
 
     async delete(id: OrderId): Promise<boolean> {
-        const result = await AlertModel.deleteOne({ id }).exec();
-        return result.deletedCount > 0;
+        try {
+            const result = await AlertModel.deleteOne({ id }).exec();
+            return result.deletedCount > 0;
+        } catch (error) {
+            throw new Error('Failed to delete alert: ' + error.message);
+        }
     }
 
     async findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]> {
-        return AlertModel.find(query).exec();
+        try {
+            return await AlertModel.find(query).exec();
+        } catch (error) {
+            throw new Error('Failed to find alerts: ' + error.message);
+        }
     }
 
     async deleteAll(): Promise<void> {
-        await AlertModel.deleteMany({}).exec();
+        try {
+            await AlertModel.deleteMany({}).exec();
+        } catch (error) {
+            throw new Error('Failed to delete all alerts: ' + error.message);
+        }
     }
 
     async transaction(operations: Array<() => Promise<void>>): Promise<void> {
@@ -59,7 +83,7 @@ class MongoAlertStore implements AlertStoreInterface {
             await session.commitTransaction();
         } catch (error) {
             await session.abortTransaction();
-            throw error;
+            throw new Error('Transaction failed: ' + error.message);
         } finally {
             session.endSession();
         }
