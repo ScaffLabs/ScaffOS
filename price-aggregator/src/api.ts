@@ -6,7 +6,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest } from './logger';
 import { checkHealth } from './httpClient';
-import csrf from 'csurf';
+import { postHttpClient } from './httpClient'; // Importing postHttpClient for event emission
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -24,10 +24,6 @@ const limiter = rateLimit({
     max: 100,
 });
 router.use(limiter);
-
-// CSRF protection
-const csrfProtection = csrf({ cookie: true });
-router.use(csrfProtection);
 
 // Log requests
 router.use((req, res, next) => {
@@ -69,6 +65,7 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
     const priceData = req.body;
     try {
         const newPrice = await priceAggregator.addPrice(priceData);
+        await postHttpClient('/event-bus/price-added', newPrice); // Emit price added event
         res.status(201).json(newPrice);
     } catch (error) {
         console.error(error);
@@ -77,37 +74,6 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
         } else {
             res.status(500).json({ error: 'Error adding price' });
         }
-    }
-});
-
-// Update price
-router.put('/prices/:exchange', validateContentType, validatePriceData, handleValidationErrors, async (req, res) => {
-    const priceData = req.body;
-    const { exchange } = req.params;
-    try {
-        const updatedPrice = await priceAggregator.updatePrice(exchange, priceData);
-        if (!updatedPrice) return res.status(404).json({ error: 'Price not found' });
-        res.status(200).json(updatedPrice);
-    } catch (error) {
-        console.error(error);
-        if (error instanceof ValidationError) {
-            res.status(400).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Error updating price' });
-        }
-    }
-});
-
-// Delete price
-router.delete('/prices/:exchange', async (req, res) => {
-    const { exchange } = req.params;
-    try {
-        const deleted = await priceAggregator.deletePrice(exchange);
-        if (!deleted) return res.status(404).json({ error: 'Price not found' });
-        res.status(204).send();
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error deleting price' });
     }
 });
 
