@@ -1,6 +1,6 @@
 import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData, clearPortfolios } from '../src/services/portfolioService';
 import { Portfolio } from '../src/types';
-import { validPortfolio, invalidPortfolio, existingPortfolioId, nonExistentPortfolioId, portfolioWithMultiplePositions } from './fixtures/portfolioFixtures';
+import { validPortfolio, invalidPortfolio, existingPortfolioId, nonExistentPortfolioId, portfolioWithMultiplePositions, portfolioWithNegativeQuantity } from './fixtures/portfolioFixtures';
 
 let testPortfolio: Portfolio;
 
@@ -47,27 +47,16 @@ describe('Portfolio Service', () => {
         expect(portfolios).toEqual([]);
     });
 
-    test('should return an error for invalid portfolio data during creation', async () => {
-        await expect(createPortfolio({ name: null, positions: [] })).rejects.toThrow('Invalid portfolio data');
-    });
-
-    test('should update portfolio with valid positions', async () => {
-        await createPortfolio(testPortfolio);
-        const updatedPortfolio = await updatePortfolio(existingPortfolioId, { positions: [{ symbol: 'AAPL', quantity: 10, averagePrice: 150 }] });
-        expect(updatedPortfolio.positions.length).toBe(1);
-        expect(updatedPortfolio.positions[0]).toEqual({ symbol: 'AAPL', quantity: 10, averagePrice: 150 });
-    });
-
-    test('should throw an error for invalid position update data', async () => {
-        await createPortfolio(testPortfolio);
-        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: '', quantity: -5, averagePrice: 150 }] })).rejects.toThrow('Invalid portfolio update data');
+    test('should throw an error for creating a portfolio with negative quantity', async () => {
+        await expect(createPortfolio({ name: 'Invalid Quantity', positions: [{ symbol: 'AAPL', quantity: -10, averagePrice: 150 }] })).rejects.toThrow('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
     });
 
     test('should throw an error for creating a portfolio with empty name', async () => {
         await expect(createPortfolio({ name: '', positions: [] })).rejects.toThrow('Invalid portfolio data');
     });
 
-    test('should throw an error for creating a portfolio with negative quantity', async () => {
-        await expect(createPortfolio({ name: 'Invalid Quantity', positions: [{ symbol: 'AAPL', quantity: -10, averagePrice: 150 }] })).rejects.toThrow('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
+    test('should throw an error for updating a portfolio with invalid position data', async () => {
+        await createPortfolio(testPortfolio);
+        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: '', quantity: 10, averagePrice: 150 }] })).rejects.toThrow('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
     });
 });

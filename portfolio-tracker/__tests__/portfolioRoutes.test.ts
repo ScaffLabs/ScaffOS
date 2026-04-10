@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../src/index';
-import { validPortfolio, invalidPortfolio, portfolioWithNegativeQuantity, portfolioWithEmptySymbol } from './fixtures/portfolioFixtures';
+import { validPortfolio, invalidPortfolio, portfolioWithNegativeQuantity, portfolioWithEmptySymbol, portfolioWithZeroQuantity } from './fixtures/portfolioFixtures';
 
 describe('Portfolio Routes', () => {
     it('should create a new portfolio', async () => {
@@ -23,6 +23,12 @@ describe('Portfolio Routes', () => {
 
     it('should return 400 for portfolio with empty symbol', async () => {
         const response = await request(app).post('/api/portfolios').send(portfolioWithEmptySymbol);
+        expect(response.status).toBe(400);
+        expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Invalid position data. Ensure symbol is provided and quantities are non-negative.' })]));
+    });
+
+    it('should return 400 for portfolio with zero quantity', async () => {
+        const response = await request(app).post('/api/portfolios').send(portfolioWithZeroQuantity);
         expect(response.status).toBe(400);
         expect(response.body.errors).toEqual(expect.arrayContaining([expect.objectContaining({ msg: 'Invalid position data. Ensure symbol is provided and quantities are non-negative.' })]));
     });
