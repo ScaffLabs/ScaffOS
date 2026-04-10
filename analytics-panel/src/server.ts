@@ -51,6 +51,16 @@ const startServer = async () => {
 
 startServer();
 
-const handleShutdown = () => gracefulShutdown(server);
+const handleShutdown = () => {
+    console.log('Received shutdown signal. Gracefully shutting down...');
+    mongoose.connection.close(() => {
+        console.log('MongoDB connections closed.');
+    });
+    server.close(() => {
+        console.log('Closed all connections.');
+        process.exit(0);
+    });
+};
+
 process.on('SIGTERM', handleShutdown);
 process.on('SIGINT', handleShutdown);
