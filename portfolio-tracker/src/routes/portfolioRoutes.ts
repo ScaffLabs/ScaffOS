@@ -8,6 +8,7 @@ import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 import requestLogger from '../middleware/requestLogger';
 import auditLogger from '../middleware/auditLogger';
+import csrfProtection from '../middleware/csrfProtection';
 
 const router = Router();
 
@@ -27,6 +28,9 @@ router.use(limiter);
 router.use(sanitize);
 router.use(auditLogger);
 router.use(requestLogger);
+
+// CSRF protection
+router.use(csrfProtection);
 
 // Validation rules for portfolio creation and updates
 const portfolioValidation = [
