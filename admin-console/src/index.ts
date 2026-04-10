@@ -17,9 +17,7 @@ dotenv.config();
 const app = express();
 const db = new Database();
 
-// CORS configuration
-const allowedOrigins = ['http://localhost:3000', 'https://your-production-url.com'];
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors());
 app.use(helmet());
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(sanitizeBody);
@@ -37,7 +35,6 @@ const startServer = async () => {
         await db.connect();
         const server = app.listen(config.port, () => {
             console.log(`Server running on http://localhost:${config.port}`);
-            console.log(`Environment: ${config.nodeEnv}`);
         });
 
         const shutdown = async () => {
