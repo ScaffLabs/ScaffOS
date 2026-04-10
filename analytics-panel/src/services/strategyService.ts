@@ -1,13 +1,17 @@
-import { InMemoryStore } from '../storage/inMemoryStore';
+import { DatabaseStore, PostgresStore, SQLiteStore } from '../storage/database';
 import { Strategy, PerformanceMetrics } from '../types';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
-import { runMigrations } from '../storage/migrations';
 
-const strategyStore = new InMemoryStore<Strategy>();
+const dbType = process.env.DB_TYPE || 'in-memory';
+let strategyStore: DatabaseStore<Strategy>;
 
-const initializeStore = async () => {
-    await runMigrations(strategyStore);
-};
+if (dbType === 'postgres') {
+    strategyStore = new PostgresStore<Strategy>('strategies', process.env.DB_URL);
+} else if (dbType === 'sqlite') {
+    strategyStore = new SQLiteStore<Strategy>('database.sqlite', 'strategies');
+} else {
+    strategyStore = new InMemoryStore<Strategy>(); // Fallback to in-memory store
+}
 
 const calculatePerformanceMetrics = (strategies: Strategy[]): PerformanceMetrics => {
     const drawdown = strategies.map(strategy => Math.random() * 100);
@@ -52,7 +56,5 @@ const deleteStrategy = async (id: string) => {
 const findStrategies = async (query: Partial<Strategy>) => {
     return await strategyStore.find(query);
 };
-
-initializeStore();
 
 export { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics };
