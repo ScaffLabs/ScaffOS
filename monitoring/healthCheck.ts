@@ -28,10 +28,12 @@ export const healthCheck = async (req: Request, res: Response) => {
     }
 };
 
-export const readinessCheck = (req: Request, res: Response) => {
-    res.status(200).json({ status: 'READY' });
-};
-
-export const livelinessCheck = (req: Request, res: Response) => {
-    res.status(200).json({ status: 'ALIVE' });
+export const healthCheckServices = async (req: Request, res: Response) => {
+    try {
+        const healthStatus = await checkServiceHealth();
+        res.status(200).json({ status: 'UP', services: healthStatus });
+    } catch (error) {
+        logger.error('Service health check failed:', error);
+        res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
 };
