@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.8.0] - 2023-11-15
+- Added comprehensive documentation in README.md, including project description, API reference, and setup instructions.
+- Updated error handling middleware to ensure consistent error messages across all endpoints.
+- Improved logging functionality to include more detailed request and response data.
+
 ## [1.7.0] - 2023-11-10
 - Added detailed API error handling strategies in the documentation.
 - Updated README.md to include environment variable descriptions and usage.
