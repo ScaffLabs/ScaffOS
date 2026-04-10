@@ -16,4 +16,4 @@ export const errorMiddleware = (err: Error, req: Request, res: Response, next: N
     }
     logger.error({ message: 'An unexpected error occurred: ' + err.message });
     return res.status(500).json({ message: 'An unexpected error occurred.' });
-}; 
+};
