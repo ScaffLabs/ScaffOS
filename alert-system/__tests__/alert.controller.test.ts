@@ -86,4 +86,13 @@ describe('AlertController', () => {
         expect(res.status).toHaveBeenCalledWith(500);
         expect(res.json).toHaveBeenCalledWith({ message: 'Failed to add alert.' });
     });
+
+    test('should handle rate limiting gracefully', async () => {
+        jest.spyOn(mockAlertStore, 'create').mockImplementation(() => { throw new Error('Rate limit exceeded'); });
+        const req = { body: { type: 'price', threshold: 100, currentValue: 120 } };
+        const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+        await alertController.addAlert(req, res);
+        expect(res.status).toHaveBeenCalledWith(429);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Too many requests, please try again later.' });
+    });
 });
