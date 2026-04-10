@@ -39,3 +39,23 @@ const fetchServiceHealthRequest = async () => {
 
 export const fetchExternalData = circuitBreaker(retry(fetchExternalDataRequest));
 export const fetchServiceHealth = circuitBreaker(retry(fetchServiceHealthRequest));
+
+export const registerExternalApiRoutes = (app: any) => {
+    app.get('/api/external/data', async (req, res) => {
+        try {
+            const data = await fetchExternalData();
+            res.status(200).json(data);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+
+    app.get('/api/external/health', async (req, res) => {
+        try {
+            const health = await fetchServiceHealth();
+            res.status(200).json(health);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+};
