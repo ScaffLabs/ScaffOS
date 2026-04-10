@@ -25,7 +25,7 @@ app.use(express.json({ limit: '1mb' }));
 
 const main = async () => {
     await initializeRedis();
-    logger.info(`Configuration: ${JSON.stringify(config)}`);
+    logger.logStartup(config); // Log startup configuration
     app.use('/events', eventRoutes());
     app.use(errorLogger);
     app.use(errorHandler);
