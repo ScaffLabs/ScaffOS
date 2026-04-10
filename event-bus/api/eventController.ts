@@ -43,6 +43,41 @@ const getEvents = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+const updateEvent = async (req: Request, res: Response): Promise<void> => {
+    const reqId = req.headers['x-request-id'] || 'unknown';
+    const start = Date.now();
+    const { id } = req.params;
+    try {
+        const validation = updateEventSchema.safeParse(req.body);
+        if (!validation.success) {
+            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+        }
+        const updatedEvent = await storage.update(id, validation.data);
+        if (!updatedEvent) {
+            throw new NotFoundError('Event not found');
+        }
+        const duration = Date.now() - start;
+        logger.logRequest(req.method, req.originalUrl, 200, duration, reqId);
+        res.status(200).json(updatedEvent);
+    } catch (error) {
+        handleError(error, res, reqId);
+    }
+};
+
+const deleteEvent = async (req: Request, res: Response): Promise<void> => {
+    const reqId = req.headers['x-request-id'] || 'unknown';
+    const { id } = req.params;
+    try {
+        const deleted = await storage.delete(id);
+        if (!deleted) {
+            throw new NotFoundError('Event not found');
+        }
+        res.status(204).send();
+    } catch (error) {
+        handleError(error, res, reqId);
+    }
+};
+
 const handleError = (error: Error, res: Response, reqId: string) => {
     if (error instanceof ValidationError) {
         res.status(400).json({ message: error.message });
@@ -59,4 +94,6 @@ const handleError = (error: Error, res: Response, reqId: string) => {
 const router = Router();
 router.post('/', createEvent);
 router.get('/', getEvents);
+router.put('/:id', updateEvent);
+router.delete('/:id', deleteEvent);
 export default router;
