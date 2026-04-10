@@ -10,6 +10,10 @@ const env = cleanEnv(process.env, {
   DATABASE_URL: str({ default: 'mongodb://mongo:27017/portfolio-tracker' }),
   LOG_LEVEL: str({ choices: ['debug', 'info', 'warn', 'error'], default: 'info' }),
   DEBUG_MODE: bool({ default: false }),
+  DB_HOST: str({ default: 'localhost' }),
+  DB_USER: str({ default: 'root' }),
+  DB_PASS: str({ default: 'example' }),
+  DB_NAME: str({ default: 'portfolio-tracker' }),
 });
 
 if (!env.DATABASE_URL) {
