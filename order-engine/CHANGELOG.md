@@ -38,3 +38,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Detailed CONTRIBUTING.md to guide contributors on best practices.
 - Enhanced error messages throughout the application for better debugging.
+
+## [1.0.7] - 2023-12-01
+### Added
+- Comprehensive README.md with project description, setup instructions, API reference, and other necessary details.
