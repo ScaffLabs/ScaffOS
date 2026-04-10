@@ -28,7 +28,7 @@ app.use(csrfProtection);
 
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
-app.use('/dashboard', dashboardLimiter); // Rate limiting applied to dashboard endpoints
+app.use('/dashboard', dashboardLimiter);
 setupRoutes(app);
 app.use(errorMiddleware);
 
