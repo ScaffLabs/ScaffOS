@@ -2,8 +2,8 @@ import express, { Request, Response } from 'express';
 import { AlertMessage, validateCreateAlertRequest } from './alert.schema';
 import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
-import { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError } from './error.types';
-import logger, { logRequest, logError } from './logger';
+import { ServiceError, ValidationError, NotFoundError } from './error.types';
+import logger, { logRequest } from './logger';
 import axios from 'axios';
 import { CircuitBreaker } from 'opossum';
 
@@ -39,7 +39,7 @@ export class AlertController {
             }
             return res.status(200).json(alerts);
         } catch (error) {
-            logError(error);
+            logger.error(error);
             return res.status(500).json({ message: 'Failed to retrieve alerts.' });
         } finally {
             logRequest(req, res, start);
@@ -61,7 +61,7 @@ export class AlertController {
             if (error instanceof ValidationError) {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
             }
-            logError(error);
+            logger.error(error);
             return res.status(500).json({ message: 'Failed to add alert.' });
         } finally {
             logRequest(req, res, start);
@@ -75,7 +75,7 @@ export class AlertController {
                 emailServiceCircuit.fire(alert)
             ]);
         } catch (error) {
-            logError(error);
+            logger.error(error);
             throw new ServiceError('Failed to notify external services.');
         }
     }
@@ -92,7 +92,7 @@ export class AlertController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
-            logError(error);
+            logger.error(error);
             return res.status(500).json({ message: 'Failed to update alert.' });
         } finally {
             logRequest(req, res, start);
@@ -110,10 +110,10 @@ export class AlertController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ message: error.message });
             }
-            logError(error);
+            logger.error(error);
             return res.status(500).json({ message: 'Failed to delete alert.' });
         } finally {
             logRequest(req, res, start);
         }
     }
-} 
+}
