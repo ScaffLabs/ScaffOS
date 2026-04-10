@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createStrategy, updateStrategy, deleteStrategy, findStrategies } from '../services/strategyService';
+import { createStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics } from '../services/strategyService';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
 
 // Handler to fetch all strategies with pagination

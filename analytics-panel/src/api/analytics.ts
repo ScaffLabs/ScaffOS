@@ -19,15 +19,15 @@ const fetchPerformanceMetrics = async () => {
     }
 };
 
-const fetchStrategies = async () => {
+const createStrategy = async (strategy) => {
     try {
         const response = await circuitBreaker.execute(() =>
-            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`)
+            axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`, strategy)
         );
-        return response.data.map(strategy => StrategySchema.parse(strategy));
+        return StrategySchema.parse(response.data);
     } catch (error) {
-        logError(error, 'Fetching strategies');
-        throw new ServiceError('Failed to fetch strategies: ' + error.message);
+        logError(error, 'Creating strategy');
+        throw new ServiceError('Failed to create strategy: ' + error.message);
     }
 };
 
@@ -58,16 +58,4 @@ const healthCheck = async () => {
     }
 };
 
-const deleteStrategy = async (id: string) => {
-    try {
-        const response = await circuitBreaker.execute(() =>
-            axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/strategies/${id}`)
-        );
-        return response.data;
-    } catch (error) {
-        logError(error, 'Deleting strategy');
-        throw new ServiceError('Failed to delete strategy: ' + error.message);
-    }
-};
-
-export { fetchPerformanceMetrics, fetchComparisonData, healthCheck, fetchStrategies, deleteStrategy };
+export { fetchPerformanceMetrics, fetchComparisonData, healthCheck, createStrategy };
