@@ -56,4 +56,10 @@ describe('RiskManager', () => {
         const positions = await riskManager.getRiskPositions();
         expect(positions).toEqual([]);
     });
+
+    it('should throw ValidationError for asset that exceeds limit', async () => {
+        riskManager.positionLimits.setLimit('AAPL', 50);
+        await riskManager.createRiskPosition('AAPL', 100);
+        await expect(riskManager.createRiskPosition('AAPL', 60)).rejects.toThrow(ValidationError);
+    });
 });
