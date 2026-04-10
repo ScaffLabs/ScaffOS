@@ -33,9 +33,21 @@ router.use(limiter);
 router.use(healthCheckMiddleware);
 router.get('/health', checkHealthEndpoint);
 
-router.use(sanitizer());
+router.use(sanitizer()); // Use sanitizer middleware to sanitize inputs
+
+// Input validation and sanitization for the event routes
 router.post('/', createEvent);
 router.get('/', getEvents);
 router.put('/:id', updateEvent);
 router.delete('/:id', deleteEvent);
+
+// Middleware to validate JSON content type
+router.use((req, res, next) => {
+    if (req.is('application/json')) {
+        next();
+    } else {
+        return res.status(415).send({ message: 'Unsupported Media Type' });
+    }
+});
+
 export default router;
