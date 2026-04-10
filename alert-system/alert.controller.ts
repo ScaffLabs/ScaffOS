@@ -4,6 +4,7 @@ import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
 import { ValidationError, ServiceError, NotFoundError } from './error.types';
 import logger, { logRequest, logError } from './logger';
+import axios from 'axios';
 
 export class AlertController {
     private alertStore: AlertStoreInterface;
@@ -33,6 +34,7 @@ export class AlertController {
             const alertData = validateCreateAlertRequest(req.body);
             const createdAlert = await this.alertStore.create(alertData);
             this.eventBus.publish('alert.created', createdAlert);
+            await this.notifyExternalServices(createdAlert);
             return res.status(201).json(createdAlert);
         } catch (error) {
             if (error instanceof ValidationError) {
@@ -42,6 +44,16 @@ export class AlertController {
             return res.status(500).json({ message: 'Failed to add alert.' });
         } finally {
             logRequest(req, res, start);
+        }
+    }
+
+    private async notifyExternalServices(alert: AlertMessage) {
+        try {
+            await axios.post(process.env.WEBHOOK_URL, alert);
+            await axios.post(process.env.EMAIL_SERVICE_URL, alert);
+        } catch (error) {
+            logError(error);
+            throw new ServiceError('Failed to notify external services.');
         }
     }
 
@@ -81,4 +93,4 @@ export class AlertController {
             logRequest(req, res, start);
         }
     }
-} 
+}
