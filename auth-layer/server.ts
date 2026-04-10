@@ -24,6 +24,7 @@ app.use(helmet());
 app.use(express.json());
 app.use(logRequestMiddleware);
 
+// Rate limiting middleware
 app.use((req, res, next) => {
     const apiKey = req.headers['x-api-key'];
     if (!apiKey || !rateLimit(apiKey)) {
