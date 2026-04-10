@@ -1,7 +1,6 @@
-// userRoutes.ts
 import express from 'express';
-import { createUser, getAllUsers, updateUser, deleteUser, findUserById } from './storage';
-import { emitUserCreatedEvent } from './interServiceClient';
+import { createUser, getAllUsers, updateUser, deleteUser, findUserByEmail } from './storage';
+import { emitUserCreatedEvent } from './eventBus';
 import logger from './logger';
 import { ValidationError } from './errors';
 import { sanitizeUserInput } from './userValidation';
@@ -23,12 +22,16 @@ router.use((req, res, next) => {
 router.post('/users', async (req, res) => {
     const { username, email } = sanitizeUserInput(req.body);
     try {
+        const existingUser = await findUserByEmail(email);
+        if (existingUser) {
+            return res.status(409).json({ error: 'Email already in use' });
+        }
         const user = await createUser(username, email);
         emitUserCreatedEvent(user); // Emit event on user creation
         logger.info('User created', { userId: user.id, username: user.username });
         res.status(201).json(user);
     } catch (error) {
-        logger.error('Error creating user', { error: error.message, stack: error.stack });
+        logger.error('Error creating user', { error: error.message });
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message, details: error.errors });
         }
@@ -36,18 +39,13 @@ router.post('/users', async (req, res) => {
     }
 });
 
-// Route to get all users with pagination and filtering
+// Route to get all users
 router.get('/users', async (req, res) => {
-    const { limit = 10, offset = 0, sortBy = 'username', order = 'asc' } = req.query;
     try {
         const users = await getAllUsers();
-        // Implement sorting
-        users.sort((a, b) => a[sortBy] > b[sortBy] ? (order === 'asc' ? 1 : -1) : (order === 'asc' ? -1 : 1));
-        // Simple pagination
-        const paginatedUsers = users.slice(Number(offset), Number(offset) + Number(limit));
-        res.status(200).json(paginatedUsers);
+        res.status(200).json(users);
     } catch (error) {
-        logger.error('Error fetching users', { error: error.message, stack: error.stack });
+        logger.error('Error fetching users', { error: error.message });
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });

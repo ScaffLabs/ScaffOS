@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { User } from './types';
 import sanitizeHtml from 'sanitize-html';
+import { User } from './types';
 
 const userSchema = z.object({
     username: z.string().min(1, { message: 'Username is required' }),
