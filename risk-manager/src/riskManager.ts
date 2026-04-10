@@ -1,4 +1,4 @@
-import { RiskPosition, RiskPositionSchema, OrderId } from './sharedTypes';
+import { RiskPosition, RiskPositionSchema, OrderId, RiskEvent, RiskEventSchema } from './sharedTypes';
 import { RiskPositionStorage } from './storage';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
