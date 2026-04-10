@@ -50,7 +50,7 @@ export const checkServiceHealth = async () => {
 export const enhancedCheckServiceHealth = async () => {
     const healthChecks = await Promise.all([
         checkServiceHealth(),
-        fetchUserServiceWithRetry('some-user-id') // Example userId, to check connectivity
+        fetchUserServiceWithRetry('some-user-id') // Example userId to check connectivity
     ]);
     return healthChecks.every(status => status);
 };
