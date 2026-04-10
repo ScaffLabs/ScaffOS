@@ -33,8 +33,17 @@ app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 orderRouter(app);
 
+app.post('/migrate', async (req, res) => {
+    try {
+        await runMigrations();
+        res.status(200).send('Migration and seeding completed.');
+    } catch (error) {
+        logger.error('Migration error', { error: error.message });
+        res.status(500).send('Migration failed.');
+    }
+});
+
 const startServer = async () => {
-    await runMigrations();
     const server = app.listen(PORT, () => {
         logStartup({ port: PORT, env: config.NODE_ENV });
         console.log(`Order Engine listening on port ${PORT}`);
