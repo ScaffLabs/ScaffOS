@@ -5,6 +5,7 @@ import { createOrderService, updateOrderService, deleteOrderService, getOrdersSe
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
 import rateLimit from 'express-rate-limit';
+import { sanitizeInput } from './sanitization';
 
 // Rate limiting for order creation
 const createOrderLimiter = rateLimit({

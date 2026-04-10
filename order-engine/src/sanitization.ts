@@ -1,12 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { sanitize } from 'express-validator';
+import { sanitizeBody, sanitizeQuery } from 'express-validator';
 
 export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
-    for (const key in req.body) {
-        if (typeof req.body[key] === 'string') {
-            req.body[key] = sanitize(req.body[key]);
-        }
-    }
+    // Sanitize body inputs
+    sanitizeBody('id').trim().escape()(req, res, () => {});
+    sanitizeBody('type').trim().escape()(req, res, () => {});
+    sanitizeBody('price').toFloat()(req, res, () => {});
+    sanitizeBody('quantity').toInt()(req, res, () => {});
+    sanitizeBody('status').trim().escape()(req, res, () => {});
+
+    // Sanitize query inputs
     for (const key in req.query) {
         if (typeof req.query[key] === 'string') {
             req.query[key] = sanitize(req.query[key]);
