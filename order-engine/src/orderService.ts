@@ -1,7 +1,6 @@
 import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
-import { storage } from './storage';
-import { fetchData, postData } from './axiosClient';
+import { postgresStorage } from './postgresStorage';
 import logger from './logger';
 
 const createOrderService = async (orderData: unknown) => {
@@ -11,43 +10,46 @@ const createOrderService = async (orderData: unknown) => {
     }
     const order = parsedOrder.data;
     try {
-        const createdOrder = await storage.create(order);
-        // Emit event
-        await postData(`${process.env.ORDER_SERVICE_URL}/events`, { type: 'ORDER_CREATED', payload: createdOrder });
+        const createdOrder = await postgresStorage.create(order);
+        logger.info('Order created successfully', { order });
         return createdOrder;
     } catch (error) {
+        logger.error('Failed to create order', { error: error.message });
         throw new ServiceError('Failed to create order due to database error: ' + error.message);
     }
 };
 
 const updateOrderService = async (id: string, updates: Partial<Order>) => {
     try {
-        const updatedOrder = await storage.update(id, updates);
+        const updatedOrder = await postgresStorage.update(id, updates);
         if (!updatedOrder) {
             throw new NotFoundError('Order not found.');
         }
-        // Emit event
-        await postData(`${process.env.ORDER_SERVICE_URL}/events`, { type: 'ORDER_UPDATED', payload: updatedOrder });
+        logger.info('Order updated successfully', { id, updates });
         return updatedOrder;
     } catch (error) {
+        logger.error('Failed to update order', { error: error.message });
         throw new ServiceError('Failed to update order due to database error: ' + error.message);
     }
 };
 
 const deleteOrderService = async (id: string) => {
     try {
-        await storage.delete(id);
-        // Emit event
-        await postData(`${process.env.ORDER_SERVICE_URL}/events`, { type: 'ORDER_DELETED', payload: { id } });
+        await postgresStorage.delete(id);
+        logger.info('Order deleted successfully', { id });
     } catch (error) {
+        logger.error('Failed to delete order', { error: error.message });
         throw new NotFoundError('Order not found.');
     }
 };
 
 const getOrdersService = async () => {
     try {
-        return await storage.findAll();
+        const orders = await postgresStorage.findAll();
+        logger.info('Retrieved orders successfully');
+        return orders;
     } catch (error) {
+        logger.error('Failed to retrieve orders', { error: error.message });
         throw new ServiceError('Failed to retrieve orders: ' + error.message);
     }
 };
