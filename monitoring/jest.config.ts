@@ -11,6 +11,10 @@ const config: Config = {
     watchPathIgnorePatterns: ['<rootDir>/dist/'],
     watch: true,
     setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
+    reporters: [
+        'default',
+        ['jest-junit', { outputDirectory: 'reports', outputName: 'junit.xml' }]
+    ],
 };
 
 export default config;

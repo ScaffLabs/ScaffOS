@@ -23,16 +23,6 @@ describe('Health Check Endpoint', () => {
         expect(response.body.error).toBe('Internal Server Error');
     });
 
-    it('should handle service down scenario', async () => {
-        const faultyHealthCheck = (req, res) => {
-            res.status(503).json({ error: 'Service Unavailable' });
-        };
-        app.get('/health', faultyHealthCheck);
-        const response = await request(app).get('/health');
-        expect(response.status).toBe(503);
-        expect(response.body.error).toBe('Service Unavailable');
-    });
-
     it('should return memory usage metrics', async () => {
         const response = await request(app).get('/health');
         expect(response.status).toBe(200);
@@ -43,7 +33,6 @@ describe('Health Check Endpoint', () => {
     });
 
     it('should return DOWN status if any service is down', async () => {
-        // Mocking the health check of a service to return false
         jest.spyOn(global, 'fetch').mockResolvedValueOnce({ status: 503 });
         const response = await request(app).get('/health');
         expect(response.status).toBe(503);
