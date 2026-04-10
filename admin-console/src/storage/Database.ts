@@ -43,6 +43,10 @@ class Database {
         logger.info('Fetching all configurations.');
         return this.dbClient.findAll();
     }
+
+    async transaction(operations: () => Promise<void>): Promise<void> {
+        return this.dbClient.transaction(operations);
+    }
 }
 
 export default Database;
