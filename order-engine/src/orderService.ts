@@ -1,6 +1,6 @@
 import { Order } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
-import { storage } from './storage'; // Change to postgresStorage when using PostgreSQL
+import { postgresStorage as storage } from './postgresStorage';
 
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -10,28 +10,38 @@ const createOrderService = async (orderData: unknown) => {
     const order = parsedOrder.data;
     try {
         const createdOrder = await storage.create(order);
-        emitOrderEvent({ type: 'ORDER_CREATED', payload: createdOrder });
         return createdOrder;
     } catch (error) {
-        throw new ServiceError('Failed to create order due to database error.');
+        throw new ServiceError('Failed to create order due to database error: ' + error.message);
     }
 };
 
 const updateOrderService = async (id: string, updates: Partial<Order>) => {
-    const updatedOrder = await storage.update(id, updates);
-    if (!updatedOrder) {
-        throw new NotFoundError('Order not found.');
+    try {
+        const updatedOrder = await storage.update(id, updates);
+        if (!updatedOrder) {
+            throw new NotFoundError('Order not found.');
+        }
+        return updatedOrder;
+    } catch (error) {
+        throw new ServiceError('Failed to update order due to database error: ' + error.message);
     }
-    emitOrderEvent({ type: 'ORDER_UPDATED', payload: updatedOrder });
-    return updatedOrder;
 };
 
 const deleteOrderService = async (id: string) => {
-    await storage.delete(id);
+    try {
+        await storage.delete(id);
+    } catch (error) {
+        throw new NotFoundError('Order not found.');
+    }
 };
 
 const getOrdersService = async () => {
-    return await storage.findAll();
+    try {
+        return await storage.findAll();
+    } catch (error) {
+        throw new ServiceError('Failed to retrieve orders: ' + error.message);
+    }
 };
 
 export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };
