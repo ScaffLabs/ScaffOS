@@ -7,8 +7,12 @@ import { publishEvent } from '../utils/eventBus';
 const positionStore = new InMemoryStore<Position>();
 
 export const fetchPositions = async (req: Request, res: Response) => {
-    const positions = Object.values(positionStore.data);
-    res.status(200).json(positions);
+    try {
+        const positions = Object.values(positionStore.data);
+        res.status(200).json(positions);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching positions: ' + error.message });
+    }
 };
 
 export const createPosition = async (req: Request, res: Response) => {
