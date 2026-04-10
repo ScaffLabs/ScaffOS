@@ -27,12 +27,18 @@ const Configuration: React.FC = () => {
         fetchAllConfigurations();
     }, []);
 
+    const validateInputs = () => {
+        if (!key.trim()) throw new ValidationError('Key cannot be empty');
+        if (!value.trim()) throw new ValidationError('Value cannot be empty');
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setSuccessMessage(null);
 
         try {
+            validateInputs();
             const configItem: ConfigurationItem = { key: key as ConfigurationItem['key'], value };
             ConfigurationItemSchema.parse(configItem);
             setLoading(true);
