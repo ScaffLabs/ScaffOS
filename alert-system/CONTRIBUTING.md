@@ -12,7 +12,7 @@ Thank you for considering contributing to the Alert System! We appreciate your h
    ```bash
    git checkout -b feature/my-feature
    ```
-4. **Make your changes**: Implement your changes in the codebase.
+4. **Make your changes**: Implement your changes in the codebase. Use clear and descriptive commit messages to explain your changes.
 5. **Add tests**: Ensure your changes are covered by tests. We maintain a high level of test coverage to ensure the reliability of the service.
 6. **Commit your changes**: Commit your changes with a descriptive message:
    ```bash

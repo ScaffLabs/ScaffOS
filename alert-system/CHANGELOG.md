@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.10] - 2023-10-26
+### Added
+- Detailed API reference in README.md including request and response examples.
+- Updated the environment variables section for clarity.
+
 ## [1.0.9] - 2023-10-25
 ### Changed
 - Updated README.md to provide comprehensive project documentation, including setup instructions, API reference, and environment variable descriptions.
