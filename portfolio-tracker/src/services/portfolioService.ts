@@ -7,6 +7,7 @@ import axios from 'axios';
 import env from '../config';
 import { ServiceError } from '../errors';
 import circuitBreaker from 'circuit-breaker-js';
+import { publishPortfolioUpdate } from '../eventBus';
 
 const externalPortfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
 
@@ -28,6 +29,7 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
     const duration = process.hrtime(start);
     logger.info('Created portfolio', { portfolioId: newPortfolio.id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
     await notifyExternalService(newPortfolio);
+    publishPortfolioUpdate(newPortfolio);
     return newPortfolio;
 };
 
@@ -58,6 +60,7 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     }
     const updatedPortfolio = storage.update(id, updates);
     await notifyExternalService(updatedPortfolio);
+    publishPortfolioUpdate(updatedPortfolio);
     return updatedPortfolio;
 };
 
