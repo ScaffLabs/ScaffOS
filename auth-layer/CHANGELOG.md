@@ -47,3 +47,7 @@
 ## [1.6.0] - 2023-11-08
 - Added comprehensive testing for all endpoints.
 - Implemented improved error handling for unexpected errors.
+
+## [1.7.0] - 2023-11-09
+- Comprehensive documentation update including detailed API reference.
+- Enhanced error handling and logging mechanisms.
