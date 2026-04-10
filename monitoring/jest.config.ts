@@ -10,6 +10,7 @@ const config: Config = {
     testTimeout: 10000,
     watchPathIgnorePatterns: ['<rootDir>/dist/'],
     watch: true,
+    setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
 };
 
 export default config;

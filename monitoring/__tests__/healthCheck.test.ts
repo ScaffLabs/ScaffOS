@@ -41,4 +41,12 @@ describe('Health Check Endpoint', () => {
         expect(response.body.memory).toHaveProperty('heapTotal');
         expect(response.body.memory).toHaveProperty('heapUsed');
     });
+
+    it('should return DOWN status if any service is down', async () => {
+        // Mocking the health check of a service to return false
+        jest.spyOn(global, 'fetch').mockResolvedValueOnce({ status: 503 });
+        const response = await request(app).get('/health');
+        expect(response.status).toBe(503);
+        expect(response.body.status).toBe('DOWN');
+    });
 });
