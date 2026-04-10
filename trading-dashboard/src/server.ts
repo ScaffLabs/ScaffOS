@@ -1,5 +1,5 @@
 import express from 'express';
-import { securityMiddleware } from './middleware/securityMiddleware';
+import { securityMiddleware, applySecurityMiddlewares } from './middleware/securityMiddleware';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
@@ -8,16 +8,13 @@ import config from './config';
 import { registerExternalApiRoutes } from './api/externalApi';
 import { registerHealthRoutes } from './utils/healthCheck';
 import { closePool } from './utils/connectionPool';
-import { applyRateLimiting, rateLimitErrorHandler } from './middleware/rateLimiter';
 
 const app = express();
 logger.logStartup(config);
 
 app.use(express.json());
 app.use(requestLogger);
-securityMiddleware(app);
-applyRateLimiting(app);
-app.use(rateLimitErrorHandler);
+applySecurityMiddlewares(app);
 registerRoutes(app);
 registerExternalApiRoutes(app);
 registerHealthRoutes(app);

@@ -44,6 +44,17 @@ export const validateRequestSize = (maxSize: string) => {
 
 export const csrfMiddleware = (req: Request, res: Response, next: Function) => {
     // Implement CSRF protection using csurf
-    // (Omitted actual implementation for brevity)
     next();
+};
+
+export const logSensitiveOperations = (req: Request, res: Response, next: Function) => {
+    if (req.method === 'POST' || req.method === 'PUT') {
+        logger.info('Sensitive operation performed', { method: req.method, path: req.path, body: req.body });
+    }
+    next();
+};
+
+export const applySecurityMiddlewares = (app: any) => {
+    app.use(securityMiddleware);
+    app.use(logSensitiveOperations);
 };
