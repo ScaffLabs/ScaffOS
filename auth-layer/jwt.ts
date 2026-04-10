@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { User } from './user'; // Assuming a user model is defined
+import { User } from './types';
 
 const SECRET_KEY = process.env.JWT_SECRET || 'default_secret';
 const EXPIRATION_TIME = '1h';

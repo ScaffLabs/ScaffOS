@@ -17,3 +17,8 @@ export const unsubscribeFromUserCreatedEvent = (listener: (event: UserCreatedEve
 };
 
 export default eventBus;
+
+// Example of subscribing to the event
+subscribeToUserCreatedEvent((event) => {
+    console.log('New user created:', event.payload);
+});
