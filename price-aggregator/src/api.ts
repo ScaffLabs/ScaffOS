@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest, logError } from './logger';
+import { ValidationError, NotFoundError } from './errors';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -38,6 +39,9 @@ router.get('/prices', async (req, res) => {
         res.status(200).json(prices);
     } catch (error) {
         logError(error, { message: 'Fetching prices failed' });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Error fetching prices' });
     }
 });
@@ -63,11 +67,14 @@ router.put('/prices/:id', validateContentType, validatePriceData, handleValidati
     try {
         const updatedPrice = await priceAggregator.updatePrice(id, priceData);
         if (!updatedPrice) {
-            return res.status(404).json({ error: 'Price not found' });
+            throw new NotFoundError('Price not found.');
         }
         res.status(200).json(updatedPrice);
     } catch (error) {
         logError(error, { message: 'Updating price failed' });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Error updating price' });
     }
 });
