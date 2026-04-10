@@ -4,11 +4,23 @@ import { ValidationError, NotFoundError } from '../errors';
 import { logPortfolioCreation, logPortfolioUpdate, logPortfolioDeletion } from './auditService';
 import { publishPortfolioUpdate } from '../eventBus';
 import logger from './logger';
+import axios from 'axios';
+import { CircuitBreaker } from 'circuit-breaker-js';
+
+const externalServiceBreaker = new CircuitBreaker();
+const externalServiceUrl = process.env.PORTFOLIO_SERVICE_URL;
+
+const fetchExternalServiceData = async (endpoint: string) => {
+    return await externalServiceBreaker.run(async () => {
+        const response = await axios.get(`${externalServiceUrl}/${endpoint}`);
+        return response.data;
+    });
+};
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const start = process.hrtime();
     try {
-        PortfolioSchema.parse({ ...portfolioData, id: '' }); // Assign a temporary ID
+        PortfolioSchema.parse({ ...portfolioData, id: '' });
         portfolioData.positions.forEach(pos => PositionSchema.parse(pos));
     } catch (error) {
         throw new ValidationError('Invalid portfolio data');
@@ -47,4 +59,14 @@ export const deletePortfolio = async (id: string): Promise<void> => {
     await logPortfolioDeletion(id);
     const duration = process.hrtime(start);
     logger.info('Deleted portfolio', { portfolioId: id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
+};
+
+export const fetchAllExternalPortfolios = async () => {
+    try {
+        const portfolios = await fetchExternalServiceData('');
+        return portfolios;
+    } catch (error) {
+        logger.error('Failed to fetch external portfolios', { error: error.message });
+        throw new ServiceError('Error fetching external portfolios');
+    }
 };
