@@ -3,7 +3,7 @@ import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { sanitize } from '../middleware/sanitization';
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData, healthCheck } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 import requestLogger from '../middleware/requestLogger';
@@ -26,7 +26,13 @@ router.use(limiter);
 // Middleware for sanitization
 router.use(sanitize);
 router.use(auditLogger);
-router.use(requestLogger); // Use the request logger middleware
+router.use(requestLogger);
+
+// Health check route
+router.get('/health', async (req, res) => {
+    const healthStatus = await healthCheck();
+    res.json(healthStatus);
+});
 
 // Validation rules for portfolio creation and updates
 const portfolioValidation = [
