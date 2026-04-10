@@ -54,4 +54,16 @@ const handleAxiosError = (error: unknown, operation: string) => {
     throw new ServiceError(`Failed to ${operation}`);
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration };  // Export functions for use in components.
+const healthCheckWithRetry = async (retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await axiosInstance.get('/health');
+            return response.data;
+        } catch (error) {
+            if (i === retries - 1) throw new ServiceError('Health check failed: ' + error.message);
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+};
+
+export { fetchConfigurations, postConfiguration, deleteConfiguration, healthCheckWithRetry };
