@@ -8,3 +8,13 @@ export const monitorMemoryUsage = () => {
     logPerformance('Memory Usage', memoryUsagePercent);
     console.log(`Memory Usage: ${memoryUsagePercent.toFixed(2)}%`);
 };
+
+const checkMemoryUsageThreshold = (threshold = 80) => {
+    const memoryUsage = process.memoryUsage();
+    const usedMemory = memoryUsage.heapUsed / 1024 / 1024;
+    if (usedMemory > threshold) {
+        console.warn(`Memory usage exceeded threshold: ${usedMemory.toFixed(2)} MB`);
+    }
+};
+
+setInterval(() => checkMemoryUsageThreshold(), 60000); // Check every minute

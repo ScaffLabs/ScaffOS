@@ -1,36 +1,34 @@
 import { Request, Response } from 'express';
-import os from 'os';
-import { logPerformance } from '../logger';
-import { ServiceError } from '../errors/customErrors';
+import axios from 'axios';
+import { logError } from '../utils/errorLogger';
 
-export const healthCheckHandler = async (req: Request, res: Response) => {
+const SERVICES = {
+    strategyService: process.env.STRATEGY_SERVICE_URL || 'http://localhost:3001/api/health',
+};
+
+const checkServiceHealth = async (url: string) => {
     try {
-        const healthStatus = {
-            status: 'ok',
-            uptime: process.uptime(),
-            memoryUsage: process.memoryUsage(),
-            cpuUsage: os.cpus(),
-            timestamp: new Date(),
-        };
-        logPerformance('Health Check', 0);
-        res.status(200).json(healthStatus);
+        const response = await axios.get(url);
+        return response.status === 200;
     } catch (error) {
-        console.error('Health check failed:', error);
-        throw new ServiceError('Health check failed.');
+        logError(error, `Health check failed for ${url}`);
+        return false;
     }
 };
 
 export const dependentHealthCheckHandler = async (req: Request, res: Response) => {
     try {
-        const dependencies = await dependentHealthCheck();
-        const allHealthy = dependencies.every(dep => dep.healthy);
-        logPerformance('Dependent Health Check', allHealthy ? 0 : 1);
+        const healthResults = await Promise.all(Object.entries(SERVICES).map(async ([name, url]) => {
+            const healthy = await checkServiceHealth(url);
+            return { serviceName: name, healthy };
+        }));
+        const allHealthy = healthResults.every(dep => dep.healthy);
         res.status(allHealthy ? 200 : 503).json({
             status: allHealthy ? 'ready' : 'not ready',
-            dependencies,
+            dependencies: healthResults,
         });
     } catch (error) {
         console.error('Dependent health check failed:', error);
-        throw new ServiceError('Dependent health check failed.');
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };

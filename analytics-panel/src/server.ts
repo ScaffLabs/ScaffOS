@@ -11,6 +11,9 @@ import { csrfMiddleware } from './middleware/csrfProtection';
 import config from './config';
 import mongoose from 'mongoose';
 import { gracefulShutdown } from './utils/shutdown';
+import { monitorMemoryUsage } from './utils/monitor';
+import { dependentHealthCheckHandler, readyCheckHandler } from './handlers/healthCheck';
+import { connectToDatabase } from './utils/dbConnection';
 
 const app = express();
 const server = createServer(app);
@@ -32,17 +35,20 @@ app.use('/api/', limiter);
 // Define API routes
 app.use('/api/strategies', strategyRoutes);
 app.use('/api', healthRoutes);
+app.use('/api/health/dependencies', dependentHealthCheckHandler);
+app.use('/api/ready', readyCheckHandler);
 app.use(errorHandler);
 app.use(csrfMiddleware);
 
 const startServer = async () => {
     try {
-        await mongoose.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+        await connectToDatabase();
         const PORT = process.env.PORT || 3000;
         logStartup(config);
         server.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
+        setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
     } catch (error) {
         console.error('Error starting server:', error);
         process.exit(1);
@@ -64,3 +70,5 @@ const handleShutdown = () => {
 
 process.on('SIGTERM', handleShutdown);
 process.on('SIGINT', handleShutdown);
+
+export default app;
