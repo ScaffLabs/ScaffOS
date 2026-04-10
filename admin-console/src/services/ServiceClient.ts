@@ -17,7 +17,7 @@ const circuitBreakerOptions = {
 
 const circuitBreaker = new CircuitBreaker(axiosInstance, circuitBreakerOptions);
 
-const retryWithExponentialBackoff = async (fn, retries = 5, delay = 1000) => {
+const retryWithExponentialBackoff = async (fn, retries = 3, delay = 1000) => {
     try {
         return await fn();
     } catch (error) {
