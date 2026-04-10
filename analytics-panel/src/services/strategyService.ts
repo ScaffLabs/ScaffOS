@@ -48,4 +48,8 @@ const findStrategies = async (query: Partial<Strategy>) => {
     return await strategyService.find(query);
 };
 
-export { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics };
+const initializeStore = async () => {
+    console.log('Initializing strategy store...');
+};
+
+export { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics, initializeStore };
