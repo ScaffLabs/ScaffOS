@@ -1,5 +1,4 @@
 import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema, PriceEventSchema } from './types';
-import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
 import { ValidationError, ServiceError } from './errors';
@@ -23,14 +22,10 @@ export class PriceAggregator {
                 const newPrice = await storage.create(parsedData.data);
                 this.currentPrices[parsedData.data.exchange] = parsedData.data.price;
                 this.currentPrices.VWAP = await this.calculateVWAP();
-                await this.retryPostHttpClient('/prices', newPrice);
                 this.eventBus.emitPriceAdded(newPrice);
             });
             return parsedData.data;
         } catch (error) {
-            if (error instanceof ValidationError) {
-                throw new ServiceError('Validation error while adding price: ' + error.message);
-            }
             throw new ServiceError('Failed to add price: ' + error.message);
         }
     }
