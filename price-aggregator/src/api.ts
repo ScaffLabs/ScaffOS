@@ -4,7 +4,7 @@ import { validatePriceData, handleValidationErrors, validateContentType } from '
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
-import { logRequest, logError, logSensitiveOperation } from './logger';
+import { logRequest, logError } from './logger';
 import { ValidationError, NotFoundError } from './errors';
 
 const router = express.Router();
@@ -50,7 +50,6 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
     const priceData = req.body;
     try {
         const newPrice = await priceAggregator.addPrice(priceData);
-        logSensitiveOperation({ type: 'PRICE_ADDED', data: newPrice });
         res.status(201).json(newPrice);
     } catch (error) {
         logError(error, { message: 'Adding price failed' });
@@ -62,30 +61,10 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
     }
 });
 
-router.put('/prices/:id', validateContentType, validatePriceData, handleValidationErrors, async (req, res) => {
-    const { id } = req.params;
-    const priceData = req.body;
-    try {
-        const updatedPrice = await priceAggregator.updatePrice(id, priceData);
-        if (!updatedPrice) {
-            throw new NotFoundError('Price not found.');
-        }
-        logSensitiveOperation({ type: 'PRICE_UPDATED', data: updatedPrice });
-        res.status(200).json(updatedPrice);
-    } catch (error) {
-        logError(error, { message: 'Updating price failed' });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Error updating price' });
-    }
-});
-
 router.delete('/prices/:id', async (req, res) => {
     const { id } = req.params;
     try {
         await priceAggregator.deletePrice(id);
-        logSensitiveOperation({ type: 'PRICE_DELETED', exchange: id });
         res.status(204).send();
     } catch (error) {
         logError(error, { message: 'Deleting price failed' });
