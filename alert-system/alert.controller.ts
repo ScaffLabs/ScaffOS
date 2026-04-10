@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { AlertMessage, validateCreateAlertRequest } from './alert.schema';
 import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
-import { ServiceError, ValidationError } from './error.types';
+import { ServiceError, ValidationError, NotFoundError } from './error.types';
 import logger, { logRequest, logError } from './logger';
 import axios from 'axios';
 import { CircuitBreaker } from 'opossum';
@@ -45,6 +45,9 @@ export class AlertController {
             logError(error, { requestId: req.headers['x-request-id'] });
             if (error instanceof ValidationError) {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
+            }
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ message: 'Alert not found: ' + error.message });
             }
             logger.error('Failed to add alert.', { error: error.message });
             return res.status(500).json({ message: 'Failed to add alert.' });
