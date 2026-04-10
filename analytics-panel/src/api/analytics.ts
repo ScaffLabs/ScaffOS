@@ -58,4 +58,16 @@ const healthCheck = async () => {
     }
 };
 
-export { fetchPerformanceMetrics, fetchComparisonData, healthCheck, fetchStrategies };
+const deleteStrategy = async (id: string) => {
+    try {
+        const response = await circuitBreaker.execute(() =>
+            axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/strategies/${id}`)
+        );
+        return response.data;
+    } catch (error) {
+        logError(error, 'Deleting strategy');
+        throw new ServiceError('Failed to delete strategy: ' + error.message);
+    }
+};
+
+export { fetchPerformanceMetrics, fetchComparisonData, healthCheck, fetchStrategies, deleteStrategy };
