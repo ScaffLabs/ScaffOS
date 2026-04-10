@@ -13,7 +13,7 @@ COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/package*.json ./
 RUN npm install --production
 
-# Add environment variables support
+# Environment variables support
 ENV NODE_ENV=production
 ENV PORT=${PORT}
 ENV BASE_URL=${BASE_URL}
