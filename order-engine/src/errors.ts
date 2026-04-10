@@ -19,42 +19,12 @@ class NotFoundError extends Error {
     }
 }
 
-class DatabaseError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'DatabaseError';
-    }
-}
-
-class InternalServerError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'InternalServerError';
-    }
-}
-
-class OverflowError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'OverflowError';
-    }
-}
-
-class DivisionByZeroError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'DivisionByZeroError';
-    }
-}
-
 class AppError extends Error {
     constructor(message: string, public statusCode: number) {
         super(message);
         this.name = 'AppError';
     }
 }
-
-export { ServiceError, ValidationError, NotFoundError, DatabaseError, InternalServerError, OverflowError, DivisionByZeroError, AppError };
 
 const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
     if (err instanceof ValidationError) {
@@ -63,10 +33,10 @@ const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunc
     if (err instanceof NotFoundError) {
         return res.status(404).json({ message: err.message });
     }
-    if (err instanceof ServiceError || err instanceof DatabaseError) {
+    if (err instanceof ServiceError) {
         return res.status(500).json({ message: 'Internal Server Error', details: err.message });
     }
     res.status(500).json({ message: 'An unexpected error occurred.' });
 };
 
-export default errorMiddleware;
+export { ServiceError, ValidationError, NotFoundError, AppError, errorMiddleware };

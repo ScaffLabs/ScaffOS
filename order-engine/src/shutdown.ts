@@ -2,7 +2,7 @@ import { closeDatabaseConnection } from './db';
 import logger from './logger';
 import { server } from './index';
 
-export const setupGracefulShutdown = (app) => {
+export const setupGracefulShutdown = (server) => {
     const shutdown = async () => {
         console.log('Initiating graceful shutdown...');
         try {
@@ -11,7 +11,7 @@ export const setupGracefulShutdown = (app) => {
         } catch (err) {
             console.error('Error closing database connection:', err);
         }
-        app.close(() => {
+        server.close(() => {
             console.log('HTTP server closed. Exiting...');
             process.exit(0);
         });

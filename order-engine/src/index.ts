@@ -2,7 +2,6 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { healthCheck, readyCheck } from './health';
 import { orderRouter } from './orderController';
-import { migrateData } from './migrations';
 import { setupGracefulShutdown } from './shutdown';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -31,12 +30,11 @@ app.get('/ready', readyCheck);
 orderRouter(app);
 
 const startServer = async () => {
-    await migrateData();
-    setupGracefulShutdown(app);
     const server = app.listen(PORT, () => {
         logStartup({ port: PORT, env: config.NODE_ENV });
         console.log(`Order Engine listening on port ${PORT}`);
     });
+    setupGracefulShutdown(server);
     return server;
 };
 

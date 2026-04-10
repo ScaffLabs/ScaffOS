@@ -1,19 +1,9 @@
-// Import necessary modules
 import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
-import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
-import rateLimit from 'express-rate-limit';
+import logger from './logger';
 
-// Rate limiting for order creation
-const createOrderLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    message: 'Too many orders created from this IP, please try again later'
-});
-
-// Validation middleware for creating an order
 export const createOrderValidators = [
     body('id').isString().trim().escape().withMessage('ID must be a string'),
     body('type').isIn(['limit', 'market', 'stop']).withMessage('Type must be one of limit, market, or stop'),
@@ -22,85 +12,25 @@ export const createOrderValidators = [
     body('status').isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled')
 ];
 
-/**
- * @openapi
- * /orders:
- *   get:
- *     summary: Retrieve a list of orders
- *     parameters:
- *       - name: limit
- *         in: query
- *         description: Number of orders to return
- *         required: false
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: offset
- *         in: query
- *         description: Number of orders to skip
- *         required: false
- *         schema:
- *           type: integer
- *           default: 0
- *       - name: sort
- *         in: query
- *         description: Field to sort by
- *         required: false
- *         schema:
- *           type: string
- *       - name: order
- *         in: query
- *         description: Sorting order (asc or desc)
- *         required: false
- *         schema:
- *           type: string
- *           enum: [asc, desc]
- *     responses:
- *       200:
- *         description: A list of orders
- *       404:
- *         description: No orders found
- */
-// Get Orders
-export const getOrders = async (req: Request, res: Response) => {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = parseInt(req.query.offset as string) || 0;
-    const sort = req.query.sort as string;
-    const order = req.query.order as string;
-
-    try {
-        const orders = await getOrdersService({ limit, offset, sort, order });
-        if (!orders.length) {
-            return res.status(404).json({ message: 'No orders found.' });
-        }
-        res.status(200).json(orders);
-    } catch (error) {
-        logger.error('Error retrieving orders', { error: error.message, requestId: req.headers['x-request-id'] });
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-// Create Order
-export const createOrder = [createOrderLimiter, createOrderValidators, async (req: Request, res: Response) => {
+export const createOrder = async (req: Request, res: Response) => {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
-        return res.status(400).json({ errors: validationErrors.array() });
+        throw new ValidationError('Validation failed: ' + validationErrors.array().map(e => e.msg).join(', '));
     }
     try {
         const order = req.body;
         const createdOrder = await createOrderService(order);
         res.status(201).json(createdOrder);
-        logger.info('Order created successfully', { order, requestId: req.headers['x-request-id'] });
+        logger.info('Order created successfully', { order });
     } catch (error) {
-        logger.error('Error creating order', { error: error.message, requestId: req.headers['x-request-id'] });
+        logger.error('Error creating order', { error: error.message });
         if (error instanceof ValidationError) {
             return res.status(400).json({ message: error.message });
         }
         res.status(500).json({ message: 'Internal Server Error' });
     }
-}];
+};
 
-// Update Order
 export const updateOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
     const updates = req.body;
@@ -111,32 +41,10 @@ export const updateOrder = async (req: Request, res: Response) => {
         }
         res.status(200).json(updatedOrder);
     } catch (error) {
-        logger.error('Error updating order', { error: error.message, requestId: req.headers['x-request-id'] });
+        logger.error('Error updating order', { error: error.message });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ message: error.message });
         }
         res.status(500).json({ message: 'Internal Server Error' });
     }
-};
-
-// Delete Order
-export const deleteOrder = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    try {
-        await deleteOrderService(id);
-        res.status(204).send();
-    } catch (error) {
-        logger.error('Error deleting order', { error: error.message, requestId: req.headers['x-request-id'] });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ message: 'Order not found.' });
-        }
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-export const orderRouter = (app: any) => {
-    app.post('/orders', createOrder);
-    app.get('/orders', getOrders);
-    app.put('/orders/:id', updateOrder);
-    app.delete('/orders/:id', deleteOrder);
 };
