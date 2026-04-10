@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../logger';
+import validator from 'validator';
 
 export const auditLogger = (req: Request, res: Response, next: NextFunction) => {
     const { method, url } = req;
@@ -43,4 +44,3 @@ export const validateQueryParams = (req: Request, res: Response, next: NextFunct
     req.query.strategyB = validator.escape(strategyB.toString());
     next();
 };
-
