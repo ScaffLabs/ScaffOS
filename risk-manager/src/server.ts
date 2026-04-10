@@ -2,7 +2,7 @@ import express from 'express';
 import http from 'http';
 import apiRouter from './api';
 import healthRouter from './healthCheck';
-import logger from './logger';
+import logger, { logStartupConfig } from './logger';
 import { errorHandler } from './errors';
 import gracefulShutdown from './gracefulShutdown';
 import { createPool } from 'mysql2/promise';
@@ -47,5 +47,14 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason) => {
     logger.error('Unhandled Rejection: ', reason);
 });
+
+setInterval(async () => {
+    try {
+        const healthStatus = await healthCheckServices();
+        logger.info('Health check status: ', healthStatus);
+    } catch (error) {
+        logger.error('Health check failed: ', error);
+    }
+}, 60000);
 
 startServer();
