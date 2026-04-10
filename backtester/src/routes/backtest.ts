@@ -4,7 +4,7 @@ import { ValidationError, NotFoundError, ServiceError } from '../middleware/erro
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
 import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
-import { body, validationResult } from 'express-validator';
+import { body, validationResult, query } from 'express-validator';
 import xss from 'xss';
 
 const backtestRouter = Router();
@@ -58,6 +58,13 @@ backtestRouter.get('/:id', async (req, res, next) => {
         }
         next(new ServiceError('Error retrieving backtest result: ' + error.message));
     }
+});
+
+backtestRouter.get('/', async (req, res) => {
+    const { limit = 10, offset = 0 } = req.query;
+    const results = await store.findAll();
+    const paginatedResults = results.slice(offset, offset + limit);
+    res.status(200).json({ results: paginatedResults, total: results.length });
 });
 
 export { backtestRouter };
