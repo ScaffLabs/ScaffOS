@@ -23,10 +23,11 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const bodyValidation = LatencyDataSchema.safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data.');
+            throw new ValidationError('Invalid input data: ' + bodyValidation.error.errors.map(e => e.message).join(', '));
         }
         const { path, duration } = bodyValidation.data;
-        store.create({ path, duration, timestamp: new Date() }, path);
+        const timestamp = new Date();
+        store.create({ path, duration, timestamp }, path);
         logger.info(`Created new entry: ${path}`);
         res.status(201).json({ message: 'Entry created', id: path });
     } catch (error) {
@@ -43,7 +44,7 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         const { id } = req.params;
         const bodyValidation = LatencyDataSchema.partial().safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data.');
+            throw new ValidationError('Invalid input data: ' + bodyValidation.error.errors.map(e => e.message).join(', '));
         }
         const existingEntry = store.read(id);
         if (!existingEntry) {
