@@ -36,7 +36,9 @@ describe('Event API Integration Tests', () => {
 
     describe('GET /events', () => {
         it('should return a list of events', async () => {
-            await request(app).post('/events').send({ title: 'Event 1', description: 'Description 1', type: 'userCreated' });
+            await request(app)
+                .post('/events')
+                .send({ title: 'Event 1', description: 'Description 1', type: 'userCreated' });
             const response = await request(app).get('/events');
             expect(response.status).toBe(200);
             expect(Array.isArray(response.body)).toBe(true);

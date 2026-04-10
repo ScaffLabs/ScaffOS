@@ -63,7 +63,7 @@ describe('EventBus', () => {
         expect(anotherListener).not.toHaveBeenCalled();
     });
 
-    test('should not call listener if the message is cached', () => {
+    test('should cache message and not re-publish', () => {
         eventBus.subscribe(testTopic, mockListener);
         eventBus.publish(testTopic, testData);
         eventBus.publish(testTopic, testData);

@@ -7,7 +7,8 @@
     "test:watch": "jest --watch",
     "test:unit": "jest --testPathPattern=./__tests__/eventBus.unit.test.ts",
     "test:integration": "jest --testPathPattern=./__tests__/eventApi.integration.test.ts",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:all": "jest --collectCoverage"
   },
   "dependencies": {
     "axios": "^0.27.2",
