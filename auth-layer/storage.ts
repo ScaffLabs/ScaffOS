@@ -1,5 +1,5 @@
 import { User, UserId, UserSchema } from './types';
-import { ValidationError, NotFoundError } from './errors';
+import { ValidationError, NotFoundError, EmptyArrayError } from './errors';
 import userStore from './inMemoryStore';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,6 +22,15 @@ export const createUser = async (username: string, email: string): Promise<User>
     }
 };
 
+// Get All Users
+export const getAllUsers = async (): Promise<User[]> => {
+    const users = userStore.findAll();
+    if (users.length === 0) {
+        throw new EmptyArrayError('No users found.');
+    }
+    return users;
+};
+
 // Update User
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
     const user = userStore.findById(id);
@@ -32,34 +41,4 @@ export const updateUser = async (id: UserId, userData: Partial<User>): Promise<U
     // Validate the updated user data with Zod schema
     UserSchema.parse(updatedUserData);
     return userStore.update(id, updatedUserData);
-};
-
-// Delete User
-export const deleteUser = async (id: UserId): Promise<boolean> => {
-    const user = userStore.findById(id);
-    if (!user) {
-        throw new NotFoundError('User not found for deletion');
-    }
-    return userStore.delete(id);
-};
-
-// Get All Users
-export const getAllUsers = async (): Promise<User[]> => {
-    return userStore.findAll();
-};
-
-// Find User by ID
-export const findUserById = async (id: UserId): Promise<User | null> => {
-    return userStore.findById(id);
-};
-
-// Find User by Email
-export const findUserByEmail = async (email: string): Promise<User | null> => {
-    return userStore.findByEmail(email);
-};
-
-// Transaction Support
-export const transaction = async (operations: () => Promise<void>) => {
-    // Transaction implementation can be added here later.
-    await operations();
 };

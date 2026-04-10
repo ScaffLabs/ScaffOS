@@ -2,7 +2,7 @@ import express from 'express';
 import { createUser, getAllUsers, updateUser, deleteUser, findUserByEmail } from './storage';
 import { emitUserCreatedEvent } from './eventBus';
 import logger from './logger';
-import { ValidationError, NotFoundError } from './errors';
+import { ValidationError, NotFoundError, EmptyArrayError } from './errors';
 import { sanitizeUserInput } from './userValidation';
 import { UserSchema } from './types';
 import { requestSizeLimitMiddleware } from './middleware';
@@ -42,6 +42,9 @@ router.get('/users', async (req, res) => {
         res.status(200).json(users);
     } catch (error) {
         logger.error('Error fetching users', { error: error.message });
+        if (error instanceof EmptyArrayError) {
+            return res.status(404).json({ error: error.message });
+        }
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
