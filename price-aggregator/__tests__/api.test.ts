@@ -73,4 +73,3 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual({ error: 'API Error' });
     });
 });
-

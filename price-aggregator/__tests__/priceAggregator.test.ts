@@ -56,4 +56,3 @@ describe('PriceAggregator', () => {
         expect(priceAggregator.getCurrentPrices()).toEqual({ VWAP: expect.any(Number), exchange1: 100 });
     });
 });
-

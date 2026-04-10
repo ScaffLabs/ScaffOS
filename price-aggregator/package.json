@@ -12,7 +12,7 @@
         "test:integration": "jest --testPathPattern=__tests__/api.test.ts",
         "test:all": "jest",
         "test:coverage": "jest --coverage",
-        "test:report": "jest --reporters=default --reporters=jest-junit" // New script for JUnit reports
+        "test:report": "jest --reporters=default --reporters=jest-junit"
     },
     "dependencies": {
         "express": "^4.17.1",
@@ -36,6 +36,6 @@
         "ts-jest": "^27.0.0",
         "supertest": "^6.1.6",
         "@types/jest": "^27.0.0",
-        "jest-junit": "^12.0.0" // New dependency for JUnit reports
+        "jest-junit": "^12.0.0"
     }
 }
