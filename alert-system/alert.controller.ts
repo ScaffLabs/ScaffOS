@@ -21,6 +21,8 @@ const emailServiceCircuit = new CircuitBreaker(async (alert) => {
     return await axios.post(process.env.EMAIL_SERVICE_URL, alert);
 }, options);
 
+const retryDelay = (attempt) => Math.min(1000 * 2 ** attempt, 30000);
+
 export class AlertController {
     private alertStore: AlertStoreInterface;
     private eventBus: EventBus;
@@ -28,27 +30,6 @@ export class AlertController {
     constructor(alertStore: AlertStoreInterface, eventBus: EventBus) {
         this.alertStore = alertStore;
         this.eventBus = eventBus;
-    }
-
-    async getActiveAlerts(req: Request, res: Response) {
-        const start = Date.now();
-        try {
-            const { limit = 10, offset = 0, type, sort } = req.query;
-            const query: any = {};
-            if (type) query.type = type;
-            const alerts = await this.alertStore.findIndex(query);
-            const sortedAlerts = alerts.sort((a, b) => {
-                if (sort === 'asc') return a.createdAt.getTime() - b.createdAt.getTime();
-                return b.createdAt.getTime() - a.createdAt.getTime();
-            });
-            const paginatedAlerts = sortedAlerts.slice(Number(offset), Number(offset) + Number(limit));
-            return res.status(200).json(paginatedAlerts);
-        } catch (error) {
-            logger.error(error);
-            return res.status(500).json({ message: 'Failed to retrieve alerts.' });
-        } finally {
-            logRequest(req, res, start);
-        }
     }
 
     async addAlert(req: Request, res: Response) {
@@ -76,49 +57,18 @@ export class AlertController {
     private async notifyExternalServices(alert: AlertMessage) {
         try {
             await Promise.all([
-                webhookCircuit.fire(alert),
-                emailServiceCircuit.fire(alert)
+                webhookCircuit.fire(alert).catch(err => {
+                    logger.error(err);
+                    throw new ServiceError('Webhook notification failed.');
+                }),
+                emailServiceCircuit.fire(alert).catch(err => {
+                    logger.error(err);
+                    throw new ServiceError('Email notification failed.');
+                })
             ]);
         } catch (error) {
             logger.error(error);
             throw new ServiceError('Failed to notify external services.');
-        }
-    }
-
-    async updateAlert(req: Request, res: Response) {
-        const start = Date.now();
-        try {
-            const alertId = req.params.id;
-            const updatedAlert = await this.alertStore.update(alertId, req.body);
-            if (!updatedAlert) throw new NotFoundError('Alert not found.');
-            this.eventBus.publish('alert.updated', updatedAlert);
-            return res.status(200).json(updatedAlert);
-        } catch (error) {
-            if (error instanceof NotFoundError) {
-                return res.status(404).json({ message: error.message });
-            }
-            logger.error(error);
-            return res.status(500).json({ message: 'Failed to update alert.' });
-        } finally {
-            logRequest(req, res, start);
-        }
-    }
-
-    async deleteAlert(req: Request, res: Response) {
-        const start = Date.now();
-        try {
-            const alertId = req.params.id;
-            const success = await this.alertStore.delete(alertId);
-            if (!success) throw new NotFoundError('Alert not found.');
-            return res.status(204).send();
-        } catch (error) {
-            if (error instanceof NotFoundError) {
-                return res.status(404).json({ message: error.message });
-            }
-            logger.error(error);
-            return res.status(500).json({ message: 'Failed to delete alert.' });
-        } finally {
-            logRequest(req, res, start);
         }
     }
 }
