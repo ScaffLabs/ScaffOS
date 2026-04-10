@@ -35,19 +35,6 @@ export class PriceAggregator {
         }
     }
 
-    private async retryPostHttpClient(path: string, data: PriceData): Promise<void> {
-        for (let i = 0; i < 3; i++) {
-            try {
-                await postHttpClient(path, data);
-                return;
-            } catch (error) {
-                if (i === 2) {
-                    throw new ServiceError('Failed to post data after retries: ' + error.message);
-                }
-            }
-        }
-    }
-
     public getCurrentPrices(): CurrentPrices {
         return this.currentPrices;
     }
