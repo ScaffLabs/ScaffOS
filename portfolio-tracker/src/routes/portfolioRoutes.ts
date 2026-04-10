@@ -3,7 +3,7 @@ import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { sanitize } from '../middleware/sanitization';
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData, healthCheck } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData, healthCheck, checkExternalServiceHealth } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 import requestLogger from '../middleware/requestLogger';
@@ -32,6 +32,17 @@ router.use(requestLogger);
 router.get('/health', async (req, res) => {
     const healthStatus = await healthCheck();
     res.json(healthStatus);
+});
+
+// External service health check
+router.get('/external-health', async (req, res) => {
+    try {
+        const isPortfolioServiceUp = await checkExternalServiceHealth(process.env.PORTFOLIO_SERVICE_URL);
+        res.json({ status: isPortfolioServiceUp ? 'UP' : 'DOWN' });
+    } catch (error) {
+        logger.error('Error checking external service health', { error: error.message });
+        res.status(503).json({ status: 'DOWN', error: error.message });
+    }
 });
 
 // Validation rules for portfolio creation and updates
