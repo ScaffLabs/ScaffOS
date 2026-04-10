@@ -35,6 +35,14 @@ class PostgresStorage {
         const result = await this.pool.query('SELECT * FROM orders');
         return result.rows;
     }
+
+    public async findBy(criteria: Partial<Order>): Promise<Order[]> {
+        const query = 'SELECT * FROM orders WHERE ' + 
+            Object.keys(criteria).map((key, index) => `${key} = $${index + 1}`).join(' AND ');
+        const values = Object.values(criteria);
+        const result = await this.pool.query(query, values);
+        return result.rows;
+    }
 }
 
 export const postgresStorage = new PostgresStorage();

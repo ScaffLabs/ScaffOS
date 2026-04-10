@@ -18,15 +18,14 @@ export const seedData = async (): Promise<void> => {
     await migrateOrders(initialOrders);
 };
 
-export const migrateData = async () => {
-    console.log('Seeding initial data...');
-    await seedData();
-    console.log('Seeding complete!');
-};
-
 export const migrateDatabase = async () => {
     console.log('Starting database migration...');
     const orders = await queryDatabase('SELECT * FROM orders');
     await migrateOrders(orders.rows);
     console.log('Database migration complete!');
+};
+
+export const runMigrations = async () => {
+    await seedData();
+    await migrateDatabase();
 };

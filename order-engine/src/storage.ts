@@ -7,6 +7,7 @@ interface Database<T> {
     update(id: OrderId, updates: Partial<T>): Promise<T | null>;
     delete(id: OrderId): Promise<void>;
     findAll(): Promise<T[]>;
+    findBy(criteria: Partial<T>): Promise<T[]>;
 }
 
 class InMemoryStorage<T extends { id: string }> implements Database<T> {
@@ -48,6 +49,13 @@ class InMemoryStorage<T extends { id: string }> implements Database<T> {
 
     public findAll(): Promise<T[]> {
         return Promise.resolve(this.items);
+    }
+
+    public findBy(criteria: Partial<T>): Promise<T[]> {
+        const result = this.items.filter(item => {
+            return Object.keys(criteria).every(key => item[key] === criteria[key]);
+        });
+        return Promise.resolve(result);
     }
 
     public on(event: string, listener: (item: T) => void): void {
