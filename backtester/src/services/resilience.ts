@@ -6,6 +6,7 @@ const eventEmitter = new EventEmitter();
 const retryLimit = 5;
 const retryDelay = 1000; // milliseconds
 const circuitBreakTimeout = 30000; // 30 seconds
+const TIMEOUT = 5000; // 5 seconds timeout for async operations
 
 async function exponentialBackoff(retries: number) {
     return new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * retryDelay));
@@ -14,7 +15,10 @@ async function exponentialBackoff(retries: number) {
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
     for (let i = 0; i < retryLimit; i++) {
         try {
-            return await fn();
+            return await Promise.race([
+                fn(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Operation timed out')), TIMEOUT))
+            ]);
         } catch (error) {
             logger.warn(`Retrying due to error: ${error.message}`);
             if (i === retryLimit - 1) throw error;
@@ -41,7 +45,10 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
             }
         }
         try {
-            const result = await fn();
+            const result = await Promise.race([
+                fn(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Operation timed out')), TIMEOUT))
+            ]);
             failureCount = 0; // Reset on success
             return result;
         } catch (error) {

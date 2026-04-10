@@ -1,11 +1,17 @@
 import axios from 'axios';
 import logger from '../utils/logger';
 import { circuitBreaker } from './resilience';
+import { Pool } from 'pg'; // PostgreSQL connection pooling
 
 const serviceUrls = {
   orderService: process.env.ORDER_SERVICE_URL,
   dataService: process.env.DATA_SERVICE_URL
 };
+
+// Initialize PostgreSQL connection pool
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+});
 
 async function checkService(url: string): Promise<boolean> {
   try {
@@ -34,15 +40,21 @@ export async function checkAllHealth() {
 }
 
 export async function checkReadiness() {
-  const servicesHealth = await healthCheckServices();
-  const allHealthy = servicesHealth.every(result => result.healthy);
-  return { healthy: allHealthy };
+  // Example readiness check for database connection
+  try {
+    await pool.query('SELECT 1'); // Simple query to check connection
+    return { healthy: true };
+  } catch (error) {
+    logger.error('Database connection failed:', error);
+    return { healthy: false };  
+  }
 }
 
 export async function healthCheckController(req, res) {
   try {
     const health = await checkAllHealth();
-    res.status(200).json(health);
+    const readiness = await checkReadiness();
+    res.status(200).json({ health, readiness });
   } catch (error) {
     logger.error('Health check failed:', error);
     res.status(500).json({ status: 'unhealthy', error: error.message });
