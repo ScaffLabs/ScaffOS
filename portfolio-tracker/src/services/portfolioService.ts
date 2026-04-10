@@ -1,6 +1,6 @@
 import { Portfolio, PortfolioUpdate, PortfolioSchema, PositionSchema } from '../types';
 import storage from './storage';
-import { ValidationError, NotFoundError } from '../errors';
+import { ValidationError, NotFoundError, ServiceError } from '../errors';
 import { logPortfolioCreation, logPortfolioUpdate, logPortfolioDeletion } from './auditService';
 import { publishPortfolioUpdate } from '../eventBus';
 import logger from './logger';
@@ -23,6 +23,7 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
         PortfolioSchema.parse({ ...portfolioData, id: '' });
         portfolioData.positions.forEach(pos => PositionSchema.parse(pos));
     } catch (error) {
+        logger.error('Validation error while creating portfolio', { error: error.message });
         throw new ValidationError('Invalid portfolio data');
     }
     const newPortfolio = storage.create(portfolioData);
@@ -37,6 +38,7 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     const start = process.hrtime();
     const existingPortfolio = storage.read(id);
     if (!existingPortfolio) {
+        logger.warn('Attempted to update a non-existent portfolio', { portfolioId: id });
         throw new NotFoundError('Portfolio not found');
     }
     if (updates.positions) {
@@ -54,6 +56,7 @@ export const deletePortfolio = async (id: string): Promise<void> => {
     const start = process.hrtime();
     const success = storage.delete(id);
     if (!success) {
+        logger.warn('Attempted to delete a non-existent portfolio', { portfolioId: id });
         throw new NotFoundError('Portfolio not found');
     }
     await logPortfolioDeletion(id);

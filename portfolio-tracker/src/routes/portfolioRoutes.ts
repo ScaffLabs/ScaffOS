@@ -14,10 +14,6 @@ const router = Router();
 const allowedOrigins = ['http://localhost:3000', 'https://your-allowed-origin.com'];
 router.use(cors({ origin: allowedOrigins, optionsSuccessStatus: 200 }));
 
-// CSRF protection
-const csrfProtection = csrf({ cookie: true });
-router.use(csrfProtection);
-
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -59,6 +55,8 @@ router.post('/', portfolioValidation, async (req, res) => {
         logger.error('Error creating portfolio', { error: error.message, requestId });
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
+        } else if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
         }
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -80,6 +78,36 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Other route handlers remain unchanged...
+router.put('/:id', portfolioValidation, async (req, res) => {
+    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(2);
+    try {
+        const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
+        logger.info('Portfolio updated', { portfolioId: req.params.id, requestId });
+        res.status(200).json(updatedPortfolio);
+    } catch (error) {
+        if (error instanceof NotFoundError) {
+            logger.warn('Portfolio not found for update', { portfolioId: req.params.id, requestId });
+            return res.status(404).json({ error: error.message });
+        }
+        logger.error('Error updating portfolio', { error: error.message, requestId });
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.delete('/:id', async (req, res) => {
+    const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(2);
+    try {
+        await deletePortfolio(req.params.id);
+        logger.info('Portfolio deleted', { portfolioId: req.params.id, requestId });
+        res.status(204).send();
+    } catch (error) {
+        if (error instanceof NotFoundError) {
+            logger.warn('Portfolio not found for deletion', { portfolioId: req.params.id, requestId });
+            return res.status(404).json({ error: error.message });
+        }
+        logger.error('Error deleting portfolio', { error: error.message, requestId });
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 export default router;
