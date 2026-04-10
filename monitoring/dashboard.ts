@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import { ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
 import InMemoryStore from './dataStore';
-import { LatencyData, LatencyDataSchema, DashboardEntry, DashboardEntrySchema } from './types';
+import { LatencyData, DashboardEntry, DashboardEntrySchema } from './types';
 
-const store = new InMemoryStore<LatencyData>();
+const store = new InMemoryStore<DashboardEntry>();
 
 /**
  * List all dashboard entries.
@@ -26,7 +26,7 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
 
 /**
  * Create a new dashboard entry.
- * @param req - Express request object with body { id: string, value: number }
+ * @param req - Express request object with body { id: string, data: LatencyData }
  * @param res - Express response object
  */
 export const createDashboardEntry = async (req: Request, res: Response) => {
@@ -51,13 +51,13 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
 
 /**
  * Update an existing dashboard entry.
- * @param req - Express request object with params { id: string } and body { value: number }
+ * @param req - Express request object with params { id: string } and body { data: LatencyData }
  * @param res - Express response object
  */
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const bodyValidation = LatencyDataSchema.partial().safeParse(req.body);
+        const bodyValidation = DashboardEntrySchema.partial().safeParse(req.body);
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data: ' + bodyValidation.error.errors.map(e => e.message).join(', '));
         }
@@ -65,8 +65,8 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         if (!existingEntry) {
             throw new NotFoundError('Entry not found.');
         }
-        const updatedData = { ...existingEntry, ...bodyValidation.data };
-        store.update(id, updatedData);
+        const updatedData = { ...existingEntry.data, ...bodyValidation.data };
+        store.update(id, { id, data: updatedData });
         logger.info(`Updated entry: ${id}`);
         res.status(204).send();
     } catch (error) {
