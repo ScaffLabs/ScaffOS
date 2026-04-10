@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest } from './logger';
+import { checkHealth } from './httpClient';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -36,8 +37,8 @@ router.use((req, res, next) => {
 // Health endpoint
 router.get('/health', async (req, res) => {
     try {
-        const health = await priceAggregator.checkDependencies();
-        res.status(200).json({ status: 'healthy', dependencies: health });
+        const healthCheck = await checkHealth();
+        res.status(200).json({ status: 'healthy', dependencies: healthCheck });
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: 'unhealthy', error: error.message });
@@ -51,7 +52,7 @@ router.get('/prices', async (req, res) => {
     const cursor = req.query.cursor as string || null;
 
     try {
-        const prices = await priceAggregator.getCurrentPrices(); // Implement pagination in PriceAggregator
+        const prices = await priceAggregator.getCurrentPrices();
         const paginatedPrices = Object.entries(prices).slice(offset, offset + limit);
         res.status(200).json(paginatedPrices);
     } catch (error) {
@@ -75,7 +76,5 @@ router.post('/prices', validatePriceData, handleValidationErrors, async (req, re
         }
     }
 });
-
-// Additional endpoints for update and delete operations would follow the same pattern...
 
 export default router;

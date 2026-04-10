@@ -14,7 +14,7 @@ const breaker = new CircuitBreaker({
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-export const httpClient = async (path: string, config?: AxiosRequestConfig) => {
+const httpClient = async (path: string, config?: AxiosRequestConfig) => {
     const url = `${BASE_URL}${path}`;
     let lastError;
 
@@ -32,7 +32,7 @@ export const httpClient = async (path: string, config?: AxiosRequestConfig) => {
     throw new Error(`Request failed after ${MAX_RETRIES} attempts: ${lastError}`);
 };
 
-export const postHttpClient = async (path: string, data: any, config?: AxiosRequestConfig) => {
+const postHttpClient = async (path: string, data: any, config?: AxiosRequestConfig) => {
     const url = `${BASE_URL}${path}`;
     let lastError;
 
@@ -50,7 +50,7 @@ export const postHttpClient = async (path: string, data: any, config?: AxiosRequ
     throw new Error(`Request failed after ${MAX_RETRIES} attempts: ${lastError}`);
 };
 
-export const checkHealth = async () => {
+const checkHealth = async () => {
     try {
         const healthCheck = await httpClient('/health');
         return healthCheck;
@@ -59,3 +59,5 @@ export const checkHealth = async () => {
         throw new Error('Health check failed.');
     }
 };
+
+export { httpClient, postHttpClient, checkHealth };
