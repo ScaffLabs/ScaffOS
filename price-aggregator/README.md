@@ -8,34 +8,34 @@ The service is built using Node.js, Express for the API, and WebSocket for real-
 
 ## Setup Instructions
 ### Prerequisites
-- Node.js (version 14 or higher)  
+- Node.js (version 14 or higher)
 - npm (Node package manager)
 
 ### Install
-1. Clone the repository:  
-   ```bash  
-   git clone https://github.com/yourusername/price-aggregator.git  
-   cd price-aggregator  
-   ```  
-2. Install dependencies:  
-   ```bash  
-   npm install  
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/price-aggregator.git
+   cd price-aggregator
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
    ```
 
 ### Run
-To start the application:  
-```bash  
-npm start  
+To start the application:
+```bash
+npm start
 ```
 
 ### Testing
-To run the tests:  
-```bash  
-npm test  
+To run the tests:
+```bash
+npm test
 ```
-To run tests in watch mode:  
-```bash  
-npm run test:watch  
+To run tests in watch mode:
+```bash
+npm run test:watch
 ```
 
 ## API Reference
