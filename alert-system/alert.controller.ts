@@ -32,8 +32,8 @@ export class AlertController {
 
     async getActiveAlerts(req: Request, res: Response) {
         const start = Date.now();
-        const { limit = 10, offset = 0, type, sort } = req.query;
         try {
+            const { limit = 10, offset = 0, type, sort } = req.query;
             const query: any = {};
             if (type) query.type = type;
             const alerts = await this.alertStore.findIndex(query);
