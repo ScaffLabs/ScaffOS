@@ -10,23 +10,21 @@ import logger from './logger';
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 import { initGracefulShutdown } from './shutdown';
-import { sanitizeUserInput } from './userValidation';
+import crypto from 'crypto';
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
 
-// CORS configuration
 const corsOptions = {
-    origin: ['http://your-allowed-origin.com'], // Replace with your allowed origins
+    origin: ['http://your-allowed-origin.com'],
     optionsSuccessStatus: 200,
 };
 
-// Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 100, // Limit each API key to 100 requests per windowMs
+    windowMs: 60 * 60 * 1000,
+    max: 100,
     message: 'Too many requests from this API key, please try again later.',
 });
 
