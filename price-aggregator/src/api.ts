@@ -4,7 +4,7 @@ import { validatePriceData, handleValidationErrors, validateContentType } from '
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
-import { logRequest, logError } from './logger';
+import { logRequest, logError, logSensitiveOperation } from './logger';
 import { ValidationError, NotFoundError } from './errors';
 
 const router = express.Router();
@@ -50,6 +50,7 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
     const priceData = req.body;
     try {
         const newPrice = await priceAggregator.addPrice(priceData);
+        logSensitiveOperation({ type: 'PRICE_ADDED', data: newPrice });
         res.status(201).json(newPrice);
     } catch (error) {
         logError(error, { message: 'Adding price failed' });
@@ -69,6 +70,7 @@ router.put('/prices/:id', validateContentType, validatePriceData, handleValidati
         if (!updatedPrice) {
             throw new NotFoundError('Price not found.');
         }
+        logSensitiveOperation({ type: 'PRICE_UPDATED', data: updatedPrice });
         res.status(200).json(updatedPrice);
     } catch (error) {
         logError(error, { message: 'Updating price failed' });
@@ -83,6 +85,7 @@ router.delete('/prices/:id', async (req, res) => {
     const { id } = req.params;
     try {
         await priceAggregator.deletePrice(id);
+        logSensitiveOperation({ type: 'PRICE_DELETED', exchange: id });
         res.status(204).send();
     } catch (error) {
         logError(error, { message: 'Deleting price failed' });
