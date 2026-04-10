@@ -1,4 +1,3 @@
-// Import necessary modules
 import express from 'express';
 import http from 'http';
 import { createConnectionPool } from './dbConnection';
@@ -31,6 +30,18 @@ app.get('/health', async (req, res) => {
     } catch (error) {
         logError(error);
         res.status(500).json({ status: 'unhealthy', error: error.message });
+    }
+});
+
+// Readiness check endpoint
+app.get('/ready', async (req, res) => {
+    try {
+        const healthStatus = await checkHealth();
+        const isReady = Object.values(healthStatus).every(status => status === 'healthy');
+        res.status(isReady ? 200 : 503).json({ status: isReady ? 'ready' : 'not ready' });
+    } catch (error) {
+        logError(error);
+        res.status(500).json({ status: 'not ready', error: error.message });
     }
 });
 
