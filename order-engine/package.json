@@ -6,7 +6,6 @@
     "start": "ts-node src/index.ts",
     "build": "tsc",
     "test": "jest",
-    "test:watch": "jest --watch",
     "test:unit": "jest --testPathPattern=unit",
     "test:integration": "jest --testPathPattern=integration",
     "test:all": "jest",
