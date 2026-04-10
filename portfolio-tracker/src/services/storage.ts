@@ -29,7 +29,16 @@ class InMemoryStorage extends Storage {
     public update(id: string, data: PortfolioUpdate): Portfolio | undefined {
         const portfolio = this.read(id);
         if (!portfolio) return undefined;
-        Object.assign(portfolio, data);
+        if (data.name) portfolio.name = data.name;
+        if (data.positions) {
+            data.positions.forEach(pos => {
+                // Validate position data
+                if (!pos.symbol || pos.quantity < 0 || pos.averagePrice < 0) {
+                    throw new Error('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
+                }
+            });
+            portfolio.positions = data.positions;
+        }
         return portfolio;
     }
 
