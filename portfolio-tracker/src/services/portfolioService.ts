@@ -3,8 +3,10 @@ import storage from './storage';
 import { ValidationError, NotFoundError } from '../errors';
 import { logPortfolioCreation, logPortfolioUpdate, logPortfolioDeletion } from './auditService';
 import { publishPortfolioUpdate } from '../eventBus';
+import logger from './logger';
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
+    const start = process.hrtime();
     try {
         PortfolioSchema.parse({ ...portfolioData, id: '' }); // Assign a temporary ID
         portfolioData.positions.forEach(pos => PositionSchema.parse(pos));
@@ -14,10 +16,13 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
     const newPortfolio = storage.create(portfolioData);
     await logPortfolioCreation(newPortfolio);
     publishPortfolioUpdate(newPortfolio);
+    const duration = process.hrtime(start);
+    logger.info('Created portfolio', { portfolioId: newPortfolio.id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
     return newPortfolio;
 };
 
 export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Promise<Portfolio> => {
+    const start = process.hrtime();
     const existingPortfolio = storage.read(id);
     if (!existingPortfolio) {
         throw new NotFoundError('Portfolio not found');
@@ -28,13 +33,18 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     const updatedPortfolio = storage.update(id, updates);
     await logPortfolioUpdate(id, updates);
     publishPortfolioUpdate(updatedPortfolio);
+    const duration = process.hrtime(start);
+    logger.info('Updated portfolio', { portfolioId: id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
     return updatedPortfolio;
 };
 
 export const deletePortfolio = async (id: string): Promise<void> => {
+    const start = process.hrtime();
     const success = storage.delete(id);
     if (!success) {
         throw new NotFoundError('Portfolio not found');
     }
     await logPortfolioDeletion(id);
+    const duration = process.hrtime(start);
+    logger.info('Deleted portfolio', { portfolioId: id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
 };
