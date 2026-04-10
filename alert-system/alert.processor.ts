@@ -34,7 +34,7 @@ export class AlertProcessor {
             const duration = Date.now() - start;
             logger.logPerformance('processAlert', duration);
         } catch (error) {
-            console.error('Error processing alert:', error);
+            logger.error('Error processing alert:', error);
             throw new ServiceError('Failed to process alert.');
         }
     }
@@ -51,10 +51,14 @@ export class AlertProcessor {
                     await new Promise(res => setTimeout(res, retryDelay(attempt)));
                     return sendAlert(attempt + 1);
                 }
-                console.error('Error sending alert to services:', error);
+                logger.error('Error sending alert to services:', error);
                 throw new ServiceError('Failed to notify services.');
             }
         };
         await sendAlert();
     }
 }
+
+const retryDelay = (attempt: number) => {
+    return Math.pow(2, attempt) * 100; // Exponential backoff
+};
