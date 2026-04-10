@@ -12,6 +12,12 @@ const envSchema = Joi.object({
     LOG_LEVEL: Joi.string().valid('info', 'warn', 'error').default('info'),
     API_KEY: Joi.string().required(),
     SECRET_KEY: Joi.string().required(),
+    HEALTH_CHECK_INTERVAL: Joi.number().default(30000).required(),
+    DB_USER: Joi.string().required(),
+    DB_PASS: Joi.string().required(),
+    DB_HOST: Joi.string().required(),
+    DB_PORT: Joi.number().default(5432),
+    DB_NAME: Joi.string().required(),
 }).unknown();
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -29,4 +35,10 @@ export const config = {
     logLevel: envVars.LOG_LEVEL,
     apiKey: envVars.API_KEY,
     secretKey: envVars.SECRET_KEY,
+    healthCheckInterval: envVars.HEALTH_CHECK_INTERVAL,
+    dbUser: envVars.DB_USER,
+    dbPass: envVars.DB_PASS,
+    dbHost: envVars.DB_HOST,
+    dbPort: envVars.DB_PORT,
+    dbName: envVars.DB_NAME,
 };

@@ -21,6 +21,14 @@ ENV ORDER_SERVICE_URL=http://order_service:4000
 ENV DATA_SERVICE_URL=http://data_service:5000
 ENV DATABASE_URL=sqlite://:memory:
 ENV LOG_LEVEL=info
+ENV API_KEY=your_api_key_here
+ENV SECRET_KEY=your_secret_key_here
+ENV HEALTH_CHECK_INTERVAL=30000
+ENV DB_USER=your_db_user
+ENV DB_PASS=your_db_password
+ENV DB_HOST=your_db_host
+ENV DB_PORT=5432
+ENV DB_NAME=your_db_name
 
 EXPOSE 3000
 CMD [ "node", "dist/index.js" ]
