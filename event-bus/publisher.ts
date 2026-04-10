@@ -10,17 +10,20 @@ export const publish = async <T>(message: Message<T>, retries = 3, backoff = 100
     if (!validation.success) {
         throw new ServiceError('Invalid message data: ' + validation.error.errors.map(err => err.message).join(', '));
     }
+
     const { topic, data } = message;
     if (!topic || typeof topic !== 'string') {
         throw new ServiceError('Invalid topic');
     }
-    if (!data) {
+    if (data === null || data === undefined) {
         throw new ServiceError('Invalid data');
     }
+
     if (isMessageCached(topic, data)) {
         console.log('Message is already published, skipping.');
         return;
     }
+
     cacheMessage(topic, data);
     try {
         await redisClient.publishWithTimeout(topic, data);
