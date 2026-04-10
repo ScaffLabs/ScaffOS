@@ -7,6 +7,7 @@ import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchA
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 import requestLogger from '../middleware/requestLogger';
+import auditLogger from '../middleware/auditLogger';
 
 const router = Router();
 
@@ -17,12 +18,14 @@ router.use(cors({ origin: allowedOrigins, optionsSuccessStatus: 200 }));
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100
+    max: 100,
+    message: 'Too many requests, please try again later.',
 });
 router.use(limiter);
 
 // Middleware for sanitization
 router.use(sanitize);
+router.use(auditLogger);
 router.use(requestLogger); // Use the request logger middleware
 
 // Validation rules for portfolio creation and updates
@@ -38,7 +41,7 @@ const portfolioValidation = [
             }
         });
         return true;
-    })
+    }),
 ];
 
 router.post('/', portfolioValidation, async (req, res) => {
@@ -62,6 +65,48 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
 });
 
-// Additional route handlers omitted for brevity
+router.get('/:id', async (req, res) => {
+    try {
+        const portfolio = await getPortfolio(req.params.id);
+        res.json(portfolio);
+    } catch (error) {
+        logger.error('Error fetching portfolio', { error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.put('/:id', portfolioValidation, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        logger.warn('Validation errors', { errors: errors.array() });
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
+        res.json(updatedPortfolio);
+    } catch (error) {
+        logger.error('Error updating portfolio', { error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.delete('/:id', async (req, res) => {
+    try {
+        await deletePortfolio(req.params.id);
+        res.status(204).send();
+    } catch (error) {
+        logger.error('Error deleting portfolio', { error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 export default router;
