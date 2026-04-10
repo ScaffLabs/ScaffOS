@@ -20,7 +20,7 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
     try {
         PortfolioSchema.parse({ ...portfolioData, id: '' });
     } catch (error) {
-        throw new ValidationError('Invalid portfolio data');
+        throw new ValidationError('Invalid portfolio data: ' + error.errors.map(e => e.message).join(', '));
     }
     const newPortfolio = storage.create(portfolioData);
     const duration = process.hrtime(start);
@@ -46,6 +46,18 @@ export const getPortfolio = async (id: string): Promise<Portfolio> => {
 export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Promise<Portfolio> => {
     const existingPortfolio = storage.read(id);
     if (!existingPortfolio) throw new NotFoundError('Portfolio not found');
+    try {
+        if (updates.name) PortfolioSchema.shape.name.parse(updates.name);
+        if (updates.positions) {
+            updates.positions.forEach(pos => {
+                if (!pos.symbol || typeof pos.quantity !== 'number' || pos.quantity < 0 || typeof pos.averagePrice !== 'number' || pos.averagePrice < 0) {
+                    throw new ValidationError('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
+                }
+            });
+        }
+    } catch (error) {
+        throw new ValidationError('Invalid update data: ' + error.errors.map(e => e.message).join(', '));
+    }
     const updatedPortfolio = storage.update(id, updates);
     await notifyExternalService(updatedPortfolio);
     return updatedPortfolio;
@@ -57,5 +69,7 @@ export const deletePortfolio = async (id: string): Promise<void> => {
 };
 
 export const fetchAllData = async (): Promise<Portfolio[]> => {
-    return storage.getAll();
+    const portfolios = storage.getAll();
+    if (!portfolios.length) throw new ServiceError('No portfolios found');
+    return portfolios;
 };
