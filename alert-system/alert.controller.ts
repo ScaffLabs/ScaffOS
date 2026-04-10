@@ -17,14 +17,9 @@ export class AlertController {
 
     async getActiveAlerts(req: Request, res: Response) {
         const start = Date.now();
-        const { limit, offset, type, sort } = req.query;
         try {
-            const query: any = {};
-            if (type) query.type = type;
-            const alerts = await this.alertStore.findIndex(query);
-            const sortedAlerts = sort ? alerts.sort((a, b) => a[sort] - b[sort]) : alerts;
-            const paginatedAlerts = sortedAlerts.slice(offset, offset + limit);
-            return res.status(200).json(paginatedAlerts);
+            const alerts = await this.alertStore.findIndex({});
+            return res.status(200).json(alerts);
         } catch (error) {
             logError(error);
             return res.status(500).json({ message: 'Failed to retrieve alerts.' });
@@ -54,8 +49,10 @@ export class AlertController {
 
     private async notifyExternalServices(alert: AlertMessage) {
         try {
-            await axios.post(process.env.WEBHOOK_URL, alert);
-            await axios.post(process.env.EMAIL_SERVICE_URL, alert);
+            const webhookResponse = await axios.post(process.env.WEBHOOK_URL, alert);
+            if (webhookResponse.status !== 200) throw new ServiceError('Webhook notification failed');
+            const emailResponse = await axios.post(process.env.EMAIL_SERVICE_URL, alert);
+            if (emailResponse.status !== 200) throw new ServiceError('Email notification failed');
         } catch (error) {
             logError(error);
             throw new ServiceError('Failed to notify external services.');
