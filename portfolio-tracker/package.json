@@ -8,7 +8,9 @@
     "test:coverage": "jest --coverage",
     "docker:build": "docker build -t portfolio-tracker .",
     "docker:up": "docker-compose up",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:integration": "jest --testPathPattern=__tests__/portfolioRoutes.test.ts",
+    "test:unit": "jest --testPathPattern=__tests__/portfolioService.test.ts"
   },
   "dependencies": {
     "express": "^4.17.1",

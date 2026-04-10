@@ -70,4 +70,10 @@ describe('Portfolio Routes', () => {
         expect(response.status).toBe(404);
         expect(response.body.error).toBe('Portfolio not found');
     });
+
+    it('should return 200 for health check', async () => {
+        const response = await request(app).get('/api/health');
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('UP');
+    });
 });
