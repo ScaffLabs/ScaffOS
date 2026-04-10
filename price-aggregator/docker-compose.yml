@@ -21,13 +21,15 @@ services:
       - price-aggregator-network
 
   db:
-    image: postgres:latest
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    ports:
+      - '5432:5432'
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - '5432:5432'
     networks:
       - price-aggregator-network
 
