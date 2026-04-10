@@ -1,6 +1,5 @@
 import { Order } from './types';
 import { storage } from './storage';
-import { queryDatabase } from './db';
 
 export const migrateOrders = async (data: Order[]): Promise<void> => {
     console.log('Migrating orders...');
@@ -18,14 +17,6 @@ export const seedData = async (): Promise<void> => {
     await migrateOrders(initialOrders);
 };
 
-export const migrateDatabase = async () => {
-    console.log('Starting database migration...');
-    const orders = await queryDatabase('SELECT * FROM orders');
-    await migrateOrders(orders.rows);
-    console.log('Database migration complete!');
-};
-
 export const runMigrations = async () => {
     await seedData();
-    await migrateDatabase();
 };

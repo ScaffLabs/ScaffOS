@@ -8,6 +8,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import logger, { logStartup } from './logger';
 import { config } from './config';
+import { runMigrations } from './migrations';
 
 const app = express();
 const PORT = config.PORT;
@@ -30,6 +31,7 @@ app.get('/ready', readyCheck);
 orderRouter(app);
 
 const startServer = async () => {
+    await runMigrations();
     const server = app.listen(PORT, () => {
         logStartup({ port: PORT, env: config.NODE_ENV });
         console.log(`Order Engine listening on port ${PORT}`);
