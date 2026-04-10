@@ -35,11 +35,18 @@ export const updatePosition = async (req: Request, res: Response) => {
         if (!existingPosition) {
             throw new NotFoundError('Position not found.');
         }
-        positionStore.update(id, positionData);
+        const validationResult = PositionSchema.safeParse(positionData);
+        if (!validationResult.success) {
+            throw new ValidationError('Invalid position data: ' + validationResult.error.errors.join(', '));
+        }
+        positionStore.update(id, validationResult.data);
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {
             return res.status(404).json({ message: error.message });
+        }
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ message: error.message });
         }
         res.status(500).json({ message: 'Error updating position: ' + error.message });
     }
@@ -59,4 +66,11 @@ export const deletePosition = async (req: Request, res: Response) => {
         }
         res.status(500).json({ message: 'Error deleting position: ' + error.message });
     }
+};
+
+export const registerRoutes = (app: any) => {
+    app.get('/api/positions', fetchPositions);
+    app.post('/api/positions', createPosition);
+    app.put('/api/positions/:id', updatePosition);
+    app.delete('/api/positions/:id', deletePosition);
 };
