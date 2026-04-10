@@ -12,6 +12,8 @@ import { monitorMemoryUsage } from './monitor';
 import { initGracefulShutdown } from './shutdown';
 import crypto from 'crypto';
 import { sanitizeUserInput } from './userValidation';
+import bodyParser from 'body-parser';
+import { rateLimit as customRateLimit } from './rateLimit';
 
 const app = express();
 const server = http.createServer(app);
@@ -31,7 +33,7 @@ const limiter = rateLimit({
 
 app.use(cors(corsOptions));
 app.use(helmet());
-app.use(express.json());
+app.use(bodyParser.json({ limit: '1mb' }));
 app.use(logRequestMiddleware);
 app.use(limiter);
 
