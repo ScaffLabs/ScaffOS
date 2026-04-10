@@ -4,7 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { sanitize } from 'express-validator';
 import cors from 'cors';
 import helmet from 'helmet';
-import { checkHealthEndpoint } from './healthCheck';
+import { checkHealthEndpoint, readyCheck, healthCheckMiddleware } from './healthCheck';
 
 const router = Router();
 
@@ -23,6 +23,11 @@ const limiter = rateLimit({
 });
 router.use(limiter);
 
+// Health check middleware
+router.use(healthCheckMiddleware);
+router.get('/health', checkHealthEndpoint);
+router.get('/ready', readyCheck);
+
 // Endpoint to handle event creation and retrieval with sanitization
 router.post('/', [
     sanitize('title').escape(),
@@ -35,12 +40,5 @@ router.put('/:id', [
     updateEvent
 ]);
 router.delete('/:id', deleteEvent);
-
-// Health check endpoints
-router.get('/health', checkHealthEndpoint);
-router.get('/ready', async (req, res) => {
-    const isHealthy = await checkServiceHealth();
-    res.status(isHealthy ? 200 : 503).json({ ready: isHealthy });
-});
 
 export default router;
