@@ -38,7 +38,7 @@ export class HealthCheck {
     }
 
     static async checkReady(req: Request, res: Response) {
-        const dbStatus = true; // Mocked DB status, replace with actual DB check if needed
+        const dbStatus = true; // Replace with actual DB status check
         const services = await this.checkExternalServices(['WEBHOOK', 'EMAIL']);
         return res.json({ ready: dbStatus && services.WEBHOOK && services.EMAIL });
     }
