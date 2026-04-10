@@ -7,15 +7,15 @@ const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunc
     logger.error({ error: err.stack, message: err.message, path: req.path, requestId }, 'Error occurred');
 
     if (err instanceof ValidationError) {
-        return res.status(400).json({ error: err.message });
+        return res.status(400).json({ error: err.message, requestId });
     }
     if (err instanceof NotFoundError) {
-        return res.status(404).json({ error: err.message });
+        return res.status(404).json({ error: err.message, requestId });
     }
     if (err instanceof ServiceError) {
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: err.message, requestId });
     }
-    return res.status(500).json({ error: 'Something went wrong!' });
+    return res.status(500).json({ error: 'Something went wrong!', requestId });
 };
 
-export default errorMiddleware;
+export default errorMiddleware; 
