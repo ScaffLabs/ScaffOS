@@ -8,13 +8,16 @@ import logger, { logStartup } from './logger';
 import bodyParser from 'body-parser';
 import { errorMiddleware } from './error.middleware';
 import cors from 'cors';
+import helmet from 'helmet';
 import alertRoutes from './alert.routes';
 
 const app = express();
 const eventBus = new EventBus();
 const alertProcessor = new AlertProcessor(eventBus);
 
+// Middleware
 app.use(cors()); // Enable all CORS requests
+app.use(helmet()); // Use helmet for security headers
 app.use(bodyParser.json());
 app.use(errorMiddleware);
 

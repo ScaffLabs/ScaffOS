@@ -5,11 +5,21 @@ import { AlertStore } from './storage';
 import { ValidationError } from './error.types';
 import { sanitize } from './sanitization';
 import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import helmet from 'helmet';
 import { HealthCheck } from './health-check';
+import { logAudit } from './audit.logger';
 
 const alertStore = new AlertStore();
 const alertController = new AlertController(alertStore);
 const router = Router();
+
+// CORS configuration
+const allowedOrigins = ['http://your-allowed-origin.com'];
+router.use(cors({ origin: allowedOrigins }));
+
+// Helmet middleware for security headers
+router.use(helmet());
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -44,6 +54,7 @@ router.post('/api/alerts', async (req, res) => {
     try {
         const alert = validateCreateAlertRequest(req.body);
         const createdAlert = await alertController.addAlert({ body: alert }, res);
+        logAudit('CREATE_ALERT', { alert: createdAlert });
         return res.status(201).json(createdAlert);
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -58,6 +69,10 @@ router.put('/api/alerts/:id', async (req, res) => {
     await alertController.updateAlert(req, res);
 });
 
-router.delete('/api/alerts/:id', async (req, res) => await alertController.deleteAlert(req, res));
+router.delete('/api/alerts/:id', async (req, res) => {
+    const alertId = req.params.id;
+    const success = await alertController.deleteAlert(req, res);
+    if (success) logAudit('DELETE_ALERT', { alertId });
+});
 
 export default router;
