@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.4] - 2023-10-30
+### Added
+- Comprehensive README.md documentation with detailed API reference and setup instructions.
+- Improved inline comments in codebase for clarity.
+
 ## [1.4.3] - 2023-10-28
 ### Added
 - Comprehensive API documentation in README.md, including request and response examples.
