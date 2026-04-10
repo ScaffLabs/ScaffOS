@@ -35,4 +35,14 @@ const healthCheckWithRetry = async (retries = 3, delay = 1000) => {
     }
 };
 
-export { healthCheckWithRetry, fetchHealthStatus };
+const checkDatabaseConnection = async () => {
+    try {
+        // Simulated database connection check
+        // Replace with actual logic to check if the database is connected
+        return true; // Assuming database is connected
+    } catch (error) {
+        return false;
+    }
+};
+
+export { healthCheckWithRetry, fetchHealthStatus, checkDatabaseConnection };

@@ -13,10 +13,21 @@ import cors from 'cors';
 import { sanitizeBody, sanitizeQueryParams } from './middleware/sanitization';
 import { logAudit } from './middleware/auditLogger';
 import csurf from 'csurf';
+import { createPool } from 'mysql';
+import { logger } from './middleware/logger';
 
 dotenv.config();
 const app = express();
 const db = new Database();
+
+// Create a connection pool
+const pool = createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    connectionLimit: 10
+});
 
 const allowedOrigins = ['http://localhost:3000'];
 app.use(cors({ origin: allowedOrigins }));
@@ -45,6 +56,7 @@ const startServer = async () => {
             await db.closeConnection();
             server.close(() => {
                 console.log('HTTP server closed.');
+                pool.end(); // Close the connection pool
                 process.exit(0);
             });
         };

@@ -1,6 +1,6 @@
 import express from 'express';
 import { logger } from '../middleware/logger';
-import { healthCheckWithRetry } from '../services/HealthService';
+import { healthCheckWithRetry, checkDatabaseConnection } from '../services/HealthService';
 
 const router = express.Router();
 
@@ -21,10 +21,8 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/ready', async (req, res) => {
-    // Implement readiness check logic here, e.g. check if database is connected
     try {
-        // Assuming we have a function `isDatabaseReady` to check database connection
-        const dbReady = await isDatabaseReady();
+        const dbReady = await checkDatabaseConnection();
         if (dbReady) {
             res.status(200).json({ status: 'ready' });
         } else {
