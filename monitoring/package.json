@@ -8,7 +8,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:unit": "jest --collectCoverage --coverageReporters=text",
-    "test:integration": "jest --testPathPattern=__tests__/"
+    "test:integration": "jest --testPathPattern=__tests__"
   },
   "dependencies": {
     "express": "^4.17.1",
@@ -18,7 +18,8 @@
     "eventemitter3": "^4.0.7",
     "helmet": "^4.6.0",
     "cors": "^2.8.5",
-    "zod": "^3.11.6"
+    "zod": "^3.11.6",
+    "pg": "^8.7.1"
   },
   "devDependencies": {
     "jest": "^27.0.0",
