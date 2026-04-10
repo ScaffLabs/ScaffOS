@@ -9,9 +9,8 @@ import config from './config';
 import { createConnectionPool } from './connectionPool';
 import { emitHealthCheckEvent } from './serviceHealth';
 import { setupRoutes } from './dashboard';
-import { generalLimiter } from './rateLimiter';
-import { sanitize } from './sanitize';
-import { apiKeyLimiter } from './rateLimiter';
+import { generalLimiter, apiKeyLimiter } from './rateLimiter';
+import { sanitize, csrfProtection } from './sanitize';
 
 const app = express();
 const PORT = config.PORT;
@@ -20,11 +19,12 @@ const connectionPool = createConnectionPool();
 const allowedOrigins = ['http://example.com', 'http://another-example.com'];
 app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(logRequest);
 app.use(generalLimiter);
 app.use(apiKeyLimiter);
 app.use(sanitize);
+app.use(csrfProtection);
 
 // Health check endpoint
 app.get('/health', healthCheck);
