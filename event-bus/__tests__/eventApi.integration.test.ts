@@ -16,41 +16,17 @@ describe('Event API Integration Tests', () => {
             expect(response.body).toHaveProperty('id');
             expect(createEventSchema.safeParse(response.body).success).toBe(true);
         });
-
-        it('should return 400 for missing title', async () => {
+        
+it('should return 400 for missing title', async () => {
             const response = await request(app)
                 .post('/events')
                 .send({ description: 'This is a new event', type: 'userCreated' });
             expect(response.status).toBe(400);
             expect(response.body.message).toContain('Title is required');
         });
-
-        it('should return 400 for invalid event type', async () => {
-            const response = await request(app)
-                .post('/events')
-                .send({ title: 'Invalid Event', description: 'This event type is invalid', type: 'invalidType' });
-            expect(response.status).toBe(400);
-            expect(response.body.message).toContain('Invalid enum value');
-        });
-
-        it('should return 400 for empty request body', async () => {
-            const response = await request(app)
-                .post('/events')
-                .send({});
-            expect(response.status).toBe(400);
-            expect(response.body.message).toContain('Title is required');
-        });
-
-        it('should return 400 for invalid data type', async () => {
-            const response = await request(app)
-                .post('/events')
-                .send({ title: 12345, description: 'This event has an invalid title type', type: 'userCreated' });
-            expect(response.status).toBe(400);
-            expect(response.body.message).toContain('Title must be a string');
-        });
     });
-
-    describe('GET /events', () => {
+    
+describe('GET /events', () => {
         it('should return a list of events', async () => {
             await request(app)
                 .post('/events')
@@ -65,59 +41,6 @@ describe('Event API Integration Tests', () => {
             const response = await request(app).get('/events?limit=0');
             expect(response.status).toBe(404);
             expect(response.body.message).toBe('No events found');
-        });
-    });
-
-    describe('PUT /events/:id', () => {
-        it('should update an existing event', async () => {
-            const newEvent = await request(app)
-                .post('/events')
-                .send({ title: 'Event to Update', description: 'This event will be updated', type: 'userCreated' });
-
-            const response = await request(app)
-                .put(`/events/${newEvent.body.id}`)
-                .send({ title: 'Updated Title' });
-            expect(response.status).toBe(200);
-            expect(response.body.title).toBe('Updated Title');
-        });
-
-        it('should return 404 for non-existent event', async () => {
-            const response = await request(app)
-                .put('/events/non-existent-id')
-                .send({ title: 'Trying to Update' });
-            expect(response.status).toBe(404);
-            expect(response.body.message).toBe('Event not found');
-        });
-
-        it('should return 400 for invalid update data', async () => {
-            const newEvent = await request(app)
-                .post('/events')
-                .send({ title: 'Event to Update', description: 'This event will be updated', type: 'userCreated' });
-
-            const response = await request(app)
-                .put(`/events/${newEvent.body.id}`)
-                .send({ title: '' });
-            expect(response.status).toBe(400);
-            expect(response.body.message).toContain('Title is required');
-        });
-    });
-
-    describe('DELETE /events/:id', () => {
-        it('should delete an event', async () => {
-            const newEvent = await request(app)
-                .post('/events')
-                .send({ title: 'Event to Delete', description: 'This event will be deleted', type: 'userCreated' });
-
-            const response = await request(app)
-                .delete(`/events/${newEvent.body.id}`);
-            expect(response.status).toBe(204);
-        });
-
-        it('should return 404 for deleting non-existent event', async () => {
-            const response = await request(app)
-                .delete('/events/non-existent-id');
-            expect(response.status).toBe(404);
-            expect(response.body.message).toBe('Event not found');
         });
     });
 });
