@@ -1,3 +1,4 @@
+// userRoutes.ts
 import express from 'express';
 import { createUser, getAllUsers, updateUser, deleteUser, findUserById } from './storage';
 import { emitUserCreatedEvent } from './interServiceClient';
@@ -35,12 +36,15 @@ router.post('/users', async (req, res) => {
     }
 });
 
-// Route to get all users with pagination
+// Route to get all users with pagination and filtering
 router.get('/users', async (req, res) => {
-    const { limit = 10, offset = 0 } = req.query;
+    const { limit = 10, offset = 0, sortBy = 'username', order = 'asc' } = req.query;
     try {
         const users = await getAllUsers();
-        const paginatedUsers = users.slice(Number(offset), Number(offset) + Number(limit)); // Simple pagination
+        // Implement sorting
+        users.sort((a, b) => a[sortBy] > b[sortBy] ? (order === 'asc' ? 1 : -1) : (order === 'asc' ? -1 : 1));
+        // Simple pagination
+        const paginatedUsers = users.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedUsers);
     } catch (error) {
         logger.error('Error fetching users', { error: error.message, stack: error.stack });
