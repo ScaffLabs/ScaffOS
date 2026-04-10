@@ -1,11 +1,12 @@
 import express from 'express';
 import { PriceAggregator } from './priceAggregator';
-import { validatePriceData, handleValidationErrors } from './middleware/validationMiddleware';
+import { validatePriceData, handleValidationErrors, validateContentType } from './middleware/validationMiddleware';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest } from './logger';
 import { checkHealth } from './httpClient';
+import csrf from 'csurf';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -23,6 +24,10 @@ const limiter = rateLimit({
     max: 100,
 });
 router.use(limiter);
+
+// CSRF protection
+const csrfProtection = csrf({ cookie: true });
+router.use(csrfProtection);
 
 // Log requests
 router.use((req, res, next) => {
@@ -60,7 +65,7 @@ router.get('/prices', async (req, res) => {
 });
 
 // Add new price
-router.post('/prices', validatePriceData, handleValidationErrors, async (req, res) => {
+router.post('/prices', validateContentType, validatePriceData, handleValidationErrors, async (req, res) => {
     const priceData = req.body;
     try {
         const newPrice = await priceAggregator.addPrice(priceData);
@@ -76,7 +81,7 @@ router.post('/prices', validatePriceData, handleValidationErrors, async (req, re
 });
 
 // Update price
-router.put('/prices/:exchange', validatePriceData, handleValidationErrors, async (req, res) => {
+router.put('/prices/:exchange', validateContentType, validatePriceData, handleValidationErrors, async (req, res) => {
     const priceData = req.body;
     const { exchange } = req.params;
     try {
