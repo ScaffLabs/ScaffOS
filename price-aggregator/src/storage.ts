@@ -55,44 +55,5 @@ class InMemoryStorage<T> implements Storage<T> {
     }
 }
 
-class SQLiteStorage<T> implements Storage<T> {
-    private db: any; // Placeholder for SQLite database instance
-
-    constructor() {
-        // Initialize SQLite database connection
-        this.db = {}; // Initialize with actual SQLite connection setup
-    }
-
-    async create(item: T): Promise<T> {
-        // Implement actual SQLite insert logic here
-        // E.g. using sqlite3 or sequelize
-        return item;
-    }
-
-    async read(id: string): Promise<T | null> {
-        // Implement actual SQLite read logic here
-        return null;
-    }
-
-    async update(id: string, item: T): Promise<T | null> {
-        // Implement actual SQLite update logic here
-        return null;
-    }
-
-    async delete(id: string): Promise<void> {
-        // Implement actual SQLite delete logic here
-    }
-
-    async findAll(query?: Partial<T>): Promise<T[]> {
-        // Implement actual SQLite find logic here
-        return [];
-    }
-
-    async transaction(operations: () => Promise<void>): Promise<void> {
-        // Implement transaction logic with SQLite
-        await operations();
-    }
-}
-
 const storage = new InMemoryStorage<PriceData>();
-export { storage, SQLiteStorage };
+export { storage };
