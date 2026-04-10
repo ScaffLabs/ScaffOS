@@ -38,3 +38,24 @@ export const circuitBreaker = (fn: Function, failureThreshold: number = 5, coold
         }
     };
 };
+
+export const withTimeout = async (fn: Function, timeout: number) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    try {
+        return await fn({ signal: controller.signal });
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('Operation timed out');
+        }
+        throw error;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+};
+
+export const withRetryAndTimeout = (fn: Function, retries: number = 3, delay: number = 1000, timeout: number = 5000) => {
+    return async (...args: any[]) => {
+        return retry(() => withTimeout(() => fn(...args), timeout), retries, delay);
+    };
+};

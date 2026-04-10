@@ -1,5 +1,5 @@
 import express from 'express';
-import { securityMiddleware, applySecurityMiddlewares } from './middleware/securityMiddleware';
+import { applySecurityMiddlewares } from './middleware/securityMiddleware';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
