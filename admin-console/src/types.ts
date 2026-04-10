@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
 export type ConfigurationKey = string & { readonly brand: unique symbol };
+export type UserId = string & { readonly brand: unique symbol };
+export type OrderId = string & { readonly brand: unique symbol };
+export type TradeId = string & { readonly brand: unique symbol };
+
 export interface ConfigurationItem {
     key: ConfigurationKey;
     value: string;
@@ -33,3 +37,6 @@ export const validateAppEvent = (event: unknown): AppEvent => {
     }
     return result.data;
 };
+
+// Shared types for other services
+export type { UserId, OrderId, TradeId };

@@ -2,20 +2,11 @@ import axios, { AxiosError } from 'axios';
 import config from '../config';
 import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
-import { CircuitBreaker } from 'opossum';
 import { emitEvent } from '../events/EventBus';
 
 const axiosInstance = axios.create({
     baseURL: config.API_URL,
 });
-
-const circuitBreakerOptions = {
-    timeout: 3000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 10000,
-};
-
-const circuitBreaker = new CircuitBreaker(axiosInstance, circuitBreakerOptions);
 
 const retryWithExponentialBackoff = async (fn, retries = 3, delay = 1000) => {
     try {
@@ -29,7 +20,7 @@ const retryWithExponentialBackoff = async (fn, retries = 3, delay = 1000) => {
 
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
-        const response = await retryWithExponentialBackoff(() => circuitBreaker.fire('/config'));
+        const response = await retryWithExponentialBackoff(() => axiosInstance.get('/config'));
         if (!response.data || !Array.isArray(response.data)) {
             throw new ServiceError('Invalid response: Expected an array');
         }
@@ -41,7 +32,7 @@ const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
 
 const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
     try {
-        await retryWithExponentialBackoff(() => circuitBreaker.fire('/config', { method: 'POST', data: configItem }));
+        const response = await retryWithExponentialBackoff(() => axiosInstance.post('/config', configItem));
         emitEvent('CONFIGURATION_CREATED', configItem);
     } catch (error) {
         handleAxiosError(error, 'create configuration');
@@ -50,19 +41,10 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
 
 const deleteConfiguration = async (key: string): Promise<void> => {
     try {
-        await retryWithExponentialBackoff(() => circuitBreaker.fire(`/config/${key}`, { method: 'DELETE' }));
+        await retryWithExponentialBackoff(() => axiosInstance.delete(`/config/${key}`));
         emitEvent('CONFIGURATION_DELETED', { key });
     } catch (error) {
         handleAxiosError(error, 'delete configuration');
-    }
-};
-
-const fetchHealthStatus = async () => {
-    try {
-        const response = await retryWithExponentialBackoff(() => circuitBreaker.fire('/health'));
-        return response.data;
-    } catch (error) {
-        handleAxiosError(error, 'fetch health status');
     }
 };
 
@@ -73,4 +55,4 @@ const handleAxiosError = (error: unknown, operation: string) => {
     throw new ServiceError(`Failed to ${operation}`);
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration, fetchHealthStatus };
+export { fetchConfigurations, postConfiguration, deleteConfiguration };
