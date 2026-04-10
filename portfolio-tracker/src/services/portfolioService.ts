@@ -6,9 +6,10 @@ import { publishPortfolioUpdate } from '../eventBus';
 import logger from './logger';
 import axios from 'axios';
 import { CircuitBreaker } from 'circuit-breaker-js';
+import env from '../config';
 
 const externalServiceBreaker = new CircuitBreaker();
-const externalServiceUrl = process.env.PORTFOLIO_SERVICE_URL;
+const externalServiceUrl = env.PORTFOLIO_SERVICE_URL;
 
 const fetchExternalServiceData = async (endpoint: string) => {
     return await externalServiceBreaker.run(async () => {
@@ -32,6 +33,16 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
     const duration = process.hrtime(start);
     logger.info('Created portfolio', { portfolioId: newPortfolio.id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
     return newPortfolio;
+};
+
+export const fetchExternalPortfolios = async (): Promise<Portfolio[]> => {
+    try {
+        const portfolios = await fetchExternalServiceData('');
+        return portfolios;
+    } catch (error) {
+        logger.error('Failed to fetch external portfolios', { error: error.message });
+        throw new ServiceError('Error fetching external portfolios');
+    }
 };
 
 export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Promise<Portfolio> => {

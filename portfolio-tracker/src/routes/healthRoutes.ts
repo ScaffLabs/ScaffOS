@@ -27,4 +27,17 @@ router.get('/ready', async (req, res) => {
     res.status(isPortfolioServiceReady ? 200 : 503).json({ status: isPortfolioServiceReady ? 'READY' : 'NOT READY' });
 });
 
+router.get('/metrics', async (req, res) => {
+    const memoryUsage = process.memoryUsage();
+    const uptime = process.uptime();
+    const portfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
+    const isPortfolioServiceUp = await checkExternalServiceHealth(portfolioServiceUrl);
+
+    res.json({
+        uptime,
+        memoryUsage,
+        portfolioService: isPortfolioServiceUp,
+    });
+});
+
 export default router;
