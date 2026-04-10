@@ -1,13 +1,10 @@
 import redisClient from './redisClient';
-import axios from 'axios';
+import os from 'os';
 import { config } from './config';
 import logger from './logger';
-import { enhancedCheckServiceHealth } from './eventService';
 
 const checkHealth = async () => {
     let redisHealthy = false;
-    let serviceHealthy = false;
-
     try {
         await redisClient.ping();
         redisHealthy = true;
@@ -16,20 +13,13 @@ const checkHealth = async () => {
         logger.error('Redis connection failed', error);
     }
 
-    try {
-        serviceHealthy = await enhancedCheckServiceHealth();
-        logger.info('Other service is healthy');
-    } catch (error) {
-        logger.error('Other service connection failed', error);
-    }
-
-    return { redisHealthy, serviceHealthy };
+    return { redisHealthy };
 };
 
 export const checkHealthEndpoint = async (req, res) => {
     const health = await checkHealth();
-    const allHealthy = health.redisHealthy && health.serviceHealthy;
-    res.status(allHealthy ? 200 : 503).json({ health });
+    const allHealthy = health.redisHealthy;
+    res.status(allHealthy ? 200 : 503).json({ health, memoryUsage: process.memoryUsage(), uptime: process.uptime(), cpuCount: os.cpus().length });
 };
 
 export const gracefulShutdown = async () => {
