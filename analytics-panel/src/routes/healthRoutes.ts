@@ -1,7 +1,5 @@
-// Import necessary modules
 import { Router } from 'express';
 import { healthCheckHandler, dependentHealthCheckHandler, readyCheckHandler } from '../handlers/healthCheck';
-import { healthCheckDependentServices } from '../api/analytics';
 import { monitorMemoryUsage } from '../utils/monitor';
 
 const router = Router();
