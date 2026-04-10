@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import userRoutes from '../userRoutes';
-import { createUser } from '../storage';
+import { createUser, findUserByEmail } from '../storage';
 import { validateApiKey } from '../apiKey';
 
 const app = express();
@@ -26,12 +26,13 @@ describe('User Routes Integration Tests', () => {
         expect(res.body).toHaveProperty('id');
     });
 
-    it('should return 404 for non-existent user', async () => {
+    it('should return 409 for duplicate email', async () => {
         const res = await request(app)
-            .get('/api/users/nonexistentId')
-            .set('x-api-key', apiKey);
-        expect(res.status).toBe(404);
-        expect(res.body).toEqual({ error: 'User not found' });
+            .post('/api/users')
+            .set('x-api-key', apiKey)
+            .send({ username: 'duplicateuser', email: 'test@example.com' });
+        expect(res.status).toBe(409);
+        expect(res.body).toEqual({ error: 'Email already in use' });
     });
 
     it('should return 400 for invalid user creation data', async () => {
@@ -50,5 +51,21 @@ describe('User Routes Integration Tests', () => {
             .send({ username: 'user', email: 'user@example.com' });
         expect(res.status).toBe(401);
         expect(res.body).toEqual({ error: 'Invalid API key' });
+    });
+
+    it('should get all users', async () => {
+        const res = await request(app)
+            .get('/api/users')
+            .set('x-api-key', apiKey);
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body)).toBe(true);
+    });
+
+    it('should return 404 for non-existent user', async () => {
+        const res = await request(app)
+            .get('/api/users/nonexistentId')
+            .set('x-api-key', apiKey);
+        expect(res.status).toBe(404);
+        expect(res.body).toEqual({ error: 'User not found' });
     });
 });
