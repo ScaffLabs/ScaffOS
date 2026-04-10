@@ -26,8 +26,7 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
             throw new ValidationError('Invalid input data: ' + bodyValidation.error.errors.map(e => e.message).join(', '));
         }
         const { id, data } = bodyValidation.data;
-        const timestamp = new Date();
-        store.create({ ...data, timestamp }, id);
+        store.create(data, id);
         logger.info(`Created new entry: ${id}`);
         res.status(201).json({ message: 'Entry created', id });
     } catch (error) {
@@ -51,7 +50,7 @@ export const updateDashboardEntry = async (req: Request, res: Response): Promise
             throw new NotFoundError('Entry not found.');
         }
         const updatedData = { ...existingEntry.data, ...bodyValidation.data };
-        store.update(id, { id, data: updatedData });
+        store.update(id, updatedData);
         logger.info(`Updated entry: ${id}`);
         res.status(204).send();
     } catch (error) {

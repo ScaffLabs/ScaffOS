@@ -19,7 +19,6 @@ export const seedData = (store: InMemoryStore<LatencyData>): void => {
         { path: '/api/test3', duration: 300, timestamp: new Date() },
         { path: '/api/test4', duration: 400, timestamp: new Date() },
     ];
-
     sampleData.forEach(data => {
         store.create(data, data.path);
     });
@@ -27,10 +26,6 @@ export const seedData = (store: InMemoryStore<LatencyData>): void => {
 
 export const clearStore = <T>(store: InMemoryStore<T>): void => {
     store.clearData();
-};
-
-export const migrateStore = (sourceStore: InMemoryStore<any>, targetStore: InMemoryStore<any>): void => {
-    sourceStore.migrateData(targetStore);
 };
 
 export const transferEntries = <T>(sourceStore: InMemoryStore<T>, targetStore: InMemoryStore<T>, ids: string[]): void => {
