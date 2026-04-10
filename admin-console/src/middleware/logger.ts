@@ -42,12 +42,3 @@ export const logError = (err: Error, req: Request, res: Response, next: NextFunc
     });
     res.status(500).json({ error: 'Internal Server Error' });
 };
-
-export const logPerformance = (req: Request, res: Response, next: NextFunction) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        logger.info(`Performance Log: ${req.method} ${req.originalUrl} took ${duration}ms`);
-    });
-    next();
-};
