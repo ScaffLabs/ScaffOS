@@ -1,8 +1,6 @@
-import { Order, OrderSchema } from './types';
+import { Order } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
-import { queryDatabase } from './db';
-import logger from './logger';
-import { emitOrderEvent } from './eventBus';
+import { storage } from './storage'; // Change to postgresStorage when using PostgreSQL
 
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -11,71 +9,29 @@ const createOrderService = async (orderData: unknown) => {
     }
     const order = parsedOrder.data;
     try {
-        const createdOrder = await queryDatabase('INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5) RETURNING *', [order.id, order.type, order.price, order.quantity, order.status]);
-        logger.info('Order created successfully', { order: createdOrder.rows[0] });
-        emitOrderEvent({ type: 'ORDER_CREATED', payload: createdOrder.rows[0] });
-        await notifyOtherServices(createdOrder.rows[0]);
-        return createdOrder.rows[0];
+        const createdOrder = await storage.create(order);
+        emitOrderEvent({ type: 'ORDER_CREATED', payload: createdOrder });
+        return createdOrder;
     } catch (error) {
-        logger.error('Database error during order creation', { error });
         throw new ServiceError('Failed to create order due to database error.');
     }
 };
 
-const notifyOtherServices = async (order: Order) => {
-    const urls = [
-        `${process.env.ANOTHER_SERVICE_URL}/orders`,
-        `${process.env.ORDER_SERVICE_URL}/orders`
-    ];
-    const promises = urls.map(url => postData(url, order));
-    try {
-        await Promise.all(promises);
-        logger.info('Successfully notified other services.');
-    } catch (error) {
-        logger.error('Failed to notify other services', { error });
-    }
-};
-
 const updateOrderService = async (id: string, updates: Partial<Order>) => {
-    const parsedUpdates = OrderSchema.partial().safeParse(updates);
-    if (!parsedUpdates.success) {
-        throw new ValidationError('Invalid update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
+    const updatedOrder = await storage.update(id, updates);
+    if (!updatedOrder) {
+        throw new NotFoundError('Order not found.');
     }
-    try {
-        const updatedOrder = await queryDatabase('UPDATE orders SET type = $1, price = $2, quantity = $3, status = $4 WHERE id = $5 RETURNING *', [updates.type, updates.price, updates.quantity, updates.status, id]);
-        if (updatedOrder.rowCount === 0) {
-            throw new NotFoundError('Order not found.');
-        }
-        emitOrderEvent({ type: 'ORDER_UPDATED', payload: updatedOrder.rows[0] });
-        await notifyOtherServices(updatedOrder.rows[0]);
-        return updatedOrder.rows[0];
-    } catch (error) {
-        logger.error('Error updating order', { error });
-        throw new ServiceError('Failed to update order due to database error.');
-    }
+    emitOrderEvent({ type: 'ORDER_UPDATED', payload: updatedOrder });
+    return updatedOrder;
 };
 
 const deleteOrderService = async (id: string) => {
-    try {
-        const deletedOrder = await queryDatabase('DELETE FROM orders WHERE id = $1 RETURNING *', [id]);
-        if (deletedOrder.rowCount === 0) {
-            throw new NotFoundError('Order not found.');
-        }
-        emitOrderEvent({ type: 'ORDER_DELETED', payload: { id } });
-    } catch (error) {
-        logger.error('Error deleting order', { error });
-        throw new ServiceError('Failed to delete order due to database error.');
-    }
+    await storage.delete(id);
 };
 
-const getOrdersService = async (pagination: { limit: number; offset: number }) => {
-    try {
-        const orders = await queryDatabase('SELECT * FROM orders LIMIT $1 OFFSET $2', [pagination.limit, pagination.offset]);
-        return orders.rows;
-    } catch (error) {
-        logger.error('Error retrieving orders', { error });
-        throw new ServiceError('Failed to retrieve orders.');
-    }
+const getOrdersService = async () => {
+    return await storage.findAll();
 };
 
 export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };

@@ -2,7 +2,15 @@ import { EventEmitter } from 'events';
 import { Order, OrderId } from './types';
 import { queryDatabase } from './db';
 
-class InMemoryStorage<T extends { id: string }> {
+interface Database<T> {
+    create(item: T): Promise<T>;
+    read(id: OrderId): Promise<T | null>;
+    update(id: OrderId, updates: Partial<T>): Promise<T | null>;
+    delete(id: OrderId): Promise<void>;
+    findAll(): Promise<T[]>;
+}
+
+class InMemoryStorage<T extends { id: string }> implements Database<T> {
     private items: T[] = [];
     private eventEmitter: EventEmitter;
 
