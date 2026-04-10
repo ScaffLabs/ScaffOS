@@ -59,3 +59,28 @@ export const PaginationSchema = z.object({
 export const validatePaginationRequest = (data: unknown) => {
     return PaginationSchema.parse(data);
 };
+
+/**
+ * Represents a notification event for alert processing.
+ * @property {OrderId} alertId - The identifier of the alert that triggered the event.
+ * @property {string} eventType - The type of event triggered.
+ */
+export type AlertEvent = { alertId: OrderId; eventType: 'created' | 'updated' | 'processed' };
+
+/**
+ * Schema for validating alert events.
+ */
+export const AlertEventSchema = z.object({
+    alertId: z.string().length(24), // Assuming ObjectId format
+    eventType: z.enum(['created', 'updated', 'processed']),
+});
+
+/**
+ * Validates an alert event.
+ * @param data - The event data to validate.
+ * @returns {AlertEvent} - The validated alert event data.
+ * @throws {ZodError} - If validation fails.
+ */
+export const validateAlertEvent = (data: unknown): AlertEvent => {
+    return AlertEventSchema.parse(data);
+};
