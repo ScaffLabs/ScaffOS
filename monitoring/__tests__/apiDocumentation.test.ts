@@ -46,7 +46,7 @@ describe('API Documentation', () => {
     test('POST /dashboard with invalid body', async () => {
         const response = await request(app).post('/dashboard').send({});
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe('Invalid input data. Both id and value are required.');
+        expect(response.body.error).toBe('Invalid input data: Both id and value are required.');
     });
 
     test('PUT /dashboard/:id with non-existent entry', async () => {

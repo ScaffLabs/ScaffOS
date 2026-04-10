@@ -40,7 +40,7 @@ describe('Dashboard Endpoint', () => {
     it('should return 400 for missing id', async () => {
         const response = await request(app).post('/dashboard').send({ value: 300 });
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe('Invalid input data. Both id and value are required.');
+        expect(response.body.error).toBe('Invalid input data: Both id and value are required.');
     });
 
     it('should return 404 for updating non-existent entry', async () => {
