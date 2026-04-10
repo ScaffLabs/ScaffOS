@@ -41,6 +41,11 @@ export const gracefulShutdown = async () => {
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 
+export const readyCheck = async (req, res) => {
+    const isHealthy = await checkHealth();
+    res.status(isHealthy.redisHealthy && isHealthy.serviceHealthy ? 200 : 503).json({ ready: isHealthy });
+};
+
 export const healthCheckMiddleware = async (req, res, next) => {
     try {
         const health = await checkHealth();
@@ -50,9 +55,4 @@ export const healthCheckMiddleware = async (req, res, next) => {
         logger.error('Health check middleware error:', error);
         res.status(500).json({ error: 'Health check failed' });
     }
-};
-
-export const readyCheck = async (req, res) => {
-    const isHealthy = await checkHealth();
-    res.status(isHealthy.redisHealthy && isHealthy.serviceHealthy ? 200 : 503).json({ ready: isHealthy });
 };
