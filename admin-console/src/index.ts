@@ -7,7 +7,7 @@ import Database from './storage/Database';
 import healthRouter from './routes/health';
 import configRouter from './routes/config';
 import errorHandler from './middleware/errorHandler';
-import { logRequest, logError, logPerformance } from './middleware/logger';
+import { logRequest } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
 import { sanitizeBody, sanitizeQueryParams } from './middleware/sanitization';
@@ -26,7 +26,6 @@ app.use(rateLimiter);
 app.use(logRequest);
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
-app.use(logError);
 app.use(errorHandler);
 
 const gracefulShutdown = async (signal) => {
@@ -43,6 +42,7 @@ const startServer = async () => {
         await db.connect();
         const server = app.listen(config.port, () => {
             console.log(`Server running on http://localhost:${config.port}`);
+            console.log(`Environment: ${config.nodeEnv}`);
         });
     } catch (error) {
         console.error(`Failed to start server: ${error.message}`);

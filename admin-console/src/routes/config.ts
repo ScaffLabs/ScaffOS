@@ -31,27 +31,11 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Get All Configurations with Pagination, Filtering, and Sorting
+// Get All Configurations
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    const { limit = 10, offset = 0, sortBy = 'key', order = 'asc', key } = req.query;
     try {
         const allConfigs = await db.findAllConfigurations();
-        let filteredConfigs = allConfigs;
-
-        // Filtering (if needed)
-        if (key) {
-            filteredConfigs = filteredConfigs.filter(config => config.key.includes(String(key)));
-        }
-
-        // Sorting
-        filteredConfigs.sort((a, b) => {
-            const compare = a[sortBy] < b[sortBy] ? -1 : 1;
-            return order === 'asc' ? compare : -compare;
-        });
-
-        // Pagination
-        const paginatedConfigs = filteredConfigs.slice(Number(offset), Number(offset) + Number(limit));
-        res.status(200).json(paginatedConfigs);
+        res.status(200).json(allConfigs);
     } catch (error) {
         return next(error);
     }
@@ -78,9 +62,6 @@ router.put('/', async (req: Request, res: Response, next: NextFunction) => {
         await db.updateConfiguration(configItem);
         res.status(200).json({ message: 'Configuration updated successfully!' });
     } catch (error) {
-        if (error instanceof NotFoundError) {
-            return next(new NotFoundError('Configuration not found')); 
-        }
         return next(error);
     }
 });
