@@ -42,6 +42,22 @@ class InMemoryStore<T> {
     public clear(): void {
         this.storage.clear();
     }
+
+    public migrateTo(targetStore: InMemoryStore<T>): void {
+        this.getAll().forEach(entity => {
+            targetStore.create(entity.data, entity.id);
+        });
+    }
+
+    public transaction(operations: (store: InMemoryStore<T>) => void): void {
+        const backup = new Map(this.storage);
+        try {
+            operations(this);
+        } catch (error) {
+            this.storage = backup; // Rollback on error
+            throw error;
+        }
+    }
 }
 
-export default InMemoryStore;
+export default InMemoryStore; 

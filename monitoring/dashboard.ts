@@ -8,16 +8,14 @@ const store = new InMemoryStore<DashboardEntry>();
 
 export const listDashboardEntries = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { limit = 10, offset = 0 } = req.query;
         const entries = store.getAll();
-        const paginatedEntries = entries.slice(Number(offset), Number(offset) + Number(limit));
-        if (paginatedEntries.length === 0) {
+        if (entries.length === 0) {
             return res.status(204).json([]);
         }
-        res.status(200).json(paginatedEntries);
+        res.status(200).json(entries);
     } catch (error) {
         logger.error(error, req);
-        res.status(500).json({ error: 'Failed to fetch entries. Please try again later.' });
+        res.status(500).json({ error: 'Failed to fetch entries.' });
     }
 };
 
@@ -25,12 +23,9 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
     try {
         const bodyValidation = DashboardEntrySchema.safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data: ' + bodyValidation.error.errors.map(e => e.message).join(', '));
+            throw new ValidationError('Invalid input data.');
         }
         const { id, data } = bodyValidation.data;
-        if (store.read(id)) {
-            throw new ValidationError('Entry with this ID already exists.');
-        }
         store.create(data, id);
         logger.info(`Created new entry: ${id}`);
         res.status(201).json({ message: 'Entry created', id });
@@ -38,10 +33,8 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
         logger.error(error, req);
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
-        } else if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
@@ -50,7 +43,7 @@ export const updateDashboardEntry = async (req: Request, res: Response): Promise
         const { id } = req.params;
         const bodyValidation = DashboardEntrySchema.partial().safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data: ' + bodyValidation.error.errors.map(e => e.message).join(', '));
+            throw new ValidationError('Invalid input data.');
         }
         const existingEntry = store.read(id);
         if (!existingEntry) {
@@ -65,15 +58,14 @@ export const updateDashboardEntry = async (req: Request, res: Response): Promise
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
 export const deleteDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const existingEntry = store.read(id);
-        if (!existingEntry) {
+        if (!store.read(id)) {
             throw new NotFoundError('Entry not found.');
         }
         store.delete(id);
@@ -84,6 +76,17 @@ export const deleteDashboardEntry = async (req: Request, res: Response): Promise
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+export const migrateStore = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const targetStore = new InMemoryStore<DashboardEntry>();
+        store.migrateTo(targetStore);
+        res.status(200).json({ message: 'Data migrated successfully.' });
+    } catch (error) {
+        logger.error(error, req);
+        res.status(500).json({ error: 'Migration failed.' });
     }
 };
