@@ -9,7 +9,6 @@ import rateLimit from 'express-rate-limit';
 import logger, { logStartup } from './logger';
 import { config } from './config';
 import { runMigrations } from './migrations';
-import { setupRequestQueue } from './requestQueue';
 import './memoryMonitor';
 
 const app = express();
@@ -31,7 +30,6 @@ app.use(limiter);
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 orderRouter(app);
-setupRequestQueue(app);
 
 const startServer = async () => {
     await runMigrations();

@@ -3,7 +3,6 @@ import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import { ValidationError, NotFoundError } from './errors';
 import logger from './logger';
-import { sanitizeInput } from './sanitization';
 
 export const createOrderValidators = [
     body('id').isString().trim().escape().withMessage('ID must be a string'),
@@ -14,24 +13,22 @@ export const createOrderValidators = [
 ];
 
 export const createOrder = async (req: Request, res: Response) => {
-    sanitizeInput(req, res, async () => {
-        const validationErrors = validationResult(req);
-        if (!validationErrors.isEmpty()) {
-            throw new ValidationError('Validation failed: ' + validationErrors.array().map(e => e.msg).join(', '));
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        throw new ValidationError('Validation failed: ' + validationErrors.array().map(e => e.msg).join(', '));
+    }
+    try {
+        const order = req.body;
+        const createdOrder = await createOrderService(order);
+        res.status(201).json(createdOrder);
+        logger.info('Order created successfully', { order });
+    } catch (error) {
+        logger.error('Error creating order', { error: error.message });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ message: error.message });
         }
-        try {
-            const order = req.body;
-            const createdOrder = await createOrderService(order);
-            res.status(201).json(createdOrder);
-            logger.info('Order created successfully', { order });
-        } catch (error) {
-            logger.error('Error creating order', { error: error.message });
-            if (error instanceof ValidationError) {
-                return res.status(400).json({ message: error.message });
-            }
-            res.status(500).json({ message: 'Internal Server Error' });
-        }
-    });
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
 };
 
 export const updateOrder = async (req: Request, res: Response) => {
@@ -51,30 +48,3 @@ export const updateOrder = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
-
-export const deleteOrder = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    try {
-        await deleteOrderService(id);
-        res.status(204).send();
-        logger.info('Order deleted successfully', { id });
-    } catch (error) {
-        logger.error('Error deleting order', { error: error.message });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ message: error.message });
-        }
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-export const getOrders = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, sort, order = 'asc' } = req.query;
-    try {
-        const orders = await getOrdersService({ limit: parseInt(limit as string), offset: parseInt(offset as string), sort: sort as string, order: order as 'asc' | 'desc' });
-        res.status(200).json(orders);
-    } catch (error) {
-        logger.error('Error retrieving orders', { error: error.message });
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-

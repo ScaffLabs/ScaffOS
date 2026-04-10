@@ -1,6 +1,5 @@
 import { closeDatabaseConnection } from './db';
 import logger from './logger';
-import { server } from './index';
 
 export const setupGracefulShutdown = (server) => {
     const shutdown = async () => {
