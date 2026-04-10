@@ -1,6 +1,6 @@
 import axios from 'axios';
 import logger from '../utils/logger';
-import { Pool } from 'pg'; // PostgreSQL connection pooling
+import { Pool } from 'pg';
 import { circuitBreaker, withRetry } from './resilience';
 
 const serviceUrls = {

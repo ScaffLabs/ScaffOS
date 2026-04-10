@@ -4,29 +4,24 @@ import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import InMemoryStore from '../storage/InMemoryStore';
 import axios from 'axios';
+import { withRetry } from './resilience';
 
 const store = new InMemoryStore<BacktestResult>();
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
 const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
 
 async function fetchOrders() {
-    try {
+    return await withRetry(async () => {
         const response = await axios.get(`${ORDER_SERVICE_URL}/api/orders`);
         return response.data;
-    } catch (error) {
-        logger.error('Error fetching orders:', error);
-        throw new ServiceError('Failed to fetch orders');
-    }
+    });
 }
 
 async function fetchHistoricalData() {
-    try {
+    return await withRetry(async () => {
         const response = await axios.get(`${DATA_SERVICE_URL}/api/historical-data`);
         return response.data;
-    } catch (error) {
-        logger.error('Error fetching historical data:', error);
-        throw new ServiceError('Failed to fetch historical data');
-    }
+    });
 }
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number) {
