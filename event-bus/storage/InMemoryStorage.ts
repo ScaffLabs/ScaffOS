@@ -56,11 +56,9 @@ export class InMemoryStorage<T> implements IStorage<T> {
     }
 
     async transaction(operations: (() => Promise<void>)[]): Promise<void> {
-        const results = [];
         for (const operation of operations) {
-            results.push(await operation());
+            await operation();
         }
-        return results;
     }
 
     async migrate(): Promise<void> {
