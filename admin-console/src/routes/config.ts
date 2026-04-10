@@ -4,20 +4,19 @@ import Database from '../storage/Database';
 import { ValidationError, NotFoundError } from '../errors/CustomErrors';
 import { Request, Response, NextFunction } from 'express';
 import { logRequest } from '../middleware/logger';
+import rateLimiter from '../middleware/rateLimiter';
 
 const router = express.Router();
 const db = new Database();
 
-// Middleware to log requests
+// Middleware to log requests & rate limit
 router.use(logRequest);
+router.use(rateLimiter);
 
 // Create Configuration
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
-        if (!configItem || !configItem.key || !configItem.value) {
-            throw new ValidationError('Key and Value are required.');
-        }
         ConfigurationItemSchema.parse(configItem);
         await db.createConfiguration(configItem);
         res.status(201).json({ message: 'Configuration created successfully!' });
@@ -29,6 +28,68 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Other routes unchanged...  
+// Get All Configurations with Pagination, Filtering, and Sorting
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    const { limit = 10, offset = 0, sortBy = 'key', order = 'asc' } = req.query;
+    try {
+        const allConfigs = await db.findAllConfigurations();
+        let filteredConfigs = allConfigs;
+
+        // Filtering (if needed)
+        if (req.query.key) {
+            filteredConfigs = filteredConfigs.filter(config => config.key.includes(req.query.key));
+        }
+
+        // Sorting
+        filteredConfigs.sort((a, b) => {
+            const compare = a[sortBy] < b[sortBy] ? -1 : 1;
+            return order === 'asc' ? compare : -compare;
+        });
+
+        // Pagination
+        const paginatedConfigs = filteredConfigs.slice(Number(offset), Number(offset) + Number(limit));
+        res.status(200).json(paginatedConfigs);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+// Get Configuration by Key
+router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const config = await db.readConfiguration(req.params.key);
+        if (!config) {
+            throw new NotFoundError('Configuration not found');
+        }
+        res.status(200).json(config);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+// Update Configuration
+router.put('/', async (req: Request, res: Response, next: NextFunction) => {
+    const configItem: ConfigurationItem = req.body;
+    try {
+        ConfigurationItemSchema.parse(configItem);
+        await db.updateConfiguration(configItem);
+        res.status(200).json({ message: 'Configuration updated successfully!' });
+    } catch (error) {
+        if (error instanceof NotFoundError) {
+            return next(new NotFoundError('Configuration not found')); 
+        }
+        return next(error);
+    }
+});
+
+// Delete Configuration
+router.delete('/:key', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await db.deleteConfiguration(req.params.key);
+        res.status(204).send();
+    } catch (error) {
+        return next(error);
+    }
+});
 
 export default router;
