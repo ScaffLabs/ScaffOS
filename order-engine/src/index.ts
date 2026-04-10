@@ -8,7 +8,6 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import logger, { logStartup } from './logger';
-import { sanitizeInput } from './sanitization';
 import { config } from './config';
 
 const app = express();
@@ -16,10 +15,8 @@ const PORT = config.PORT;
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: ['http://allowed-origin.com', 'http://another-allowed-origin.com'] }));
+app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));
-app.use(sanitizeInput);
-app.use(logger.logRequest);
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -47,5 +44,3 @@ startServer().catch(err => {
     logger.error('Failed to start server:', err);
     process.exit(1);
 });
-
-app.use(errorHandlingMiddleware);
