@@ -4,7 +4,6 @@ import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import InMemoryStore from '../storage/InMemoryStore';
 import axios from 'axios';
-import { eventEmitter } from './resilience';
 
 const store = new InMemoryStore<BacktestResult>();
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
@@ -75,8 +74,7 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
     await store.create(result);
-    eventEmitter.emit('BACKTEST_CREATED', { result });
-    logger.info({ message: 'Audit log: Backtest created', id: backtestId, performanceMetrics }); // Audit log
+    logger.info({ message: 'Audit log: Backtest created', id: backtestId, performanceMetrics });
     return BacktestResultSchema.parse(result);
 };
 
