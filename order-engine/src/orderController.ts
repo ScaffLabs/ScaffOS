@@ -1,11 +1,9 @@
-// Import necessary packages
 import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
 import rateLimit from 'express-rate-limit';
-import { sanitizeInput } from './sanitization';
 
 // Rate limiting for order creation
 const createOrderLimiter = rateLimit({
@@ -22,6 +20,64 @@ export const createOrderValidators = [
     body('quantity').isInt({ gt: 0 }).withMessage('Quantity must be a positive integer'),
     body('status').isIn(['open', 'filled', 'cancelled']).withMessage('Status must be one of open, filled, or cancelled')
 ];
+
+/**
+ * @openapi
+ * /orders:
+ *   get:
+ *     summary: Retrieve a list of orders
+ *     parameters:
+ *       - name: limit
+ *         in: query
+ *         description: Number of orders to return
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: offset
+ *         in: query
+ *         description: Number of orders to skip
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *       - name: sort
+ *         in: query
+ *         description: Field to sort by
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (asc or desc)
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *     responses:
+ *       200:
+ *         description: A list of orders
+ *       404:
+ *         description: No orders found
+ */
+// Get Orders
+export const getOrders = async (req: Request, res: Response) => {
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = parseInt(req.query.offset as string) || 0;
+    const sort = req.query.sort as string;
+    const order = req.query.order as string;
+
+    try {
+        const orders = await getOrdersService({ limit, offset, sort, order });
+        if (!orders.length) {
+            return res.status(404).json({ message: 'No orders found.' });
+        }
+        res.status(200).json(orders);
+    } catch (error) {
+        logger.error('Error retrieving orders', { error: error.message, requestId: req.headers['x-request-id'] });
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
 
 // Create Order
 export const createOrder = [createOrderLimiter, createOrderValidators, async (req: Request, res: Response) => {
@@ -42,20 +98,6 @@ export const createOrder = [createOrderLimiter, createOrderValidators, async (re
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }];
-
-// Get Orders
-export const getOrders = async (req: Request, res: Response) => {
-    try {
-        const orders = await getOrdersService();
-        if (!orders.length) {
-            return res.status(404).json({ message: 'No orders found.' });
-        }
-        res.status(200).json(orders);
-    } catch (error) {
-        logger.error('Error retrieving orders', { error: error.message, requestId: req.headers['x-request-id'] });
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
 
 // Update Order
 export const updateOrder = async (req: Request, res: Response) => {
