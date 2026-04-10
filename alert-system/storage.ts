@@ -69,4 +69,49 @@ class InMemoryAlertStore implements AlertStoreInterface {
     }
 }
 
-export const alertStore = new InMemoryAlertStore();
+class MongoAlertStore implements AlertStoreInterface {
+    async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
+        const newAlert = new AlertModel({ ...alert, id: new mongoose.Types.ObjectId().toString() });
+        await newAlert.save();
+        return newAlert;
+    }
+
+    async read(id: OrderId): Promise<AlertMessage | null> {
+        return AlertModel.findById(id).exec();
+    }
+
+    async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
+        return AlertModel.findByIdAndUpdate(id, alert, { new: true }).exec();
+    }
+
+    async delete(id: OrderId): Promise<boolean> {
+        const result = await AlertModel.deleteOne({ id }).exec();
+        return result.deletedCount > 0;
+    }
+
+    async findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]> {
+        return AlertModel.find(query).exec();
+    }
+
+    async deleteAll(): Promise<void> {
+        await AlertModel.deleteMany({}).exec();
+    }
+
+    async transaction(operations: Array<() => Promise<void>>): Promise<void> {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            for (const operation of operations) {
+                await operation();
+            }
+            await session.commitTransaction();
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
+        }
+    }
+}
+
+export const alertStore = process.env.NODE_ENV === 'production' ? new MongoAlertStore() : new InMemoryAlertStore();
