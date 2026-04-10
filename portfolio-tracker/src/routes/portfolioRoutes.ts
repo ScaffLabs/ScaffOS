@@ -3,9 +3,11 @@ import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import csrf from 'csurf';
+import { sanitize } from '../middleware/sanitization';
 import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
+import { auditLog } from '../services/auditService';
 
 const router = Router();
 
@@ -24,6 +26,9 @@ const limiter = rateLimit({
 });
 router.use(limiter);
 
+// Middleware for sanitization
+router.use(sanitize);
+
 // Validation rules for portfolio creation and updates
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
@@ -40,7 +45,6 @@ const portfolioValidation = [
     })
 ];
 
-// GET all portfolios with pagination
 router.get('/', async (req, res) => {
     const { limit = 10, offset = 0 } = req.query;
     try {
@@ -61,6 +65,7 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
     try {
         const portfolio = await createPortfolio(req.body);
+        await auditLog('Portfolio Created', portfolio);
         logger.info('Portfolio created', { portfolioId: portfolio.id });
         res.status(201).json(portfolio);
     } catch (error) {
@@ -95,6 +100,7 @@ router.put('/:id', portfolioValidation, async (req, res) => {
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
+        await auditLog('Portfolio Updated', { id: req.params.id, changes: req.body });
         logger.info('Portfolio updated', { portfolioId: req.params.id });
         res.status(200).json(updatedPortfolio);
     } catch (error) {
@@ -110,6 +116,7 @@ router.put('/:id', portfolioValidation, async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         await deletePortfolio(req.params.id);
+        await auditLog('Portfolio Deleted', { id: req.params.id });
         logger.info('Portfolio deleted', { portfolioId: req.params.id });
         res.status(204).send();
     } catch (error) {
