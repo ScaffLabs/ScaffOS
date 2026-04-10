@@ -27,7 +27,6 @@ To start the service in development mode:
 ```bash
 npm run dev
 ```
-
 To build and start the service:
 ```bash
 npm run build
@@ -89,6 +88,14 @@ npm start
 | `DATA_SERVICE_URL`    | URL for the data service.           |
 | `DATABASE_URL`        | Database connection string.         |
 | `LOG_LEVEL`           | Logging level (info, warn, error). |
+| `API_KEY`             | API key for external services.      |
+| `SECRET_KEY`          | Secret key for authentication.      |
+| `HEALTH_CHECK_INTERVAL`| Interval for health checks in milliseconds. |
+| `DB_USER`             | Database username.                  |
+| `DB_PASS`             | Database password.                  |
+| `DB_HOST`             | Database host.                      |
+| `DB_PORT`             | Database port.                      |
+| `DB_NAME`             | Database name.                      |
 
 ## Development Guide
 - Use `npm run test` to run tests.

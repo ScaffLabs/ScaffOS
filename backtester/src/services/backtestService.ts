@@ -10,6 +10,7 @@ const store = new InMemoryStore<BacktestResult>();
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
 const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
 
+// Function to fetch historical data from the external data service
 async function fetchHistoricalData(): Promise<HistoricalData[]> {
     return await withRetry(async () => {
         const response = await axios.get(`${DATA_SERVICE_URL}/api/historical-data`);
@@ -17,6 +18,7 @@ async function fetchHistoricalData(): Promise<HistoricalData[]> {
     });
 }
 
+// Calculate returns based on historical data and strategy parameters
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
@@ -25,23 +27,28 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     let trades = 0;
     let successfulTrades = 0;
 
+    // Iterate through historical data to simulate trades
     for (let i = 1; i < historicalData.length; i++) {
         const previousPrice = historicalData[i - 1].price;
         const currentPrice = historicalData[i].price;
         if (typeof currentPrice !== 'number' || currentPrice <= 0) {
             throw new ValidationError('Price must be a positive number.');
         }
+
+        // Check if the current price indicates a buying opportunity
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
+            // Calculate returns after buying
             totalReturns += (currentPrice * (1 - slippage)) - previousPrice;
             successfulTrades++;
-        }
-        else if (currentPrice < previousPrice * (1 - sellThreshold)) {
+        } else if (currentPrice < previousPrice * (1 - sellThreshold)) {
             trades++;
+            // Calculate returns after selling
             totalReturns += previousPrice - (currentPrice * (1 + slippage));
             successfulTrades++;
         }
     }
+    // Calculate win rate as a percentage of successful trades
     const winRate = trades > 0 ? (successfulTrades / trades) * 100 : 0;
     const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}%`;
     return { totalReturns, trades, winRate, performanceMetrics };
@@ -52,8 +59,10 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     if (!validation.success) {
         throw new ValidationError('Invalid strategy parameters: ' + validation.error.format());
     }
+    // Fetch historical data if not provided
     const historicalDataFetched = await fetchHistoricalData();
     const dataToUse = historicalData.length ? historicalData : historicalDataFetched;
+    // Calculate returns using the provided parameters and historical data
     const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(dataToUse, params.buyThreshold, params.sellThreshold, params.slippage);
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
