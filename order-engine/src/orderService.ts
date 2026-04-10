@@ -46,7 +46,7 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
 const deleteOrderService = async (id: string) => {
     try {
         await storage.delete(id);
-        await fetchData(`${process.env.ORDER_SERVICE_URL}/orders/${id}`, { method: 'DELETE' });
+        await postData(`${process.env.ORDER_SERVICE_URL}/orders/${id}`, {});
         await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
         logger.info('Order deleted successfully', { id });
     } catch (error) {
@@ -54,3 +54,5 @@ const deleteOrderService = async (id: string) => {
         throw new NotFoundError('Order not found.');
     }
 };
+
+export { createOrderService, updateOrderService, deleteOrderService };
