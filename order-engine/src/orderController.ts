@@ -4,6 +4,14 @@ import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
+import rateLimit from 'express-rate-limit';
+
+// Rate limiting for order creation
+const createOrderLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 requests per windowMs
+    message: 'Too many orders created from this IP, please try again later'
+});
 
 // Validation middleware for creating an order
 export const createOrderValidators = [
@@ -15,7 +23,7 @@ export const createOrderValidators = [
 ];
 
 // Create Order
-export const createOrder = [createOrderValidators, async (req: Request, res: Response) => {
+export const createOrder = [createOrderLimiter, createOrderValidators, async (req: Request, res: Response) => {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         return res.status(400).json({ errors: validationErrors.array() });

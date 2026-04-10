@@ -7,9 +7,7 @@ import { setupGracefulShutdown } from './shutdown';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { requestIdMiddleware, errorHandlingMiddleware } from './middleware';
 import logger, { logStartup } from './logger';
-import { setupRequestQueue } from './requestQueue';
 import { sanitizeInput } from './sanitization';
 import { config } from './config';
 
@@ -20,7 +18,6 @@ const PORT = config.PORT;
 app.use(helmet());
 app.use(cors({ origin: ['http://allowed-origin.com', 'http://another-allowed-origin.com'] }));
 app.use(bodyParser.json({ limit: '1mb' }));
-app.use(requestIdMiddleware);
 app.use(sanitizeInput);
 app.use(logger.logRequest);
 
@@ -35,7 +32,6 @@ app.use(limiter);
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 orderRouter(app);
-setupRequestQueue(app);
 
 const startServer = async () => {
     await migrateData();
