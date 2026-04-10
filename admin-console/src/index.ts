@@ -12,21 +12,10 @@ import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
 import { logAudit } from './middleware/auditLogger';
 import { sanitizeQueryParams } from './middleware/sanitization';
-import { createPool } from 'mysql2/promise';
-import { CircuitBreaker } from 'opossum';
 
 dotenv.config();
 const app = express();
 const db = new Database();
-
-const pool = createPool({
-    host: 'localhost',
-    user: 'root',
-    database: 'admin_console',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
 
 const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.com'];
 app.use(cors({ origin: allowedOrigins }));
