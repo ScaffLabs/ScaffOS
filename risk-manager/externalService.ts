@@ -22,18 +22,46 @@ const fetchWithRetry = async (url: string, retries: number = 5): Promise<any> =>
     }
 };
 
-const checkServiceHealth = async (url: string): Promise<boolean> => {
+let failureCount = 0;
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+const CIRCUIT_BREAKER_TIMEOUT = 30000;
+let isCircuitOpen = false;
+let circuitBreakerTimeout: NodeJS.Timeout;
+
+const circuitBreaker = async (url: string) => {
+    if (isCircuitOpen) {
+        throw new Error('Circuit breaker is open. Please try later.');
+    }
     try {
-        const response = await axios.get(url, { timeout: 5000 });
-        return response.status === 200;
+        const data = await fetchWithRetry(url);
+        failureCount = 0;
+        return data;
     } catch (error) {
-        logger.error(`Health check failed for ${url}: ${error.message}`);
-        return false;
+        failureCount++;
+        logger.error('Error fetching data:', error);
+        if (failureCount >= CIRCUIT_BREAKER_THRESHOLD) {
+            isCircuitOpen = true;
+            circuitBreakerTimeout = setTimeout(() => {
+                isCircuitOpen = false;
+                failureCount = 0;
+            }, CIRCUIT_BREAKER_TIMEOUT);
+        }
+        throw error;
     }
 };
 
 export const healthCheckServices = async () => {
-    const eventBusHealth = await checkServiceHealth(config.EVENT_BUS_URL);
-    const anotherServiceHealth = await checkServiceHealth(config.ANOTHER_SERVICE_URL);
+    const eventBusHealth = await circuitBreaker(config.EVENT_BUS_URL);
+    const anotherServiceHealth = await circuitBreaker(config.ANOTHER_SERVICE_URL);
     return { eventBus: eventBusHealth, anotherService: anotherServiceHealth };
+};
+
+export const fetchRiskData = async (riskId: string) => {
+    const url = `${config.ANOTHER_SERVICE_URL}/risk/${riskId}`;
+    return await circuitBreaker(url);
+};
+
+export const postRiskEvent = async (event: any) => {
+    const url = `${config.EVENT_BUS_URL}/events`;
+    return await axios.post(url, event);
 };
