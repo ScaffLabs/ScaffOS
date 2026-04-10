@@ -28,7 +28,7 @@ const notifyOtherServices = async (order: Order) => {
         `${process.env.ANOTHER_SERVICE_URL}/orders`,
         `${process.env.ORDER_SERVICE_URL}/orders`
     ];
-    const promises = urls.map(url => fetchData(url));
+    const promises = urls.map(url => fetchData(url, { method: 'POST', data: order }));
     try {
         await Promise.all(promises);
         logger.info('Successfully notified other services.');
@@ -37,7 +37,7 @@ const notifyOtherServices = async (order: Order) => {
     }
 };
 
-const updateOrderService = async (id: OrderId, updates: Partial<Order>) => {
+const updateOrderService = async (id: string, updates: Partial<Order>) => {
     const parsedUpdates = OrderSchema.partial().safeParse(updates);
     if (!parsedUpdates.success) {
         throw new ValidationError('Invalid update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
@@ -55,7 +55,7 @@ const updateOrderService = async (id: OrderId, updates: Partial<Order>) => {
     }
 };
 
-const deleteOrderService = async (id: OrderId) => {
+const deleteOrderService = async (id: string) => {
     try {
         const deletedOrder = await queryDatabase('DELETE FROM orders WHERE id = $1 RETURNING *', [id]);
         if (deletedOrder.rowCount === 0) {
