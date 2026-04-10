@@ -54,21 +54,22 @@ export class AlertController {
     }
 
     private async notifyExternalServices(alert: AlertMessage) {
-        try {
-            await Promise.all([
-                webhookCircuit.fire(alert).catch(err => {
-                    logger.error(err);
-                    throw new ServiceError('Webhook notification failed.');
-                }),
-                emailServiceCircuit.fire(alert).catch(err => {
-                    logger.error(err);
-                    throw new ServiceError('Email notification failed.');
-                })
-            ]);
-        } catch (error) {
-            logger.error(error);
-            throw new ServiceError('Failed to notify external services.');
-        }
+        const notifyWithRetry = async (attempt = 0) => {
+            try {
+                await Promise.all([
+                    webhookCircuit.fire(alert),
+                    emailServiceCircuit.fire(alert)
+                ]);
+            } catch (error) {
+                if (attempt < 5) {
+                    await new Promise(res => setTimeout(res, Math.pow(2, attempt) * 100));
+                    return notifyWithRetry(attempt + 1);
+                }
+                logger.error('Failed to notify services after retries:', error);
+                throw new ServiceError('Failed to notify external services.');
+            }
+        };
+        await notifyWithRetry();
     }
 
     async checkHealth(req: Request, res: Response) {
