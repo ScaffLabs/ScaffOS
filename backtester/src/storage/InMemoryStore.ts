@@ -61,7 +61,7 @@ export class InMemoryStore<T> implements StorageInterface<T> {
         await Promise.all(data.map(item => this.create(item)));
     }
 
-    async findByIndex(indexKey: string, value: any): Promise<Entity<T>[]> {
+    async findByIndex(indexKey: keyof T, value: any): Promise<Entity<T>[]> {
         return Array.from(this.store.values()).filter(entity => entity.data[indexKey] === value);
     }
 }
