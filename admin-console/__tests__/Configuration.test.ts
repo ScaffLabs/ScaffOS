@@ -89,4 +89,15 @@ describe('Configuration Component', () => {
 
         expect(await screen.findByText(/Failed to delete configuration. Please try again./i)).toBeInTheDocument();
     });
+
+    test('handles duplicate key error', async () => {
+        (postConfiguration as jest.Mock).mockRejectedValueOnce(new Error('Configuration with this key already exists'));
+        render(<Configuration />);
+
+        fireEvent.change(screen.getByLabelText(/Key/i), { target: { value: 'duplicateKey' } });
+        fireEvent.change(screen.getByLabelText(/Value/i), { target: { value: 'value' } });
+        fireEvent.click(screen.getByText(/Create Configuration/i));
+
+        expect(await screen.findByText(/Configuration with this key already exists/i)).toBeInTheDocument();
+    });
 });
