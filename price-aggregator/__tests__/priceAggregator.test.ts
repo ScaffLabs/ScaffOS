@@ -35,7 +35,7 @@ describe('PriceAggregator', () => {
 
     test('should throw error during VWAP calculation if total volume is zero', async () => {
         const prices = [{ exchange: 'exchange1', price: 100, volume: 0 }];
-        await expect(priceAggregator.calculateVWAP(prices)).rejects.toThrow('Division by zero in VWAP calculation.');
+        await expect(priceAggregator.calculateVWAP(prices)).rejects.toThrow('No volume available for VWAP calculation.');
     });
 
     test('should successfully add a valid price', async () => {
