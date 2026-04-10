@@ -26,6 +26,7 @@ app.use('/health', healthRouter);
 app.use(errorHandler);
 
 const startServer = async () => {
+    logStartupConfig();
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
         logger.info(`Server is running on port ${PORT}`);

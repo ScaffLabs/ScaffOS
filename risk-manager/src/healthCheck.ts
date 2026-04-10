@@ -4,6 +4,7 @@ import logger from './logger';
 
 const router = express.Router();
 
+// Health check endpoint for overall service health
 router.get('/health', async (req, res) => {
     try {
         const healthStatus = await healthCheckServices();
@@ -17,6 +18,7 @@ router.get('/health', async (req, res) => {
     }
 });
 
+// Readiness check endpoint
 router.get('/ready', async (req, res) => {
     try {
         const readyStatus = await healthCheckServices();
