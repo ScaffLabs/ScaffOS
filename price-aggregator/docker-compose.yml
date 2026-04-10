@@ -5,31 +5,29 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - NODE_ENV=development
-      - BASE_URL=https://api.example.com
-      - PORT=3000
+      - NODE_ENV=${NODE_ENV}
+      - BASE_URL=${BASE_URL}
+      - PORT=${PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=${DB_HOST}
       - DB_NAME=${DB_NAME}
       - DB_PORT=${DB_PORT}
-      - LOG_LEVEL=info
-      - DOCKER=true
+      - LOG_LEVEL=${LOG_LEVEL}
+      - DOCKER=${DOCKER}
     volumes:
       - .:/usr/src/app
     networks:
       - price-aggregator-network
 
   db:
-    build:
-      context: .
-      dockerfile: db.Dockerfile
-    ports:
-      - '5432:5432'
+    image: postgres:latest
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    ports:
+      - '5432:5432'
     networks:
       - price-aggregator-network
 
