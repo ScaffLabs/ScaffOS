@@ -10,8 +10,7 @@ import { ValidationError, NotFoundError } from './errors';
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
 
-const allowedOrigins = ['https://example.com', 'https://another-domain.com'];
-router.use(cors({ origin: allowedOrigins }));
+router.use(cors());
 router.use(helmet());
 
 const limiter = rateLimit({
@@ -30,45 +29,23 @@ router.use((req, res, next) => {
 });
 
 router.get('/prices', async (req, res) => {
-    const { limit = 10, offset = 0, sort = 'asc', exchange } = req.query;
     try {
-        const prices = await priceAggregator.getCurrentPrices({ limit: Number(limit), offset: Number(offset), sort, exchange });
-        if (prices.length === 0) {
-            return res.status(204).send();
-        }
+        const prices = await priceAggregator.getCurrentPrices();
+        if (!prices.length) return res.status(204).send();
         res.status(200).json(prices);
     } catch (error) {
         logError(error, { message: 'Fetching prices failed' });
-        if (error instanceof ValidationError) {
-            return res.status(400).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Error fetching prices' });
+        next(error);
     }
 });
 
-router.post('/prices', validateContentType, validatePriceData, handleValidationErrors, async (req, res) => {
-    const priceData = req.body;
+router.post('/prices', validateContentType, validatePriceData, handleValidationErrors, async (req, res, next) => {
     try {
-        const newPrice = await priceAggregator.addPrice(priceData);
+        const newPrice = await priceAggregator.addPrice(req.body);
         res.status(201).json(newPrice);
     } catch (error) {
         logError(error, { message: 'Adding price failed' });
-        if (error instanceof ValidationError) {
-            res.status(400).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Error adding price' });
-        }
-    }
-});
-
-router.delete('/prices/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await priceAggregator.deletePrice(id);
-        res.status(204).send();
-    } catch (error) {
-        logError(error, { message: 'Deleting price failed' });
-        res.status(500).json({ error: 'Error deleting price' });
+        next(error);
     }
 });
 
