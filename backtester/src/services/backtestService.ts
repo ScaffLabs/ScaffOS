@@ -11,6 +11,10 @@ const store = new InMemoryStore<BacktestResult>();
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
 const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
 
+/**
+ * Fetch historical data from the data service.
+ * @returns {Promise<HistoricalData[]>} An array of historical data entries.
+ */
 async function fetchHistoricalData(): Promise<HistoricalData[]> {
     return await withRetry(async () => {
         const response = await axios.get(`${DATA_SERVICE_URL}/api/historical-data`);
@@ -18,6 +22,14 @@ async function fetchHistoricalData(): Promise<HistoricalData[]> {
     });
 }
 
+/**
+ * Calculate total returns, number of trades, win rate, and performance metrics based on historical data.
+ * @param {HistoricalData[]} historicalData - The historical data to analyze.
+ * @param {number} buyThreshold - The threshold for buy conditions.
+ * @param {number} sellThreshold - The threshold for sell conditions.
+ * @param {number} slippage - The slippage percentage.
+ * @returns {Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }>} The calculated results.
+ */
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
@@ -50,6 +62,12 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     return { totalReturns, trades, winRate, performanceMetrics };
 }
 
+/**
+ * Simulate a backtest based on provided parameters and historical data.
+ * @param {StrategyParameters} params - The strategy parameters.
+ * @param {HistoricalData[]} historicalData - The historical data to use for the backtest.
+ * @returns {Promise<BacktestResult>} The backtest result object containing id, totalReturns, trades, winRate, and performanceMetrics.
+ */
 const simulateBacktest = async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     const validation = StrategyParametersSchema.safeParse(params);
     if (!validation.success) {
