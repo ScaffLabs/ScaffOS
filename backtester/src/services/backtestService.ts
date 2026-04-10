@@ -64,7 +64,12 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns, requestId: backtestId });
+
+    const startTime = Date.now();
     await store.create(result);
+    const duration = Date.now() - startTime;
+    logger.info({ message: 'Database operation: create completed', duration, requestId: backtestId });
+
     return BacktestResultSchema.parse(result);
 };
 

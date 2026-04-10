@@ -40,8 +40,8 @@ const requestLogger = (req, res, next) => {
 
 const logError = (err, req) => {
   logger.error({
-    message: err instanceof Error ? err.message : 'Unknown error',
-    stack: err instanceof Error ? err.stack : 'No stack trace',
+    message: err.message,
+    stack: err.stack,
     requestId: req.headers['x-request-id'] || 'N/A',
   });
 };
