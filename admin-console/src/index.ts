@@ -17,7 +17,8 @@ dotenv.config();
 const app = express();
 const db = new Database();
 
-app.use(cors());
+const allowedOrigins = ['http://localhost:3000'];
+app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(sanitizeBody);

@@ -17,6 +17,9 @@ export const logAudit = (req: Request, res: Response, next: NextFunction) => {
     } else if (req.method === 'DELETE' && req.path.startsWith('/api/config/')) {
         const key = req.path.split('/').pop();
         auditLogger.info(`Configuration deleted: {key: ${key}, requestId: ${requestId}}`);
+    } else if (req.method === 'PUT' && req.path === '/api/config') {
+        const { key } = req.body;
+        auditLogger.info(`Configuration updated: {key: ${key}, requestId: ${requestId}}`);
     }
     next();
 };
