@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ValidationError, ServiceError, NotFoundError } from './errors';
+import { ValidationError, ServiceError, NotFoundError, AppError } from './errors';
 import logger from './logger';
 
 // Input Validation Middleware
@@ -7,7 +7,7 @@ export const validateInput = (schema: any) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const validationErrors = validationResult(req);
         if (!validationErrors.isEmpty()) {
-            return res.status(400).json({ errors: validationErrors.array() });
+            throw new ValidationError('Validation failed: ' + validationErrors.array().map(e => e.msg).join(', '));
         }
         next();
     };
@@ -22,23 +22,13 @@ export const errorHandlingMiddleware = (err: Error, req: Request, res: Response,
     if (err instanceof NotFoundError) {
         return res.status(404).json({ message: err.message });
     }
-    if (err instanceof ServiceError) {
-        return res.status(500).json({ message: 'Internal Server Error' });
+    if (err instanceof AppError) {
+        return res.status(err.statusCode).json({ message: err.message });
     }
     res.status(500).json({ message: 'An unexpected error occurred.' });
 };
 
-// Request ID Middleware
-const generateRequestId = () => {
-    return 'req-' + Math.random().toString(36).substr(2, 9);
-};
-
-export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    req.headers['x-request-id'] = req.headers['x-request-id'] || generateRequestId();
-    next();
-};
-
-// Graceful shutdown handling
+// Graceful Shutdown Middleware
 export const setupGracefulShutdown = (app: any) => {
     const shutdown = async () => {
         console.log('Initiating graceful shutdown...');
@@ -57,11 +47,11 @@ export const setupGracefulShutdown = (app: any) => {
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
     process.on('uncaughtException', (err) => {
-        console.error('Uncaught Exception:', err);
+        logger.error('Uncaught Exception:', err);
         shutdown();
     });
     process.on('unhandledRejection', (reason) => {
-        console.error('Unhandled Rejection:', reason);
+        logger.error('Unhandled Rejection:', reason);
         shutdown();
     });
 };

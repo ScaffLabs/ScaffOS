@@ -49,57 +49,9 @@ export const getOrders = async (req: Request, res: Response) => {
         res.status(200).json(orders);
     } catch (error) {
         logger.error('Error retrieving orders', { error: error.message });
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-// Update Order
-export const updateOrder = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const updates = req.body;
-    const validationErrors = validationResult(req);
-    if (!validationErrors.isEmpty()) {
-        return res.status(400).json({ errors: validationErrors.array() });
-    }
-    try {
-        const updatedOrder = await updateOrderService(id, updates);
-        if (!updatedOrder) {
-            return res.status(404).json({ message: 'Order not found.' });
-        }
-        res.status(200).json(updatedOrder);
-    } catch (error) {
-        logger.error('Error updating order', { error: error.message });
         if (error instanceof NotFoundError) {
-            return res.status(404).json({ message: 'Order not found.' });
+            return res.status(404).json({ message: 'No orders found.' });
         }
         res.status(500).json({ message: 'Internal Server Error' });
     }
-};
-
-// Delete Order
-export const deleteOrder = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    try {
-        await deleteOrderService(id);
-        res.status(204).send();
-    } catch (error) {
-        logger.error('Error deleting order', { error: error.message });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ message: 'Order not found.' });
-        }
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-// Attach routes to the app
-export const orderRouter = (app: any) => {
-    app.post('/orders', createOrder);
-    app.get('/orders', [
-        query('limit').optional().isInt({ min: 1 }).toInt(),
-        query('offset').optional().isInt({ min: 0 }).toInt(),
-        query('sort').optional().isString(),
-        query('order').optional().isIn(['asc', 'desc'])
-    ], getOrders);
-    app.put('/orders/:id', updateOrder);
-    app.delete('/orders/:id', deleteOrder);
 };

@@ -47,4 +47,11 @@ class DivisionByZeroError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DatabaseError, InternalServerError, OverflowError, DivisionByZeroError };
+class AppError extends Error {
+    constructor(message: string, public statusCode: number) {
+        super(message);
+        this.name = 'AppError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DatabaseError, InternalServerError, OverflowError, DivisionByZeroError, AppError };
