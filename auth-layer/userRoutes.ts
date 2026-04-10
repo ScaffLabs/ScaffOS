@@ -8,6 +8,7 @@ import { rateLimit } from './rateLimit';
 
 const router = express.Router();
 
+// Create User
 router.post('/users', async (req, res) => {
     const { username, email } = sanitizeUserInput(req.body);
     try {
@@ -28,16 +29,36 @@ router.post('/users', async (req, res) => {
     }
 });
 
+// Get All Users with Pagination, Sorting, and Filtering
 router.get('/users', async (req, res) => {
+    const { limit = 10, offset = 0, sort = 'username', order = 'asc', filter } = req.query;
     try {
         const users = await getAllUsers();
-        res.status(200).json(users);
+        let filteredUsers = users;
+
+        if (filter) {
+            filteredUsers = filteredUsers.filter(user => user.username.includes(filter) || user.email.includes(filter));
+        }
+
+        filteredUsers.sort((a, b) => {
+            const keyA = a[sort];
+            const keyB = b[sort];
+            if (order === 'asc') {
+                return keyA < keyB ? -1 : (keyA > keyB ? 1 : 0);
+            } else {
+                return keyA > keyB ? -1 : (keyA < keyB ? 1 : 0);
+            }
+        });
+
+        const paginatedUsers = filteredUsers.slice(Number(offset), Number(offset) + Number(limit));
+        res.status(200).json(paginatedUsers);
     } catch (error) {
         logger.error('Error fetching users', { error: error.message });
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
+// Update User
 router.put('/users/:id', async (req, res) => {
     const { id } = req.params;
     const userData = sanitizeUserInput(req.body);
@@ -59,6 +80,7 @@ router.put('/users/:id', async (req, res) => {
     }
 });
 
+// Delete User
 router.delete('/users/:id', async (req, res) => {
     const { id } = req.params;
     try {
