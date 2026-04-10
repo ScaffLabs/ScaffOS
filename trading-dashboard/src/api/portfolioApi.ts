@@ -3,31 +3,18 @@ import { InMemoryStore } from '../storage/InMemoryStore';
 import { Position, PositionSchema } from '../types';
 import { ServiceError, ValidationError, NotFoundError } from '../utils/errors';
 import { publishEvent } from '../utils/eventBus';
-import rateLimit from 'express-rate-limit';
 
 const positionStore = new InMemoryStore<Position>();
 
-const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests, please try again later.',
-});
-
 export const fetchPositions = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0 } = req.query;
-    const limitNum = parseInt(limit as string);
-    const offsetNum = parseInt(offset as string);
-
-    if (isNaN(limitNum) || isNaN(offsetNum) || limitNum <= 0 || offsetNum < 0) {
-        return res.status(400).json({ message: 'Invalid pagination parameters' });
-    }
-
     try {
         const positions = Object.values(positionStore.data);
-        const paginatedPositions = positions.slice(offsetNum, offsetNum + limitNum);
-        res.status(200).json(paginatedPositions);
+        if (positions.length === 0) {
+            return res.status(204).json([]);
+        }
+        res.status(200).json(positions);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching positions: ' + error.message });
+        res.status(500).json({ message: 'Failed to fetch positions: ' + error.message });
     }
 };
 
@@ -92,8 +79,8 @@ export const deletePosition = async (req: Request, res: Response) => {
 };
 
 export const registerRoutes = (app: any) => {
-    app.get('/api/positions', limiter, fetchPositions);
-    app.post('/api/positions', limiter, createPosition);
-    app.put('/api/positions/:id', limiter, updatePosition);
-    app.delete('/api/positions/:id', limiter, deletePosition);
+    app.get('/api/positions', fetchPositions);
+    app.post('/api/positions', createPosition);
+    app.put('/api/positions/:id', updatePosition);
+    app.delete('/api/positions/:id', deletePosition);
 };

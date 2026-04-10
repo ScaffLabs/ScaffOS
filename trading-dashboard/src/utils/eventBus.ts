@@ -33,3 +33,15 @@ export const initializeEventBus = () => {
 };
 
 initializeEventBus();
+
+export const reconnectEventBus = () => {
+    // Reconnect logic to handle any disconnections
+    console.log('Reconnecting Event Bus...');
+    // You can add logic to attempt reconnection or reset listeners if needed
+};
+
+// Handle error events
+eventBus.on('error', (error) => {
+    console.error('Event Bus Error:', error);
+    reconnectEventBus();
+});
