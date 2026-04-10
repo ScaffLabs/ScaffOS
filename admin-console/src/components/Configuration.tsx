@@ -11,67 +11,63 @@ const Configuration: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    // Fetches all existing configurations from the server
     const fetchAllConfigurations = async () => {
         setLoading(true);
         try {
-            const configs = await fetchConfigurations(); // Get configurations from the service
-            setConfigurations(configs); // Set them in local state
+            const configs = await fetchConfigurations();
+            setConfigurations(configs);
         } catch (err) {
-            setError(`Error fetching configurations: ${err.message}`); // Handle errors gracefully
+            setError(`Error fetching configurations: ${err.response?.data?.error || err.message}`);
         } finally {
-            setLoading(false); // Reset loading state
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchAllConfigurations(); // Call fetch on component mount
+        fetchAllConfigurations();
     }, []);
 
-    // Validates the input fields before submitting the form
     const validateInputs = () => {
-        if (!key.trim()) throw new ValidationError('Key cannot be empty'); // Ensure key is not empty
-        if (!value.trim()) throw new ValidationError('Value cannot be empty'); // Ensure value is not empty
+        if (!key.trim()) throw new ValidationError('Key cannot be empty');
+        if (!value.trim()) throw new ValidationError('Value cannot be empty');
     };
 
-    // Handles form submission to create a new configuration
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // Prevent default form submission
-        setError(null); // Reset errors
-        setSuccessMessage(null); // Reset success message
+        e.preventDefault();
+        setError(null);
+        setSuccessMessage(null);
 
         try {
-            validateInputs(); // Validate inputs before proceeding
+            validateInputs();
             const configItem: ConfigurationItem = { key: key as ConfigurationItem['key'], value };
-            ConfigurationItemSchema.parse(configItem); // Validate with Zod schema
-            setLoading(true); // Set loading state
-            await postConfiguration(configItem); // Make API call to create configuration
-            setSuccessMessage('Configuration created successfully!'); // Inform user of success
-            setKey(''); // Reset key input
-            setValue(''); // Reset value input
-            fetchAllConfigurations(); // Refresh configuration list
+            ConfigurationItemSchema.parse(configItem);
+            setLoading(true);
+            await postConfiguration(configItem);
+            setSuccessMessage('Configuration created successfully!');
+            setKey('');
+            setValue('');
+            fetchAllConfigurations();
         } catch (err) {
             if (err instanceof ValidationError) {
-                setError(err.message); // Handle validation errors
+                setError(err.message);
             } else {
-                setError(`Failed to create configuration: ${err.message}`); // Handle other errors
+                setError(`Failed to create configuration: ${err.response?.data?.error || err.message}`);
             }
         } finally {
-            setLoading(false); // Reset loading state
+            setLoading(false);
         }
     };
 
-    // Handles deletion of a configuration
     const handleDelete = async (key: string) => {
-        setLoading(true); // Set loading state
+        setLoading(true);
         try {
-            await deleteConfiguration(key); // Make API call to delete configuration
-            setSuccessMessage('Configuration deleted successfully!'); // Inform user of success
-            fetchAllConfigurations(); // Refresh configuration list
+            await deleteConfiguration(key);
+            setSuccessMessage('Configuration deleted successfully!');
+            fetchAllConfigurations();
         } catch (err) {
-            setError(`Failed to delete configuration: ${err.message}`); // Handle errors
+            setError(`Failed to delete configuration: ${err.response?.data?.error || err.message}`);
         } finally {
-            setLoading(false); // Reset loading state
+            setLoading(false);
         }
     };
 
