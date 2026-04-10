@@ -47,4 +47,11 @@ class NullValueError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError, InvalidTypeError, NullValueError };
+class UnexpectedError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'UnexpectedError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError, InvalidTypeError, NullValueError, UnexpectedError };
