@@ -12,6 +12,7 @@ services:
       - STRATEGY_SERVICE_URL=${STRATEGY_SERVICE_URL}
       - DB_URL=${DB_URL}
       - LOG_LEVEL=${LOG_LEVEL}
+      - DB_TYPE=${DB_TYPE}
     volumes:
       - .:/app
 
@@ -23,6 +24,7 @@ services:
       - '3001:3001'
     environment:
       - NODE_ENV=development
+      - DB_TYPE=${DB_TYPE}
 
   mongo:
     image: mongo:latest

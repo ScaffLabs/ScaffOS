@@ -10,6 +10,7 @@ const schema = Joi.object({
     STRATEGY_SERVICE_URL: Joi.string().uri().default('http://localhost:3001/api/health'),
     DB_URL: Joi.string().uri().required(),
     LOG_LEVEL: Joi.string().valid('debug', 'info', 'warn', 'error').default('info'),
+    DB_TYPE: Joi.string().valid('in-memory', 'sqlite', 'postgres').default('in-memory'),
 }).unknown();
 
 const { error, value: config } = schema.validate(process.env);
