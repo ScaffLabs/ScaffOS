@@ -83,4 +83,13 @@ describe('Analytics API', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual(mockHealth);
     });
+
+    // Edge cases and error handling tests
+    test('GET /api/compare handles empty strategy names', async () => {
+        const response = await request(app)
+            .get('/api/compare')
+            .query({ strategyA: '', strategyB: '' });
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('error', 'Invalid query parameters. Strategy names must be alphanumeric.');
+    });
 });

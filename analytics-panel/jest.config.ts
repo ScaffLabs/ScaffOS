@@ -8,8 +8,6 @@ const config: Config = {
     testPathIgnorePatterns: ['/node_modules/', '/dist/'],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
-    globalSetup: '<rootDir>/setupTests.ts',
-    globalTeardown: '<rootDir>/teardownTests.ts',
 };
 
 export default config;
