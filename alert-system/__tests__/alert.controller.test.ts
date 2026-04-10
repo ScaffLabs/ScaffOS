@@ -86,4 +86,12 @@ describe('AlertController', () => {
         expect(res.status).toHaveBeenCalledWith(500);
         expect(res.json).toHaveBeenCalledWith({ message: 'Failed to add alert.' });
     });
+
+    test('should handle invalid alert id gracefully', async () => {
+        const req = { params: { id: 'invalid-id' } };
+        const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+        await alertController.updateAlert(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Invalid alert id.' });
+    });
 });

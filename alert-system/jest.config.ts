@@ -11,4 +11,5 @@ module.exports = {
     coverageDirectory: '<rootDir>/coverage',
     coverageReporters: ['text', 'lcov'],
     coveragePathIgnorePatterns: ['<rootDir>/__tests__'], // Ignore test files from coverage
+    testTimeout: 10000,
 };

@@ -72,4 +72,16 @@ describe('Alert API Integration Tests', () => {
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ message: 'Failed to create alert.' });
     });
+
+    test('should return 404 for non-existent alert when updating', async () => {
+        const response = await request(app).put('/api/alerts/nonexistent').send({ threshold: 200 });
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: 'Alert not found.' });
+    });
+
+    test('should return 404 for non-existent alert when deleting', async () => {
+        const response = await request(app).delete('/api/alerts/nonexistent');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ message: 'Alert not found.' });
+    });
 });
