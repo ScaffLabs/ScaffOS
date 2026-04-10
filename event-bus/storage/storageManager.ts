@@ -1,5 +1,6 @@
 import { IStorage } from './IStorage';
 import { InMemoryStorage } from './InMemoryStorage';
+import { Event } from '../types';
 
 export class StorageManager<T> {
     private storage: IStorage<T>;
@@ -42,5 +43,9 @@ export class StorageManager<T> {
 
     async findAllEvents(limit = 10, offset = 0): Promise<T[]> {
         return await this.storage.findAll(limit, offset);
+    }
+
+    async findByField(field: keyof T, value: any): Promise<T[]> {
+        return await this.storage.findByField(field, value);
     }
 }

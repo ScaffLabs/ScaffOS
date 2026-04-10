@@ -36,7 +36,7 @@ const getEvents = async (req: Request, res: Response): Promise<void> => {
             throw new NotFoundError('No events found');
         }
         const sortedEvents = events.sort((a, b) => {
-            return order === 'asc' ? a[sortBy] > b[sortBy] ? 1 : -1 : a[sortBy] < b[sortBy] ? 1 : -1;
+            return order === 'asc' ? (a[sortBy] > b[sortBy] ? 1 : -1) : (a[sortBy] < b[sortBy] ? 1 : -1);
         });
         const duration = Date.now() - start;
         logger.info({ message: 'Events retrieved', reqId, duration });
