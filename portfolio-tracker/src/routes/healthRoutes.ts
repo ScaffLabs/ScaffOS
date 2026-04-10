@@ -7,7 +7,7 @@ const router = Router();
 
 const checkExternalServiceHealth = async (serviceUrl: string) => {
     try {
-        const response = await axios.get(`${serviceUrl}/health`);
+        const response = await axios.get(`${serviceUrl}/health`, { timeout: 5000 });
         return response.data.status === 'UP';
     } catch (error) {
         logger.warn('External service is down', { error: error.message });
@@ -16,28 +16,13 @@ const checkExternalServiceHealth = async (serviceUrl: string) => {
 };
 
 router.get('/health', async (req, res) => {
-    const portfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
-    const isPortfolioServiceUp = await checkExternalServiceHealth(portfolioServiceUrl);
+    const isPortfolioServiceUp = await checkExternalServiceHealth(env.PORTFOLIO_SERVICE_URL);
     res.json({ status: 'UP', portfolioService: isPortfolioServiceUp });
 });
 
 router.get('/ready', async (req, res) => {
-    const portfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
-    const isPortfolioServiceReady = await checkExternalServiceHealth(portfolioServiceUrl);
+    const isPortfolioServiceReady = await checkExternalServiceHealth(env.PORTFOLIO_SERVICE_URL);
     res.status(isPortfolioServiceReady ? 200 : 503).json({ status: isPortfolioServiceReady ? 'READY' : 'NOT READY' });
-});
-
-router.get('/metrics', async (req, res) => {
-    const memoryUsage = process.memoryUsage();
-    const uptime = process.uptime();
-    const portfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
-    const isPortfolioServiceUp = await checkExternalServiceHealth(portfolioServiceUrl);
-
-    res.json({
-        uptime,
-        memoryUsage,
-        portfolioService: isPortfolioServiceUp,
-    });
 });
 
 export default router;
