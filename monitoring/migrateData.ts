@@ -1,5 +1,6 @@
 import InMemoryStore from './dataStore';
 import { ValidationError } from './errorClasses';
+import { LatencyData } from './types';
 
 export const migrateData = async <T>(sourceStore: InMemoryStore<T>, targetStore: InMemoryStore<T>): Promise<void> => {
     try {
@@ -11,16 +12,16 @@ export const migrateData = async <T>(sourceStore: InMemoryStore<T>, targetStore:
     }
 };
 
-export const seedData = <T>(store: InMemoryStore<T>): void => {
-    const sampleData: T[] = [
-        { id: '1', path: '/api/test1', duration: 100 } as unknown as T,
-        { id: '2', path: '/api/test2', duration: 200 } as unknown as T,
-        { id: '3', path: '/api/test3', duration: 300 } as unknown as T,
-        { id: '4', path: '/api/test4', duration: 400 } as unknown as T,
+export const seedData = (store: InMemoryStore<LatencyData>): void => {
+    const sampleData: LatencyData[] = [
+        { path: '/api/test1', duration: 100, timestamp: new Date() },
+        { path: '/api/test2', duration: 200, timestamp: new Date() },
+        { path: '/api/test3', duration: 300, timestamp: new Date() },
+        { path: '/api/test4', duration: 400, timestamp: new Date() },
     ];
 
     sampleData.forEach(data => {
-        store.create(data, data.id);
+        store.create(data, data.path);
     });
 };
 

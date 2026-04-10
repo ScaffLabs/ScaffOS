@@ -8,14 +8,11 @@ const store = new InMemoryStore<LatencyData>();
 
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
-        const limit = Number(req.query.limit) || 10;
-        const offset = Number(req.query.offset) || 0;
         const entries = store.getAll();
-        const paginatedEntries = entries.slice(offset, offset + limit);
-        if (paginatedEntries.length === 0) {
+        if (entries.length === 0) {
             return res.status(204).json([]);
         }
-        res.status(200).json(paginatedEntries);
+        res.status(200).json(entries);
     } catch (error) {
         logger.error(error, req);
         res.status(500).json({ error: 'Failed to fetch entries.' });
@@ -26,7 +23,7 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
         const bodyValidation = LatencyDataSchema.safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data. Please provide valid path and duration.');
+            throw new ValidationError('Invalid input data.');
         }
         const { path, duration } = bodyValidation.data;
         store.create({ path, duration, timestamp: new Date() }, path);
@@ -46,7 +43,7 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
         const { id } = req.params;
         const bodyValidation = LatencyDataSchema.partial().safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data. Please ensure the fields are correct.');
+            throw new ValidationError('Invalid input data.');
         }
         const existingEntry = store.read(id);
         if (!existingEntry) {
