@@ -52,14 +52,7 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     const existingPortfolio = storage.read(id);
     if (!existingPortfolio) throw new NotFoundError('Portfolio not found');
     try {
-        if (updates.name) PortfolioSchema.shape.name.parse(updates.name);
-        if (updates.positions) {
-            updates.positions.forEach(pos => {
-                if (!pos.symbol || typeof pos.quantity !== 'number' || pos.quantity < 0 || typeof pos.averagePrice !== 'number' || pos.averagePrice < 0) {
-                    throw new ValidationError('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
-                }
-            });
-        }
+        PortfolioSchema.parse({ ...existingPortfolio, ...updates });
     } catch (error) {
         throw new ValidationError('Invalid update data: ' + error.errors.map(e => e.message).join(', '));
     }
@@ -90,10 +83,4 @@ export const healthCheckExternalService = async (): Promise<boolean> => {
         logger.error('Health check failed for external service', { error: err.message });
         return false;
     }
-};
-
-// Readiness check for service
-export const readinessCheck = async (req: Request, res: Response) => {
-    const isServiceReady = await healthCheckExternalService();
-    res.status(isServiceReady ? 200 : 503).json({ status: isServiceReady ? 'READY' : 'NOT READY' });
 };
