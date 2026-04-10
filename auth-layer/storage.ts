@@ -1,3 +1,4 @@
+// Import necessary modules
 import { User, UserId, UserSchema } from './types';
 import { ValidationError, NotFoundError } from './errors';
 import userStore from './inMemoryStore';
@@ -62,11 +63,9 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
 
 // Transaction Support
 export const transaction = async (operations: () => Promise<void>) => {
-    // Logic to handle transaction support, such as rollback on failure
     try {
         await operations();
     } catch (error) {
-        // Handle errors, rollback if necessary
         throw error;
     }
 };
