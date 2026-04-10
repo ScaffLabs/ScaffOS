@@ -14,14 +14,14 @@ const PORT = config.PORT;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: ['http://your-allowed-origin.com'], credentials: true }));
 app.use(bodyParser.json({ limit: '1mb' }));
 
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: 'Too many requests from this IP, please try again later'
+    message: 'Too many requests from this IP, please try again later',
 });
 app.use(limiter);
 

@@ -12,7 +12,7 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     // Sanitize query inputs
     for (const key in req.query) {
         if (typeof req.query[key] === 'string') {
-            req.query[key] = sanitize(req.query[key]);
+            req.query[key] = req.query[key].replace(/<script.*?>.*?<\/script>/gi, '');
         }
     }
     next();
