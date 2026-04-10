@@ -11,9 +11,6 @@ services:
       - LOG_LEVEL=info
       - API_KEY=your_api_key_here
       - SECRET_KEY=your_secret_key_here
-    depends_on:
-      - order_service
-      - data_service
   order_service:
     image: your_order_service_image
     ports:
