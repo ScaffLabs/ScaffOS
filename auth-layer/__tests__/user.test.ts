@@ -1,9 +1,9 @@
 import { createUser, findUserById, updateUser, deleteUser, getAllUsers } from '../storage';
-import { User } from '../user';
+import { ValidationError } from '../errors';
 
 describe('User Service Functions', () => {
     const testUser = { username: 'testuser', email: 'test@example.com' };
-    let createdUser: User;
+    let createdUser;
 
     it('should create a user', () => {
         createdUser = createUser(testUser.username, testUser.email);
@@ -32,5 +32,14 @@ describe('User Service Functions', () => {
     it('should return all users', () => {
         const users = getAllUsers();
         expect(users).toEqual([]);
+    });
+
+    it('should throw error when creating user with existing email', () => {
+        createUser(testUser.username, testUser.email);
+        expect(() => createUser(testUser.username, testUser.email)).toThrow(ValidationError);
+    });
+
+    it('should throw error when updating non-existent user', () => {
+        expect(() => updateUser('non-existent-id', { username: 'updateduser' })).toThrow(Error);
     });
 });
