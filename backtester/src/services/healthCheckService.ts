@@ -1,7 +1,7 @@
 import axios from 'axios';
 import logger from '../utils/logger';
-import { circuitBreaker } from './resilience';
 import { Pool } from 'pg'; // PostgreSQL connection pooling
+import { circuitBreaker } from './resilience';
 
 const serviceUrls = {
   orderService: process.env.ORDER_SERVICE_URL,
@@ -33,12 +33,6 @@ export async function healthCheckServices() {
   return results;
 }
 
-export async function checkAllHealth() {
-  const servicesHealth = await healthCheckServices();
-  const allHealthy = servicesHealth.every(result => result.healthy);
-  return { healthy: allHealthy, details: servicesHealth };
-}
-
 export async function checkReadiness() {
   // Example readiness check for database connection
   try {
@@ -52,7 +46,7 @@ export async function checkReadiness() {
 
 export async function healthCheckController(req, res) {
   try {
-    const health = await checkAllHealth();
+    const health = await healthCheckServices();
     const readiness = await checkReadiness();
     res.status(200).json({ health, readiness });
   } catch (error) {
