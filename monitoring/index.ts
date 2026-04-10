@@ -22,7 +22,6 @@ app.use(logRequest);
 
 // Health check endpoints
 app.get('/health', healthCheck);
-app.get('/health/services', healthCheck);
 app.get('/ready', readinessCheck);
 app.get('/alive', livelinessCheck);
 app.use(errorMiddleware);
@@ -38,16 +37,13 @@ server.listen(PORT, () => {
     setInterval(emitHealthCheckEvent, 60000);
 });
 
-process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received: closing HTTP server');
+const gracefulShutdown = () => {
+    console.log('Initiating graceful shutdown...');
     server.close(() => {
-        console.log('HTTP server closed');
+        console.log('HTTP server closed.');
+        process.exit(0);
     });
-});
+};
 
-process.on('SIGINT', () => {
-    console.log('SIGINT signal received: closing HTTP server');
-    server.close(() => {
-        console.log('HTTP server closed');
-    });
-});
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
