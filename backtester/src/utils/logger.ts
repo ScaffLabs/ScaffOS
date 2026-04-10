@@ -52,4 +52,19 @@ const logPerformance = (operation, duration, requestId) => {
   });
 };
 
-export { logger, requestLogger, logError, logPerformance };
+const logStartup = (config) => {
+  logger.info({
+    message: 'Service starting...',
+    config,
+  });
+};
+
+const logDatabasePerformance = (operation, duration, requestId) => {
+  logger.info({
+    message: `Database operation: ${operation} completed`,
+    duration,
+    requestId,
+  });
+};
+
+export { logger, requestLogger, logError, logPerformance, logStartup, logDatabasePerformance };
