@@ -49,4 +49,8 @@ const logStartupConfig = () => {
   });
 };
 
-export { logger, requestLogger, logStartupConfig };
+const logError = (error, context) => {
+  logger.error('An error occurred', { error: error.message, stack: error.stack, context });
+};
+
+export { logger, requestLogger, logStartupConfig, logError };

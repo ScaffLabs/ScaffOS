@@ -8,6 +8,8 @@ import gracefulShutdown from './gracefulShutdown';
 import { createPool } from 'mysql2/promise';
 import { healthCheckServices } from './externalService';
 import MemoryQueue from './memoryQueue';
+import requestIdMiddleware from './middleware/requestIdMiddleware';
+import loggingMiddleware from './middleware/loggingMiddleware';
 
 const app = express();
 const server = http.createServer(app);
@@ -22,6 +24,8 @@ const dbPool = createPool({
 });
 
 app.use(express.json());
+app.use(requestIdMiddleware);
+app.use(loggingMiddleware);
 app.use('/api', apiRouter);
 app.use('/health', healthRouter);
 app.use(errorHandler);
