@@ -7,7 +7,6 @@ import { errorHandler } from './errors';
 import gracefulShutdown from './gracefulShutdown';
 import { createPool } from 'mysql2/promise';
 import { healthCheckServices } from './externalService';
-import MemoryQueue from './memoryQueue';
 
 const app = express();
 const server = http.createServer(app);
@@ -34,32 +33,11 @@ const startServer = async () => {
     });
 };
 
-const healthCheckInterval = setInterval(async () => {
-    try {
-        const healthStatus = await healthCheckServices();
-        logger.info('Health check status: ', healthStatus);
-    } catch (error) {
-        logger.error('Health check failed: ', error);
-    }
-}, 60000);
-
 process.on('SIGTERM', async () => {
-    clearInterval(healthCheckInterval);
     await gracefulShutdown(dbPool);
 });
 process.on('SIGINT', async () => {
-    clearInterval(healthCheckInterval);
     await gracefulShutdown(dbPool);
-});
-
-process.on('uncaughtException', (err) => {
-    logger.error('Uncaught Exception: ', err);
-    clearInterval(healthCheckInterval);
-    gracefulShutdown(dbPool);
-});
-
-process.on('unhandledRejection', (reason) => {
-    logger.error('Unhandled Rejection: ', reason);
 });
 
 startServer();
