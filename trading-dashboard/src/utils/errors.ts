@@ -33,34 +33,4 @@ class OverflowError extends Error {
     }
 }
 
-const validateInput = (input: any) => {
-    if (input == null || (Array.isArray(input) && input.length === 0)) {
-        throw new ValidationError('Input cannot be null or an empty array.');
-    }
-};
-
-const validateQuantity = (quantity: number) => {
-    if (typeof quantity !== 'number' || quantity <= 0) {
-        throw new ValidationError('Quantity must be a positive number.');
-    }
-};
-
-const validateArray = (arr: any[]) => {
-    if (!Array.isArray(arr)) {
-        throw new ValidationError('Input must be an array.');
-    }
-    if (arr.length === 0) {
-        throw new ValidationError('Array cannot be empty.');
-    }
-};
-
-export { 
-    ServiceError, 
-    ValidationError, 
-    NotFoundError, 
-    DivisionByZeroError, 
-    OverflowError, 
-    validateInput, 
-    validateQuantity, 
-    validateArray
-};
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError };
