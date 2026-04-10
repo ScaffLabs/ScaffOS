@@ -2,8 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import logger from './logger';
 import { ValidationError } from './errors';
 
-export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    req.headers['x-request-id'] = req.headers['x-request-id'] || crypto.randomUUID();
+const MAX_REQUEST_SIZE = '1mb'; // Set max request size limit
+
+export const requestSizeLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    if (req.headers['content-length'] && parseInt(req.headers['content-length']) > parseInt(MAX_REQUEST_SIZE)) {
+        return res.status(413).json({ error: 'Payload too large' });
+    }
     next();
 };
 
@@ -24,4 +28,4 @@ export const errorHandlingMiddleware = (err: Error, req: Request, res: Response,
     return res.status(500).json({ error: 'Internal Server Error' });
 };
 
-export default { requestIdMiddleware, logRequestMiddleware, errorHandlingMiddleware };
+export default { requestSizeLimitMiddleware, logRequestMiddleware, errorHandlingMiddleware };

@@ -11,6 +11,7 @@ import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 import { initGracefulShutdown } from './shutdown';
 import crypto from 'crypto';
+import { sanitizeUserInput } from './userValidation';
 
 const app = express();
 const server = http.createServer(app);
