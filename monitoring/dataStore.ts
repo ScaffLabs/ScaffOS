@@ -70,6 +70,10 @@ class InMemoryStore<T> {
             targetStore.create(entity.data, id);
         }
     }
+
+    public findBy<K extends keyof T>(key: K, value: T[K]): Entity<T>[] {
+        return Array.from(this.storage.values()).filter(entity => entity.data[key] === value);
+    }
 }
 
 export default InMemoryStore;

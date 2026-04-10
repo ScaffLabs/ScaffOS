@@ -32,3 +32,12 @@ export const clearStore = <T>(store: InMemoryStore<T>): void => {
 export const migrateStore = (sourceStore: InMemoryStore<any>, targetStore: InMemoryStore<any>): void => {
     sourceStore.migrateData(targetStore);
 };
+
+export const transferEntries = <T>(sourceStore: InMemoryStore<T>, targetStore: InMemoryStore<T>, ids: string[]): void => {
+    const entriesToTransfer = ids.map(id => sourceStore.read(id)).filter(entry => entry !== null);
+    entriesToTransfer.forEach((entry, index) => {
+        if (entry) {
+            targetStore.create(entry, ids[index]);
+        }
+    });
+};
