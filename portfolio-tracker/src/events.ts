@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Portfolio } from './types';
 
 // Event types for portfolio updates
 export type PortfolioUpdatedEvent = {
