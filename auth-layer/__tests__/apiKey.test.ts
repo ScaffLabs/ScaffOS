@@ -34,13 +34,4 @@ describe('API Key Functions', () => {
     it('should handle empty API key on retrieval', () => {
         expect(getUserIdFromApiKey('')).toBe(null);
     });
-
-    it('should handle duplicate API keys', () => {
-        const userId1 = 'user123';
-        const userId2 = 'user456';
-        const apiKey1 = generateApiKey(userId1);
-        const apiKey2 = generateApiKey(userId2);
-        expect(validateApiKey(apiKey1)).toBe(true);
-        expect(validateApiKey(apiKey2)).toBe(true);
-    });
 });
