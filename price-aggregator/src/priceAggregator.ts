@@ -1,9 +1,8 @@
-// Import relevant error classes
 import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema } from './types';
 import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
-import { ValidationError, ServiceError, DivisionByZeroError } from './errors';
+import { ValidationError, ServiceError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -24,15 +23,24 @@ export class PriceAggregator {
                 const newPrice = await storage.create(parsedData.data);
                 this.currentPrices[parsedData.data.exchange] = parsedData.data.price;
                 this.currentPrices.VWAP = await this.calculateVWAP();
-                await postHttpClient('/prices', newPrice);
+                await this.retryPostHttpClient('/prices', newPrice);
                 this.eventBus.emitPriceAdded(newPrice);
             });
             return parsedData.data;
         } catch (error) {
-            if (error instanceof ValidationError) {
-                throw new ValidationError('Failed to add price: ' + error.message);
-            } else {
-                throw new ServiceError('Failed to add price: ' + error.message);
+            throw new ServiceError('Failed to add price: ' + error.message);
+        }
+    }
+
+    private async retryPostHttpClient(path: string, data: any, retries: number = 3): Promise<void> {
+        for (let i = 0; i < retries; i++) {
+            try {
+                await postHttpClient(path, data);
+                return;
+            } catch (error) {
+                if (i === retries - 1) {
+                    throw new ServiceError('Failed to post data after retries: ' + error.message);
+                }
             }
         }
     }
@@ -41,35 +49,16 @@ export class PriceAggregator {
         return this.currentPrices;
     }
 
-    public async checkDependencies() {
-        try {
-            const dbHealth = await checkHealth();
-            return { database: dbHealth.status };
-        } catch (error) {
-            throw new ServiceError('Dependency health check failed: ' + error.message);
-        }
-    }
-
     private async calculateVWAP(): Promise<number> {
         const pricesData = await storage.findAll();
         const totalVolume = pricesData.reduce((acc, price) => acc + price.volume, 0);
-        if (totalVolume === 0) throw new DivisionByZeroError('No volume available for VWAP calculation.');
+        if (totalVolume === 0) throw new Error('No volume available for VWAP calculation.');
 
         const vwap = pricesData.reduce((acc, price) => acc + (price.price * price.volume), 0) / totalVolume;
         return parseFloat(vwap.toFixed(2));
     }
 
     private handlePriceEvent(event: PriceEvent) {
-        switch (event.type) {
-            case 'PRICE_ADDED':
-                console.log('New price added:', event.data);
-                break;
-            case 'PRICE_UPDATED':
-                console.log('Price updated:', event.data);
-                break;
-            case 'PRICE_DELETED':
-                console.log('Price deleted for exchange:', event.exchange);
-                break;
-        }
+        console.log('New price added:', event.data);
     }
 }

@@ -51,13 +51,16 @@ const postHttpClient = async (path: string, data: any, config?: AxiosRequestConf
 };
 
 const checkHealth = async () => {
-    try {
-        const healthCheck = await httpClient('/health');
-        return healthCheck;
-    } catch (error) {
-        logError(error, { message: 'Health check failed.' });
-        throw new Error('Health check failed.');
-    }
+    const services = ['/service1/health', '/service2/health']; // Add your service health paths
+    const healthChecks = await Promise.all(services.map(async service => {
+        try {
+            const result = await httpClient(service);
+            return { [service]: result.status };
+        } catch (error) {
+            return { [service]: 'unhealthy' };
+        }
+    }));
+    return Object.assign({}, ...healthChecks);
 };
 
 export { httpClient, postHttpClient, checkHealth };

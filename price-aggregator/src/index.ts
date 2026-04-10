@@ -5,27 +5,20 @@ import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
 import { PriceAggregator } from './priceAggregator';
-import rateLimit from 'express-rate-limit';
-import cors from 'cors';
-import helmet from 'helmet';
-import { MemoryMonitor } from './memoryMonitor';
+import { checkHealth } from './httpClient';
 
 const app = express();
 const server = http.createServer(app);
 const dbPool = createConnectionPool();
 const priceAggregator = new PriceAggregator();
-const memoryMonitor = new MemoryMonitor();
 
-app.use(cors());
-app.use(helmet());
-app.use(express.json({ limit: '1mb' }));
-app.use(rateLimit({ windowMs: 1 * 60 * 1000, max: 100 }));
-app.use(errorMiddleware);  // Add error handling middleware
+app.use(express.json());
+app.use(errorMiddleware);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
     try {
-        const healthStatus = await priceAggregator.checkDependencies();
+        const healthStatus = await checkHealth();
         res.status(200).json({ status: 'healthy', dependencies: healthStatus });
     } catch (error) {
         logError(error);
@@ -47,5 +40,4 @@ process.on('SIGINT', shutdown);
 
 server.listen(config.port, () => {
     logStartup({ port: config.port, nodeEnv: config.nodeEnv });
-    memoryMonitor.startLogging(); // Start memory monitoring
 });
