@@ -8,11 +8,13 @@ const store = new InMemoryStore<DashboardEntry>();
 
 export const listDashboardEntries = async (req: Request, res: Response): Promise<void> => {
     try {
+        const { limit = 10, offset = 0 } = req.query;
         const entries = store.getAll();
-        if (entries.length === 0) {
+        const paginatedEntries = entries.slice(offset, offset + limit);
+        if (paginatedEntries.length === 0) {
             return res.status(204).json([]);
         }
-        res.status(200).json(entries);
+        res.status(200).json(paginatedEntries);
     } catch (error) {
         logger.error(error, req);
         res.status(500).json({ error: 'Failed to fetch entries. Please try again later.' });

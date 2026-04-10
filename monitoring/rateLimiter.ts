@@ -20,4 +20,7 @@ const generalLimiter = createRateLimiter(100, 1 * 60 * 1000); // 100 requests pe
 // Create a separate rate limiter for API key usage
 const apiKeyLimiter = createRateLimiter(50, 1 * 60 * 1000); // 50 requests per minute per API key
 
-export { generalLimiter, apiKeyLimiter };
+// Create a rate limiter specific to dashboard endpoints
+const dashboardLimiter = createRateLimiter(20, 1 * 60 * 1000); // 20 requests per minute for dashboard endpoints
+
+export { generalLimiter, apiKeyLimiter, dashboardLimiter };

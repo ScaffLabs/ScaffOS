@@ -9,7 +9,7 @@ import config from './config';
 import { createConnectionPool } from './connectionPool';
 import { emitHealthCheckEvent } from './serviceHealth';
 import { setupRoutes } from './dashboard';
-import { generalLimiter, apiKeyLimiter } from './rateLimiter';
+import { generalLimiter, apiKeyLimiter, dashboardLimiter } from './rateLimiter';
 import { sanitize, csrfProtection } from './sanitize';
 
 const app = express();
@@ -28,8 +28,9 @@ app.use(csrfProtection);
 
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
-app.use(errorMiddleware);
+app.use('/dashboard', dashboardLimiter); // Rate limiting applied to dashboard endpoints
 setupRoutes(app);
+app.use(errorMiddleware);
 
 const server = createServer(app);
 
