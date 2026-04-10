@@ -2,20 +2,15 @@ import axios from 'axios';
 import { ServiceError, ValidationError } from '../errors/customErrors';
 import { PerformanceMetricsSchema } from '../types';
 import { logError } from '../utils/errorLogger';
+import CircuitBreaker from '../utils/circuitBreaker';
 
-const fetchStrategies = async () => {
-    try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`);
-        return response.data;
-    } catch (error) {
-        logError(error, 'Fetching strategies');
-        throw new ServiceError('Failed to fetch strategies: ' + error.message);
-    }
-};
+const circuitBreaker = new CircuitBreaker();
 
 const fetchPerformanceMetrics = async () => {
     try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/performance`);
+        const response = await circuitBreaker.execute(() =>
+            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/performance`)
+        );
         const validatedData = PerformanceMetricsSchema.parse(response.data);
         return validatedData;
     } catch (error) {
@@ -29,7 +24,9 @@ const fetchComparisonData = async (strategyA: string, strategyB: string) => {
         throw new ValidationError('Both strategies must be defined.');
     }
     try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
+        const response = await circuitBreaker.execute(() =>
+            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`)
+        );
         return response.data;
     } catch (error) {
         logError(error, 'Comparing strategies');
@@ -37,4 +34,4 @@ const fetchComparisonData = async (strategyA: string, strategyB: string) => {
     }
 };
 
-export { fetchPerformanceMetrics, fetchComparisonData, fetchStrategies };
+export { fetchPerformanceMetrics, fetchComparisonData };
