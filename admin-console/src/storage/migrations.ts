@@ -12,4 +12,4 @@ const runMigrations = async (sourceDb: Database, targetDb: Database): Promise<vo
     await migrateData(sourceDb, targetDb);
 };
 
-export { runMigrations };
+export { runMigrations }; 
