@@ -7,6 +7,7 @@ import logger from './utils/logger';
 import config from './config';
 import { registerExternalApiRoutes } from './api/externalApi';
 import { registerHealthRoutes } from './utils/healthCheck';
+import { closePool } from './utils/connectionPool';
 
 const app = express();
 logger.logStartup(config);
@@ -26,6 +27,7 @@ const server = app.listen(PORT, () => {
 
 const shutdown = async () => {
     logger.info('Shutting down gracefully...');
+    await closePool(); // Close DB connection pool
     server.close(() => {
         logger.info('Closed out remaining connections.');
         process.exit(0);

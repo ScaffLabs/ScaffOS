@@ -2,44 +2,40 @@ import axios from 'axios';
 import { ServiceError } from '../utils/errors';
 import config from '../config';
 import { retry, circuitBreaker } from '../utils/retry';
-import { publishEvent } from '../utils/eventBus';
 
 const BASE_URL = config.externalApiUrl;
 
 const fetchExternalDataRequest = async () => {
-    const response = await axios.get(`${BASE_URL}/data`);
-    return response.data;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    try {
+        const response = await axios.get(`${BASE_URL}/data`, { signal: controller.signal });
+        return response.data;
+    } catch (error) {
+        if (axios.isCancel(error)) {
+            throw new ServiceError('Fetch external data request timed out.');
+        }
+        throw new ServiceError('Error fetching external data: ' + error.message);
+    } finally {
+        clearTimeout(timeoutId);
+    }
 };
 
 const fetchServiceHealthRequest = async () => {
-    const response = await axios.get(`${BASE_URL}/health`);
-    return response.data;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    try {
+        const response = await axios.get(`${BASE_URL}/health`, { signal: controller.signal });
+        return response.data;
+    } catch (error) {
+        if (axios.isCancel(error)) {
+            throw new ServiceError('Fetch service health request timed out.');
+        }
+        throw new ServiceError('Error fetching service health: ' + error.message);
+    } finally {
+        clearTimeout(timeoutId);
+    }
 };
 
 export const fetchExternalData = circuitBreaker(retry(fetchExternalDataRequest));
 export const fetchServiceHealth = circuitBreaker(retry(fetchServiceHealthRequest));
-
-export const healthCheck = async (req, res) => {
-    try {
-        const health = await fetchServiceHealth();
-        res.status(health.status === 'UP' ? 200 : 500).send(health);
-    } catch (error) {
-        throw new ServiceError(`Failed to fetch health status: ${error.message}`);
-    }
-};
-
-export const registerExternalApiRoutes = (app) => {
-    app.get('/api/external/health', healthCheck);
-};
-
-export const notifyExternalData = async (data) => {
-    publishEvent('EXTERNAL_DATA_RECEIVED', data);
-};
-
-export const subscribeToExternalData = (listener) => {
-    eventBus.on('EXTERNAL_DATA_RECEIVED', listener);
-};
-
-export const unsubscribeFromExternalData = (listener) => {
-    eventBus.off('EXTERNAL_DATA_RECEIVED', listener);
-};
