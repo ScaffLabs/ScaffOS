@@ -7,7 +7,7 @@ import { EventBus } from '../event-bus';
 const app = express();
 const eventBus = new EventBus();
 const alertStore = new AlertStore();
-const alertController = new AlertController(alertStore);
+const alertController = new AlertController(alertStore, eventBus);
 
 app.use(express.json());
 app.post('/api/alerts', (req, res) => alertController.addAlert(req, res));
