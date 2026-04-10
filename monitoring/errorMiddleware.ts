@@ -15,7 +15,7 @@ const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunc
     if (err instanceof ServiceError) {
         return res.status(500).json({ error: err.message, requestId });
     }
-    return res.status(500).json({ error: 'Something went wrong!', requestId });
+    return res.status(500).json({ error: 'Something went wrong! Please try again later.', requestId });
 };
 
-export default errorMiddleware; 
+export default errorMiddleware;

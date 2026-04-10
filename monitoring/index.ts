@@ -26,11 +26,8 @@ app.use(apiKeyLimiter);
 app.use(sanitize);
 app.use(csrfProtection);
 
-// Health check endpoint
 app.get('/health', healthCheck);
 app.use(errorMiddleware);
-
-// Setup dashboard routes
 setupRoutes(app);
 
 const server = createServer(app);

@@ -6,11 +6,6 @@ import { DashboardEntry, DashboardEntrySchema } from './types';
 
 const store = new InMemoryStore<DashboardEntry>();
 
-/**
- * Lists all dashboard entries.
- * @param req - Express request object
- * @param res - Express response object
- */
 export const listDashboardEntries = async (req: Request, res: Response): Promise<void> => {
     try {
         const entries = store.getAll();
@@ -20,15 +15,10 @@ export const listDashboardEntries = async (req: Request, res: Response): Promise
         res.status(200).json(entries);
     } catch (error) {
         logger.error(error, req);
-        res.status(500).json({ error: 'Failed to fetch entries.' });
+        res.status(500).json({ error: 'Failed to fetch entries. Please try again later.' });
     }
 };
 
-/**
- * Creates a new dashboard entry.
- * @param req - Express request object containing the entry data
- * @param res - Express response object
- */
 export const createDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const bodyValidation = DashboardEntrySchema.safeParse(req.body);
@@ -44,15 +34,10 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
     }
 };
 
-/**
- * Updates an existing dashboard entry.
- * @param req - Express request object containing the entry ID and update data
- * @param res - Express response object
- */
 export const updateDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -73,15 +58,10 @@ export const updateDashboardEntry = async (req: Request, res: Response): Promise
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
     }
 };
 
-/**
- * Deletes a dashboard entry.
- * @param req - Express request object containing the entry ID
- * @param res - Express response object
- */
 export const deleteDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -97,6 +77,6 @@ export const deleteDashboardEntry = async (req: Request, res: Response): Promise
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
     }
 };
