@@ -10,8 +10,9 @@ const store = new InMemoryStore<DashboardEntry>();
  * List all dashboard entries.
  * @param req - Express request object
  * @param res - Express response object
+ * @returns {Promise<void>} - Response with list of entries or 204 if none.
  */
-export const listDashboardEntries = async (req: Request, res: Response) => {
+export const listDashboardEntries = async (req: Request, res: Response): Promise<void> => {
     try {
         const entries = store.getAll();
         if (entries.length === 0) {
@@ -28,8 +29,9 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
  * Create a new dashboard entry.
  * @param req - Express request object with body { id: string, data: LatencyData }
  * @param res - Express response object
+ * @returns {Promise<void>} - Response with creation status.
  */
-export const createDashboardEntry = async (req: Request, res: Response) => {
+export const createDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const bodyValidation = DashboardEntrySchema.safeParse(req.body);
         if (!bodyValidation.success) {
@@ -53,8 +55,9 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
  * Update an existing dashboard entry.
  * @param req - Express request object with params { id: string } and body { data: LatencyData }
  * @param res - Express response object
+ * @returns {Promise<void>} - Response with update status.
  */
-export const updateDashboardEntry = async (req: Request, res: Response) => {
+export const updateDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
         const bodyValidation = DashboardEntrySchema.partial().safeParse(req.body);
@@ -82,8 +85,9 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
  * Delete a dashboard entry.
  * @param req - Express request object with params { id: string }
  * @param res - Express response object
+ * @returns {Promise<void>} - Response with deletion status.
  */
-export const deleteDashboardEntry = async (req: Request, res: Response) => {
+export const deleteDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
         const existingEntry = store.read(id);
