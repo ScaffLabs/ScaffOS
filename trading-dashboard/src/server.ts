@@ -1,33 +1,18 @@
 import express from 'express';
-import { securityMiddleware, validateAndLog, validateRequestSize } from './middleware/securityMiddleware';
-import { registerHealthRoutes } from './utils/healthCheck';
+import { securityMiddleware } from './middleware/securityMiddleware';
 import errorHandler from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
-import { registerExternalApiRoutes } from './api/externalApi';
 import logger from './utils/logger';
 import config from './config';
-import rateLimit from 'express-rate-limit';
 
 const app = express();
-
 logger.logStartup(config);
-app.use(express.json({ limit: '1mb' }));
+
+app.use(express.json());
 app.use(requestLogger);
 securityMiddleware(app);
-
-const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100,
-    message: 'Too many requests, please try again later.',
-});
-
-app.use(limiter); // Apply rate limiting to all routes
-
-app.use(validateRequestSize('1mb')); // Custom middleware to limit request size
-registerHealthRoutes(app);
 registerRoutes(app);
-registerExternalApiRoutes(app);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;

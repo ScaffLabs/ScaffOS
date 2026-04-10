@@ -33,4 +33,11 @@ class OverflowError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError };
+class CustomError extends Error {
+    constructor(public statusCode: number, message: string) {
+        super(message);
+        this.name = 'CustomError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, CustomError };

@@ -15,6 +15,11 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
         return res.status(404).json({ message: err.message });
     }
 
+    if (err instanceof ServiceError) {
+        logger.error('Service error occurred', { error: err.message, requestId });
+        return res.status(500).json({ message: err.message });
+    }
+
     logger.error('Unknown error occurred', { error: err.message, requestId });
     return res.status(500).json({ message: 'Internal Server Error' });
 };
