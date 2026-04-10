@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "test:integration": "jest --runInBand",
     "test:unit": "jest --testPathPattern=__tests__",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:all": "jest --coverage --runInBand"
   },
   "dependencies": {
     "axios": "^0.21.1",

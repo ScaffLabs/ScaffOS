@@ -54,7 +54,6 @@ describe('Analytics API', () => {
         await expect(healthCheck()).rejects.toThrow(ServiceError);
     });
 
-    // Integration tests for API endpoints
     test('GET /api/performance responds with 200 and performance data', async () => {
         const mockData = { drawdown: [10, 20, 30], maxDrawdown: 30, sharpeRatio: 1.5 };
         mock.onGet('/api/performance').reply(200, mockData);
@@ -84,7 +83,6 @@ describe('Analytics API', () => {
         expect(response.body).toEqual(mockHealth);
     });
 
-    // Edge cases and error handling tests
     test('GET /api/compare handles empty strategy names', async () => {
         const response = await request(app)
             .get('/api/compare')
