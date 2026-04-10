@@ -16,14 +16,14 @@ describe('API Endpoints', () => {
     });
 
     test('GET /prices should return current prices', async () => {
-        (priceAggregator.getCurrentPrices as jest.Mock).mockReturnValueOnce([{ exchange: 'exchange1', price: 50, volume: 10 }]);
+        (priceAggregator.getCurrentPrices as jest.Mock).mockResolvedValueOnce([{ exchange: 'exchange1', price: 50, volume: 10 }]);
         const response = await request(app).get('/prices');
         expect(response.status).toBe(200);
         expect(response.body).toEqual([{ exchange: 'exchange1', price: 50, volume: 10 }]);
     });
 
     test('GET /prices should return 204 for no prices', async () => {
-        (priceAggregator.getCurrentPrices as jest.Mock).mockReturnValueOnce([]);
+        (priceAggregator.getCurrentPrices as jest.Mock).mockResolvedValueOnce([]);
         const response = await request(app).get('/prices');
         expect(response.status).toBe(204);
     });
@@ -71,5 +71,11 @@ describe('API Endpoints', () => {
         const response = await request(app).delete('/prices/1');
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ error: 'Not Found' });
+    });
+
+    test('GET /prices should return 400 for invalid query parameters', async () => {
+        const response = await request(app).get('/prices?limit=NaN');
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: 'Invalid limit parameter' });
     });
 });

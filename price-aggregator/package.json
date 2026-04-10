@@ -12,7 +12,8 @@
         "test:integration": "jest --testPathPattern=__tests__/api.test.ts",
         "test:all": "jest",
         "test:coverage": "jest --coverage",
-        "test:report": "jest --reporters=default --reporters=jest-junit"
+        "test:report": "jest --reporters=default --reporters=jest-junit",
+        "test:setup": "jest --setupFilesAfterEnv=<rootDir>/jest.setup.ts"
     },
     "dependencies": {
         "express": "^4.17.1",

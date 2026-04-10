@@ -54,4 +54,9 @@ describe('PriceAggregator', () => {
         await priceAggregator.addPrice(price);
         expect(priceAggregator.getCurrentPrices()).toEqual({ VWAP: expect.any(Number), exchange1: 100 });
     });
+
+    test('should return 400 for invalid price data on add', async () => {
+        const invalidPrice: PriceData = { exchange: '', price: 0, volume: 0 };
+        await expect(priceAggregator.addPrice(invalidPrice)).rejects.toThrow(ValidationError);
+    });
 });
