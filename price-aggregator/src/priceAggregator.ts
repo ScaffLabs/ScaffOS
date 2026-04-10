@@ -1,8 +1,9 @@
+// Import relevant error classes
 import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema } from './types';
 import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
-import { ValidationError, ServiceError } from './errors';
+import { ValidationError, ServiceError, DivisionByZeroError } from './errors';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -28,7 +29,11 @@ export class PriceAggregator {
             });
             return parsedData.data;
         } catch (error) {
-            throw new ServiceError('Failed to add price: ' + error.message);
+            if (error instanceof ValidationError) {
+                throw new ValidationError('Failed to add price: ' + error.message);
+            } else {
+                throw new ServiceError('Failed to add price: ' + error.message);
+            }
         }
     }
 
@@ -48,7 +53,7 @@ export class PriceAggregator {
     private async calculateVWAP(): Promise<number> {
         const pricesData = await storage.findAll();
         const totalVolume = pricesData.reduce((acc, price) => acc + price.volume, 0);
-        if (totalVolume === 0) throw new ValidationError('No volume available for VWAP calculation.');
+        if (totalVolume === 0) throw new DivisionByZeroError('No volume available for VWAP calculation.');
 
         const vwap = pricesData.reduce((acc, price) => acc + (price.price * price.volume), 0) / totalVolume;
         return parseFloat(vwap.toFixed(2));
