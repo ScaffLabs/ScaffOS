@@ -8,7 +8,7 @@ const SERVICE_URLS = {
     userService: config.USER_SERVICE_URL,
 };
 
-const checkService = async (service) => {
+const checkService = async (service: keyof typeof SERVICE_URLS) => {
     try {
         const response = await connectionPool.requestWithRetry(service, 'get', '/health');
         return response.status === 'UP';
@@ -19,11 +19,11 @@ const checkService = async (service) => {
 };
 
 export const checkServiceHealth = async () => {
-    const results = await Promise.all(Object.keys(SERVICE_URLS).map(service => checkService(service)));
+    const results = await Promise.all(Object.keys(SERVICE_URLS).map(service => checkService(service as keyof typeof SERVICE_URLS)));
     return Object.keys(SERVICE_URLS).reduce((acc, service, index) => {
         acc[service] = results[index];
         return acc;
-    }, {});
+    }, {} as Record<string, boolean>);
 };
 
 export const emitHealthCheckEvent = async () => {
@@ -32,7 +32,7 @@ export const emitHealthCheckEvent = async () => {
     connectionPool.serviceEmitter.emit('healthCheck', event);
 };
 
-export const healthCheck = async (req, res) => {
+export const healthCheck = async (req: Request, res: Response) => {
     try {
         const healthStatus = await checkServiceHealth();
         const allServicesUp = Object.values(healthStatus).every(status => status);

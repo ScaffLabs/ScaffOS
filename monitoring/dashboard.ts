@@ -3,8 +3,10 @@ import { ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
 import InMemoryStore from './dataStore';
 import { DashboardEntry, DashboardEntrySchema } from './types';
+import { createConnectionPool } from './connectionPool';
 
 const store = new InMemoryStore<DashboardEntry>();
+const connectionPool = createConnectionPool();
 
 export const listDashboardEntries = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -38,55 +40,12 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
     }
 };
 
-export const updateDashboardEntry = async (req: Request, res: Response): Promise<void> => {
+export const checkDashboardHealth = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
-        const bodyValidation = DashboardEntrySchema.partial().safeParse(req.body);
-        if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data.');
-        }
-        const existingEntry = store.read(id);
-        if (!existingEntry) {
-            throw new NotFoundError('Entry not found.');
-        }
-        const updatedData = { ...existingEntry.data, ...bodyValidation.data };
-        store.update(id, updatedData);
-        logger.info(`Updated entry: ${id}`);
-        res.status(204).send();
+        const healthStatus = await connectionPool.requestWithRetry('orderService', 'get', '/health');
+        res.status(200).json({ status: healthStatus });
     } catch (error) {
-        logger.error(error, req);
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-};
-
-export const deleteDashboardEntry = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { id } = req.params;
-        if (!store.read(id)) {
-            throw new NotFoundError('Entry not found.');
-        }
-        store.delete(id);
-        logger.info(`Deleted entry: ${id}`);
-        res.status(204).send();
-    } catch (error) {
-        logger.error(error, req);
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-};
-
-export const migrateStore = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const targetStore = new InMemoryStore<DashboardEntry>();
-        store.migrateTo(targetStore);
-        res.status(200).json({ message: 'Data migrated successfully.' });
-    } catch (error) {
-        logger.error(error, req);
-        res.status(500).json({ error: 'Migration failed.' });
+        logger.error({ error: error.message }, 'Health check for dashboard failed');
+        res.status(503).json({ error: 'Order service unavailable' });
     }
 };
