@@ -47,7 +47,9 @@ export default class RiskManager {
             throw new ValidationError(`Position exceeds limit for asset: ${updatedPosition.asset}`);
         }
 
-        return await this.storage.update(id, updatedPosition);
+        const updated = await this.storage.update(id, updatedPosition);
+        logger.info(`Updated risk position: ${JSON.stringify(updated)}`);
+        return updated;
     }
 
     async deleteRiskPosition(id: OrderId): Promise<boolean> {
@@ -55,7 +57,9 @@ export default class RiskManager {
         if (!existingPosition) {
             throw new NotFoundError(`Risk position with id ${id} not found.`);
         }
-        return await this.storage.delete(id);
+        const deleted = await this.storage.delete(id);
+        logger.info(`Deleted risk position with id: ${id}`);
+        return deleted;
     }
 
     async getRiskPositions(limit?: number, offset?: number, sortBy?: string, filterBy?: string): Promise<RiskPosition[]> {
