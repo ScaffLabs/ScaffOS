@@ -3,7 +3,6 @@ import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
 import logger from './logger';
 import { emitOrderEvent } from './eventBus';
-import { fetchData, postData } from './axiosClient';
 
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -15,7 +14,7 @@ const createOrderService = async (orderData: unknown) => {
         const createdOrder = await queryDatabase('INSERT INTO orders (id, type, price, quantity, status) VALUES ($1, $2, $3, $4, $5) RETURNING *', [order.id, order.type, order.price, order.quantity, order.status]);
         logger.info('Order created successfully', { order: createdOrder.rows[0] });
         emitOrderEvent({ type: 'ORDER_CREATED', payload: createdOrder.rows[0] });
-        await notifyOtherServices(order);
+        await notifyOtherServices(createdOrder.rows[0]);
         return createdOrder.rows[0];
     } catch (error) {
         logger.error('Database error during order creation', { error });
