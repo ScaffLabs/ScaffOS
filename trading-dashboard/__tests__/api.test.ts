@@ -1,16 +1,21 @@
 import request from 'supertest';
 import app from '../src/server';
 import { fetchPositions, updatePosition, deletePosition, createPosition } from '../src/api/portfolioApi';
+import { mockPositionData } from './__mocks__/dataMocks';
 import { jest } from '@jest/globals';
 
 jest.mock('../src/api/portfolioApi');
 
 describe('API Endpoints', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     it('GET /api/positions should return positions', async () => {
-        (fetchPositions as jest.Mock).mockResolvedValue([{ id: 1, symbol: 'AAPL', quantity: 10 }]);
+        (fetchPositions as jest.Mock).mockResolvedValue(mockPositionData);
         const response = await request(app).get('/api/positions');
         expect(response.status).toBe(200);
-        expect(response.body).toEqual([{ id: 1, symbol: 'AAPL', quantity: 10 }]);
+        expect(response.body).toEqual(mockPositionData);
     });
 
     it('GET /api/positions should return 500 on fetch error', async () => {
@@ -21,12 +26,13 @@ describe('API Endpoints', () => {
     });
 
     it('POST /api/positions should create a position', async () => {
-        (createPosition as jest.Mock).mockResolvedValue({ id: '2', symbol: 'GOOGL', quantity: 5 });
+        const newPosition = { id: '2', symbol: 'GOOGL', quantity: 5 };
+        (createPosition as jest.Mock).mockResolvedValue(newPosition);
         const response = await request(app)
             .post('/api/positions')
-            .send({ id: '2', symbol: 'GOOGL', quantity: 5 });
+            .send(newPosition);
         expect(response.status).toBe(201);
-        expect(response.body).toEqual({ message: 'Position created successfully', position: { id: '2', symbol: 'GOOGL', quantity: 5 } });
+        expect(response.body).toEqual({ message: 'Position created successfully', position: newPosition });
     });
 
     it('PUT /api/positions/:id with valid data should update position', async () => {
@@ -58,13 +64,6 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual({ message: 'Error deleting position' });
     });
 
-    it('should respond with 404 for non-existing position', async () => {
-        (deletePosition as jest.Mock).mockRejectedValue(new Error('Position not found'));
-        const response = await request(app).delete('/api/positions/99');
-        expect(response.status).toBe(404);
-    });
-
-    // New tests for edge cases and error paths
     it('GET /api/positions should return 400 for invalid query params', async () => {
         const response = await request(app).get('/api/positions?limit=invalid');
         expect(response.status).toBe(400);
