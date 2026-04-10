@@ -1,4 +1,4 @@
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData, clearPortfolios } from '../src/services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, clearPortfolios } from '../src/services/portfolioService';
 import { Portfolio } from '../src/types';
 import { validPortfolio, invalidPortfolio, existingPortfolioId, nonExistentPortfolioId, portfolioWithMultiplePositions, portfolioWithNegativeQuantity } from './fixtures/portfolioFixtures';
 
