@@ -1,4 +1,4 @@
-import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema, PriceEventSchema } from './types';
+import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema } from './types';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
 import { ValidationError, ServiceError } from './errors';
@@ -11,19 +11,11 @@ export class PriceAggregator {
         this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
     }
 
-    /**
-     * Adds a new price to the aggregator.
-     * @param priceData - The price data to add, must match PriceData schema.
-     * @returns The added price data.
-     * @throws ValidationError if the data is invalid.
-     * @throws ServiceError if an error occurs during the operation.
-     */
     public async addPrice(priceData: PriceData): Promise<PriceData> {
         const parsedData = PriceDataSchema.safeParse(priceData);
         if (!parsedData.success) {
             throw new ValidationError('Invalid price data: ' + parsedData.error.errors.map(e => e.message).join(', '));
         }
-
         try {
             await storage.transaction(async () => {
                 const newPrice = await storage.create(parsedData.data);
@@ -37,32 +29,40 @@ export class PriceAggregator {
         }
     }
 
-    /**
-     * Retrieves the current prices from the aggregator.
-     * @returns The current prices as CurrentPrices object.
-     */
-    public getCurrentPrices(): CurrentPrices {
-        return this.currentPrices;
+    public async getCurrentPrices({ limit, offset, sort, exchange }: { limit: number; offset: number; sort: string; exchange?: string }): Promise<CurrentPrices[]> {
+        const pricesData = await storage.findAll();
+        let filteredPrices = pricesData;
+        if (exchange) {
+            filteredPrices = filteredPrices.filter(price => price.exchange === exchange);
+        }
+        if (sort === 'desc') {
+            filteredPrices.sort((a, b) => b.price - a.price);
+        } else {
+            filteredPrices.sort((a, b) => a.price - b.price);
+        }
+        return filteredPrices.slice(offset, offset + limit);
     }
 
-    /**
-     * Calculates the Volume Weighted Average Price (VWAP).
-     * @returns The calculated VWAP as a number.
-     * @throws Error if no volume is available.
-     */
+    public async updatePrice(id: string, priceData: PriceData): Promise<PriceData | null> {
+        const existingPrice = await storage.read(id);
+        if (!existingPrice) return null;
+        const updatedPrice = { ...existingPrice, ...priceData };
+        await storage.update(id, updatedPrice);
+        return updatedPrice;
+    }
+
+    public async deletePrice(id: string): Promise<void> {
+        await storage.delete(id);
+    }
+
     private async calculateVWAP(): Promise<number> {
         const pricesData = await storage.findAll();
         const totalVolume = pricesData.reduce((acc, price) => acc + price.volume, 0);
         if (totalVolume === 0) throw new Error('No volume available for VWAP calculation.');
-
         const vwap = pricesData.reduce((acc, price) => acc + (price.price * price.volume), 0) / totalVolume;
         return parseFloat(vwap.toFixed(2));
     }
 
-    /**
-     * Handles events when a price is added.
-     * @param event - The price event to handle.
-     */
     private handlePriceEvent(event: PriceEvent) {
         console.log('New price added:', event.data);
     }

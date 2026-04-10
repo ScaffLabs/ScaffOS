@@ -5,7 +5,6 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest, logError } from './logger';
-import { checkHealth } from './httpClient';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -29,20 +28,11 @@ router.use((req, res, next) => {
     next();
 });
 
-router.get('/health', async (req, res) => {
-    try {
-        const healthCheck = await checkHealth();
-        res.status(200).json({ status: 'healthy', dependencies: healthCheck });
-    } catch (error) {
-        logError(error, { message: 'Health check failed' });
-        res.status(500).json({ status: 'unhealthy', error: error.message });
-    }
-});
-
 router.get('/prices', async (req, res) => {
+    const { limit = 10, offset = 0, sort = 'asc', exchange } = req.query;
     try {
-        const prices = await priceAggregator.getCurrentPrices();
-        if (Object.keys(prices).length === 0) {
+        const prices = await priceAggregator.getCurrentPrices({ limit: Number(limit), offset: Number(offset), sort, exchange });
+        if (prices.length === 0) {
             return res.status(204).send();
         }
         res.status(200).json(prices);
@@ -64,6 +54,32 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
         } else {
             res.status(500).json({ error: 'Error adding price' });
         }
+    }
+});
+
+router.put('/prices/:id', validateContentType, validatePriceData, handleValidationErrors, async (req, res) => {
+    const { id } = req.params;
+    const priceData = req.body;
+    try {
+        const updatedPrice = await priceAggregator.updatePrice(id, priceData);
+        if (!updatedPrice) {
+            return res.status(404).json({ error: 'Price not found' });
+        }
+        res.status(200).json(updatedPrice);
+    } catch (error) {
+        logError(error, { message: 'Updating price failed' });
+        res.status(500).json({ error: 'Error updating price' });
+    }
+});
+
+router.delete('/prices/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await priceAggregator.deletePrice(id);
+        res.status(204).send();
+    } catch (error) {
+        logError(error, { message: 'Deleting price failed' });
+        res.status(500).json({ error: 'Error deleting price' });
     }
 });
 
