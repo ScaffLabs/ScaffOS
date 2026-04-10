@@ -7,27 +7,29 @@ import Database from './storage/Database';
 import healthRouter from './routes/health';
 import configRouter from './routes/config';
 import errorHandler from './middleware/errorHandler';
-import { logRequest, logError } from './middleware/logger';
+import { logRequest } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
 import { sanitizeBody, sanitizeQueryParams } from './middleware/sanitization';
-import { ValidationError, ServiceError } from './errors/CustomErrors';
+import { logAudit } from './middleware/auditLogger';
 
 dotenv.config();
 const app = express();
 const db = new Database();
 
-app.use(cors());
+// CORS configuration
+const allowedOrigins = ['http://localhost:3000', 'https://your-production-url.com'];
+app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(sanitizeBody);
 app.use(sanitizeQueryParams);
 app.use(rateLimiter);
-app.use(logRequest); // Logging requests
+app.use(logRequest);
+app.use(logAudit);
 
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
-app.use(logError); // Logging errors
 app.use(errorHandler);
 
 const startServer = async () => {
@@ -38,7 +40,6 @@ const startServer = async () => {
             console.log(`Environment: ${config.nodeEnv}`);
         });
 
-        // Graceful shutdown handling
         const shutdown = async () => {
             console.log('Shutting down gracefully...');
             await db.closeConnection();
@@ -51,13 +52,7 @@ const startServer = async () => {
         process.on('SIGTERM', shutdown);
         process.on('SIGINT', shutdown);
     } catch (error) {
-        if (error instanceof ValidationError) {
-            console.error(`Validation Error: ${error.message}`);
-        } else if (error instanceof ServiceError) {
-            console.error(`Service Error: ${error.message}`);
-        } else {
-            console.error(`Failed to start server: ${error.message}`);
-        }
+        console.error(`Failed to start server: ${error.message}`);
     }
 };
 
