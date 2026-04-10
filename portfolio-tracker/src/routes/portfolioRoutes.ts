@@ -82,6 +82,25 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
 });
 
+router.get('/', async (req, res) => {
+    const { limit = 10, offset = 0, sort = 'name', order = 'asc' } = req.query;
+    try {
+        const portfolios = await fetchAllData();
+        const sortedPortfolios = portfolios.sort((a, b) => {
+            if (order === 'asc') {
+                return a[sort].localeCompare(b[sort]);
+            } else {
+                return b[sort].localeCompare(a[sort]);
+            }
+        });
+        const paginatedPortfolios = sortedPortfolios.slice(Number(offset), Number(offset) + Number(limit));
+        res.json(paginatedPortfolios);
+    } catch (error) {
+        logger.error('Error fetching portfolios', { error: error.message });
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 router.get('/:id', async (req, res) => {
     try {
         const portfolio = await getPortfolio(req.params.id);
