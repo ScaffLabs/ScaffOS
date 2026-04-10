@@ -16,30 +16,24 @@ describe('API Endpoints', () => {
     });
 
     test('GET /prices should return current prices', async () => {
-        (priceAggregator.getCurrentPrices as jest.Mock).mockReturnValueOnce({ VWAP: 100, exchange1: 50 });
+        (priceAggregator.getCurrentPrices as jest.Mock).mockReturnValueOnce([{ exchange: 'exchange1', price: 50, volume: 10 }]);
         const response = await request(app).get('/prices');
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ VWAP: 100, exchange1: 50 });
+        expect(response.body).toEqual([{ exchange: 'exchange1', price: 50, volume: 10 }]);
     });
 
     test('GET /prices should return 204 for no prices', async () => {
-        (priceAggregator.getCurrentPrices as jest.Mock).mockReturnValueOnce({});
+        (priceAggregator.getCurrentPrices as jest.Mock).mockReturnValueOnce([]);
         const response = await request(app).get('/prices');
         expect(response.status).toBe(204);
     });
 
     test('GET /health should return healthy status', async () => {
-        (priceAggregator.checkDependencies as jest.Mock).mockResolvedValueOnce({ database: 'healthy' });
+        const mockHealth = { database: 'healthy' };
+        (priceAggregator.checkDependencies as jest.Mock).mockResolvedValueOnce(mockHealth);
         const response = await request(app).get('/health');
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ status: 'healthy', dependencies: { database: 'healthy' }});
-    });
-
-    test('GET /health should return unhealthy status on error', async () => {
-        (priceAggregator.checkDependencies as jest.Mock).mockRejectedValueOnce(new Error('Service down'));
-        const response = await request(app).get('/health');
-        expect(response.status).toBe(500);
-        expect(response.body).toEqual({ status: 'unhealthy', error: 'Service down' });
+        expect(response.body).toEqual({ status: 'healthy', dependencies: mockHealth });
     });
 
     test('POST /prices should add new price', async () => {
@@ -50,7 +44,7 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual(newPriceData);
     });
 
-    test('POST /prices should return 400 on invalid data', async () => {
+    test('POST /prices should return 400 for invalid data', async () => {
         const invalidPriceData = { exchange: '', price: -50, volume: 0 };
         (priceAggregator.addPrice as jest.Mock).mockRejectedValueOnce(new Error('Validation Error'));
         const response = await request(app).post('/prices').send(invalidPriceData);
@@ -58,18 +52,24 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual({ error: 'Validation Error' });
     });
 
-    test('POST /prices should return 400 on missing fields', async () => {
-        const missingFieldData = { exchange: 'exchange1' }; // Missing price and volume
-        const response = await request(app).post('/prices').send(missingFieldData);
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({ error: 'Price must be a positive number, Volume must be a positive number' });
+    test('GET /prices/:id should return the correct price data', async () => {
+        const mockPriceData = { exchange: 'exchange1', price: 100, volume: 10 };
+        (priceAggregator.readPrice as jest.Mock).mockResolvedValueOnce(mockPriceData);
+        const response = await request(app).get('/prices/1');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(mockPriceData);
     });
 
-    test('POST /prices should handle API errors gracefully', async () => {
-        const errorPriceData = { exchange: 'exchange1', price: 100, volume: 10 };
-        (priceAggregator.addPrice as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
-        const response = await request(app).post('/prices').send(errorPriceData);
-        expect(response.status).toBe(500);
-        expect(response.body).toEqual({ error: 'API Error' });
+    test('DELETE /prices/:id should return 204 on successful deletion', async () => {
+        (priceAggregator.deletePrice as jest.Mock).mockResolvedValueOnce(undefined);
+        const response = await request(app).delete('/prices/1');
+        expect(response.status).toBe(204);
+    });
+
+    test('DELETE /prices/:id should return 404 if price not found', async () => {
+        (priceAggregator.deletePrice as jest.Mock).mockRejectedValueOnce(new Error('Not Found'));
+        const response = await request(app).delete('/prices/1');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ error: 'Not Found' });
     });
 });

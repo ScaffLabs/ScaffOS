@@ -23,14 +23,13 @@ describe('PriceAggregator', () => {
             { exchange: 'exchange1', price: 100, volume: 10 },
             { exchange: 'exchange2', price: 200, volume: 20 }
         ];
-        priceAggregator['currentPrices'] = { exchange1: 100, exchange2: 200 }; // mock the current prices
+        await Promise.all(prices.map(price => priceAggregator.addPrice(price)));
         const vwap = await priceAggregator.calculateVWAP();
         expect(vwap).toBeCloseTo(166.67, 2);
     });
 
     test('should handle empty price data gracefully', async () => {
-        const prices: PriceData[] = [];
-        await expect(priceAggregator.calculateVWAP(prices)).rejects.toThrow(ValidationError);
+        await expect(priceAggregator.calculateVWAP([])).rejects.toThrow(ValidationError);
     });
 
     test('should throw error during VWAP calculation if total volume is zero', async () => {
