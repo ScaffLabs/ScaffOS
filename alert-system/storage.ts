@@ -21,49 +21,52 @@ export interface AlertStoreInterface {
     transaction(operations: Array<() => Promise<void>>): Promise<void>;
 }
 
-class MongoAlertStore implements AlertStoreInterface {
+class InMemoryAlertStore implements AlertStoreInterface {
+    private store: { [key: string]: AlertMessage } = {};
+
     async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
-        const newAlert = new AlertModel({ ...alert, id: new mongoose.Types.ObjectId().toString() });
-        await newAlert.save();
-        return newAlert.toObject();
+        const newAlert = { ...alert, id: new mongoose.Types.ObjectId().toString(), createdAt: new Date() };
+        this.store[newAlert.id] = newAlert;
+        return newAlert;
     }
 
     async read(id: OrderId): Promise<AlertMessage | null> {
-        return AlertModel.findOne({ id }).exec();
+        return this.store[id] || null;
     }
 
     async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
-        return AlertModel.findOneAndUpdate({ id }, alert, { new: true }).exec();
+        const existingAlert = this.store[id];
+        if (!existingAlert) return null;
+        const updatedAlert = { ...existingAlert, ...alert };
+        this.store[id] = updatedAlert;
+        return updatedAlert;
     }
 
     async delete(id: OrderId): Promise<boolean> {
-        const result = await AlertModel.deleteOne({ id });
-        return result.deletedCount > 0;
+        if (this.store[id]) {
+            delete this.store[id];
+            return true;
+        }
+        return false;
     }
 
     async findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]> {
-        return AlertModel.find(query).exec();
+        return Object.values(this.store).filter(alert => {
+            return Object.keys(query).every(key => alert[key] === query[key]);
+        });
     }
 
     async deleteAll(): Promise<void> {
-        await AlertModel.deleteMany({});
+        this.store = {};
     }
 
     async transaction(operations: Array<() => Promise<void>>): Promise<void> {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        try {
-            for (const operation of operations) {
-                await operation();
-            }
-            await session.commitTransaction();
-        } catch (error) {
-            await session.abortTransaction();
-            throw error;
-        } finally {
-            session.endSession();
+        const results: any[] = [];
+        for (const operation of operations) {
+            results.push(await operation());
         }
+        return results;
     }
 }
 
-export const alertStore = new MongoAlertStore();
+export const alertStore = new InMemoryAlertStore();
