@@ -2,16 +2,10 @@ import { Request, Response } from 'express';
 import { ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
 import InMemoryStore from './dataStore';
-import { DashboardEntry, DashboardEntrySchema } from './types';
+import { LatencyData, DashboardEntry, DashboardEntrySchema } from './types';
 
 const store = new InMemoryStore<DashboardEntry>();
 
-/**
- * List all dashboard entries.
- * @param req - Express request object
- * @param res - Express response object
- * @returns {Promise<void>} - Response with list of entries or 204 if none.
- */
 export const listDashboardEntries = async (req: Request, res: Response): Promise<void> => {
     try {
         const entries = store.getAll();
@@ -25,12 +19,6 @@ export const listDashboardEntries = async (req: Request, res: Response): Promise
     }
 };
 
-/**
- * Create a new dashboard entry.
- * @param req - Express request object with body { id: string, data: LatencyData }
- * @param res - Express response object
- * @returns {Promise<void>} - Response with creation status.
- */
 export const createDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const bodyValidation = DashboardEntrySchema.safeParse(req.body);
@@ -51,12 +39,6 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
     }
 };
 
-/**
- * Update an existing dashboard entry.
- * @param req - Express request object with params { id: string } and body { data: LatencyData }
- * @param res - Express response object
- * @returns {Promise<void>} - Response with update status.
- */
 export const updateDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -81,12 +63,6 @@ export const updateDashboardEntry = async (req: Request, res: Response): Promise
     }
 };
 
-/**
- * Delete a dashboard entry.
- * @param req - Express request object with params { id: string }
- * @param res - Express response object
- * @returns {Promise<void>} - Response with deletion status.
- */
 export const deleteDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
