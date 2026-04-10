@@ -48,4 +48,8 @@ export class StorageManager<T> {
     async findByField(field: keyof T, value: any): Promise<T[]> {
         return await this.storage.findByField(field, value);
     }
+
+    async transaction(operations: (() => Promise<void>)[]): Promise<void> {
+        await this.storage.transaction(operations);
+    }
 }

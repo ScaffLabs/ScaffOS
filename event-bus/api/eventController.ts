@@ -25,7 +25,7 @@ const createEvent = async (req: Request, res: Response): Promise<void> => {
 };
 
 const getEvents = async (req: Request, res: Response): Promise<void> => {
-    const { limit, offset }: GetEventsQuery = req.query;
+    const { limit = 10, offset = 0 }: GetEventsQuery = req.query;
     try {
         const events = await storage.findAll(limit, offset);
         if (!events.length) {
