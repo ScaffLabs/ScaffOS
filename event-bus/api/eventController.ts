@@ -5,6 +5,7 @@ import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
 import logger from '../logger';
 import { ServiceError } from '../errors/serviceError';
+import { sanitize } from 'express-validator';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -79,8 +80,15 @@ const handleError = (error: Error, res: Response) => {
 };
 
 const router = Router();
-router.post('/', createEvent);
+router.post('/', [
+    sanitize('title').escape(),
+    sanitize('description').escape(),
+    createEvent
+]);
 router.get('/', getEvents);
-router.put('/:id', updateEvent);
+router.put('/:id', [
+    sanitize('title').escape(),
+    updateEvent
+]);
 router.delete('/:id', deleteEvent);
 export default router;
