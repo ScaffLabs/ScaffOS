@@ -1,6 +1,6 @@
 // Import necessary packages
 import { Request, Response } from 'express';
-import { body, validationResult } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
@@ -37,6 +37,10 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
 // Get Orders with Pagination and Sorting
 export const getOrders = async (req: Request, res: Response) => {
     const { limit = 10, offset = 0, sort = 'id', order = 'asc' } = req.query;
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        return res.status(400).json({ errors: validationErrors.array() });
+    }
     try {
         const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), sort, order });
         if (orders.length === 0) {
@@ -90,7 +94,12 @@ export const deleteOrder = async (req: Request, res: Response) => {
 // Attach routes to the app
 export const orderRouter = (app: any) => {
     app.post('/orders', createOrder);
-    app.get('/orders', getOrders);
+    app.get('/orders', [
+        query('limit').optional().isInt({ min: 1 }).toInt(),
+        query('offset').optional().isInt({ min: 0 }).toInt(),
+        query('sort').optional().isString(),
+        query('order').optional().isIn(['asc', 'desc'])
+    ], getOrders);
     app.put('/orders/:id', updateOrder);
     app.delete('/orders/:id', deleteOrder);
 };
