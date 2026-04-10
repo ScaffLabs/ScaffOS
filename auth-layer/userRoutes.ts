@@ -5,6 +5,7 @@ import logger from './logger';
 import { ValidationError, NotFoundError, EmptyArrayError } from './errors';
 import { UserSchema } from './types';
 import { requestSizeLimitMiddleware, validateAndSanitizeUserInput } from './middleware';
+import { notifyUserService } from './interServiceClient';
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ router.post('/users', async (req, res) => {
         }
         const user = await createUser(sanitizedInput.username, sanitizedInput.email);
         emitUserCreatedEvent(user);
+        await notifyUserService(user);
         logger.info('User created', { userId: user.id, username: user.username });
         res.status(201).json(user);
     } catch (error) {

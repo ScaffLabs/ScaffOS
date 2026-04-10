@@ -66,3 +66,14 @@ export const checkOrderServiceHealth = async () => {
         return false;
     }
 };
+
+export const notifyUserService = async (user) => {
+    try {
+        const url = `${config.USER_SERVICE_URL}/api/users`;
+        const response = await axios.post(url, user);
+        return response.data;
+    } catch (error) {
+        logger.error('Failed to notify user service', { error: error.message });
+        throw error;
+    }
+};

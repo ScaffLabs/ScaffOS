@@ -24,26 +24,4 @@ router.get('/health', async (req, res) => {
     }
 });
 
-// Ready check endpoint
-router.get('/ready', async (req, res) => {
-    try {
-        // Assume readiness check involves checking DB connection
-        const dbReady = await checkDatabaseConnection();
-        res.status(dbReady ? 200 : 503).json({ status: dbReady ? 'ready' : 'not ready' });
-    } catch (error) {
-        logger.error('Readiness check error', { error: error.message });
-        res.status(500).json({ status: 'not ready', error: error.message });
-    }
-});
-
-const checkDatabaseConnection = async () => {
-    try {
-        await pool.query('SELECT 1'); // Assuming pool is defined globally
-        return true;
-    } catch (error) {
-        logger.error('Database connection check failed', { error: error.message });
-        return false;
-    }
-};
-
 export default router;
