@@ -24,4 +24,4 @@ export const runMigrations = async (storage: RiskPositionStorage) => {
 export const resetData = async (storage: RiskPositionStorage) => {
     await storage.reset();
     await seedData(storage);
-};
+}; 
