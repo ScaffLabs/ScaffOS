@@ -14,18 +14,31 @@ Thank you for considering contributing to the Admin Console project! We welcome 
    git checkout -b feature/your-feature
    ```
 4. **Make your changes** and ensure to add tests where applicable.
-5. **Commit your changes** with a clear message about what you have done.
+5. **Run the application** locally with `npm run dev` to ensure your changes work as expected.
+6. **Commit your changes** with a clear message about what you have done.
    ```bash
    git commit -m "Add feature XYZ"
    ```
-6. **Push to your fork** on GitHub.
+7. **Push to your fork** on GitHub.
    ```bash
    git push origin feature/your-feature
    ```
-7. **Open a Pull Request** to the main repository.
+8. **Open a Pull Request** to the main repository, clearly explaining what your changes do and why they are beneficial to the project.
 
 ## Code of Conduct
 Please make sure to read our [Code of Conduct](./CODE_OF_CONDUCT.md) before contributing.
 
 ## Issues
-If you find a bug or have a feature request, please open an issue on GitHub.
+If you find a bug or have a feature request, please open an issue on GitHub. Provide details about the problem or the feature you'd like to see.
+
+## Testing Your Changes
+Before submitting your pull request, ensure your changes pass all tests. Run the following command:
+```bash
+npm test
+```
+
+## Style Guide
+- Follow the existing code style and conventions used in the codebase.
+- Use meaningful variable names and write concise comments where necessary.
+
+Thank you for contributing to the Admin Console project!
