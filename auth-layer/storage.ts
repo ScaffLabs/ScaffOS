@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const createUser = async (username: string, email: string): Promise<User> => {
     const newUser: User = { id: uuidv4() as UserId, username, email };
     try {
-        UserSchema.parse(newUser); // Validate user data
+        UserSchema.parse(newUser);
     } catch (err) {
         throw new ValidationError(err.errors.map(e => e.message));
     }
@@ -25,7 +25,7 @@ export const updateUser = async (id: UserId, userData: Partial<User>): Promise<U
     }
     const updatedUser = { ...user, ...userData };
     try {
-        UserSchema.parse(updatedUser); // Validate updated user data
+        UserSchema.parse(updatedUser);
     } catch (err) {
         throw new ValidationError(err.errors.map(e => e.message));
     }
@@ -38,4 +38,12 @@ export const deleteUser = async (id: UserId): Promise<boolean> => {
 
 export const getAllUsers = async (): Promise<User[]> => {
     return userStore.findAll();
+};
+
+export const findUserById = async (id: UserId): Promise<User | null> => {
+    return userStore.findById(id);
+};
+
+export const findUserByEmail = async (email: string): Promise<User | null> => {
+    return userStore.findByEmail(email);
 };
