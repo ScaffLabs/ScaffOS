@@ -19,3 +19,11 @@ export const initializeStore = (store: InMemoryStore<Position>) => {
     const seedPositions = seedData();
     migrateData(store, seedPositions);
 };
+
+export const migrateStore = (store: InMemoryStore<Position>) => {
+    const migrationData: Position[] = [
+        { id: '4', symbol: 'TSLA', quantity: 30 },
+        { id: '5', symbol: 'AMZN', quantity: 20 }
+    ];
+    migrateData(store, migrationData);
+};

@@ -67,4 +67,10 @@ export class InMemoryStore<T extends { id: string }> implements Store<T> {
             { id: '3', symbol: 'MSFT', quantity: 75 }
         ];
     }
-}
+
+    migrateData(data: T[]): void {
+        data.forEach(position => {
+            this.create(position);
+        });
+    }
+} 
