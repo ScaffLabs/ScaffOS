@@ -7,7 +7,7 @@ export type BacktestId = string & { readonly brand: unique symbol };
 
 /**
  * Represents historical price data for backtesting.
- * @property {number} timestamp - The timestamp in seconds since the epoch.
+ * @property {number} timestamp - The timestamp in seconds since the epoch, must be a positive integer.
  * @property {number} price - The price at the given timestamp, must be a positive number.
  */
 export interface HistoricalData {
@@ -44,7 +44,7 @@ export interface BacktestResult {
 }
 
 export const HistoricalDataSchema = z.object({
-    timestamp: z.number().nonnegative().describe('Timestamp in seconds since the epoch, must be non-negative.'),
+    timestamp: z.number().int().positive().describe('Timestamp in seconds since the epoch, must be a positive integer.'),
     price: z.number().positive().describe('Price at the timestamp, must be a positive number.'),
 });
 

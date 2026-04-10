@@ -2,12 +2,19 @@ import { HistoricalData, StrategyParameters, BacktestResult, BacktestId, Backtes
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
-import axios from 'axios';
 import { withRetry } from './resilience';
 import InMemoryStore from '../storage/InMemoryStore';
 
 const store = new InMemoryStore<BacktestResult>();
 
+/**
+ * Calculates the returns based on historical data and strategy parameters.
+ * @param historicalData - The historical price data used for backtesting.
+ * @param buyThreshold - The threshold at which to buy.
+ * @param sellThreshold - The threshold at which to sell.
+ * @param slippage - The slippage percentage.
+ * @returns An object containing the total returns, number of trades, win rate, and performance metrics.
+ */
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
@@ -43,6 +50,12 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     return { totalReturns, trades, winRate, performanceMetrics };
 }
 
+/**
+ * Simulates a backtest using the provided strategy parameters and historical data.
+ * @param params - The strategy parameters for the backtest.
+ * @param historicalData - The historical price data used for backtesting.
+ * @returns The result of the backtest simulation.
+ */
 const simulateBacktest = async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     const validation = StrategyParametersSchema.safeParse(params);
     if (!validation.success) {
