@@ -1,17 +1,8 @@
-import { DatabaseService, PostgresStore, SQLiteStore } from '../storage/database';
+import { DatabaseService, InMemoryStore } from '../storage/database';
 import { Strategy, PerformanceMetrics } from '../types';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
 
-const dbType = process.env.DB_TYPE || 'in-memory';
-let strategyService: DatabaseService<Strategy>;
-
-if (dbType === 'postgres') {
-    strategyService = new DatabaseService(new PostgresStore<Strategy>('strategies', process.env.DB_URL));
-} else if (dbType === 'sqlite') {
-    strategyService = new DatabaseService(new SQLiteStore<Strategy>('database.sqlite', 'strategies'));
-} else {
-    strategyService = new DatabaseService(new InMemoryStore<Strategy>());
-}
+const strategyService = new DatabaseService(new InMemoryStore<Strategy>());
 
 const calculatePerformanceMetrics = (strategies: Strategy[]): PerformanceMetrics => {
     const drawdown = strategies.map(strategy => Math.random() * 100);
@@ -27,7 +18,7 @@ const createStrategy = async (strategy: Strategy) => {
     return await strategyService.create(strategy);
 };
 
-const getPerformanceMetrics = async () => {
+const getPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
     const strategies = await strategyService.find({});
     if (strategies.length === 0) {
         throw new ValidationError('No strategies available for performance metrics calculation.');
