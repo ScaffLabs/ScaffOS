@@ -43,3 +43,7 @@
 ## [1.5.2] - 2023-11-07
 - Improved user input sanitization to prevent XSS attacks.
 - Enhanced performance of user retrieval and filtering logic.
+
+## [1.6.0] - 2023-11-08
+- Added comprehensive testing for all endpoints.
+- Implemented improved error handling for unexpected errors.
