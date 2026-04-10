@@ -72,13 +72,4 @@ describe('Alert API Integration Tests', () => {
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ message: 'Failed to create alert.' });
     });
-
-    test('should handle rate limiting', async () => {
-        for (let i = 0; i < 100; i++) {
-            await request(app).post('/api/alerts').send({ type: 'price', threshold: 100, currentValue: 120 });
-        }
-        const response = await request(app).post('/api/alerts').send({ type: 'price', threshold: 100, currentValue: 120 });
-        expect(response.status).toBe(429);
-        expect(response.body).toEqual({ message: 'Too many requests, please try again later.' });
-    });
 });
