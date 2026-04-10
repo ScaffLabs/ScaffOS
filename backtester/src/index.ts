@@ -22,10 +22,14 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again later.',
 });
 
-app.use(cors());
+app.use(cors({
+    origin: ['https://your-allowed-origin.com', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(helmet());
 app.use(limiter);
-app.use(express.json());
+app.use(express.json({ limit: '1mb' })); // Limit request size to 1mb
 app.use(requestLogger);
 app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);

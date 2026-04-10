@@ -48,6 +48,7 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
     await store.create(result);
+    logger.info({ message: 'Audit log: Backtest created', id: backtestId, performanceMetrics }); // Audit log
     return BacktestResultSchema.parse(result);
 };
 
