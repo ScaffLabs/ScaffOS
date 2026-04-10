@@ -23,7 +23,8 @@ describe('PriceAggregator', () => {
             { exchange: 'exchange1', price: 100, volume: 10 },
             { exchange: 'exchange2', price: 200, volume: 20 }
         ];
-        const vwap = await priceAggregator.calculateVWAP(prices);
+        priceAggregator['currentPrices'] = { exchange1: 100, exchange2: 200 }; // mock the current prices
+        const vwap = await priceAggregator.calculateVWAP();
         expect(vwap).toBeCloseTo(166.67, 2);
     });
 
@@ -55,3 +56,4 @@ describe('PriceAggregator', () => {
         expect(priceAggregator.getCurrentPrices()).toEqual({ VWAP: expect.any(Number), exchange1: 100 });
     });
 });
+

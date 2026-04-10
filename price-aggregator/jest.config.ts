@@ -11,6 +11,8 @@ const config: Config = {
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov'],
     setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+    reporters: ['default', 'jest-junit'], // Added to generate JUnit reports
 };
 
 export default config;
+
