@@ -2,9 +2,24 @@ import express, { Request, Response } from 'express';
 import { AlertMessage, validateCreateAlertRequest } from './alert.schema';
 import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
-import { ValidationError, ServiceError, NotFoundError } from './error.types';
+import { ServiceError, ValidationError, NotFoundError } from './error.types';
 import logger, { logRequest, logError } from './logger';
 import axios from 'axios';
+import { CircuitBreaker } from 'opossum';
+
+const options = {
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 10000
+};
+
+const webhookCircuit = new CircuitBreaker(async (alert) => {
+    return await axios.post(process.env.WEBHOOK_URL, alert);
+}, options);
+
+const emailServiceCircuit = new CircuitBreaker(async (alert) => {
+    return await axios.post(process.env.EMAIL_SERVICE_URL, alert);
+}, options);
 
 export class AlertController {
     private alertStore: AlertStoreInterface;
@@ -49,10 +64,10 @@ export class AlertController {
 
     private async notifyExternalServices(alert: AlertMessage) {
         try {
-            const webhookResponse = await axios.post(process.env.WEBHOOK_URL, alert);
-            if (webhookResponse.status !== 200) throw new ServiceError('Webhook notification failed');
-            const emailResponse = await axios.post(process.env.EMAIL_SERVICE_URL, alert);
-            if (emailResponse.status !== 200) throw new ServiceError('Email notification failed');
+            await Promise.all([
+                webhookCircuit.fire(alert),
+                emailServiceCircuit.fire(alert)
+            ]);
         } catch (error) {
             logError(error);
             throw new ServiceError('Failed to notify external services.');
