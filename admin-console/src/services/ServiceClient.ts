@@ -8,9 +8,11 @@ const axiosInstance = axios.create({
     timeout: 5000,
 });
 
-const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
+const fetchConfigurations = async (limit: number, offset: number, sortBy: string, order: string): Promise<ConfigurationItem[]> => {
     try {
-        const response = await axiosInstance.get('/config');
+        const response = await axiosInstance.get('/config', {
+            params: { limit, offset, sortBy, order }
+        });
         if (!Array.isArray(response.data)) {
             throw new InvalidInputTypeError('Expected an array of configurations.');
         }
@@ -49,26 +51,4 @@ const handleAxiosError = (error: unknown, operation: string) => {
     throw new ServiceError(`Failed to ${operation}`);
 };
 
-const fetchHealthStatus = async () => {
-    try {
-        const response = await axiosInstance.get('/health');
-        return response.data;
-    } catch (error) {
-        throw new ServiceError('Failed to fetch health status: ' + error.message);
-    }
-};
-
-const healthCheck = async () => {
-    try {
-        const result = await fetchHealthStatus();
-        return {
-            application: 'running',
-            database: result.database,
-            externalService: result.externalService
-        };
-    } catch (error) {
-        throw new ServiceError('Health check failed: ' + error.message);
-    }
-};
-
-export { fetchConfigurations, postConfiguration, deleteConfiguration, fetchHealthStatus, healthCheck };
+export { fetchConfigurations, postConfiguration, deleteConfiguration };  // Export functions for use in components.

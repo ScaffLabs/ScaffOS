@@ -18,35 +18,11 @@ router.get('/', async (req, res) => {
             freeMemory: os.freemem(),
             totalMemory: os.totalmem(),
             loadAvg: os.loadavg(),
+            cpuCount: os.cpus().length
         });
     } catch (error) {
         logger.error(`Health check failed: ${error.message}`);
         res.status(500).json({ error: 'Health check failed: ' + error.message });
-    }
-});
-
-router.get('/ready', async (req, res) => {
-    try {
-        const health = await fetchHealthStatus();
-        const isReady = health && health.application === 'running' && health.database === 'up';
-        if (isReady) {
-            res.status(200).json({ status: 'ready' });
-        } else {
-            res.status(503).json({ status: 'not ready' });
-        }
-    } catch (error) {
-        logger.error(`Readiness check failed: ${error.message}`);
-        res.status(500).json({ error: 'Readiness check failed: ' + error.message });
-    }
-});
-
-router.get('/live', async (req, res) => {
-    try {
-        const health = await fetchHealthStatus();
-        res.status(200).json({ status: 'alive', health });
-    } catch (error) {
-        logger.error(`Live check failed: ${error.message}`);
-        res.status(500).json({ error: 'Live check failed: ' + error.message });
     }
 });
 
