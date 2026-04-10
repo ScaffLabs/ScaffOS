@@ -43,17 +43,26 @@ export interface BacktestResult {
     performanceMetrics: string;
 }
 
+/**
+ * Schema for validating HistoricalData.
+ */
 export const HistoricalDataSchema = z.object({
     timestamp: z.number().int().positive().describe('Timestamp in seconds since the epoch, must be a positive integer.'),
     price: z.number().positive().describe('Price at the timestamp, must be a positive number.'),
 });
 
+/**
+ * Schema for validating StrategyParameters.
+ */
 export const StrategyParametersSchema = z.object({
     slippage: z.number().min(0).max(1).describe('Slippage percentage, must be between 0 and 1.'),
     buyThreshold: z.number().min(0).max(1).describe('Threshold for buying, must be between 0 and 1.'),
     sellThreshold: z.number().min(0).max(1).describe('Threshold for selling, must be between 0 and 1.'),
 });
 
+/**
+ * Schema for validating BacktestResult.
+ */
 export const BacktestResultSchema = z.object({
     id: z.string().uuid().transform((id) => id as BacktestId),
     totalReturns: z.number(),
@@ -62,6 +71,9 @@ export const BacktestResultSchema = z.object({
     performanceMetrics: z.string(),
 });
 
+/**
+ * Schema for Backtest events.
+ */
 export const BacktestEventSchema = z.union([
     z.object({ type: z.literal('BACKTEST_CREATED'), data: BacktestResultSchema }),
     z.object({ type: z.literal('BACKTEST_UPDATED'), data: BacktestResultSchema }),
