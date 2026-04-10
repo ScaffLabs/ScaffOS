@@ -39,8 +39,8 @@ backtestRouter.post('/', [
         logger.info({ message: 'Backtest created', id: entity.id });
         res.status(201).json({ id: entity.id, result: xss(result) }); // Escape output to prevent XSS
     } catch (error) {
+        logger.error({ message: 'Error during backtest', error: error.message });
         if (error instanceof ValidationError) {
-            logger.warn({ message: 'Validation error', error: error.message });
             return next(error);
         }
         next(new ServiceError('Error during backtest: ' + error.message));
@@ -56,8 +56,8 @@ backtestRouter.get('/:id', async (req, res, next) => {
         }
         res.status(200).json(result);
     } catch (error) {
+        logger.error({ message: 'Error retrieving backtest result', error: error.message });
         if (error instanceof NotFoundError) {
-            logger.warn({ message: 'Not found error for ID', id });
             return next(error);
         }
         next(new ServiceError('Error retrieving backtest result: ' + error.message));
