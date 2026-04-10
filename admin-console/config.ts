@@ -10,6 +10,8 @@ const envSchema = Joi.object({
     DATABASE_URL: Joi.string().required(),
     API_KEY: Joi.string().required(),
     API_URL: Joi.string().uri().required(),
+    LOG_LEVEL: Joi.string().valid('info', 'debug', 'error').default('info'),
+    ENABLE_CORS: Joi.boolean().default(true),
 }).unknown(true);
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -23,10 +25,12 @@ const config = {
     databaseUrl: envVars.DATABASE_URL,
     apiKey: envVars.API_KEY,
     apiUrl: envVars.API_URL,
+    logLevel: envVars.LOG_LEVEL,
+    enableCors: envVars.ENABLE_CORS === 'true',
 };
 
 const logger = winston.createLogger({
-    level: 'info',
+    level: config.logLevel,
     format: winston.format.json(),
     transports: [new winston.transports.Console()],
 });
