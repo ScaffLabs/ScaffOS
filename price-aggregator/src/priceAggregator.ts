@@ -1,4 +1,4 @@
-import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema, PriceEventSchema } from './types';
+import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema } from './types';
 import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
@@ -19,12 +19,14 @@ export class PriceAggregator {
         }
 
         try {
-            const newPrice = await storage.create(parsedData.data);
-            this.currentPrices[parsedData.data.exchange] = parsedData.data.price;
-            this.currentPrices.VWAP = await this.calculateVWAP();
-            await postHttpClient('/prices', newPrice);
-            this.eventBus.emitPriceAdded(newPrice);
-            return newPrice;
+            await storage.transaction(async () => {
+                const newPrice = await storage.create(parsedData.data);
+                this.currentPrices[parsedData.data.exchange] = parsedData.data.price;
+                this.currentPrices.VWAP = await this.calculateVWAP();
+                await postHttpClient('/prices', newPrice);
+                this.eventBus.emitPriceAdded(newPrice);
+            });
+            return parsedData.data;
         } catch (error) {
             throw new ServiceError('Failed to add price: ' + error.message);
         }
