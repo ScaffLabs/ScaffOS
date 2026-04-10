@@ -51,7 +51,7 @@ const postHttpClient = async (path: string, data: any, config?: AxiosRequestConf
 };
 
 const checkHealth = async () => {
-    const services = ['/service1/health', '/service2/health']; // Add your service health paths
+    const services = ['/service1/health', '/service2/health']; // Health check paths for dependent services
     const healthChecks = await Promise.all(services.map(async service => {
         try {
             const result = await httpClient(service);
