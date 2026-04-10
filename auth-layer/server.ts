@@ -38,21 +38,6 @@ app.use('/health', healthRouter); // Define health check route
 app.use('/api', userRoutes); // Define user management routes
 app.use(errorHandlingMiddleware); // Centralized error handling middleware
 
-app.post('/api/users', async (req, res) => {
-    const { username, email } = sanitizeUserInput(req.body); // Sanitize user inputs to prevent injection attacks
-    try {
-        const user = await createUser(username, email); // Try to create a new user
-        logger.info('User created', { userId: user.id, username: user.username }); // Log successful user creation
-        res.status(201).json(user); // Respond with the created user
-    } catch (error) {
-        logger.error('Error creating user', { error: error.message }); // Log error details
-        if (error instanceof ValidationError) {
-            return res.status(400).json({ error: error.message, details: error.errors }); // Respond with validation error details
-        }
-        return res.status(500).json({ error: 'Internal Server Error' }); // Handle generic server errors
-    }
-});
-
 const start = async () => {
     try {
         await connectionPool.isReady(); // Check if the database connection is ready
