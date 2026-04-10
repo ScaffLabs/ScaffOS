@@ -11,8 +11,8 @@ const SERVICE_URLS = {
 
 const checkService = async (service) => {
     try {
-        const response = await axios.get(`${SERVICE_URLS[service]}/health`);
-        return response.data.status === 'UP';
+        const response = await connectionPool.requestWithRetry(service, 'get', '/health');
+        return response.status === 'UP';
     } catch (error) {
         logger.error({ error: error.message }, `Error checking ${service}`);
         return false;

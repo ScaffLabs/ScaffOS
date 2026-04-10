@@ -1,6 +1,6 @@
 import express from 'express';
 import { createServer } from 'http';
-import { healthCheck, readinessCheck, livelinessCheck } from './healthCheck';
+import { healthCheck } from './healthCheck';
 import errorMiddleware from './errorMiddleware';
 import { logRequest, logStartup } from './logger';
 import helmet from 'helmet';
@@ -26,8 +26,6 @@ app.use(sanitize);
 
 // Health check endpoints
 app.get('/health', healthCheck);
-app.get('/ready', readinessCheck);
-app.get('/alive', livelinessCheck);
 app.use(errorMiddleware);
 
 // Setup dashboard routes
