@@ -8,7 +8,6 @@ const serviceUrls = {
   dataService: process.env.DATA_SERVICE_URL
 };
 
-// Initialize PostgreSQL connection pool
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL
 });
@@ -35,7 +34,7 @@ export async function healthCheckServices() {
 
 export async function checkReadiness() {
   try {
-    await pool.query('SELECT 1'); // Check database connection
+    await pool.query('SELECT 1');
     return { healthy: true };
   } catch (error) {
     logger.error('Database connection failed:', error);
@@ -54,11 +53,8 @@ export async function healthCheckController(req, res) {
   }
 }
 
-// Health check endpoint for /health
 export const healthCheckRouter = Router();
 healthCheckRouter.get('/', healthCheckController);
-
-// Readiness endpoint for /ready
 healthCheckRouter.get('/ready', async (req, res) => {
   const readiness = await checkReadiness();
   res.status(readiness.healthy ? 200 : 503).json(readiness);

@@ -41,7 +41,7 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
                 return fallback;
             } else {
                 isCircuitOpen = false;
-                failureCount = 0; // Reset on timeout
+                failureCount = 0;
                 logger.info('Circuit breaker reset');
             }
         }
@@ -50,7 +50,7 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
                 fn(),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Operation timed out')), TIMEOUT))
             ]);
-            failureCount = 0; // Reset on success
+            failureCount = 0;
             return result;
         } catch (error) {
             failureCount++;
@@ -64,10 +64,6 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
     };
 }
 
-/**
- * Emit an event when a backtest result is created.
- * @param {object} event - The event data to emit.
- */
 function emitBacktestEvent(event: unknown) {
     const validation = BacktestEventSchema.safeParse(event);
     if (!validation.success) {
