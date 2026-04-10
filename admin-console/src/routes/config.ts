@@ -23,9 +23,12 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
         ConfigurationItemSchema.parse(configItem);
         await db.createConfiguration(configItem);
         emitEvent('CONFIGURATION_CREATED', configItem);
-        res.status(201).json({ message: 'Configuration created successfully!' });
+        return res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
-        next(new ValidationError('Invalid configuration data: ' + error.message));
+        if (error instanceof ValidationError) {
+            return next(new ValidationError('Invalid configuration data: ' + error.message));
+        }
+        next(new ServiceError('Error creating configuration: ' + error.message));
     }
 });
 
@@ -57,7 +60,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
                 return 0;
             })
             .slice(offset, offset + limit);
-        res.status(200).json(filteredConfigs);
+        if (filteredConfigs.length === 0) throw new NotFoundError('No configurations found.');
+        return res.status(200).json(filteredConfigs);
     } catch (error) {
         next(new ServiceError('Error fetching configurations: ' + error.message));
     }
@@ -70,12 +74,12 @@ router.put('/', async (req: Request, res: Response, next: NextFunction) => {
         ConfigurationItemSchema.parse(configItem);
         await db.updateConfiguration(configItem);
         emitEvent('CONFIGURATION_UPDATED', configItem);
-        res.status(200).json({ message: 'Configuration updated successfully!' });
+        return res.status(200).json({ message: 'Configuration updated successfully!' });
     } catch (error) {
         if (error instanceof ValidationError) {
             return next(new ValidationError('Invalid configuration data: ' + error.message));
         }
-        return next(new ServiceError('Error updating configuration: ' + error.message));
+        next(new ServiceError('Error updating configuration: ' + error.message));
     }
 });
 
@@ -85,7 +89,7 @@ router.delete('/:key', async (req: Request, res: Response, next: NextFunction) =
     try {
         await db.deleteConfiguration(key);
         emitEvent('CONFIGURATION_DELETED', { key });
-        res.status(204).send();
+        return res.status(204).send();
     } catch (error) {
         next(new ServiceError('Error deleting configuration: ' + error.message));
     }

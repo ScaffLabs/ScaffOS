@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import config from '../config';
 import { ServiceError, InvalidInputTypeError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
-import { emitEvent } from '../events/EventBus';  
+import { emitEvent } from '../events/EventBus';
 
 const axiosInstance = axios.create({
     baseURL: config.API_URL,
