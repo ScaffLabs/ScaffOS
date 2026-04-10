@@ -11,6 +11,7 @@ import { monitorMemoryUsage } from './utils/monitor';
 import { gracefulShutdown } from './utils/gracefulShutdown';
 import csrf from 'csurf';
 import bodyParser from 'body-parser';
+import { body, validationResult } from 'express-validator';
 
 const app = express();
 const PORT = config.port;

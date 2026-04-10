@@ -11,13 +11,11 @@ const backtestRouter = Router();
 const store = new InMemoryStore();
 
 const sanitizeInput = (req, res, next) => {
-    req.body = {
-        strategyParams: req.body.strategyParams,
-        historicalData: req.body.historicalData.map(data => ({
-            timestamp: data.timestamp,
-            price: data.price,
-        }))
-    };
+    req.body.strategyParams = req.body.strategyParams;
+    req.body.historicalData = req.body.historicalData.map(data => ({
+        timestamp: data.timestamp,
+        price: data.price,
+    }));
     next();
 };
 
@@ -35,32 +33,13 @@ backtestRouter.post('/', [
         const result = await simulateBacktest(strategyParams, historicalData);
         const entity = await store.create({ strategyParams, historicalData, result });
         logger.info({ message: 'Backtest created', id: entity.id });
-        res.status(201).json({ id: entity.id, result });
+        res.status(201).json({ id: entity.id, result: xss(result) }); // Escape output to prevent XSS
     } catch (error) {
         if (error instanceof ValidationError) {
             logger.warn({ message: 'Validation error', error: error.message });
             return next(error);
         }
         next(new ServiceError('Error during backtest: ' + error.message));
-    }
-});
-
-backtestRouter.get('/', async (req, res, next) => {
-    const { limit = 10, offset = 0, orderBy = 'createdAt', orderDirection = 'asc' } = req.query;
-    try {
-        const allResults = await store.findAll();
-        const sortedResults = allResults.sort((a, b) => {
-            if (orderDirection === 'asc') {
-                return a[orderBy] > b[orderBy] ? 1 : -1;
-            } else {
-                return a[orderBy] < b[orderBy] ? 1 : -1;
-            }
-        });
-        const paginatedResults = sortedResults.slice(Number(offset), Number(offset) + Number(limit));
-        res.status(200).json(paginatedResults);
-    } catch (error) {
-        logger.error('Error retrieving backtest results:', error);
-        next(new ServiceError('Error retrieving backtest results: ' + error.message));
     }
 });
 
