@@ -2,16 +2,13 @@ import { Request, Response } from 'express';
 import { InMemoryStore } from '../storage/InMemoryStore';
 import { Position, PositionSchema } from '../types';
 import { ServiceError, ValidationError, NotFoundError } from '../utils/errors';
+import { publishEvent } from '../utils/eventBus';
 
 const positionStore = new InMemoryStore<Position>();
 
 export const fetchPositions = async (req: Request, res: Response) => {
-    try {
-        const positions = Object.values(positionStore.data);
-        res.status(200).json(positions);
-    } catch (error) {
-        throw new ServiceError('Error fetching positions: ' + error.message);
-    }
+    const positions = Object.values(positionStore.data);
+    res.status(200).json(positions);
 };
 
 export const createPosition = async (req: Request, res: Response) => {
@@ -22,6 +19,7 @@ export const createPosition = async (req: Request, res: Response) => {
             throw new ValidationError('Invalid position data: ' + validationResult.error.errors.join(', '));
         }
         positionStore.create(validationResult.data);
+        publishEvent('POSITION_UPDATED', validationResult.data); // Notify position update
         res.status(201).json({ message: 'Position created successfully', position: validationResult.data });
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -44,6 +42,7 @@ export const updatePosition = async (req: Request, res: Response) => {
             throw new ValidationError('Invalid position data: ' + validationResult.error.errors.join(', '));
         }
         positionStore.update(id, validationResult.data);
+        publishEvent('POSITION_UPDATED', validationResult.data); // Notify position update
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {

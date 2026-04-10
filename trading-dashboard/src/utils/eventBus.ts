@@ -26,5 +26,10 @@ export const notifyEventSubscribers = (event: TradingEvent['type'], data: Tradin
 export const getEventBusInstance = () => eventBus;
 
 export const initializeEventBus = () => {
-    // You can add default subscriptions here if required
+    // Default subscriptions can be added here if required
+    subscribeToEvent('ORDER_SUBMITTED', (data) => {
+        console.log('Order Submitted Event:', data);
+    });
 };
+
+initializeEventBus();
