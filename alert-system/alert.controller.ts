@@ -17,9 +17,14 @@ export class AlertController {
 
     async getActiveAlerts(req: Request, res: Response) {
         const start = Date.now();
+        const { limit, offset, type, sort } = req.query;
         try {
-            const alerts = await this.alertStore.findIndex({});
-            return alerts.length ? res.status(200).json(alerts) : res.status(204).send();
+            const query: any = {};
+            if (type) query.type = type;
+            const alerts = await this.alertStore.findIndex(query);
+            const sortedAlerts = sort ? alerts.sort((a, b) => a[sort] - b[sort]) : alerts;
+            const paginatedAlerts = sortedAlerts.slice(offset, offset + limit);
+            return res.status(200).json(paginatedAlerts);
         } catch (error) {
             logError(error);
             return res.status(500).json({ message: 'Failed to retrieve alerts.' });
