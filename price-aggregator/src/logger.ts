@@ -4,7 +4,7 @@ import { format } from 'logform';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const logger = winston.createLogger({
-    level: 'info',
+    level: process.env.LOG_LEVEL || 'info',
     format: isDevelopment ? winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()
@@ -42,11 +42,10 @@ export const logStartup = (config) => {
     });
 };
 
-export const logSensitiveOperation = (operation, data) => {
+export const logPerformance = (operation, metrics) => {
     logger.info({
-        message: 'Sensitive operation performed',
-        operation,
-        data: { ...data, password: undefined, token: undefined }, // Ensure sensitive data is not logged
+        message: `${operation} performance metrics`,
+        metrics,
     });
 };
 
