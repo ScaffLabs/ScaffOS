@@ -2,28 +2,9 @@ import { HistoricalData, StrategyParameters, BacktestResult, BacktestId, Backtes
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
-import axios from 'axios';
-import { withRetry } from './resilience';
 import InMemoryStore from '../storage/InMemoryStore';
 
 const store = new InMemoryStore<BacktestResult>();
-
-const orderServiceUrl = process.env.ORDER_SERVICE_URL;
-const dataServiceUrl = process.env.DATA_SERVICE_URL;
-
-async function fetchOrders() {
-    return withRetry(async () => {
-        const response = await axios.get(`${orderServiceUrl}/api/orders`);
-        return response.data;
-    });
-}
-
-async function fetchHistoricalData() {
-    return withRetry(async () => {
-        const response = await axios.get(`${dataServiceUrl}/api/historical-data`);
-        return response.data;
-    });
-}
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number) {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
@@ -59,8 +40,7 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     if (!validation.success) {
         throw new ValidationError('Invalid strategy parameters: ' + validation.error.format());
     }
-    const historicalDataFetched = await fetchHistoricalData();
-    const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalDataFetched, params.buyThreshold, params.sellThreshold, params.slippage);
+    const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
@@ -68,4 +48,4 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     return BacktestResultSchema.parse(result);
 };
 
-export { simulateBacktest, fetchOrders, fetchHistoricalData };
+export { simulateBacktest };
