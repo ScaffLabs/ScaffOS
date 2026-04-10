@@ -12,6 +12,7 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     }
     let totalReturns = 0;
     let trades = 0;
+    let successfulTrades = 0;
 
     for (let i = 1; i < historicalData.length; i++) {
         const previousPrice = historicalData[i - 1].price;
@@ -25,16 +26,18 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
         if (currentPrice > previousPrice * (1 + buyThreshold)) {
             trades++;
             totalReturns += (currentPrice * (1 - slippage)) - previousPrice;
+            successfulTrades++;
         } 
         // Sell logic
         else if (currentPrice < previousPrice * (1 - sellThreshold)) {
             trades++;
             totalReturns += previousPrice - (currentPrice * (1 + slippage));
+            successfulTrades++;
         }
     }
 
-    const winRate = trades > 0 ? (totalReturns > 0 ? (trades / (trades * 2)) * 100 : 0) : 0;
-    const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate}%`;
+    const winRate = trades > 0 ? (successfulTrades / trades) * 100 : 0;
+    const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}%`;
     return { totalReturns, trades, winRate, performanceMetrics };
 }
 
