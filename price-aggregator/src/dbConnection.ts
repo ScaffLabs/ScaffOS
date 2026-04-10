@@ -1,4 +1,4 @@
-import { Pool } from 'pg'; // Assuming PostgreSQL is the database
+import { Pool } from 'pg';
 
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -24,5 +24,3 @@ export const createConnectionPool = () => {
         },
     };
 };
-
-// Error handling can be added for connection errors and retries.
