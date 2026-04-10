@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -20,7 +20,7 @@ export const securityMiddleware = (app: any) => {
     app.use(limiter); // Apply rate limiting
 };
 
-export const validatePositionInput = (req: Request, res: Response, next: Function) => {
+export const validatePositionInput = (req: Request, res: Response, next: NextFunction) => {
     const { symbol, quantity } = req.body;
     if (typeof symbol !== 'string' || validator.isEmpty(symbol)) {
         throw new ValidationError('Invalid stock symbol');
@@ -33,7 +33,7 @@ export const validatePositionInput = (req: Request, res: Response, next: Functio
 };
 
 export const validateRequestSize = (maxSize: string) => {
-    return (req: Request, res: Response, next: Function) => {
+    return (req: Request, res: Response, next: NextFunction) => {
         const contentLength = req.headers['content-length'];
         if (contentLength && Number(contentLength) > Number(maxSize)) {
             return res.status(413).json({ message: 'Payload too large' });
@@ -42,19 +42,9 @@ export const validateRequestSize = (maxSize: string) => {
     };
 };
 
-export const csrfMiddleware = (req: Request, res: Response, next: Function) => {
-    // Implement CSRF protection using csurf
-    next();
-};
-
-export const logSensitiveOperations = (req: Request, res: Response, next: Function) => {
+export const logSensitiveOperations = (req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'POST' || req.method === 'PUT') {
         logger.info('Sensitive operation performed', { method: req.method, path: req.path, body: req.body });
     }
     next();
-};
-
-export const applySecurityMiddlewares = (app: any) => {
-    app.use(securityMiddleware);
-    app.use(logSensitiveOperations);
 };
