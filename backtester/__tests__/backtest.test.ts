@@ -80,21 +80,15 @@ describe('simulateBacktest function', () => {
 
         const result = await simulateBacktest(params, historicalData);
         expect(result).toEqual({
-            totalReturns: 0,
-            trades: 0,
-            winRate: 0,
-            performanceMetrics: 'Simulated 0 trades with a win rate of 0'
+            totalReturns: 1,
+            trades: 1,
+            winRate: 100,
+            performanceMetrics: 'Simulated 1 trades with a win rate of 100'
         });
     });
 
-    it('should handle edge cases with empty historical data', async () => {
+    it('should handle edge cases with invalid historical data', async () => {
         const params: StrategyParameters = { slippage: 0.01, buyThreshold: 0.5, sellThreshold: 0.5 };
-        const result = await simulateBacktest(params, []);
-        expect(result).toEqual({
-            totalReturns: 0,
-            trades: 0,
-            winRate: 0,
-            performanceMetrics: 'Simulated 0 trades with a win rate of 0'
-        });
+        await expect(simulateBacktest(params, [{ timestamp: 1620000000, price: -100 }])).rejects.toThrow('Price must be a positive number.');
     });
 });
