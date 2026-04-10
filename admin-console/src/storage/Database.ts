@@ -47,6 +47,14 @@ class Database {
     async transaction(operations: () => Promise<void>): Promise<void> {
         return this.dbClient.transaction(operations);
     }
+
+    async migrate(targetDb: Database): Promise<void> {
+        return this.dbClient.migrate(targetDb.dbClient);
+    }
+
+    async seed(data: ConfigurationItem[]): Promise<void> {
+        return this.dbClient.seed(data);
+    }
 }
 
 export default Database;

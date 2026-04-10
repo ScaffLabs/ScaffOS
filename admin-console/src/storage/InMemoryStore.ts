@@ -23,6 +23,10 @@ class InMemoryStore<T> {
         return Array.from(this.data.values());
     }
 
+    async findByIndex(index: string, value: any): Promise<T[]> {
+        return Array.from(this.data.values()).filter(item => item[index] === value);
+    }
+
     async clear() {
         this.data.clear();
     }
@@ -34,6 +38,19 @@ class InMemoryStore<T> {
         } catch (error) {
             this.data = previousState; // Rollback on error
             throw error;
+        }
+    }
+
+    async migrate(targetStore: InMemoryStore<T>): Promise<void> {
+        const items = await this.findAll();
+        for (const item of items) {
+            await targetStore.create(item['key'], item);
+        }
+    }
+
+    async seed(data: T[]): Promise<void> {
+        for (const item of data) {
+            await this.create(item['key'], item);
         }
     }
 }
