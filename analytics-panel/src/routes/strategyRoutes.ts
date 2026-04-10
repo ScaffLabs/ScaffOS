@@ -43,7 +43,7 @@ router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 router.get('/', limiter, validateRequestSize, async (req, res) => {
     const { limit = 10, offset = 0, sortBy = 'name', order = 'asc' } = req.query;
     try {
-        const strategies = await getStrategiesHandler(req, res);
+        const strategies = await findStrategies({});
         const sortedStrategies = strategies.sort((a, b) => {
             if (order === 'asc') return a[sortBy] > b[sortBy] ? 1 : -1;
             return a[sortBy] < b[sortBy] ? 1 : -1;
