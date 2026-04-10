@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import userRoutes from '../userRoutes';
-import { createUser } from '../storage';
+import { createUser, getAllUsers } from '../storage';
 import { validateApiKey } from '../apiKey';
 
 const app = express();
