@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Order, OrderSchema } from '../types';
 import { ServiceError } from '../utils/errors';
 import logger from '../utils/logger';
+import { publishEvent } from '../utils/eventBus';
 
 const orders: Order[] = [];
 
@@ -14,6 +15,7 @@ export const submitOrder = async (req: Request, res: Response) => {
         }
         orders.push(validationResult.data);
         logger.info('Order submitted', { orderId: validationResult.data.id });
+        publishEvent('ORDER_SUBMITTED', validationResult.data); // Emit order submitted event
         res.status(201).json({ message: 'Order submitted successfully', order: validationResult.data });
     } catch (error) {
         logger.error('Error submitting order', { error: error.message });
