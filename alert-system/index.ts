@@ -21,13 +21,14 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(errorMiddleware);
 
-const mongoOptions = { useNewUrlParser: true, useUnifiedTopology: true, poolSize: 5 };
+const mongoOptions = { useNewUrlParser: true, useUnifiedTopology: true, poolSize: 10 };
 mongoose.connect(config.MONGO_URI, mongoOptions)
     .then(() => logger.info('Connected to MongoDB'))
     .catch(err => logger.error('MongoDB connection error:', err));
 
 app.get('/health', HealthCheck.checkHealth);
 app.get('/ready', HealthCheck.checkReady);
+app.get('/memory', HealthCheck.checkMemoryUsage);
 app.use('/api/alerts', alertRoutes);
 
 const server = app.listen(config.PORT, () => {

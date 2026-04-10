@@ -27,4 +27,14 @@ export class HealthCheck {
         const services = await this.checkExternalServices(['WEBHOOK', 'EMAIL']);
         return res.json({ ready: services.WEBHOOK && services.EMAIL });
     }
+
+    static async checkMemoryUsage(req: Request, res: Response) {
+        const memoryUsage = process.memoryUsage();
+        return res.json({
+            rss: memoryUsage.rss,
+            heapTotal: memoryUsage.heapTotal,
+            heapUsed: memoryUsage.heapUsed,
+            external: memoryUsage.external,
+        });
+    }
 }
