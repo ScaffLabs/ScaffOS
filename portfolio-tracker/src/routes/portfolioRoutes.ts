@@ -7,7 +7,6 @@ import { sanitize } from '../middleware/sanitization';
 import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
-import { auditLog } from '../services/auditService';
 
 const router = Router();
 
@@ -22,7 +21,7 @@ router.use(csrfProtection);
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100
+    max: 100 // Limit each IP to 100 requests per windowMs
 });
 router.use(limiter);
 
@@ -46,10 +45,14 @@ const portfolioValidation = [
 ];
 
 router.get('/', async (req, res) => {
-    const { limit = 10, offset = 0 } = req.query;
+    const { limit = 10, offset = 0, sort = 'name', order = 'asc' } = req.query;
     try {
         const portfolios = await fetchAllData();
-        const paginatedPortfolios = portfolios.slice(Number(offset), Number(offset) + Number(limit));
+        const sortedPortfolios = portfolios.sort((a, b) => {
+            if (order === 'asc') return a[sort] > b[sort] ? 1 : -1;
+            return a[sort] < b[sort] ? 1 : -1;
+        });
+        const paginatedPortfolios = sortedPortfolios.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedPortfolios);
     } catch (error) {
         logger.error('Error fetching portfolios', { error: error.message });
@@ -65,7 +68,6 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
     try {
         const portfolio = await createPortfolio(req.body);
-        await auditLog('Portfolio Created', portfolio);
         logger.info('Portfolio created', { portfolioId: portfolio.id });
         res.status(201).json(portfolio);
     } catch (error) {
@@ -100,7 +102,6 @@ router.put('/:id', portfolioValidation, async (req, res) => {
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
-        await auditLog('Portfolio Updated', { id: req.params.id, changes: req.body });
         logger.info('Portfolio updated', { portfolioId: req.params.id });
         res.status(200).json(updatedPortfolio);
     } catch (error) {
@@ -116,7 +117,6 @@ router.put('/:id', portfolioValidation, async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         await deletePortfolio(req.params.id);
-        await auditLog('Portfolio Deleted', { id: req.params.id });
         logger.info('Portfolio deleted', { portfolioId: req.params.id });
         res.status(204).send();
     } catch (error) {
