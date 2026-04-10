@@ -7,7 +7,7 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: isDevelopment ? winston.format.combine(
     winston.format.colorize(),
-    winston.format.simple()
+    winston.format.simple(),
   ) : winston.format.json(),
   transports: [
     new winston.transports.Console(),
@@ -34,6 +34,7 @@ const requestLogger = (req, res, next) => {
       requestId,
     });
   });
+
   next();
 };
 
@@ -42,14 +43,6 @@ const logError = (err, req) => {
     message: err instanceof Error ? err.message : 'Unknown error',
     stack: err instanceof Error ? err.stack : 'No stack trace',
     requestId: req.headers['x-request-id'] || 'N/A',
-  });
-};
-
-const logPerformance = (operation, duration, requestId) => {
-  logger.info({
-    message: `${operation} completed`,
-    duration,
-    requestId,
   });
 };
 
@@ -77,4 +70,4 @@ const logRequestDetails = (req) => {
   });
 };
 
-export { logger, requestLogger, logError, logPerformance, logStartup, logDatabasePerformance, logRequestDetails };
+export { logger, requestLogger, logError, logStartup, logDatabasePerformance, logRequestDetails };
