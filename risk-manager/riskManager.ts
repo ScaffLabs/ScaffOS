@@ -1,7 +1,7 @@
 import { RiskPosition, RiskPositionSchema, OrderId } from './sharedTypes';
 import { RiskPositionStorage } from './storage';
 import logger from './logger';
-import { ValidationError, NotFoundError, ServiceError } from './errors';
+import { ValidationError, NotFoundError } from './errors';
 import { PositionLimits } from './positionLimits';
 
 export default class RiskManager {
