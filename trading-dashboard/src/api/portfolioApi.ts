@@ -7,10 +7,9 @@ import rateLimit from 'express-rate-limit';
 
 const positionStore = new InMemoryStore<Position>();
 
-// Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 1 * 60 * 1000,
+    max: 100,
     message: 'Too many requests, please try again later.',
 });
 
