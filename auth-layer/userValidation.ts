@@ -17,5 +17,3 @@ export const sanitizeUserInput = (user: Partial<User>) => {
         email: sanitizeHtml(user.email ? user.email.trim() : ''),
     };
 };
-
-export default { validateUser, sanitizeUserInput };
