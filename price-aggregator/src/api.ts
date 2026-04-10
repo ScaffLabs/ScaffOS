@@ -6,7 +6,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest } from './logger';
 import { checkHealth } from './httpClient';
-import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -20,8 +19,8 @@ router.use(helmet());
 
 // Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 1 * 60 * 1000,
+    max: 100,
 });
 router.use(limiter);
 
@@ -46,15 +45,14 @@ router.get('/health', async (req, res) => {
     }
 });
 
-// Get current prices with pagination
+// Get current prices
 router.get('/prices', async (req, res) => {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = parseInt(req.query.offset as string) || 0;
-
     try {
         const prices = await priceAggregator.getCurrentPrices();
-        const paginatedPrices = Object.entries(prices).slice(offset, offset + limit);
-        res.status(200).json(paginatedPrices);
+        if (Object.keys(prices).length === 0) {
+            return res.status(204).send();
+        }
+        res.status(200).json(prices);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error fetching prices' });
