@@ -3,8 +3,32 @@ import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import InMemoryStore from '../storage/InMemoryStore';
+import axios from 'axios';
+import { eventEmitter } from './resilience';
 
 const store = new InMemoryStore<BacktestResult>();
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
+const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
+
+async function fetchOrders() {
+    try {
+        const response = await axios.get(`${ORDER_SERVICE_URL}/api/orders`);
+        return response.data;
+    } catch (error) {
+        logger.error('Error fetching orders:', error);
+        throw new ServiceError('Failed to fetch orders');
+    }
+}
+
+async function fetchHistoricalData() {
+    try {
+        const response = await axios.get(`${DATA_SERVICE_URL}/api/historical-data`);
+        return response.data;
+    } catch (error) {
+        logger.error('Error fetching historical data:', error);
+        throw new ServiceError('Failed to fetch historical data');
+    }
+}
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number) {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
@@ -43,12 +67,15 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     if (!validation.success) {
         throw new ValidationError('Invalid strategy parameters: ' + validation.error.format());
     }
-    // Fetch historical data from the database or external API if needed
-    const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(historicalData, params.buyThreshold, params.sellThreshold, params.slippage);
+    const orders = await fetchOrders();
+    const historicalDataFetched = await fetchHistoricalData();
+    const dataToUse = historicalData.length ? historicalData : historicalDataFetched;
+    const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(dataToUse, params.buyThreshold, params.sellThreshold, params.slippage);
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
     await store.create(result);
+    eventEmitter.emit('BACKTEST_CREATED', { result });
     logger.info({ message: 'Audit log: Backtest created', id: backtestId, performanceMetrics }); // Audit log
     return BacktestResultSchema.parse(result);
 };
