@@ -24,3 +24,7 @@ export const notifyEventSubscribers = (event: TradingEvent['type'], data: Tradin
 };
 
 export const getEventBusInstance = () => eventBus;
+
+export const initializeEventBus = () => {
+    // You can add default subscriptions here if required
+};

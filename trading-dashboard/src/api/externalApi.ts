@@ -39,3 +39,19 @@ export const checkExternalService = async () => {
         return false;
     }
 };
+
+export const fetchDataWithRetry = async (endpoint) => {
+    try {
+        return await fetchExternalData();
+    } catch (error) {
+        throw new ServiceError('Error fetching external data: ' + error.message);
+    }
+};
+
+export const fetchHealthStatus = async () => {
+    try {
+        return await fetchServiceHealth();
+    } catch (error) {
+        throw new ServiceError('Error fetching health status: ' + error.message);
+    }
+};
