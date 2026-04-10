@@ -57,7 +57,7 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(dataToUse, params.buyThreshold, params.sellThreshold, params.slippage);
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
-    logger.info({ message: 'Backtest simulation completed', params, totalReturns, requestId: uuidv4() });
+    logger.info({ message: 'Backtest simulation completed', params, totalReturns, requestId: backtestId });
     await store.create(result);
     return BacktestResultSchema.parse(result);
 };
