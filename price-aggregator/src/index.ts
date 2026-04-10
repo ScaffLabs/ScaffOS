@@ -6,14 +6,21 @@ import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
 import { PriceAggregator } from './priceAggregator';
 import { checkHealth } from './httpClient';
+import { requestQueueMiddleware } from './middleware/requestQueueingMiddleware';
+import { MemoryMonitor } from './memoryMonitor';
 
 const app = express();
 const server = http.createServer(app);
 const dbPool = createConnectionPool();
 const priceAggregator = new PriceAggregator();
+const memoryMonitor = new MemoryMonitor();
 
 app.use(express.json());
 app.use(errorMiddleware);
+app.use(requestQueueMiddleware);
+
+// Start memory monitoring
+memoryMonitor.startLogging();
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -24,6 +31,11 @@ app.get('/health', async (req, res) => {
         logError(error);
         res.status(500).json({ status: 'unhealthy', error: error.message });
     }
+});
+
+// Ready endpoint
+app.get('/ready', (req, res) => {
+    res.status(200).json({ status: 'ready' });
 });
 
 const shutdown = async () => {

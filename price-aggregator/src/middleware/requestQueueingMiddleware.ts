@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 const requestQueue: Array<{ req: Request; res: Response; next: NextFunction }> = [];
 let processing = false;
 const MAX_QUEUE_SIZE = 100;
+const PROCESSING_DELAY = 200; // Delay for processing each request in the queue
 
 const processQueue = () => {
     if (requestQueue.length === 0) {
@@ -15,7 +16,7 @@ const processQueue = () => {
     setTimeout(() => {
         next();  // Continue to process the next request in the queue
         processQueue();
-    }, 100); // Adjust delay as necessary
+    }, PROCESSING_DELAY);
 };
 
 export const requestQueueMiddleware = (req: Request, res: Response, next: NextFunction) => {

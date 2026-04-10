@@ -7,9 +7,9 @@ export class MemoryMonitor {
         setInterval(() => {
             const used = memoryUsage();
             const memoryInfo = {
-                rss: used.rss / 1024 / 1024,
-                heapTotal: used.heapTotal / 1024 / 1024,
-                heapUsed: used.heapUsed / 1024 / 1024,
+                rss: (used.rss / 1024 / 1024).toFixed(2),
+                heapTotal: (used.heapTotal / 1024 / 1024).toFixed(2),
+                heapUsed: (used.heapUsed / 1024 / 1024).toFixed(2),
             };
             logPerformance('Memory Usage', memoryInfo);
         }, 60000); // Log memory usage every minute.
