@@ -1,57 +1,59 @@
-import { InMemoryStore } from './inMemoryStore';
 import { Strategy } from '../types';
-
-export interface DatabaseStore<T> {
-    create(record: T): Promise<any>;
-    read(id: string): Promise<T | null>;
-    update(id: string, record: T): Promise<T | null>;
-    delete(id: string): Promise<boolean>;
-    find(query: Partial<T>): Promise<T[]>;
-    transaction(operations: Array<() => Promise<any>>): Promise<void>;
-    runMigrations(): Promise<void>;
-}
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 
 export class SQLiteStore<T> implements DatabaseStore<T> {
-    // SQLite implementation details here
-    // This includes methods like create, read, update, delete, find, etc.
-}
+    private db: sqlite3.Database;
 
-export class PostgresStore<T> implements DatabaseStore<T> {
-    // PostgreSQL implementation details here
-}
-
-export class DatabaseService<T> {
-    private store: DatabaseStore<T>;
-
-    constructor(store: DatabaseStore<T>) {
-        this.store = store;
+    constructor() {
+        this.db = new sqlite3.Database(':memory:');
+        this.initialize();
     }
 
-    async create(record: T) {
-        return this.store.create(record);
-    }
-    
-    async read(id: string) {
-        return this.store.read(id);
-    }
-    
-    async update(id: string, record: T) {
-        return this.store.update(id, record);
-    }
-    
-    async delete(id: string) {
-        return this.store.delete(id);
-    }
-    
-    async find(query: Partial<T>) {
-        return this.store.find(query);
+    private async initialize() {
+        await this.db.run('CREATE TABLE IF NOT EXISTS records (id TEXT PRIMARY KEY, data TEXT)');
     }
 
-    async transaction(operations: Array<() => Promise<any>>) {
-        return this.store.transaction(operations);
+    async create(record: T): Promise<Record<T>> {
+        const id = uuidv4();
+        await this.db.run('INSERT INTO records (id, data) VALUES (?, ?)', id, JSON.stringify(record));
+        return { id, data: record };
+    }
+
+    async read(id: string): Promise<Record<T> | null> {
+        const row = await this.db.get('SELECT * FROM records WHERE id = ?', id);
+        return row ? { id: row.id, data: JSON.parse(row.data) } : null;
+    }
+
+    async update(id: string, record: T): Promise<Record<T> | null> {
+        await this.db.run('UPDATE records SET data = ? WHERE id = ?', JSON.stringify(record), id);
+        return this.read(id);
+    }
+
+    async delete(id: string): Promise<boolean> {
+        const result = await this.db.run('DELETE FROM records WHERE id = ?', id);
+        return result.changes > 0;
+    }
+
+    async find(query: Partial<T>): Promise<Record<T>[]> {
+        const allRecords = await this.db.all('SELECT * FROM records');
+        return allRecords.filter(record => Object.keys(query).every(key => JSON.parse(record.data)[key] === query[key]));
+    }
+
+    async transaction(operations: Array<() => Promise<any>>): Promise<void> {
+        await this.db.run('BEGIN TRANSACTION');
+        try {
+            for (const operation of operations) {
+                await operation();
+            }
+            await this.db.run('COMMIT');
+        } catch (error) {
+            await this.db.run('ROLLBACK');
+            throw error;
+        }
     }
 
     async runMigrations() {
-        return this.store.runMigrations();
+        // Implement migration logic if needed
     }
 }
