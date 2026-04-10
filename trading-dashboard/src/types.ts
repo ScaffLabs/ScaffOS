@@ -28,7 +28,7 @@ export interface Position {
 }
 
 // Event types for trading events
-export type TradingEvent =
+export type TradingEvent = 
     | { type: 'ORDER_SUBMITTED'; order: Order }
     | { type: 'POSITION_UPDATED'; position: Position };
 
