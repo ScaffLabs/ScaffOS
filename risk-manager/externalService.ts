@@ -6,6 +6,12 @@ const exponentialBackoff = (retryCount: number) => {
     return new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
 };
 
+let failureCount = 0;
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+const CIRCUIT_BREAKER_TIMEOUT = 30000;
+let isCircuitOpen = false;
+let circuitBreakerTimeout: NodeJS.Timeout;
+
 const fetchWithRetry = async (url: string, retries: number = 5): Promise<any> => {
     for (let i = 0; i < retries; i++) {
         try {
@@ -21,12 +27,6 @@ const fetchWithRetry = async (url: string, retries: number = 5): Promise<any> =>
         }
     }
 };
-
-let failureCount = 0;
-const CIRCUIT_BREAKER_THRESHOLD = 3;
-const CIRCUIT_BREAKER_TIMEOUT = 30000;
-let isCircuitOpen = false;
-let circuitBreakerTimeout: NodeJS.Timeout;
 
 const circuitBreaker = async (url: string) => {
     if (isCircuitOpen) {
