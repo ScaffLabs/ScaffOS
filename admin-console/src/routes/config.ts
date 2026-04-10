@@ -43,18 +43,20 @@ router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
 
 // Get All Configurations with Pagination and Filtering
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = Math.min(parseInt(req.query.limit as string) || 10, 100); // max limit 100
     const offset = parseInt(req.query.offset as string) || 0;
     const sortBy = req.query.sortBy as string || 'key';
     const order = req.query.order as string || 'asc';
 
     try {
         const configurations = await db.findAllConfigurations();
-        const filteredConfigs = configurations.sort((a, b) => {
-            if (a[sortBy] < b[sortBy]) return order === 'asc' ? -1 : 1;
-            if (a[sortBy] > b[sortBy]) return order === 'asc' ? 1 : -1;
-            return 0;
-        }).slice(offset, offset + limit);
+        const filteredConfigs = configurations
+            .sort((a, b) => {
+                if (a[sortBy] < b[sortBy]) return order === 'asc' ? -1 : 1;
+                if (a[sortBy] > b[sortBy]) return order === 'asc' ? 1 : -1;
+                return 0;
+            })
+            .slice(offset, offset + limit);
         res.status(200).json(filteredConfigs);
     } catch (error) {
         next(new ServiceError('Error fetching configurations: ' + error.message));
