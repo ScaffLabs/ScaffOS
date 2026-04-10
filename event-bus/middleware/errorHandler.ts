@@ -4,16 +4,9 @@ import { ServiceError } from '../errors/serviceError';
 import { NotFoundError } from '../errors/notFoundError';
 import logger from '../logger';
 
-/**
- * Global error handler middleware.
- * @param {Error} err - The error object.
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- */
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
     const reqId = req.headers['x-request-id'] || 'unknown';
-    logger.error({ message: err.message, stack: err.stack, reqId }); // Log error details for debugging
+    logger.error({ message: err.message, stack: err.stack, reqId });
 
     if (err instanceof ValidationError) {
         logger.warn({ message: err.message, reqId });
