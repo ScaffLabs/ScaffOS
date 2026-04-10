@@ -4,7 +4,7 @@ import { EventBus } from './event-bus';
 import { AlertProcessor } from './alert.processor';
 import { HealthCheck } from './health-check';
 import { config } from './config';
-import logger, { logStartup } from './logger';
+import logger, { logStartup, logRequest } from './logger';
 import bodyParser from 'body-parser';
 import { errorMiddleware } from './error.middleware';
 import cors from 'cors';
@@ -19,6 +19,11 @@ const alertProcessor = new AlertProcessor(eventBus);
 app.use(cors());
 app.use(helmet());
 app.use(bodyParser.json());
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => logRequest(req, res, start));
+    next();
+});
 app.use(errorMiddleware);
 
 const mongoOptions = { useNewUrlParser: true, useUnifiedTopology: true, poolSize: 10 };
