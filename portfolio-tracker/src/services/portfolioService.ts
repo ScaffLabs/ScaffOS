@@ -80,3 +80,15 @@ export const deletePortfolio = async (id: string): Promise<void> => {
     await logPortfolioDeletion(id);
     publishPortfolioUpdate({ id, deleted: true });
 };
+
+export const fetchAllPortfolios = async (): Promise<Portfolio[]> => {
+    return storage.getAll();
+};
+
+export const getPortfolio = async (id: string): Promise<Portfolio> => {
+    const portfolio = storage.read(id);
+    if (!portfolio) {
+        throw new NotFoundError('Portfolio not found');
+    }
+    return portfolio;
+};
