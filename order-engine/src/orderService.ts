@@ -54,23 +54,3 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
         throw new ServiceError('Failed to update order due to database error.');
     }
 };
-
-const deleteOrderService = async (id: string) => {
-    try {
-        const deletedOrder = await queryDatabase('DELETE FROM orders WHERE id = $1 RETURNING *', [id]);
-        if (deletedOrder.rowCount === 0) {
-            throw new NotFoundError('Order not found.');
-        }
-        emitOrderEvent({ type: 'ORDER_DELETED', payload: { id } });
-    } catch (error) {
-        logger.error('Error deleting order', { error });
-        throw new ServiceError('Failed to delete order due to database error.');
-    }
-};
-
-const getOrdersService = async ({ limit, offset, sort, order }: { limit: number; offset: number; sort: string; order: 'asc' | 'desc' }) => {
-    const orders = await queryDatabase(`SELECT * FROM orders ORDER BY ${sort} ${order} LIMIT $1 OFFSET $2`, [limit, offset]);
-    return orders.rows;
-};
-
-export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };
