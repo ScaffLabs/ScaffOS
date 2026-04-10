@@ -52,5 +52,11 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-process.on('uncaughtException', shutdown);
-process.on('unhandledRejection', shutdown);
+process.on('uncaughtException', async (err) => {
+    logger.error('Uncaught Exception:', err);
+    await shutdown();
+});
+process.on('unhandledRejection', async (reason) => {
+    logger.error('Unhandled Rejection:', reason);
+    await shutdown();
+});

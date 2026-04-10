@@ -4,35 +4,51 @@ import { ServiceError, ValidationError, NotFoundError } from './error.types';
 import logger from './logger';
 
 export class AlertController {
-    async addAlert(alertData: any): Promise<AlertMessage> {
+    constructor(private alertStore: AlertStoreInterface) {}
+
+    async addAlert(req: Request, res: Response): Promise<void> {
         try {
-            const validatedData = validateCreateAlertRequest(alertData);
+            const validatedData = validateCreateAlertRequest(req.body);
             const createdAlert = await this.alertStore.create(validatedData);
-            return createdAlert;
+            res.status(201).json(createdAlert);
         } catch (error) {
-            if (error instanceof ValidationError) {
-                throw new ValidationError('Invalid alert data: ' + error.message);
-            }
-            throw new ServiceError('Failed to create alert.');
+            this.handleError(error, res);
         }
     }
 
-    async updateAlert(id: string, alertData: any): Promise<AlertMessage> {
+    async updateAlert(req: Request, res: Response): Promise<void> {
+        const alertId = req.params.id;
         try {
-            const updatedAlert = await this.alertStore.update(id, alertData);
+            const updatedAlert = await this.alertStore.update(alertId, req.body);
             if (!updatedAlert) throw new NotFoundError('Alert not found.');
-            return updatedAlert;
+            res.status(200).json(updatedAlert);
         } catch (error) {
-            throw new ServiceError('Failed to update alert.');
+            this.handleError(error, res);
         }
     }
 
-    async deleteAlert(id: string): Promise<void> {
+    async deleteAlert(req: Request, res: Response): Promise<void> {
+        const alertId = req.params.id;
         try {
-            const success = await this.alertStore.delete(id);
+            const success = await this.alertStore.delete(alertId);
             if (!success) throw new NotFoundError('Alert not found.');
+            res.status(204).send();
         } catch (error) {
-            throw new ServiceError('Failed to delete alert.');
+            this.handleError(error, res);
         }
     }
-}
+
+    private handleError(error: Error, res: Response): void {
+        if (error instanceof ValidationError) {
+            res.status(400).json({ message: 'Validation Error: ' + error.message });
+        } else if (error instanceof NotFoundError) {
+            res.status(404).json({ message: 'Not Found: ' + error.message });
+        } else if (error instanceof ServiceError) {
+            logger.error({ message: 'Service Error: ' + error.message });
+            res.status(500).json({ message: 'Service Error: An unexpected error occurred.' });
+        } else {
+            logger.error({ message: 'An unexpected error occurred: ' + error.message });
+            res.status(500).json({ message: 'An unexpected error occurred.' });
+        }
+    }
+} 

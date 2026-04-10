@@ -17,3 +17,29 @@ export const errorMiddleware = (err: Error, req: Request, res: Response, next: N
     logger.error({ message: 'An unexpected error occurred: ' + err.message });
     return res.status(500).json({ message: 'An unexpected error occurred.' });
 };
+
+process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled Rejection:', reason);
+    process.exit(1);
+});
+
+process.on('SIGTERM', async () => {
+    logger.info('SIGTERM received. Shutting down gracefully...');
+    await shutdown();
+});
+
+process.on('SIGINT', async () => {
+    logger.info('SIGINT received. Shutting down gracefully...');
+    await shutdown();
+});
+
+const shutdown = async () => {
+    // Perform any necessary cleanup here
+    logger.info('Cleanup completed. Exiting now.');
+    process.exit(0);
+};
