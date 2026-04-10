@@ -5,7 +5,10 @@ export const sanitizeQueryParams = (req: Request, res: Response, next: NextFunct
     const sanitizedQuery: { [key: string]: string } = {};
     for (const key in req.query) {
         if (Object.hasOwnProperty.call(req.query, key)) {
-            sanitizedQuery[key] = sanitizeHtml(String(req.query[key]));
+            sanitizedQuery[key] = sanitizeHtml(String(req.query[key]), {
+                allowedTags: [],
+                allowedAttributes: {},
+            });
         }
     }
     req.query = sanitizedQuery;
@@ -16,7 +19,10 @@ export const sanitizeBody = (req: Request, res: Response, next: NextFunction) =>
     if (req.body) {
         for (const key in req.body) {
             if (Object.hasOwnProperty.call(req.body, key)) {
-                req.body[key] = sanitizeHtml(String(req.body[key]));
+                req.body[key] = sanitizeHtml(String(req.body[key]), {
+                    allowedTags: [],
+                    allowedAttributes: {},
+                });
             }
         }
     }

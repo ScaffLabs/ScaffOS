@@ -10,6 +10,8 @@ import errorHandler from './middleware/errorHandler';
 import { logRequest, logError, logPerformance } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
+import { sanitizeBody, sanitizeQueryParams } from './middleware/sanitization';
+import { logAudit } from './middleware/auditLogger';
 
 dotenv.config();
 const app = express();
@@ -19,8 +21,11 @@ const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.c
 app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
 app.use(bodyParser.json({ limit: '1mb' }));
+app.use(sanitizeBody);
+app.use(sanitizeQueryParams);
 app.use(rateLimiter);
 app.use(logRequest);
+app.use(logAudit);
 app.use(logPerformance);
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
