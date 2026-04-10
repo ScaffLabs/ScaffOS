@@ -39,3 +39,7 @@
 ## [1.5.1] - 2023-11-06
 - Fixed typos and formatting issues in documentation.
 - Clarified setup instructions and API reference details.
+
+## [1.5.2] - 2023-11-07
+- Improved user input sanitization to prevent XSS attacks.
+- Enhanced performance of user retrieval and filtering logic.
