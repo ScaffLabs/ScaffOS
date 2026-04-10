@@ -45,6 +45,16 @@ class EventBus {
             logger.info(`Cleared subscriptions for topic: ${topic}`);
         }
     }
+
+    public reconnect(): void {
+        logger.info('Reconnecting to all topics...');
+        Object.keys(this.subscriptions).forEach(topic => {
+            this.subscriptions[topic].forEach(listener => {
+                this.emitter.on(topic, listener);
+                logger.info(`Re-subscribed to topic: ${topic}`);
+            });
+        });
+    }
 }
 
 const eventBus = new EventBus();
