@@ -24,7 +24,7 @@
 - Improved error handling in user management routes.
 
 ## [1.3.0] - 2023-10-30
-- Added detailed inline comments for complex logic to README.md.
+- Added detailed inline comments for complex logic.
 - Improved error handling across all routes.
 
 ## [1.4.0] - 2023-11-02
@@ -35,3 +35,7 @@
 - Added comprehensive README.md with detailed API reference.
 - Updated environment variables table for clarity and completeness.
 - Refined development and deployment guides to streamline onboarding.
+
+## [1.5.1] - 2023-11-06
+- Fixed typos and formatting issues in documentation.
+- Clarified setup instructions and API reference details.
