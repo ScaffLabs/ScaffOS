@@ -26,7 +26,7 @@ class InMemoryStorage<T> implements Storage<T> {
         this.data.set(id, { ...item, id } as T);
         return this.data.get(id)!;
     }
-
+    
     async delete(id: string): Promise<void> {
         this.data.delete(id);
     }
@@ -60,11 +60,12 @@ class SQLiteStorage<T> implements Storage<T> {
 
     constructor() {
         // Initialize SQLite database connection
-        this.db = {}; // Initialize with actual SQLite connection
+        this.db = {}; // Initialize with actual SQLite connection setup
     }
 
     async create(item: T): Promise<T> {
         // Implement actual SQLite insert logic here
+        // E.g. using sqlite3 or sequelize
         return item;
     }
 
