@@ -23,13 +23,14 @@ const createEvent = async (req: Request, res: Response): Promise<void> => {
 };
 
 const getEvents = async (req: Request, res: Response): Promise<void> => {
-    const { limit = 10, offset = 0 }: GetEventsQuery = req.query;
+    const { limit = 10, offset = 0, sortBy = 'createdAt', order = 'asc' }: GetEventsQuery = req.query;
     try {
         const events = await storage.findAll(limit, offset);
         if (events.length === 0) {
             throw new NotFoundError('No events found');
         }
-        res.status(200).json(events);
+        const sortedEvents = order === 'asc' ? events.sort((a, b) => a[sortBy] > b[sortBy] ? 1 : -1) : events.sort((a, b) => a[sortBy] < b[sortBy] ? 1 : -1);
+        res.status(200).json(sortedEvents);
     } catch (error) {
         handleError(error, res);
     }

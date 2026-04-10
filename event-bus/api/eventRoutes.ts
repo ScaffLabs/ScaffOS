@@ -4,7 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { sanitize } from 'express-validator';
 import cors from 'cors';
 import helmet from 'helmet';
-import { checkHealthEndpoint, readyCheck, healthCheckMiddleware } from './healthCheck';
+import { checkHealthEndpoint, healthCheckMiddleware } from './healthCheck';
 
 const router = Router();
 
@@ -26,7 +26,6 @@ router.use(limiter);
 // Health check middleware
 router.use(healthCheckMiddleware);
 router.get('/health', checkHealthEndpoint);
-router.get('/ready', readyCheck);
 
 // Endpoint to handle event creation and retrieval with sanitization
 router.post('/', [
