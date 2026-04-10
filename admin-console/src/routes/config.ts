@@ -33,14 +33,14 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
 // Get All Configurations with Pagination, Filtering, and Sorting
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    const { limit = 10, offset = 0, sortBy = 'key', order = 'asc' } = req.query;
+    const { limit = 10, offset = 0, sortBy = 'key', order = 'asc', key } = req.query;
     try {
         const allConfigs = await db.findAllConfigurations();
         let filteredConfigs = allConfigs;
 
         // Filtering (if needed)
-        if (req.query.key) {
-            filteredConfigs = filteredConfigs.filter(config => config.key.includes(req.query.key));
+        if (key) {
+            filteredConfigs = filteredConfigs.filter(config => config.key.includes(String(key)));
         }
 
         // Sorting

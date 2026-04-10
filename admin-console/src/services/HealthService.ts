@@ -24,4 +24,4 @@ const healthCheck = async () => {
     }
 };
 
-export { healthCheck, fetchHealthStatus };
+export { healthCheck, fetchHealthStatus };  // Export both functions for use in controllers.

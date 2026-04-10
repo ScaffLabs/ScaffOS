@@ -7,7 +7,9 @@ class InMemoryStore<T> {
     }
 
     async read(id: string): Promise<T | undefined> {
-        return this.data.get(id);
+        const item = this.data.get(id);
+        if (!item) throw new Error('Item not found');
+        return item;
     }
 
     async update(id: string, item: T): Promise<void> {
@@ -21,25 +23,6 @@ class InMemoryStore<T> {
 
     async findAll(): Promise<T[]> {
         return Array.from(this.data.values());
-    }
-
-    async transaction(operations: Array<() => Promise<void>>): Promise<void> {
-        const rollbackActions: Array<() => Promise<void>> = [];
-        try {
-            for (const operation of operations) {
-                await operation();
-            }
-        } catch (error) {
-            await Promise.all(rollbackActions.reverse().map(fn => fn()));
-            throw error;
-        }
-    }
-
-    async migrateData(targetDB: InMemoryStore<T>): Promise<void> {
-        const items = await this.findAll();
-        for (const item of items) {
-            await targetDB.create((item as any).key, item);
-        }
     }
 
     async clear() {
