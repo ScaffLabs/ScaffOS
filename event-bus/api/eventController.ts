@@ -10,45 +10,32 @@ const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
 const createEvent = async (req: Request, res: Response): Promise<void> => {
-    const reqId = req.headers['x-request-id'] || 'unknown';
-    const start = Date.now();
     try {
         const validation = createEventSchema.safeParse(req.body);
         if (!validation.success) {
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
         }
         const event = await storage.create(validation.data);
-        const duration = Date.now() - start;
-        logger.logRequest(req.method, req.originalUrl, 201, duration, reqId);
         res.status(201).json(event);
     } catch (error) {
-        handleError(error, res, reqId);
+        handleError(error, res);
     }
 };
 
 const getEvents = async (req: Request, res: Response): Promise<void> => {
-    const reqId = req.headers['x-request-id'] || 'unknown';
-    const start = Date.now();
-    const { limit = 10, offset = 0, sortBy = 'createdAt', order = 'asc' }: GetEventsQuery = req.query;
+    const { limit = 10, offset = 0 }: GetEventsQuery = req.query;
     try {
         const events = await storage.findAll(limit, offset);
         if (events.length === 0) {
             throw new NotFoundError('No events found');
         }
-        const sortedEvents = events.sort((a, b) => {
-            return order === 'asc' ? (a[sortBy] > b[sortBy] ? 1 : -1) : (a[sortBy] < b[sortBy] ? 1 : -1);
-        });
-        const duration = Date.now() - start;
-        logger.logRequest(req.method, req.originalUrl, 200, duration, reqId);
-        res.status(200).json(sortedEvents);
+        res.status(200).json(events);
     } catch (error) {
-        handleError(error, res, reqId);
+        handleError(error, res);
     }
 };
 
 const updateEvent = async (req: Request, res: Response): Promise<void> => {
-    const reqId = req.headers['x-request-id'] || 'unknown';
-    const start = Date.now();
     const { id } = req.params;
     try {
         const validation = updateEventSchema.safeParse(req.body);
@@ -59,43 +46,33 @@ const updateEvent = async (req: Request, res: Response): Promise<void> => {
         if (!event) {
             throw new NotFoundError('Event not found');
         }
-        const duration = Date.now() - start;
-        logger.logRequest(req.method, req.originalUrl, 200, duration, reqId);
         res.status(200).json(event);
     } catch (error) {
-        handleError(error, res, reqId);
+        handleError(error, res);
     }
 };
 
 const deleteEvent = async (req: Request, res: Response): Promise<void> => {
-    const reqId = req.headers['x-request-id'] || 'unknown';
-    const start = Date.now();
     const { id } = req.params;
     try {
         const deleted = await storage.delete(id);
         if (!deleted) {
             throw new NotFoundError('Event not found');
         }
-        const duration = Date.now() - start;
-        logger.logRequest(req.method, req.originalUrl, 204, duration, reqId);
         res.status(204).send();
     } catch (error) {
-        handleError(error, res, reqId);
+        handleError(error, res);
     }
 };
 
-const handleError = (error: Error, res: Response, reqId: string) => {
+const handleError = (error: Error, res: Response) => {
     if (error instanceof ValidationError) {
-        logger.logError(error, reqId);
         res.status(400).json({ message: error.message });
     } else if (error instanceof NotFoundError) {
-        logger.logError(error, reqId);
         res.status(404).json({ message: error.message });
     } else if (error instanceof ServiceError) {
-        logger.logError(error, reqId);
         res.status(500).json({ message: 'Service error occurred.' });
     } else {
-        logger.logError(error, reqId);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };

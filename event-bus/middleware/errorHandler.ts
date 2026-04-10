@@ -21,12 +21,3 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     logger.error(err, reqId);
     return res.status(500).json({ message: 'Internal Server Error', error: 'An unexpected error occurred' });
 };
-
-export const handleGracefulShutdown = async () => {
-    logger.info('Shutting down gracefully...');
-    // Include any additional cleanup here if necessary
-    process.exit(0);
-};
-
-process.on('SIGTERM', handleGracefulShutdown);
-process.on('SIGINT', handleGracefulShutdown);
