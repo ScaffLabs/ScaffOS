@@ -10,7 +10,7 @@ export const listDashboardEntries = async (req: Request, res: Response): Promise
     try {
         const { limit = 10, offset = 0 } = req.query;
         const entries = store.getAll();
-        const paginatedEntries = entries.slice(offset, offset + limit);
+        const paginatedEntries = entries.slice(Number(offset), Number(offset) + Number(limit));
         if (paginatedEntries.length === 0) {
             return res.status(204).json([]);
         }
