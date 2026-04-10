@@ -11,14 +11,14 @@ const store = new InMemoryStore<BacktestResult>();
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
 const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
 
-async function fetchHistoricalData() {
+async function fetchHistoricalData(): Promise<HistoricalData[]> {
     return await withRetry(async () => {
         const response = await axios.get(`${DATA_SERVICE_URL}/api/historical-data`);
         return response.data;
     });
 }
 
-async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number) {
+async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
     }
