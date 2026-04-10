@@ -64,4 +64,18 @@ const handleAxiosError = (error: unknown, operation: string) => {
     throw new ServiceError(errorMessage);
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration };
+const updateConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
+    return await circuitBreaker.fire(async () => {
+        try {
+            const response = await axiosInstance.put('/config', configItem);
+            emitEvent('CONFIGURATION_UPDATED', configItem);
+            if (response.status !== 200) {
+                throw new ServiceError('Failed to update configuration.');
+            }
+        } catch (error) {
+            handleAxiosError(error, 'update configuration');
+        }
+    });
+};
+
+export { fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration };
