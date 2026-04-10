@@ -47,16 +47,20 @@ const deleteOrderService = async (id: string) => {
     }
 };
 
-const getOrdersService = async (pagination: { limit: number; offset: number; sort?: string; order?: 'asc' | 'desc' }) => {
+const getOrdersService = async ({ limit, offset, sort, order }: { limit: number; offset: number; sort?: string; order?: 'asc' | 'desc' }) => {
     try {
         const orders = await storage.findAll();
-        const sortedOrders = orders.sort((a, b) => {
-            if (pagination.sort) {
-                return pagination.order === 'asc' ? a[pagination.sort] - b[pagination.sort] : b[pagination.sort] - a[pagination.sort];
-            }
-            return 0;
-        });
-        const paginatedOrders = sortedOrders.slice(pagination.offset, pagination.offset + pagination.limit);
+        let sortedOrders = orders;
+        if (sort) {
+            sortedOrders = orders.sort((a, b) => {
+                if (order === 'asc') {
+                    return a[sort] > b[sort] ? 1 : -1;
+                } else {
+                    return a[sort] < b[sort] ? 1 : -1;
+                }
+            });
+        }
+        const paginatedOrders = sortedOrders.slice(offset, offset + limit);
         logger.info('Retrieved orders successfully');
         return paginatedOrders;
     } catch (error) {

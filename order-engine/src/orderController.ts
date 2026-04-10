@@ -68,11 +68,13 @@ export const deleteOrder = async (req: Request, res: Response) => {
 };
 
 export const getOrders = async (req: Request, res: Response) => {
+    const { limit = 10, offset = 0, sort, order = 'asc' } = req.query;
     try {
-        const orders = await getOrdersService(req.query);
+        const orders = await getOrdersService({ limit: parseInt(limit as string), offset: parseInt(offset as string), sort: sort as string, order: order as 'asc' | 'desc' });
         res.status(200).json(orders);
     } catch (error) {
         logger.error('Error retrieving orders', { error: error.message });
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
