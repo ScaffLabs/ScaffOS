@@ -42,6 +42,14 @@ export const logStartup = (config) => {
     });
 };
 
+export const logSensitiveOperation = (operation, data) => {
+    logger.info({
+        message: 'Sensitive operation performed',
+        operation,
+        data: { ...data, password: undefined, token: undefined }, // Ensure sensitive data is not logged
+    });
+};
+
 const generateRequestId = () => {
     return 'req-' + Math.random().toString(36).substr(2, 9);
 };

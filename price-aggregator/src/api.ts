@@ -6,6 +6,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest } from './logger';
 import { checkHealth } from './httpClient';
+import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -49,7 +50,6 @@ router.get('/health', async (req, res) => {
 router.get('/prices', async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = parseInt(req.query.offset as string) || 0;
-    const cursor = req.query.cursor as string || null;
 
     try {
         const prices = await priceAggregator.getCurrentPrices();

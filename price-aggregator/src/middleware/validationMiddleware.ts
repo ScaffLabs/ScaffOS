@@ -24,3 +24,12 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
     }
     next();
 };
+
+// Middleware to validate content type
+export const validateContentType = (req: Request, res: Response, next: NextFunction) => {
+    const contentType = req.headers['content-type'];
+    if (!contentType || !contentType.includes('application/json')) {
+        return res.status(415).json({ error: 'Content type must be application/json' });
+    }
+    next();
+};
