@@ -8,6 +8,7 @@ import cors from 'cors';
 import config from './config';
 import { createConnectionPool } from './connectionPool';
 import { emitHealthCheckEvent } from './serviceHealth';
+import { setupRoutes } from './dashboard';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,9 @@ app.get('/health/services', healthCheck);
 app.get('/ready', readinessCheck);
 app.get('/alive', livelinessCheck);
 app.use(errorMiddleware);
+
+// Setup dashboard routes
+setupRoutes(app);
 
 const server = createServer(app);
 
