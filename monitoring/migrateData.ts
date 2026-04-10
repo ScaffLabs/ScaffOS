@@ -36,3 +36,7 @@ export const transferEntries = <T>(sourceStore: InMemoryStore<T>, targetStore: I
         }
     });
 };
+
+export const createTransaction = <T>(store: InMemoryStore<T>, operations: (store: InMemoryStore<T>) => void): void => {
+    store.transaction(operations);
+};

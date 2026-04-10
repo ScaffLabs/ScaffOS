@@ -78,6 +78,10 @@ class InMemoryStore<T> {
     public clear(): void {
         this.storage.clear();
     }
+
+    public getLength(): number {
+        return this.storage.size;
+    }
 }
 
 export default InMemoryStore;
