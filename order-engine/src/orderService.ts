@@ -20,8 +20,12 @@ const createOrderService = async (orderData: unknown) => {
 };
 
 const updateOrderService = async (id: string, updates: Partial<Order>) => {
+    const parsedUpdates = OrderSchema.partial().safeParse(updates);
+    if (!parsedUpdates.success) {
+        throw new ValidationError('Invalid update data: ' + parsedUpdates.error.errors.map(e => e.message).join(', '));
+    }
     try {
-        const updatedOrder = await postgresStorage.update(id, updates);
+        const updatedOrder = await postgresStorage.update(id, parsedUpdates.data);
         if (!updatedOrder) {
             throw new NotFoundError('Order not found.');
         }
