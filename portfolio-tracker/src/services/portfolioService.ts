@@ -1,86 +1,39 @@
-import { Portfolio, PortfolioUpdate, PortfolioSchema, PositionSchema } from '../types';
+import { Portfolio, PortfolioUpdate, PortfolioSchema } from '../types';
 import storage from './storage';
-import { ValidationError, NotFoundError, ServiceError } from '../errors';
-import { logPortfolioCreation, logPortfolioUpdate, logPortfolioDeletion } from './auditService';
-import { publishPortfolioUpdate } from '../eventBus';
+import { ValidationError, NotFoundError } from '../errors';
 import logger from './logger';
-import axios from 'axios';
-import { CircuitBreaker } from 'circuit-breaker-js';
-import env from '../config';
-
-const externalServiceBreaker = new CircuitBreaker();
-const externalServiceUrl = env.PORTFOLIO_SERVICE_URL;
-
-const fetchExternalServiceData = async (endpoint: string) => {
-    return await externalServiceBreaker.run(async () => {
-        const response = await axios.get(`${externalServiceUrl}/${endpoint}`);
-        return response.data;
-    });
-};
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const start = process.hrtime();
     try {
         PortfolioSchema.parse({ ...portfolioData, id: '' });
-        portfolioData.positions.forEach(pos => PositionSchema.parse(pos));
     } catch (error) {
-        logger.error('Validation error while creating portfolio', { error: error.message });
         throw new ValidationError('Invalid portfolio data');
     }
     const newPortfolio = storage.create(portfolioData);
-    await logPortfolioCreation(newPortfolio);
-    publishPortfolioUpdate(newPortfolio);
     const duration = process.hrtime(start);
     logger.info('Created portfolio', { portfolioId: newPortfolio.id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
     return newPortfolio;
 };
 
-export const fetchExternalPortfolios = async (): Promise<Portfolio[]> => {
-    try {
-        const portfolios = await fetchExternalServiceData('');
-        return portfolios;
-    } catch (error) {
-        logger.error('Failed to fetch external portfolios', { error: error.message });
-        throw new ServiceError('Error fetching external portfolios');
-    }
+export const getPortfolio = async (id: string): Promise<Portfolio> => {
+    const portfolio = storage.read(id);
+    if (!portfolio) throw new NotFoundError('Portfolio not found');
+    return portfolio;
 };
 
 export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Promise<Portfolio> => {
-    const start = process.hrtime();
     const existingPortfolio = storage.read(id);
-    if (!existingPortfolio) {
-        logger.warn('Attempted to update a non-existent portfolio', { portfolioId: id });
-        throw new NotFoundError('Portfolio not found');
-    }
-    if (updates.positions) {
-        updates.positions.forEach(pos => PositionSchema.parse(pos));
-    }
+    if (!existingPortfolio) throw new NotFoundError('Portfolio not found');
     const updatedPortfolio = storage.update(id, updates);
-    await logPortfolioUpdate(id, updates);
-    publishPortfolioUpdate(updatedPortfolio);
-    const duration = process.hrtime(start);
-    logger.info('Updated portfolio', { portfolioId: id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
     return updatedPortfolio;
 };
 
 export const deletePortfolio = async (id: string): Promise<void> => {
-    const start = process.hrtime();
     const success = storage.delete(id);
-    if (!success) {
-        logger.warn('Attempted to delete a non-existent portfolio', { portfolioId: id });
-        throw new NotFoundError('Portfolio not found');
-    }
-    await logPortfolioDeletion(id);
-    const duration = process.hrtime(start);
-    logger.info('Deleted portfolio', { portfolioId: id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
+    if (!success) throw new NotFoundError('Portfolio not found');
 };
 
-export const fetchAllExternalPortfolios = async () => {
-    try {
-        const portfolios = await fetchExternalServiceData('');
-        return portfolios;
-    } catch (error) {
-        logger.error('Failed to fetch external portfolios', { error: error.message });
-        throw new ServiceError('Error fetching external portfolios');
-    }
+export const fetchAllData = async (): Promise<Portfolio[]> => {
+    return storage.getAll();
 };
