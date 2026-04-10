@@ -3,15 +3,18 @@ import { ConfigurationItem, ConfigurationItemSchema } from '../types';
 import Database from '../storage/Database';
 import { ValidationError, NotFoundError } from '../errors/CustomErrors';
 import { Request, Response, NextFunction } from 'express';
-import { logRequest } from '../middleware/logger';
+import { logRequest, logAudit } from '../middleware/logger';
 import rateLimiter from '../middleware/rateLimiter';
+import { sanitizeQueryParams } from '../middleware/sanitization';
 
 const router = express.Router();
 const db = new Database();
 
-// Middleware to log requests & rate limit
+// Middleware to log requests, sanitize query params, & rate limit
 router.use(logRequest);
+router.use(sanitizeQueryParams);
 router.use(rateLimiter);
+router.use(logAudit);
 
 // Create Configuration
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {

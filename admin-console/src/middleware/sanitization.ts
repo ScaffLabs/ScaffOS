@@ -11,3 +11,14 @@ export const sanitizeQueryParams = (req: Request, res: Response, next: NextFunct
     req.query = sanitizedQuery;
     next();
 };
+
+export const sanitizeBody = (req: Request, res: Response, next: NextFunction) => {
+    if (req.body) {
+        for (const key in req.body) {
+            if (Object.hasOwnProperty.call(req.body, key)) {
+                req.body[key] = sanitizeHtml(String(req.body[key]));
+            }
+        }
+    }
+    next();
+};
