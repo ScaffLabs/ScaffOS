@@ -98,11 +98,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 - Thanks to the open-source community for their contributions and support.
 
----
-
 ## Inline Comments Example
 In the `src/services/portfolioService.ts` file, the `createPortfolio` function includes detailed inline comments explaining the validation of portfolio data to ensure integrity:
-
 ```typescript
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     const start = process.hrtime(); // Start timing the portfolio creation process
@@ -125,3 +122,4 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
 ## Additional Changes
 - Added detailed comments throughout the codebase to explain complex logic and improve maintainability.
 - Updated `CONTRIBUTING.md` for clear guidelines on how to contribute to the project.
+
