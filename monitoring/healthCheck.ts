@@ -27,17 +27,3 @@ export const healthCheck = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
-
-export const readinessCheck = async (req: Request, res: Response) => {
-    try {
-        const healthStatus = await checkServiceHealth();
-        const allServicesUp = Object.values(healthStatus).every(status => status);
-        res.status(allServicesUp ? 200 : 503).json({
-            status: allServicesUp ? 'READY' : 'NOT_READY',
-            services: healthStatus,
-        });
-    } catch (error) {
-        logger.error({ error: error.message }, 'Readiness check failed');
-        res.status(500).json({ error: 'Internal Server Error', message: error.message });
-    }
-};
