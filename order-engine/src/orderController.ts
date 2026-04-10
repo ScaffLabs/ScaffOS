@@ -1,6 +1,6 @@
 // Import necessary packages
 import { Request, Response } from 'express';
-import { body, query, validationResult } from 'express-validator';
+import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
@@ -25,25 +25,53 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
         const createdOrder = await createOrderService(order);
         res.status(201).json(createdOrder);
         logger.info('Order created successfully', { order });
-        logger.info('Audit Log: Created Order', { orderId: order.id, action: 'create' });
     } catch (error) {
         logger.error('Error creating order', { error: error.message });
         if (error instanceof ValidationError) {
             return res.status(400).json({ message: error.message });
         }
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+}];
+
+// Get Orders
+export const getOrders = async (req: Request, res: Response) => {
+    try {
+        const orders = await getOrdersService();
+        if (!orders.length) {
+            return res.status(404).json({ message: 'No orders found.' });
+        }
+        res.status(200).json(orders);
+    } catch (error) {
+        logger.error('Error retrieving orders', { error: error.message });
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+// Update Order
+export const updateOrder = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const updates = req.body;
+    try {
+        const updatedOrder = await updateOrderService(id, updates);
+        if (!updatedOrder) {
+            throw new NotFoundError('Order not found.');
+        }
+        res.status(200).json(updatedOrder);
+    } catch (error) {
+        logger.error('Error updating order', { error: error.message });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ message: error.message });
         }
         res.status(500).json({ message: 'Internal Server Error' });
     }
-}];
+};
 
 // Delete Order
 export const deleteOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
         await deleteOrderService(id);
-        logger.info('Audit Log: Deleted Order', { orderId: id, action: 'delete' });
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting order', { error: error.message });
@@ -52,4 +80,11 @@ export const deleteOrder = async (req: Request, res: Response) => {
         }
         res.status(500).json({ message: 'Internal Server Error' });
     }
+};
+
+export const orderRouter = (app: any) => {
+    app.post('/orders', createOrder);
+    app.get('/orders', getOrders);
+    app.put('/orders/:id', updateOrder);
+    app.delete('/orders/:id', deleteOrder);
 };

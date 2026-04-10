@@ -9,8 +9,7 @@ const createOrderService = async (orderData: unknown) => {
     }
     const order = parsedOrder.data;
     try {
-        const createdOrder = await storage.create(order);
-        return createdOrder;
+        return await storage.create(order);
     } catch (error) {
         throw new ServiceError('Failed to create order due to database error: ' + error.message);
     }
@@ -38,7 +37,11 @@ const deleteOrderService = async (id: string) => {
 
 const getOrdersService = async () => {
     try {
-        return await storage.findAll();
+        const orders = await storage.findAll();
+        if (!orders.length) {
+            throw new NotFoundError('No orders found.');
+        }
+        return orders;
     } catch (error) {
         throw new ServiceError('Failed to retrieve orders: ' + error.message);
     }
