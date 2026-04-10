@@ -1,6 +1,6 @@
 // Import necessary packages
 import { Request, Response } from 'express';
-import { body, query, validationResult } from 'express-validator';
+import { body, validationResult } from 'express-validator';
 import { createOrderService, updateOrderService, deleteOrderService, getOrdersService } from './orderService';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
@@ -30,19 +30,17 @@ export const createOrder = [createOrderValidators, async (req: Request, res: Res
         if (error instanceof ValidationError) {
             return res.status(400).json({ message: error.message });
         }
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ message: error.message });
+        }
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }];
 
-// Get Orders with Pagination and Sorting
+// Get Orders
 export const getOrders = async (req: Request, res: Response) => {
-    const { limit = 10, offset = 0, sort = 'id', order = 'asc' } = req.query;
-    const validationErrors = validationResult(req);
-    if (!validationErrors.isEmpty()) {
-        return res.status(400).json({ errors: validationErrors.array() });
-    }
     try {
-        const orders = await getOrdersService({ limit: Number(limit), offset: Number(offset), sort, order });
+        const orders = await getOrdersService();
         if (orders.length === 0) {
             return res.status(404).json({ message: 'No orders found.' });
         }

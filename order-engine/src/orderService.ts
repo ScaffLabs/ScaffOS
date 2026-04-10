@@ -1,6 +1,6 @@
-import { Order } from './types';
+import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
-import { postgresStorage as storage } from './postgresStorage';
+import { storage } from './storage';
 
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
