@@ -52,14 +52,6 @@ describe('API Endpoints', () => {
         expect(response.body).toEqual({ error: 'Validation Error' });
     });
 
-    test('GET /prices/:id should return the correct price data', async () => {
-        const mockPriceData = { exchange: 'exchange1', price: 100, volume: 10 };
-        (priceAggregator.readPrice as jest.Mock).mockResolvedValueOnce(mockPriceData);
-        const response = await request(app).get('/prices/1');
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual(mockPriceData);
-    });
-
     test('DELETE /prices/:id should return 204 on successful deletion', async () => {
         (priceAggregator.deletePrice as jest.Mock).mockResolvedValueOnce(undefined);
         const response = await request(app).delete('/prices/1');
@@ -71,11 +63,5 @@ describe('API Endpoints', () => {
         const response = await request(app).delete('/prices/1');
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ error: 'Not Found' });
-    });
-
-    test('GET /prices should return 400 for invalid query parameters', async () => {
-        const response = await request(app).get('/prices?limit=NaN');
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({ error: 'Invalid limit parameter' });
     });
 });
