@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { AlertMessage, validateCreateAlertRequest } from './alert.schema';
 import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
-import { ServiceError, ValidationError, NotFoundError } from './error.types';
+import { ServiceError, ValidationError, NotFoundError, OverflowError, DivisionByZeroError } from './error.types';
 import logger, { logRequest, logError } from './logger';
 import axios from 'axios';
 import { CircuitBreaker } from 'opossum';
@@ -34,6 +34,9 @@ export class AlertController {
         const start = Date.now();
         try {
             const alerts = await this.alertStore.findIndex({});
+            if (!alerts.length) {
+                return res.status(204).send();
+            }
             return res.status(200).json(alerts);
         } catch (error) {
             logError(error);
