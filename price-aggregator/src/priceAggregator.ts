@@ -28,6 +28,9 @@ export class PriceAggregator {
             });
             return parsedData.data;
         } catch (error) {
+            if (error instanceof ValidationError) {
+                throw new ServiceError('Validation error while adding price: ' + error.message);
+            }
             throw new ServiceError('Failed to add price: ' + error.message);
         }
     }
