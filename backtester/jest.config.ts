@@ -13,4 +13,8 @@ export default {
       statements: 80,
     },
   },
+  reporters: [
+    'default',
+    ['jest-junit', { outputDirectory: 'test-results', outputName: 'junit.xml' }],
+  ],
 };
