@@ -24,4 +24,15 @@ const healthCheck = async () => {
     }
 };
 
-export { healthCheck, fetchHealthStatus };  // Export both functions for use in controllers.
+const healthCheckWithRetry = async (retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await healthCheck();
+        } catch (error) {
+            if (i === retries - 1) throw error;
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+};
+
+export { healthCheckWithRetry, fetchHealthStatus };  // Export both functions for use in controllers.

@@ -2,13 +2,14 @@ import axios, { AxiosError } from 'axios';
 import config from '../config';
 import { ServiceError, InvalidInputTypeError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
+import { emitEvent } from '../events/EventBus';  
 
 const axiosInstance = axios.create({
     baseURL: config.API_URL,
     timeout: 5000,
 });
 
-const fetchConfigurations = async (limit: number, offset: number, sortBy: string, order: string): Promise<ConfigurationItem[]> => {
+const fetchConfigurations = async (limit: number = 10, offset: number = 0, sortBy: string = 'key', order: string = 'asc'): Promise<ConfigurationItem[]> => {
     try {
         const response = await axiosInstance.get('/config', {
             params: { limit, offset, sortBy, order }
@@ -25,6 +26,7 @@ const fetchConfigurations = async (limit: number, offset: number, sortBy: string
 const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
     try {
         const response = await axiosInstance.post('/config', configItem);
+        emitEvent('CONFIGURATION_CREATED', configItem);
         if (response.status !== 201) {
             throw new ServiceError('Failed to create configuration.');
         }
@@ -36,6 +38,7 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
 const deleteConfiguration = async (key: string): Promise<void> => {
     try {
         const response = await axiosInstance.delete(`/config/${key}`);
+        emitEvent('CONFIGURATION_DELETED', { key });
         if (response.status !== 204) {
             throw new ServiceError('Failed to delete configuration.');
         }

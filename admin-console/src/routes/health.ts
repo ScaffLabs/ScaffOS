@@ -1,24 +1,18 @@
 import express from 'express';
-import os from 'os';
 import { logger } from '../middleware/logger';
-import { fetchHealthStatus } from '../services/ServiceClient';
-import { ServiceError } from '../errors/CustomErrors';
+import { healthCheckWithRetry } from '../services/HealthService';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
     try {
-        const status = await fetchHealthStatus();
+        const status = await healthCheckWithRetry();
         res.status(200).json({
             application: 'running',
             database: status.database,
             externalService: status.externalService,
             memoryUsage: process.memoryUsage(),
-            uptime: os.uptime(),
-            freeMemory: os.freemem(),
-            totalMemory: os.totalmem(),
-            loadAvg: os.loadavg(),
-            cpuCount: os.cpus().length
+            uptime: process.uptime()
         });
     } catch (error) {
         logger.error(`Health check failed: ${error.message}`);
