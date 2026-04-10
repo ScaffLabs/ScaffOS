@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
 import { Order, OrderId } from './types';
-import { queryDatabase } from './db';
 
 interface Database<T> {
     create(item: T): Promise<T>;
