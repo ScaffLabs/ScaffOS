@@ -5,9 +5,12 @@ import { ValidationError, NotFoundError } from '../errors/customErrors';
 const strategyStore = new InMemoryStore<Strategy>();
 
 const calculatePerformanceMetrics = (strategies: Strategy[]): PerformanceMetrics => {
+    if (strategies.length === 0) {
+        throw new ValidationError('No strategies available for performance metrics calculation.');
+    }
     const drawdown = strategies.map(strategy => Math.random() * 100);
     const maxDrawdown = Math.max(...drawdown);
-    const sharpeRatio = (Math.random() * 2) - 1;
+    const sharpeRatio = (Math.random() * 2) - 1; // Placeholder logic
     return { drawdown, maxDrawdown, sharpeRatio };
 };
 
@@ -20,20 +23,12 @@ const createStrategy = async (strategy: Strategy) => {
 
 const getPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
     const strategies = await strategyStore.find({});
-    if (strategies.length === 0) {
-        throw new ValidationError('No strategies available for performance metrics calculation.');
-    }
     return calculatePerformanceMetrics(strategies.map(s => s.data));
 };
 
-const getStrategy = async (id: string) => {
-    const strategy = await strategyStore.read(id);
-    if (!strategy) throw new NotFoundError('Strategy not found.');
-    return strategy;
-};
-
 const updateStrategy = async (id: string, strategy: Strategy) => {
-    const existingStrategy = await getStrategy(id);
+    const existingStrategy = await strategyStore.read(id);
+    if (!existingStrategy) throw new NotFoundError('Strategy not found.');
     const updated = { ...existingStrategy.data, ...strategy };
     return await strategyStore.update(id, updated);
 };
@@ -48,8 +43,4 @@ const findStrategies = async (query: Partial<Strategy>) => {
     return await strategyStore.find(query);
 };
 
-const initializeStore = async () => {
-    console.log('Initializing strategy store...');
-};
-
-export { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics, initializeStore };
+export { createStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics };
