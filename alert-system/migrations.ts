@@ -4,8 +4,8 @@ import { AlertStoreInterface } from './storage';
 export class MigrationUtil {
     static async seedData(store: AlertStoreInterface) {
         const seedData: AlertMessage[] = [
-            { id: '1', type: 'price', threshold: 100, currentValue: 90, createdAt: new Date() },
-            { id: '2', type: 'risk', threshold: 50, currentValue: 30, createdAt: new Date() }
+            { id: '1' as OrderId, type: 'price', threshold: 100, currentValue: 90, createdAt: new Date() },
+            { id: '2' as OrderId, type: 'risk', threshold: 50, currentValue: 30, createdAt: new Date() }
         ];
         for (const item of seedData) {
             await store.create(item);
