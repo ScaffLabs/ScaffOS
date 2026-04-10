@@ -32,11 +32,29 @@ describe('Event API Tests', () => {
             expect(response.status).toBe(400);
             expect(response.body.message).toContain('Invalid enum value');
         });
+
+        it('should return 400 for empty request body', async () => {
+            const response = await request(app)
+                .post('/events')
+                .send({});
+            expect(response.status).toBe(400);
+            expect(response.body.message).toContain('Title is required');
+        });
+
+        it('should return 400 for invalid data type', async () => {
+            const response = await request(app)
+                .post('/events')
+                .send({ title: 12345, description: 'This event has an invalid title type', type: 'userCreated' });
+            expect(response.status).toBe(400);
+            expect(response.body.message).toContain('Title must be a string');
+        });
     });
 
     describe('GET /events', () => {
         it('should return a list of events', async () => {
-            await request(app).post('/events').send({ title: 'Event 1', description: 'Description 1', type: 'userCreated' });
+            await request(app)
+                .post('/events')
+                .send({ title: 'Event 1', description: 'Description 1', type: 'userCreated' });
             const response = await request(app).get('/events');
             expect(response.status).toBe(200);
             expect(Array.isArray(response.body)).toBe(true);
@@ -69,6 +87,18 @@ describe('Event API Tests', () => {
                 .send({ title: 'Trying to Update' });
             expect(response.status).toBe(404);
             expect(response.body.message).toBe('Event not found');
+        });
+
+        it('should return 400 for invalid update data', async () => {
+            const newEvent = await request(app)
+                .post('/events')
+                .send({ title: 'Event to Update', description: 'This event will be updated', type: 'userCreated' });
+
+            const response = await request(app)
+                .put(`/events/${newEvent.body.id}`)
+                .send({ title: '' });
+            expect(response.status).toBe(400);
+            expect(response.body.message).toContain('Title is required');
         });
     });
 
