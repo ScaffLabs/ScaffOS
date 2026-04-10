@@ -4,34 +4,17 @@ import { Position, PositionSchema } from '../types';
 import { ServiceError, ValidationError, NotFoundError } from '../utils/errors';
 import logger from '../utils/logger';
 import { query } from '../utils/connectionPool';
+import { fetchExternalData } from './externalApi';
 
 const positionStore = new InMemoryStore<Position>();
 
 export const fetchPositions = async (req: Request, res: Response) => {
-    const { limit, offset, filter, sort } = req.query;
+    const { limit, offset } = req.query;
     const parsedLimit = parseInt(limit as string) || 10;
     const parsedOffset = parseInt(offset as string) || 0;
     try {
-        let sql = 'SELECT * FROM positions';
-        const params: any[] = [];
-
-        if (filter) {
-            sql += ' WHERE symbol LIKE ?';
-            params.push(`%${filter}%`);
-        }
-
-        if (sort) {
-            sql += ' ORDER BY ?';
-            params.push(sort);
-        }
-
-        sql += ' LIMIT ? OFFSET ?';
-        params.push(parsedLimit, parsedOffset);
-
-        const positions = await query(sql, params);
-        if (positions.length === 0) {
-            return res.status(204).json([]);
-        }
+        const sql = 'SELECT * FROM positions LIMIT ? OFFSET ?';
+        const positions = await query(sql, [parsedLimit, parsedOffset]);
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error fetching positions', { error: error.message });
@@ -66,10 +49,6 @@ export const updatePosition = async (req: Request, res: Response) => {
         const existingPosition = await positionStore.read(id);
         if (!existingPosition) {
             throw new NotFoundError('Position not found.');
-        }
-        const validationResult = PositionSchema.safeParse(positionData);
-        if (!validationResult.success) {
-            throw new ValidationError('Invalid position data: ' + validationResult.error.errors.join(', '));
         }
         const sql = 'UPDATE positions SET symbol = ?, quantity = ? WHERE id = ?';
         await query(sql, [positionData.symbol, positionData.quantity, id]);
