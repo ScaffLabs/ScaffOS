@@ -4,12 +4,10 @@ import apiRouter from './api';
 import healthRouter from './healthCheck';
 import logger, { logStartupConfig } from './logger';
 import { errorHandler } from './errors';
-import MemoryQueue from './memoryQueue';
-import loggingMiddleware from './middleware/loggingMiddleware';
-import requestIdMiddleware from './middleware/requestIdMiddleware';
 import gracefulShutdown from './gracefulShutdown';
 import { createPool } from 'mysql2/promise';
 import { healthCheckServices } from './externalService';
+import MemoryQueue from './memoryQueue';
 
 const app = express();
 const server = http.createServer(app);
@@ -24,8 +22,6 @@ const dbPool = createPool({
 });
 
 app.use(express.json());
-app.use(requestIdMiddleware);
-app.use(loggingMiddleware);
 app.use('/api', apiRouter);
 app.use('/health', healthRouter);
 app.use(errorHandler);
@@ -38,6 +34,22 @@ const startServer = async () => {
     });
 };
 
+process.on('SIGTERM', async () => {
+    await gracefulShutdown(dbPool);
+});
+process.on('SIGINT', async () => {
+    await gracefulShutdown(dbPool);
+});
+
+process.on('uncaughtException', (err) => {
+    logger.error('Uncaught Exception: ', err);
+    gracefulShutdown(dbPool);
+});
+
+process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled Rejection: ', reason);
+});
+
 setInterval(async () => {
     try {
         const healthStatus = await healthCheckServices();
@@ -46,12 +58,5 @@ setInterval(async () => {
         logger.error('Health check failed: ', error);
     }
 }, 60000);
-
-process.on('SIGTERM', async () => {
-    await gracefulShutdown(dbPool);
-});
-process.on('SIGINT', async () => {
-    await gracefulShutdown(dbPool);
-});
 
 startServer();
