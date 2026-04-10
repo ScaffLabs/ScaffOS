@@ -14,7 +14,7 @@ import { sanitize } from './sanitize';
 import { apiKeyLimiter } from './rateLimiter';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = config.PORT;
 const connectionPool = createConnectionPool();
 
 const allowedOrigins = ['http://example.com', 'http://another-example.com'];
