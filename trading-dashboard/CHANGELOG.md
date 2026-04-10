@@ -2,9 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.5.0] - 2023-12-21
+## [1.6.0] - 2024-01-10
 - Added comprehensive documentation in README.md, including setup instructions, API reference, and environment variables.
 - Improved error handling in various API endpoints.
+
+## [1.5.0] - 2023-12-21
+- Enhanced API validation and error messages for better clarity.
 
 ## [1.4.0] - 2023-12-20
 - Updated README.md with detailed project documentation, including setup instructions and API references.
