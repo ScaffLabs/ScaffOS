@@ -53,3 +53,16 @@ export const PortfolioSchema = z.object({
     name: z.string().min(1, { message: 'Name is required' }),
     positions: z.array(PositionSchema).optional().nonempty({ message: 'Positions must not be empty' }),
 });
+
+/**
+ * Function to validate portfolio data against the schema.
+ * @param data - The portfolio data to validate.
+ * @returns {boolean} - Whether the data is valid or not.
+ */
+export const validatePortfolioData = (data: any): data is Portfolio => {
+    const validationResult = PortfolioSchema.safeParse(data);
+    if (!validationResult.success) {
+        throw new Error(validationResult.error.errors.map(e => e.message).join(', '));
+    }
+    return true;
+};
