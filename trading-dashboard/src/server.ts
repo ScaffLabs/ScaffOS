@@ -5,6 +5,8 @@ import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
 import logger from './utils/logger';
 import config from './config';
+import { registerExternalApiRoutes } from './api/externalApi';
+import { registerHealthRoutes } from './utils/healthCheck';
 
 const app = express();
 logger.logStartup(config);
@@ -13,6 +15,8 @@ app.use(express.json());
 app.use(requestLogger);
 securityMiddleware(app);
 registerRoutes(app);
+registerExternalApiRoutes(app);
+registerHealthRoutes(app);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
