@@ -10,6 +10,7 @@ import rateLimit from 'express-rate-limit';
 import { requestIdMiddleware, errorHandlingMiddleware } from './middleware';
 import logger, { logStartup } from './logger';
 import { setupRequestQueue } from './requestQueue';
+import { sanitizeInput } from './sanitization';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,7 @@ app.use(helmet());
 app.use(cors({ origin: ['http://allowed-origin.com', 'http://another-allowed-origin.com'] }));
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(requestIdMiddleware);
+app.use(sanitizeInput);
 app.use(logger.logRequest);
 
 // Rate Limiting
