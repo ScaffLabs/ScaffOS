@@ -14,7 +14,8 @@ const envSchema = Joi.object({
     EXTERNAL_API_URL: Joi.string().uri().required(),
     LOG_LEVEL: Joi.string().valid('debug', 'info', 'warn', 'error').default('info'),
     CORS_ORIGINS: Joi.string().optional(),
-    LOG_FORMAT: Joi.string().valid('combined', 'common', 'short', 'tiny').default('combined')
+    LOG_FORMAT: Joi.string().valid('combined', 'common', 'short', 'tiny').default('combined'),
+    DOCKER: Joi.boolean().default(false)
 }).unknown();
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -36,6 +37,7 @@ const config = {
     logLevel: envVars.LOG_LEVEL,
     corsOrigins: envVars.CORS_ORIGINS ? envVars.CORS_ORIGINS.split(',') : [],
     logFormat: envVars.LOG_FORMAT,
+    docker: envVars.DOCKER,
 };
 
 export default config;
