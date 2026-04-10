@@ -1,7 +1,7 @@
 import express from 'express';
 import { ConfigurationItem, ConfigurationItemSchema } from '../types';
 import Database from '../storage/Database';
-import { ValidationError, NotFoundError } from '../errors/CustomErrors';
+import { ValidationError, NotFoundError, ServiceError } from '../errors/CustomErrors';
 import { Request, Response, NextFunction } from 'express';
 import { logRequest, logAudit } from '../middleware/logger';
 import rateLimiter from '../middleware/rateLimiter';
@@ -30,7 +30,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Get All Configurations
+// Get All Configurations with pagination and filtering
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const { limit = '10', offset = '0', filter = '' } = req.query;
     try {
