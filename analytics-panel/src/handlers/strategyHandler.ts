@@ -1,6 +1,6 @@
 // Import necessary modules
 import { Request, Response } from 'express';
-import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics } from '../services/strategyService';
+import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies } from '../services/strategyService';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
 
 // Handler to fetch all strategies based on query parameters
@@ -14,7 +14,7 @@ export const getStrategiesHandler = async (req: Request, res: Response) => {
         res.status(200).json(paginatedStrategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        throw new ServiceError('Failed to fetch strategies.');
     }
 };
 
@@ -32,19 +32,8 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
             res.status(400).json({ error: error.message });
         } else {
             console.error('Error creating strategy:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+            throw new ServiceError('Failed to create strategy.');
         }
-    }
-};
-
-// Handler to get performance metrics
-export const getPerformanceMetricsHandler = async (req: Request, res: Response) => {
-    try {
-        const metrics = await getPerformanceMetrics();
-        res.status(200).json(metrics);
-    } catch (error) {
-        console.error('Error fetching performance metrics:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
@@ -63,7 +52,7 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
             res.status(404).json({ error: error.message });
         } else {
             console.error('Error updating strategy:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+            throw new ServiceError('Failed to update strategy.');
         }
     }
 };
@@ -82,7 +71,7 @@ export const deleteStrategyHandler = async (req: Request, res: Response) => {
             res.status(404).json({ error: error.message });
         } else {
             console.error('Error deleting strategy:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+            throw new ServiceError('Failed to delete strategy.');
         }
     }
 };

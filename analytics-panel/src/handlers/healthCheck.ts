@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import os from 'os';
 import { logPerformance } from '../logger';
+import { ServiceError } from '../errors/customErrors';
 
 export const healthCheckHandler = async (req: Request, res: Response) => {
     try {
@@ -15,7 +16,7 @@ export const healthCheckHandler = async (req: Request, res: Response) => {
         res.status(200).json(healthStatus);
     } catch (error) {
         console.error('Health check failed:', error);
-        res.status(500).json({ error: 'Health check failed.' });
+        throw new ServiceError('Health check failed.');
     }
 };
 
@@ -30,6 +31,6 @@ export const dependentHealthCheckHandler = async (req: Request, res: Response) =
         });
     } catch (error) {
         console.error('Dependent health check failed:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        throw new ServiceError('Dependent health check failed.');
     }
 };
