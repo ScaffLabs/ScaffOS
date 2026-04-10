@@ -10,7 +10,8 @@
     "docker:up": "docker-compose up",
     "test:watch": "jest --watch",
     "test:integration": "jest --testPathPattern=__tests__/portfolioRoutes.test.ts",
-    "test:unit": "jest --testPathPattern=__tests__/portfolioService.test.ts"
+    "test:unit": "jest --testPathPattern=__tests__/portfolioService.test.ts",
+    "test:all": "jest --runInBand"
   },
   "dependencies": {
     "express": "^4.17.1",

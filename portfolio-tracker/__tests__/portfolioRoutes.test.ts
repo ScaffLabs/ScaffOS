@@ -76,4 +76,14 @@ describe('Portfolio Routes', () => {
         expect(response.status).toBe(200);
         expect(response.body.status).toBe('UP');
     });
+
+    it('should return 503 for health check if external service is down', async () => {
+        jest.mock('axios');
+        const mockedAxios = require('axios');
+        mockedAxios.get.mockImplementationOnce(() => Promise.reject(new Error('Service is down')));
+
+        const response = await request(app).get('/api/health');
+        expect(response.status).toBe(503);
+        expect(response.body.status).toBe('DOWN');
+    });
 });
