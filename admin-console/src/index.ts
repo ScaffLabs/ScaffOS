@@ -12,6 +12,7 @@ import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
 import { sanitizeBody, sanitizeQueryParams } from './middleware/sanitization';
 import { logAudit } from './middleware/auditLogger';
+import csurf from 'csurf';
 
 dotenv.config();
 const app = express();
@@ -26,6 +27,7 @@ app.use(sanitizeQueryParams);
 app.use(rateLimiter);
 app.use(logRequest);
 app.use(logAudit);
+app.use(csurf({ cookie: true }));
 
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
