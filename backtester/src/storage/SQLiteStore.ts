@@ -63,7 +63,7 @@ export class SQLiteStore<T> implements StorageInterface<T> {
         return new Promise((resolve, reject) => {
             db.all(`SELECT * FROM records`, (err, rows) => {
                 if (err) reject(err);
-                else resolve(rows.map(row => ({ id: row.id, data: JSON.parse(row.data) })));
+                else resolve(rows.map(row => ({ id: row.id, data: JSON.parse(row.data) }))); 
             });
         });
     }
@@ -78,6 +78,6 @@ export class SQLiteStore<T> implements StorageInterface<T> {
     }
 
     async migrate(data: T[]): Promise<void> {
-        await Promise.all(data.map(async item => await this.create(item)));
+        await Promise.all(data.map(item => this.create(item)));
     }
 }

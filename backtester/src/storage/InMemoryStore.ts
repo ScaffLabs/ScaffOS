@@ -20,11 +20,7 @@ export class InMemoryStore<T> implements StorageInterface<T> {
 
     async read(id: string): Promise<Entity<T> | undefined> {
         logger.debug({ message: 'Reading entity', id });
-        const entity = this.store.get(id);
-        if (!entity) {
-            logger.warn({ message: 'Entity not found', id });
-        }
-        return entity;
+        return this.store.get(id);
     }
 
     async update(id: string, data: T): Promise<Entity<T> | undefined> {
@@ -62,10 +58,10 @@ export class InMemoryStore<T> implements StorageInterface<T> {
     }
 
     async migrate(data: T[]): Promise<void> {
-        await Promise.all(data.map(async item => await this.create(item)));
+        await Promise.all(data.map(item => this.create(item)));
     }
 
-    async findByIndex(indexKey: string): Promise<Entity<T>[]> {
-        return Array.from(this.store.values()).filter(entity => entity.data[indexKey]);
+    async findByIndex(indexKey: string, value: any): Promise<Entity<T>[]> {
+        return Array.from(this.store.values()).filter(entity => entity.data[indexKey] === value);
     }
 }
