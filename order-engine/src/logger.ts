@@ -24,7 +24,7 @@ export const logRequest = (req: Request, res: Response, next: Function) => {
     res.on('finish', () => {
         const duration = process.hrtime(start);
         const durationInMs = (duration[0] * 1e3 + duration[1] / 1e6).toFixed(2);
-        logger.info(`Request: ${req.method} ${req.path} - ${res.statusCode} - ${durationInMs}ms`, { requestId });
+        logger.info(`Request: ${req.method} ${req.path} - Status: ${res.statusCode} - Duration: ${durationInMs}ms`, { requestId });
     });
     next();
 };
@@ -39,10 +39,6 @@ export const logError = (error: Error, req: Request) => {
 
 export const logStartup = (config: any) => {
     logger.info('Starting Order Engine', { config });
-};
-
-export const logRequestDetails = (req: Request, res: Response, duration: number) => {
-    logger.info('Request details', { method: req.method, path: req.path, status: res.statusCode, duration });
 };
 
 export const logErrorWithContext = (error: Error, req: Request) => {
