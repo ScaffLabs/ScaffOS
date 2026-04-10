@@ -3,8 +3,16 @@ import { InMemoryStore } from '../storage/InMemoryStore';
 import { Position, PositionSchema } from '../types';
 import { ServiceError, ValidationError, NotFoundError } from '../utils/errors';
 import { publishEvent } from '../utils/eventBus';
+import rateLimit from 'express-rate-limit';
 
 const positionStore = new InMemoryStore<Position>();
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests, please try again later.',
+});
 
 export const fetchPositions = async (req: Request, res: Response) => {
     const { limit = 10, offset = 0 } = req.query;
@@ -85,8 +93,8 @@ export const deletePosition = async (req: Request, res: Response) => {
 };
 
 export const registerRoutes = (app: any) => {
-    app.get('/api/positions', fetchPositions);
-    app.post('/api/positions', createPosition);
-    app.put('/api/positions/:id', updatePosition);
-    app.delete('/api/positions/:id', deletePosition);
+    app.get('/api/positions', limiter, fetchPositions);
+    app.post('/api/positions', limiter, createPosition);
+    app.put('/api/positions/:id', limiter, updatePosition);
+    app.delete('/api/positions/:id', limiter, deletePosition);
 };
