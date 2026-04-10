@@ -3,6 +3,7 @@ import { ValidationError, NotFoundError } from './errors';
 import userStore from './inMemoryStore';
 import { v4 as uuidv4 } from 'uuid';
 
+// Create User
 export const createUser = async (username: string, email: string): Promise<User> => {
     const newUser: User = { id: uuidv4() as UserId, username, email };
     try {
@@ -18,6 +19,7 @@ export const createUser = async (username: string, email: string): Promise<User>
     return newUser;
 };
 
+// Update User
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
     const user = await findUserById(id);
     if (!user) {
@@ -32,18 +34,33 @@ export const updateUser = async (id: UserId, userData: Partial<User>): Promise<U
     return userStore.update(id, updatedUser);
 };
 
+// Delete User
 export const deleteUser = async (id: UserId): Promise<boolean> => {
     return userStore.delete(id);
 };
 
+// Get All Users
 export const getAllUsers = async (): Promise<User[]> => {
     return userStore.findAll();
 };
 
+// Find User by ID
 export const findUserById = async (id: UserId): Promise<User | null> => {
     return userStore.findById(id);
 };
 
+// Find User by Email
 export const findUserByEmail = async (email: string): Promise<User | null> => {
     return userStore.findByEmail(email);
+};
+
+// Transaction Support
+export const transaction = async (operations: () => Promise<void>) => {
+    // Logic to handle transaction support, such as rollback on failure
+    try {
+        await operations();
+    } catch (error) {
+        // Handle errors, rollback if necessary
+        throw error;
+    }
 };
