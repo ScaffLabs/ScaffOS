@@ -9,16 +9,26 @@ const axiosInstance = axios.create({
 });
 
 const circuitBreakerOptions = {
-    timeout: 3000, // If the service takes longer than 3 seconds, it will be considered failed
-    errorThresholdPercentage: 50, // If 50% of requests fail, the circuit will trip
-    resetTimeout: 10000, // After 10 seconds, it will try again
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 10000,
 };
 
 const circuitBreaker = new CircuitBreaker(axiosInstance, circuitBreakerOptions);
 
+const retryWithExponentialBackoff = async (fn, retries = 5, delay = 1000) => {
+    try {
+        return await fn();
+    } catch (error) {
+        if (retries === 0) throw error;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return retryWithExponentialBackoff(fn, retries - 1, delay * 2);
+    }
+};
+
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
-        const response = await circuitBreaker.fire('/config');
+        const response = await retryWithExponentialBackoff(() => circuitBreaker.fire('/config'));
         if (!response.data || !Array.isArray(response.data)) {
             throw new ServiceError('Invalid response: Expected an array');
         }
@@ -30,7 +40,7 @@ const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
 
 const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
     try {
-        await circuitBreaker.fire('/config', { method: 'POST', data: configItem });
+        await retryWithExponentialBackoff(() => circuitBreaker.fire('/config', { method: 'POST', data: configItem }));
     } catch (error) {
         handleAxiosError(error, 'create configuration');
     }
@@ -38,7 +48,7 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
 
 const deleteConfiguration = async (key: string): Promise<void> => {
     try {
-        await circuitBreaker.fire(`/config/${key}`, { method: 'DELETE' });
+        await retryWithExponentialBackoff(() => circuitBreaker.fire(`/config/${key}`, { method: 'DELETE' }));
     } catch (error) {
         handleAxiosError(error, 'delete configuration');
     }
@@ -46,7 +56,7 @@ const deleteConfiguration = async (key: string): Promise<void> => {
 
 const fetchHealthStatus = async () => {
     try {
-        const response = await circuitBreaker.fire('/health');
+        const response = await retryWithExponentialBackoff(() => circuitBreaker.fire('/health'));
         return response.data;
     } catch (error) {
         handleAxiosError(error, 'fetch health status');

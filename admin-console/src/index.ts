@@ -11,7 +11,6 @@ import { logRequest, logError, logPerformance } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
 import { sanitizeBody, sanitizeQueryParams } from './middleware/sanitization';
-import { logAudit } from './middleware/auditLogger';
 
 dotenv.config();
 const app = express();
@@ -25,20 +24,15 @@ app.use(sanitizeBody);
 app.use(sanitizeQueryParams);
 app.use(rateLimiter);
 app.use(logRequest);
-app.use(logAudit);
-app.use(logPerformance);
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
 app.use(logError);
 app.use(errorHandler);
 
-const gracefulShutdown = (signal) => {
+const gracefulShutdown = async (signal) => {
     console.log(`Received ${signal}. Shutting down gracefully...`);
-    app.close(async () => {
-        console.log('Closed out remaining connections.');
-        await db.closeConnection();
-        process.exit(0);
-    });
+    await db.closeConnection();
+    process.exit(0);
 };
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

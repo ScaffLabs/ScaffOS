@@ -26,7 +26,7 @@ router.get('/ready', async (req, res) => {
         if (isReady) {
             res.status(200).json({ status: 'ready' });
         } else {
-            res.status(500).json({ status: 'not ready' });
+            res.status(503).json({ status: 'not ready' });
         }
     } catch (error) {
         logger.error(`Readiness check failed: ${error.message}`);
@@ -36,7 +36,6 @@ router.get('/ready', async (req, res) => {
 
 router.get('/live', async (req, res) => {
     try {
-        // Check if the service is alive
         const health = await fetchHealthStatus();
         res.status(200).json({ status: 'alive', health });
     } catch (error) {
