@@ -25,16 +25,19 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
         if (error instanceof ValidationError) {
             return next(new ValidationError('Invalid configuration data: ' + error.message));
         }
-        return next(error);
+        return next(new ServiceError('Error creating configuration: ' + error.message));
     }
 });
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const allConfigs = await db.findAllConfigurations();
+        if (allConfigs.length === 0) {
+            return next(new ValidationError('No configurations found.')); // Handle empty array case
+        }
         res.status(200).json(allConfigs);
     } catch (error) {
-        return next(error);
+        return next(new ServiceError('Error fetching configurations: ' + error.message));
     }
 });
 
@@ -46,7 +49,7 @@ router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
         }
         res.status(200).json(config);
     } catch (error) {
-        return next(error);
+        return next(new ServiceError('Error retrieving configuration: ' + error.message));
     }
 });
 
@@ -57,7 +60,7 @@ router.put('/', async (req: Request, res: Response, next: NextFunction) => {
         await db.updateConfiguration(configItem);
         res.status(200).json({ message: 'Configuration updated successfully!' });
     } catch (error) {
-        return next(error);
+        return next(new ServiceError('Error updating configuration: ' + error.message));
     }
 });
 
@@ -66,7 +69,7 @@ router.delete('/:key', async (req: Request, res: Response, next: NextFunction) =
         await db.deleteConfiguration(req.params.key);
         res.status(204).send();
     } catch (error) {
-        return next(error);
+        return next(new ServiceError('Error deleting configuration: ' + error.message));
     }
 });
 
