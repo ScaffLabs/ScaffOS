@@ -8,18 +8,18 @@ import { query } from '../utils/connectionPool';
 const positionStore = new InMemoryStore<Position>();
 
 export const fetchPositions = async (req: Request, res: Response) => {
+    const { limit, offset } = req.query;
+    const parsedLimit = parseInt(limit as string) || 10;
+    const parsedOffset = parseInt(offset as string) || 0;
     try {
-        const sql = 'SELECT * FROM positions';
-        const positions = await query(sql, []);
+        const sql = 'SELECT * FROM positions LIMIT ? OFFSET ?';
+        const positions = await query(sql, [parsedLimit, parsedOffset]);
         if (positions.length === 0) {
-            throw new NotFoundError('No positions found.');
+            return res.status(204).json([]);
         }
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error fetching positions', { error: error.message });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ message: error.message });
-        }
         res.status(500).json({ message: 'Error fetching positions: ' + error.message });
     }
 };
