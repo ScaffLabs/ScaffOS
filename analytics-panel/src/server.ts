@@ -11,7 +11,6 @@ import { csrfMiddleware } from './middleware/csrfProtection';
 import config from './config';
 import mongoose from 'mongoose';
 import { gracefulShutdown } from './utils/shutdown';
-import { auditLogger, validateInputBody, validateRequestSize } from './middleware/auditLogger';
 
 const app = express();
 const server = createServer(app);
@@ -21,9 +20,6 @@ app.use(helmet());
 app.use(cors({ origin: ['http://example.com', 'http://localhost:3000'] }));
 app.use(express.json());
 app.use(logWithRequestId);
-app.use(auditLogger);
-app.use(validateInputBody);
-app.use(validateRequestSize);
 
 // Rate limiter
 const limiter = rateLimit({
