@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.9] - 2023-10-25
+- Added comprehensive documentation in README.md, including project description, architecture overview, setup instructions, API reference, environment variables, development guide, and deployment guide.
+- Enhanced inline comments throughout the codebase to clarify complex logic in event management.
+- Updated CONTRIBUTING.md for clearer contribution guidelines.
+
 ## [1.0.8] - 2023-10-22
 - Added detailed documentation in README.md, including project description, architecture overview, setup instructions, API reference, environment variables, development guide, and deployment guide.
 - Enhanced inline comments throughout the codebase to clarify complex logic in event management.
