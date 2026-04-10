@@ -26,10 +26,6 @@ export const logError = (error: Error, requestId: string) => {
     logger.error(error.message, { stack: error.stack, requestId });
 };
 
-export const logSensitiveOperation = (operation: string, userId: string) => {
-    logger.info(`Sensitive operation: ${operation} by user: ${userId}`);
-};
-
 export const logStartup = (config: any) => {
     logger.info('Startup configuration:', config);
 };
@@ -37,11 +33,3 @@ export const logStartup = (config: any) => {
 export const generateRequestId = () => uuidv4();
 
 export default logger;
-
-export const logWarning = (message: string, requestId: string) => {
-    logger.warn(message, { requestId });
-};
-
-export const logInfo = (message: string, meta: object) => {
-    logger.info(message, meta);
-};
