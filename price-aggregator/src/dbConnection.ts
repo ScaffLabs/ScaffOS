@@ -8,16 +8,16 @@ const pool = new Pool({
     port: Number(process.env.DB_PORT),
 });
 
+const TIMEOUT = 5000; // Timeout for queries
+
 export const createConnectionPool = () => {
     return {
         query: async (text: string, params?: any[]) => {
-            try {
-                const res = await pool.query(text, params);
-                return res;
-            } catch (error) {
-                console.error('Database query error:', error);
-                throw error;
-            }
+            const queryPromise = pool.query(text, params);
+            return Promise.race([
+                queryPromise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), TIMEOUT)),
+            ]);
         },
         drain: async () => {
             await pool.end();
