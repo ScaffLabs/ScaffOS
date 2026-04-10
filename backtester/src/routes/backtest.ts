@@ -30,9 +30,12 @@ backtestRouter.post('/', [
     }
 });
 
-backtestRouter.get('/', async (req, res, next) => {
+backtestRouter.get('/', [
+    query('limit').optional().isInt({ gt: 0 }).toInt().default(10).withMessage('Limit must be a positive integer.'),
+    query('offset').optional().isInt({ min: 0 }).toInt().default(0).withMessage('Offset must be a non-negative integer.')
+], async (req, res, next) => {
     try {
-        const { limit = 10, offset = 0 } = req.query;
+        const { limit, offset } = req.query;
         const results = await store.findAll();
         const paginatedResults = results.slice(offset, offset + limit);
         res.status(200).json({ results: paginatedResults, total: results.length });
@@ -56,6 +59,33 @@ backtestRouter.get('/:id', async (req, res, next) => {
             return next(error);
         }
         next(new ServiceError('Error retrieving backtest result: ' + error.message));
+    }
+});
+
+backtestRouter.put('/:id', [
+    body('strategyParams').optional().custom((value) => StrategyParametersSchema.safeParse(value).success).withMessage('Invalid strategy parameters.'),
+    body('historicalData').optional().isArray().withMessage('Historical data must be an array.').custom((value) => value.every(item => HistoricalDataSchema.safeParse(item).success)).withMessage('Each historical data entry must be valid.')
+], async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            logger.warn({ message: 'Validation errors', errors: errors.array() });
+            return next(new ValidationError('Validation errors: ' + JSON.stringify(errors.array())));
+        }
+        const existing = await store.read(id);
+        if (!existing) {
+            throw new NotFoundError('Backtest result not found.');
+        }
+        const updatedData = { ...existing.data, ...req.body };
+        const updatedEntity = await store.update(id, updatedData);
+        res.status(200).json(updatedEntity);
+    } catch (error) {
+        logger.error({ message: 'Error updating backtest result', error: error.message });
+        if (error instanceof NotFoundError) {
+            return next(error);
+        }
+        next(new ServiceError('Error updating backtest result: ' + error.message));
     }
 });
 
