@@ -1,4 +1,3 @@
-// Shared Types for Risk Manager Service
 import { z } from 'zod';
 
 // Branded types for IDs
