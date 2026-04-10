@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getStrategiesHandler, createStrategyHandler, updateStrategyHandler, deleteStrategyHandler } from '../handlers/strategyHandler';
-import { validateInputBody, validateQueryParams, validateRequestSize } from '../middleware/inputValidator';
+import { validateInputBody, validateRequestSize, validateQueryParams } from '../middleware/inputValidator';
 import { validateStrategy, validateUpdateStrategy } from '../middleware/strategyValidator';
 import rateLimit from 'express-rate-limit';
 import swaggerJsDoc from 'swagger-jsdoc';
