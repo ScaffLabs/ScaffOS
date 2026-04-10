@@ -14,12 +14,6 @@ export const errorMiddleware = (err: Error, req: Request, res: Response, next: N
         logger.error({ message: 'Service Error: ' + err.message });
         return res.status(500).json({ message: 'Service Error: An unexpected error occurred.' });
     }
-    if (err instanceof OverflowError) {
-        return res.status(400).json({ message: 'Overflow Error: ' + err.message });
-    }
-    if (err instanceof DivisionByZeroError) {
-        return res.status(400).json({ message: 'Division by Zero Error: ' + err.message });
-    }
     logger.error({ message: 'An unexpected error occurred: ' + err.message });
     return res.status(500).json({ message: 'An unexpected error occurred.' });
 };

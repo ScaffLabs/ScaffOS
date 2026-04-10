@@ -16,8 +16,8 @@ const eventBus = new EventBus();
 const alertProcessor = new AlertProcessor(eventBus);
 
 // Middleware
-app.use(cors()); // Enable all CORS requests
-app.use(helmet()); // Use helmet for security headers
+app.use(cors());
+app.use(helmet());
 app.use(bodyParser.json());
 app.use(errorMiddleware);
 
