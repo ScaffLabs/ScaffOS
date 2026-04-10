@@ -1,16 +1,16 @@
-import { DatabaseStore, PostgresStore, SQLiteStore } from '../storage/database';
+import { DatabaseService, PostgresStore, SQLiteStore } from '../storage/database';
 import { Strategy, PerformanceMetrics } from '../types';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
 
 const dbType = process.env.DB_TYPE || 'in-memory';
-let strategyStore: DatabaseStore<Strategy>;
+let strategyService: DatabaseService<Strategy>;
 
 if (dbType === 'postgres') {
-    strategyStore = new PostgresStore<Strategy>('strategies', process.env.DB_URL);
+    strategyService = new DatabaseService(new PostgresStore<Strategy>('strategies', process.env.DB_URL));
 } else if (dbType === 'sqlite') {
-    strategyStore = new SQLiteStore<Strategy>('database.sqlite', 'strategies');
+    strategyService = new DatabaseService(new SQLiteStore<Strategy>('database.sqlite', 'strategies'));
 } else {
-    strategyStore = new InMemoryStore<Strategy>(); // Fallback to in-memory store
+    strategyService = new DatabaseService(new InMemoryStore<Strategy>());
 }
 
 const calculatePerformanceMetrics = (strategies: Strategy[]): PerformanceMetrics => {
@@ -24,11 +24,11 @@ const createStrategy = async (strategy: Strategy) => {
     if (!strategy.name || !strategy.parameters) {
         throw new ValidationError('Strategy name and parameters are required.');
     }
-    return await strategyStore.create(strategy);
+    return await strategyService.create(strategy);
 };
 
 const getPerformanceMetrics = async () => {
-    const strategies = await strategyStore.find({});
+    const strategies = await strategyService.find({});
     if (strategies.length === 0) {
         throw new ValidationError('No strategies available for performance metrics calculation.');
     }
@@ -36,7 +36,7 @@ const getPerformanceMetrics = async () => {
 };
 
 const getStrategy = async (id: string) => {
-    const strategy = await strategyStore.read(id);
+    const strategy = await strategyService.read(id);
     if (!strategy) throw new NotFoundError('Strategy not found.');
     return strategy;
 };
@@ -44,17 +44,17 @@ const getStrategy = async (id: string) => {
 const updateStrategy = async (id: string, strategy: Strategy) => {
     const existingStrategy = await getStrategy(id);
     const updated = { ...existingStrategy.data, ...strategy };
-    return await strategyStore.update(id, updated);
+    return await strategyService.update(id, updated);
 };
 
 const deleteStrategy = async (id: string) => {
-    const deleted = await strategyStore.delete(id);
+    const deleted = await strategyService.delete(id);
     if (!deleted) throw new NotFoundError('Strategy not found.');
     return deleted;
 };
 
 const findStrategies = async (query: Partial<Strategy>) => {
-    return await strategyStore.find(query);
+    return await strategyService.find(query);
 };
 
 export { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies, getPerformanceMetrics };
