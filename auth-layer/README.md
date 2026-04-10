@@ -92,3 +92,6 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## License
 This project is licensed under the MIT License.
+
+## Acknowledgments
+- Thanks to the contributors of this project for their valuable input and suggestions.
