@@ -33,6 +33,9 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
         await notifyPortfolioService(newPortfolio);
         return newPortfolio;
     } catch (error) {
+        if (error instanceof ValidationError) {
+            throw error;
+        }
         throw new ServiceError('Failed to create portfolio: ' + error.message);
     }
 };
@@ -51,6 +54,9 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
         await notifyPortfolioService(updatedPortfolio);
         return updatedPortfolio;
     } catch (error) {
+        if (error instanceof ValidationError) {
+            throw error;
+        }
         throw new ServiceError('Failed to update portfolio: ' + error.message);
     }
 };
