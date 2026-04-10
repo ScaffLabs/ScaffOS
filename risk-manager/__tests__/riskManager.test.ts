@@ -62,4 +62,12 @@ describe('RiskManager', () => {
         await riskManager.createRiskPosition('AAPL', 100);
         await expect(riskManager.createRiskPosition('AAPL', 60)).rejects.toThrow(ValidationError);
     });
+
+    it('should throw ValidationError for asset with invalid position (negative)', async () => {
+        await expect(riskManager.createRiskPosition('AAPL', -10)).rejects.toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError for asset with invalid position (non-numeric)', async () => {
+        await expect(riskManager.createRiskPosition('AAPL', 'invalid')).rejects.toThrow(ValidationError);
+    });
 });

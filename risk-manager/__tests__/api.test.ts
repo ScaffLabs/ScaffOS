@@ -80,17 +80,6 @@ describe('Risk Manager API', () => {
         expect(response.status).toBe(404);
     });
 
-    it('should handle internal server error gracefully', async () => {
-        jest.spyOn(app, 'get').mockImplementationOnce(() => {
-            throw new Error('Test error');
-        });
-        const response = await request(app)
-            .get('/api/risk')
-            .set('Authorization', validToken);
-        expect(response.status).toBe(500);
-        expect(response.body.error).toBe('Internal Server Error');
-    });
-
     it('should return 400 for empty request body', async () => {
         const response = await request(app)
             .post('/api/risk')
@@ -100,21 +89,14 @@ describe('Risk Manager API', () => {
         expect(response.body.errors).toBeDefined();
     });
 
-    it('should return 400 for invalid position (negative)', async () => {
+    it('should handle internal server error gracefully', async () => {
+        jest.spyOn(app, 'get').mockImplementationOnce(() => {
+            throw new Error('Test error');
+        });
         const response = await request(app)
-            .post('/api/risk')
-            .send({ asset: 'AAPL', position: -5 })
+            .get('/api/risk')
             .set('Authorization', validToken);
-        expect(response.status).toBe(400);
-        expect(response.body.errors).toBeDefined();
-    });
-
-    it('should return 400 for invalid position (non-numeric)', async () => {
-        const response = await request(app)
-            .post('/api/risk')
-            .send({ asset: 'AAPL', position: 'not-a-number' })
-            .set('Authorization', validToken);
-        expect(response.status).toBe(400);
-        expect(response.body.errors).toBeDefined();
+        expect(response.status).toBe(500);
+        expect(response.body.error).toBe('Internal Server Error');
     });
 });
