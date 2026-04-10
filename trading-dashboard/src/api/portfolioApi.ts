@@ -6,8 +6,12 @@ import { ServiceError, ValidationError, NotFoundError } from '../utils/errors';
 const positionStore = new InMemoryStore<Position>();
 
 export const fetchPositions = async (req: Request, res: Response) => {
-    const positions = Object.values(positionStore.data);
-    res.status(200).json(positions);
+    try {
+        const positions = Object.values(positionStore.data);
+        res.status(200).json(positions);
+    } catch (error) {
+        throw new ServiceError('Error fetching positions: ' + error.message);
+    }
 };
 
 export const createPosition = async (req: Request, res: Response) => {
