@@ -3,7 +3,7 @@ import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import csrf from 'csurf';
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 
@@ -19,7 +19,7 @@ router.use(csrfProtection);
 
 // Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100
 });
 router.use(limiter);
@@ -39,6 +39,19 @@ const portfolioValidation = [
         return true;
     })
 ];
+
+// GET all portfolios with pagination
+router.get('/', async (req, res) => {
+    const { limit = 10, offset = 0 } = req.query;
+    try {
+        const portfolios = await fetchAllData();
+        const paginatedPortfolios = portfolios.slice(Number(offset), Number(offset) + Number(limit));
+        res.status(200).json(paginatedPortfolios);
+    } catch (error) {
+        logger.error('Error fetching portfolios', { error: error.message });
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 router.post('/', portfolioValidation, async (req, res) => {
     const errors = validationResult(req);
