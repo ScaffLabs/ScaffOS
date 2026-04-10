@@ -21,11 +21,7 @@ export const logRequest = (req: Request, res: Response, next: NextFunction) => {
     res.on('finish', () => {
         const duration = Date.now() - start;
         const requestId = req.headers['x-request-id'];
-        if (res.statusCode >= 400) {
-            logger.error(`Request: ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms`, { requestId });
-        } else {
-            logger.info(`Request: ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms`, { requestId });
-        }
+        logger.info(`Request: ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms`, { requestId });
     });
     next();
 };
