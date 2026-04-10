@@ -20,7 +20,8 @@ export const logRequest = (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        const requestId = req.headers['x-request-id'];
+        const requestId = req.headers['x-request-id'] || crypto.randomUUID();
+        req.headers['x-request-id'] = requestId;
         logger.info(`Request: ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms`, { requestId });
     });
     next();

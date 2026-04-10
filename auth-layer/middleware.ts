@@ -21,7 +21,8 @@ export const logRequestMiddleware = (req: Request, res: Response, next: NextFunc
 };
 
 export const errorHandlingMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    logger.error(`Error occurred: ${err.message}`, { requestId: req.headers['x-request-id'], stack: err.stack });
+    const requestId = req.headers['x-request-id'];
+    logger.error(`Error occurred: ${err.message}`, { requestId, stack: err.stack });
     if (err instanceof ValidationError) {
         return res.status(400).json({ error: err.message, details: err.errors });
     }
