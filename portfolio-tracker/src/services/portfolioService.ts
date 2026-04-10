@@ -25,7 +25,16 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
     const newPortfolio = storage.create(portfolioData);
     const duration = process.hrtime(start);
     logger.info('Created portfolio', { portfolioId: newPortfolio.id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
+    await notifyExternalService(newPortfolio);
     return newPortfolio;
+};
+
+const notifyExternalService = async (portfolio: Portfolio) => {
+    try {
+        await breaker.run(() => axios.post(`${externalPortfolioServiceUrl}/notify`, portfolio));
+    } catch (error) {
+        logger.error('Failed to notify external service', { error: error.message });
+    }
 };
 
 export const getPortfolio = async (id: string): Promise<Portfolio> => {
@@ -38,6 +47,7 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
     const existingPortfolio = storage.read(id);
     if (!existingPortfolio) throw new NotFoundError('Portfolio not found');
     const updatedPortfolio = storage.update(id, updates);
+    await notifyExternalService(updatedPortfolio);
     return updatedPortfolio;
 };
 
@@ -50,19 +60,12 @@ export const fetchAllData = async (): Promise<Portfolio[]> => {
     return storage.getAll();
 };
 
-export const checkExternalService = async (): Promise<boolean> => {
-    return breaker.run(async () => {
-        const response = await axios.get(`${externalPortfolioServiceUrl}/health`);
-        return response.data.status === 'UP';
-    });
-};
-
 export const healthCheck = async (): Promise<{status: string, portfolioService: boolean}> => {
     try {
         const isHealthy = await checkExternalService();
         return { status: 'UP', portfolioService: isHealthy };
     } catch (error) {
-        logger.error('External service is down', { error: error.message });
+        logger.error('Health check failed', { error: error.message });
         return { status: 'DOWN', portfolioService: false };
     }
 };
