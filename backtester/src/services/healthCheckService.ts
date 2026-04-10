@@ -53,3 +53,13 @@ export async function healthCheckController(req, res) {
     res.status(500).json({ status: 'unhealthy', error: error.message });
   }
 }
+
+// Health check endpoint for /health
+export const healthCheckRouter = Router();
+healthCheckRouter.get('/', healthCheckController);
+
+// Readiness endpoint for /ready
+healthCheckRouter.get('/ready', async (req, res) => {
+  const readiness = await checkReadiness();
+  res.status(readiness.healthy ? 200 : 503).json(readiness);
+});
