@@ -2,10 +2,15 @@ import { Request, Response } from 'express';
 import { ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
 import InMemoryStore from './dataStore';
-import { LatencyData, DashboardEntry, DashboardEntrySchema } from './types';
+import { DashboardEntry, DashboardEntrySchema } from './types';
 
 const store = new InMemoryStore<DashboardEntry>();
 
+/**
+ * Lists all dashboard entries.
+ * @param req - Express request object
+ * @param res - Express response object
+ */
 export const listDashboardEntries = async (req: Request, res: Response): Promise<void> => {
     try {
         const entries = store.getAll();
@@ -19,6 +24,11 @@ export const listDashboardEntries = async (req: Request, res: Response): Promise
     }
 };
 
+/**
+ * Creates a new dashboard entry.
+ * @param req - Express request object containing the entry data
+ * @param res - Express response object
+ */
 export const createDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const bodyValidation = DashboardEntrySchema.safeParse(req.body);
@@ -38,6 +48,11 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
     }
 };
 
+/**
+ * Updates an existing dashboard entry.
+ * @param req - Express request object containing the entry ID and update data
+ * @param res - Express response object
+ */
 export const updateDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -62,6 +77,11 @@ export const updateDashboardEntry = async (req: Request, res: Response): Promise
     }
 };
 
+/**
+ * Deletes a dashboard entry.
+ * @param req - Express request object containing the entry ID
+ * @param res - Express response object
+ */
 export const deleteDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
