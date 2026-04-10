@@ -70,4 +70,9 @@ describe('RiskManager', () => {
     it('should throw ValidationError for asset with invalid position (non-numeric)', async () => {
         await expect(riskManager.createRiskPosition('AAPL', 'invalid')).rejects.toThrow(ValidationError);
     });
+
+    it('should throw ValidationError for asset that already exists', async () => {
+        await riskManager.createRiskPosition(mockPosition.asset, 50);
+        await expect(riskManager.createRiskPosition(mockPosition.asset, 60)).rejects.toThrow(ValidationError);
+    });
 });

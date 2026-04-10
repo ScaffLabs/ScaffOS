@@ -99,4 +99,12 @@ describe('Risk Manager API', () => {
         expect(response.status).toBe(500);
         expect(response.body.error).toBe('Internal Server Error');
     });
+
+    it('should handle token verification error', async () => {
+        const response = await request(app)
+            .get('/api/risk')
+            .set('Authorization', 'Bearer invalid_token');
+        expect(response.status).toBe(403);
+        expect(response.text).toBe('Forbidden');
+    });
 });
