@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { createConnectionPool, serviceEmitter } from './connectionPool';
+import { createConnectionPool } from './connectionPool';
 import logger from './logger';
 import config from './config';
 
@@ -30,7 +29,7 @@ export const checkServiceHealth = async () => {
 export const emitHealthCheckEvent = async () => {
     const healthStatus = await checkServiceHealth();
     const event = { type: 'SERVICE_HEALTH_CHECK', status: healthStatus };
-    serviceEmitter.emit('healthCheck', event);
+    connectionPool.serviceEmitter.emit('healthCheck', event);
 };
 
 export const healthCheck = async (req, res) => {

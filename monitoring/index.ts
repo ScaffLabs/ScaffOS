@@ -26,7 +26,7 @@ app.use(generalLimiter);
 app.use(apiKeyLimiter);
 app.use(sanitize);
 
-// Health check endpoints
+// Health check endpoint
 app.get('/health', healthCheck);
 app.use(errorMiddleware);
 
