@@ -45,4 +45,4 @@ export interface ErrorResponse {
     code?: number;
 }
 
-export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError;
+export type AppError = ServiceError | ValidationError | NotFoundError | OverflowError | DivisionByZeroError; 
