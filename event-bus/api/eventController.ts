@@ -3,7 +3,6 @@ import { StorageManager } from '../storage/storageManager';
 import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../types';
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
-import { ServiceError } from '../errors/serviceError';
 import logger from '../logger';
 
 const storageManager = new StorageManager<Event>('memory');
@@ -31,6 +30,7 @@ const getEvents = async (req: Request, res: Response): Promise<void> => {
         if (!events.length) {
             throw new NotFoundError('No events found');
         }
+        logger.info(`Fetched events: ${events.length}`, { reqId: req.headers['x-request-id'] || 'unknown' });
         res.json(events);
     } catch (error) {
         handleError(error, res, req.headers['x-request-id'] || 'unknown');
@@ -77,8 +77,6 @@ const handleError = (error: Error, res: Response, reqId: string) => {
         res.status(400).json({ message: error.message });
     } else if (error instanceof NotFoundError) {
         res.status(404).json({ message: error.message });
-    } else if (error instanceof ServiceError) {
-        res.status(500).json({ message: error.message });
     } else {
         res.status(500).json({ message: 'Internal Server Error' });
     }
