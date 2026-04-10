@@ -1,4 +1,4 @@
-import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema } from './types';
+import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema, PriceEventSchema } from './types';
 import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
@@ -35,13 +35,13 @@ export class PriceAggregator {
         }
     }
 
-    private async retryPostHttpClient(path: string, data: any, retries: number = 3): Promise<void> {
-        for (let i = 0; i < retries; i++) {
+    private async retryPostHttpClient(path: string, data: PriceData): Promise<void> {
+        for (let i = 0; i < 3; i++) {
             try {
                 await postHttpClient(path, data);
                 return;
             } catch (error) {
-                if (i === retries - 1) {
+                if (i === 2) {
                     throw new ServiceError('Failed to post data after retries: ' + error.message);
                 }
             }
