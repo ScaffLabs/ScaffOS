@@ -1,7 +1,7 @@
 import express from 'express';
 import http from 'http';
 import helmet from 'helmet';
-import logger from './services/logger';
+import logger, { requestLogger, errorLogger } from './services/logger';
 import healthRoutes from './routes/healthRoutes';
 import portfolioRoutes from './routes/portfolioRoutes';
 import env from './config';
@@ -11,8 +11,10 @@ const server = http.createServer(app);
 
 app.use(helmet()); // Protects against well-known vulnerabilities by setting HTTP headers
 app.use(express.json());
+app.use(requestLogger); // Use the request logger middleware
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api', healthRoutes);
+app.use(errorLogger); // Use the error logger middleware
 
 const shutdown = (signal) => {
     logger.info(`Received ${signal}. Shutting down gracefully...`);
