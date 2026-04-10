@@ -24,9 +24,15 @@ const createEvent = async (req: Request, res: Response): Promise<void> => {
 };
 
 const getEvents = async (req: Request, res: Response): Promise<void> => {
-    const { limit = 10, offset = 0 }: GetEventsQuery = req.query;
+    const { limit = 10, offset = 0, sortBy, order }: GetEventsQuery = req.query;
     try {
-        const events = await storage.findAll(limit, offset);
+        let events = await storage.findAll(limit, offset);
+        if (sortBy) {
+            events = events.sort((a, b) => {
+                const isAsc = order === 'asc';
+                return isAsc ? (a[sortBy] > b[sortBy] ? 1 : -1) : (a[sortBy] < b[sortBy] ? 1 : -1);
+            });
+        }
         if (!events.length) {
             throw new NotFoundError('No events found');
         }
