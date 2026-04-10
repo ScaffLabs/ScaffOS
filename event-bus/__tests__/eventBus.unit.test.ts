@@ -80,4 +80,12 @@ describe('EventBus', () => {
         expect(publishMock).toHaveBeenCalledTimes(2);
         publishMock.mockRestore();
     });
+
+    test('should handle publishing with invalid topic', async () => {
+        await expect(eventBus.publish('', testData)).rejects.toThrow('Invalid topic');
+    });
+
+    test('should handle publishing with missing data', async () => {
+        await expect(eventBus.publish(testTopic, null)).rejects.toThrow('Invalid data');
+    });
 });
