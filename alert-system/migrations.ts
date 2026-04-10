@@ -19,4 +19,13 @@ export class MigrationUtil {
             await store.update(alert.id, { ...alert, migrated: true });
         }
     }
+
+    static async migrateData(store: AlertStoreInterface) {
+        const allAlerts = await store.findIndex({});
+        const operations = allAlerts.map(alert => async () => {
+            // Example migration logic to add a new field
+            await store.update(alert.id, { newField: 'defaultValue' });
+        });
+        await store.transaction(operations);
+    }
 }

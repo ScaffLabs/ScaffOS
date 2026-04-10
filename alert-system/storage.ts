@@ -18,6 +18,7 @@ export interface AlertStoreInterface {
     delete(id: OrderId): Promise<boolean>;
     findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]>;
     deleteAll(): Promise<void>;
+    transaction(operations: Array<() => Promise<void>>): Promise<void>;
 }
 
 class MongoAlertStore implements AlertStoreInterface {
@@ -46,6 +47,22 @@ class MongoAlertStore implements AlertStoreInterface {
 
     async deleteAll(): Promise<void> {
         await AlertModel.deleteMany({});
+    }
+
+    async transaction(operations: Array<() => Promise<void>>): Promise<void> {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            for (const operation of operations) {
+                await operation();
+            }
+            await session.commitTransaction();
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
+        }
     }
 }
 
