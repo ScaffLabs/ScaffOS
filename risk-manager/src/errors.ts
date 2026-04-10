@@ -21,13 +21,6 @@ class NotFoundError extends Error {
     }
 }
 
-/**
- * Custom error handler middleware for handling different error types.
- * @param {Error} err - The error object.
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
- */
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
     if (err instanceof ValidationError) {
@@ -40,4 +33,4 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     return res.status(500).json({ error: 'Internal Server Error' });
 };
 
-export { ServiceError, ValidationError, NotFoundError, errorHandler }; 
+export { ServiceError, ValidationError, NotFoundError, errorHandler };
