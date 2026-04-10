@@ -24,6 +24,7 @@ const requestLogger = (req, res, next) => {
     path: req.path,
     requestId,
   });
+
   res.on('finish', () => {
     const duration = Date.now() - req.startTime;
     logger.info({
@@ -67,4 +68,13 @@ const logDatabasePerformance = (operation, duration, requestId) => {
   });
 };
 
-export { logger, requestLogger, logError, logPerformance, logStartup, logDatabasePerformance };
+const logRequestDetails = (req) => {
+  logger.info({
+    message: 'Request details',
+    requestId: req.headers['x-request-id'] || 'N/A',
+    body: req.body,
+    params: req.params,
+  });
+};
+
+export { logger, requestLogger, logError, logPerformance, logStartup, logDatabasePerformance, logRequestDetails };
