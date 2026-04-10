@@ -4,9 +4,21 @@ import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
 import { CircuitBreaker } from 'opossum';
 
+const axiosInstance = axios.create({
+    baseURL: config.API_URL,
+});
+
+const circuitBreakerOptions = {
+    timeout: 3000, // If the service takes longer than 3 seconds, it will be considered failed
+    errorThresholdPercentage: 50, // If 50% of requests fail, the circuit will trip
+    resetTimeout: 10000, // After 10 seconds, it will try again
+};
+
+const circuitBreaker = new CircuitBreaker(axiosInstance, circuitBreakerOptions);
+
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
-        const response = await axios.get(`${config.API_URL}/config`);
+        const response = await circuitBreaker.fire('/config');
         if (!response.data || !Array.isArray(response.data)) {
             throw new ServiceError('Invalid response: Expected an array');
         }
@@ -18,7 +30,7 @@ const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
 
 const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
     try {
-        await axios.post(`${config.API_URL}/config`, configItem);
+        await circuitBreaker.fire('/config', { method: 'POST', data: configItem });
     } catch (error) {
         handleAxiosError(error, 'create configuration');
     }
@@ -26,7 +38,7 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
 
 const deleteConfiguration = async (key: string): Promise<void> => {
     try {
-        await axios.delete(`${config.API_URL}/config/${key}`);
+        await circuitBreaker.fire(`/config/${key}`, { method: 'DELETE' });
     } catch (error) {
         handleAxiosError(error, 'delete configuration');
     }
@@ -34,7 +46,7 @@ const deleteConfiguration = async (key: string): Promise<void> => {
 
 const fetchHealthStatus = async () => {
     try {
-        const response = await axios.get(`${config.API_URL}/health`);
+        const response = await circuitBreaker.fire('/health');
         return response.data;
     } catch (error) {
         handleAxiosError(error, 'fetch health status');

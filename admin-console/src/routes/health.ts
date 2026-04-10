@@ -5,17 +5,6 @@ import { ServiceError } from '../errors/CustomErrors';
 
 const router = express.Router();
 
-/**
- * @swagger
- * /api/health:
- *   get:
- *     summary: Get health status of the application
- *     responses:
- *       200:
- *         description: Health check successful
- *       500:
- *         description: Health check failed
- */
 router.get('/', async (req, res) => {
     try {
         const status = await fetchHealthStatus();
@@ -30,17 +19,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/health/ready:
- *   get:
- *     summary: Check if the application is ready
- *     responses:
- *       200:
- *         description: Application is ready
- *       500:
- *         description: Application is not ready
- */
 router.get('/ready', async (req, res) => {
     try {
         const health = await fetchHealthStatus();
@@ -53,6 +31,17 @@ router.get('/ready', async (req, res) => {
     } catch (error) {
         logger.error(`Readiness check failed: ${error.message}`);
         res.status(500).json({ error: 'Readiness check failed: ' + error.message });
+    }
+});
+
+router.get('/live', async (req, res) => {
+    try {
+        // Check if the service is alive
+        const health = await fetchHealthStatus();
+        res.status(200).json({ status: 'alive', health });
+    } catch (error) {
+        logger.error(`Live check failed: ${error.message}`);
+        res.status(500).json({ error: 'Live check failed: ' + error.message });
     }
 });
 
