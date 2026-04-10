@@ -80,7 +80,6 @@ export class InMemoryStore<T> implements Store<T> {
     }
 
     async runMigrations() {
-        // Placeholder for migration logic
         console.log('Running migrations...');
     }
 }
