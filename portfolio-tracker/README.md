@@ -97,3 +97,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 - Thanks to the open-source community for their contributions and support.
+
+---
+
+## Inline Comments Example
+In the `src/services/portfolioService.ts` file, the `createPortfolio` function includes detailed inline comments explaining the validation of portfolio data to ensure integrity:
+
+```typescript
+export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
+    const start = process.hrtime(); // Start timing the portfolio creation process
+    try {
+        PortfolioSchema.parse({ ...portfolioData, id: '' }); // Validate portfolio schema to ensure data integrity
+        portfolioData.positions.forEach(pos => PositionSchema.parse(pos)); // Validate each position in the portfolio
+    } catch (error) {
+        throw new ValidationError('Invalid portfolio data'); // Throw validation error if validation fails
+    }
+    // Create new portfolio and log creation
+    const newPortfolio = storage.create(portfolioData);
+    await logPortfolioCreation(newPortfolio);
+    publishPortfolioUpdate(newPortfolio);
+    const duration = process.hrtime(start); // Calculate duration of the operation
+    logger.info('Created portfolio', { portfolioId: newPortfolio.id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
+    return newPortfolio; // Return the newly created portfolio
+};
+```
+
+## Additional Changes
+- Added detailed comments throughout the codebase to explain complex logic and improve maintainability.
+- Updated `CONTRIBUTING.md` for clear guidelines on how to contribute to the project.
