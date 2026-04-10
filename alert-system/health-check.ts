@@ -27,4 +27,4 @@ export class HealthCheck {
         const services = await this.checkExternalServices(['WEBHOOK', 'EMAIL']);
         return res.json({ ready: services.WEBHOOK && services.EMAIL });
     }
-} 
+}
