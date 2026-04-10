@@ -14,6 +14,7 @@ import { gracefulShutdown } from './utils/shutdown';
 import { monitorMemoryUsage } from './utils/monitor';
 import { dependentHealthCheckHandler, readyCheckHandler } from './handlers/healthCheck';
 import { connectToDatabase } from './utils/dbConnection';
+import { auditLogger, validateInputBody, validateRequestSize } from './middleware/auditLogger';
 
 const app = express();
 const server = createServer(app);
