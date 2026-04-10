@@ -10,6 +10,8 @@ const envSchema = Joi.object({
     DATA_SERVICE_URL: Joi.string().uri().required(),
     DATABASE_URL: Joi.string().required(),
     LOG_LEVEL: Joi.string().valid('info', 'warn', 'error').default('info'),
+    API_KEY: Joi.string().required(),
+    SECRET_KEY: Joi.string().required(),
 }).unknown();
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -25,4 +27,6 @@ export const config = {
     dataServiceUrl: envVars.DATA_SERVICE_URL,
     databaseUrl: envVars.DATABASE_URL,
     logLevel: envVars.LOG_LEVEL,
+    apiKey: envVars.API_KEY,
+    secretKey: envVars.SECRET_KEY,
 };
