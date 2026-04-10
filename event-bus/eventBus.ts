@@ -12,47 +12,37 @@ class EventBus {
     }
 
     public subscribe<T>(topic: string, listener: (message: Message<T>) => void): void {
-        this.emitter.on(topic, listener);
-        this.subscriptions[topic] = this.subscriptions[topic] || [];
+        if (!this.subscriptions[topic]) {
+            this.subscriptions[topic] = [];
+        }
         this.subscriptions[topic].push(listener);
+        this.emitter.on(topic, listener);
+        logger.info(`Subscribed to topic: ${topic}`);
+    }
+
+    public unsubscribe<T>(topic: string, listener: (message: Message<T>) => void): void {
+        if (this.subscriptions[topic]) {
+            this.subscriptions[topic] = this.subscriptions[topic].filter(l => l !== listener);
+        }
+        this.emitter.off(topic, listener);
+        logger.info(`Unsubscribed from topic: ${topic}`);
     }
 
     public publish<T>(topic: string, data: T): void {
         if (!this.subscriptions[topic] || this.subscriptions[topic].length === 0) {
             logger.warn(`No subscribers for topic: ${topic}`);
+            return;
         }
         const message: Message<T> = { topic, data, timestamp: Date.now() };
         this.emitter.emit(topic, message);
-    }
-
-    public unsubscribe<T>(topic: string, listener: (message: Message<T>) => void): void {
-        this.emitter.off(topic, listener);
-        if (this.subscriptions[topic]) {
-            this.subscriptions[topic] = this.subscriptions[topic].filter(l => l !== listener);
-        }
+        logger.info(`Published message to topic: ${topic}`);
     }
 
     public clearSubscriptions(topic: string): void {
         if (this.subscriptions[topic]) {
-            this.subscriptions[topic].forEach(listener => {
-                this.emitter.off(topic, listener);
-            });
+            this.subscriptions[topic].forEach(listener => this.emitter.off(topic, listener));
             delete this.subscriptions[topic];
-        }
-    }
-
-    public async publishWithRetry<T>(topic: string, data: T, retries = 3): Promise<void> {
-        const message: Message<T> = { topic, data, timestamp: Date.now() };
-        while (retries > 0) {
-            try {
-                this.publish(topic, data);
-                return;
-            } catch (error) {
-                retries--;
-                logger.error(`Publish failed, retrying... ${error}`);
-                await new Promise(res => setTimeout(res, 1000)); // wait before retrying
-                if (retries === 0) throw error;
-            }
+            logger.info(`Cleared subscriptions for topic: ${topic}`);
         }
     }
 }
