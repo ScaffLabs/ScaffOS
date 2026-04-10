@@ -1,5 +1,5 @@
 import { ValidationError } from './errorClasses';
-import { LatencyData } from './types';
+import { DashboardEntry } from './types';
 
 interface Entity<T> {
     id: string;
@@ -39,48 +39,8 @@ class InMemoryStore<T> {
         return Array.from(this.storage.values());
     }
 
-    public indexBy<K extends keyof T>(key: K): Map<T[K], Entity<T>[]> {
-        const index = new Map<T[K], Entity<T>[]>();
-        for (const entity of this.storage.values()) {
-            const indexedKey = entity.data[key];
-            if (!index.has(indexedKey)) {
-                index.set(indexedKey, []);
-            }
-            index.get(indexedKey)?.push(entity);
-        }
-        return index;
-    }
-
-    public transaction(operations: (store: InMemoryStore<T>) => void): void {
-        const snapshot = new Map(this.storage);
-        try {
-            operations(this);
-        } catch (error) {
-            this.storage = snapshot; // Rollback on error
-            throw error;
-        }
-    }
-
-    public clearData(): void {
-        this.storage.clear();
-    }
-
-    public migrateData(targetStore: InMemoryStore<T>): void {
-        for (const [id, entity] of this.storage.entries()) {
-            targetStore.create(entity.data, id);
-        }
-    }
-
-    public findBy<K extends keyof T>(key: K, value: T[K]): Entity<T>[] {
-        return Array.from(this.storage.values()).filter(entity => entity.data[key] === value);
-    }
-
     public clear(): void {
         this.storage.clear();
-    }
-
-    public getLength(): number {
-        return this.storage.size;
     }
 }
 
