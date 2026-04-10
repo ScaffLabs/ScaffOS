@@ -17,7 +17,7 @@ class InMemoryStorage extends Storage {
     private idCounter: number = 1;
 
     public create(portfolioData: Omit<Portfolio, 'id'>): Portfolio {
-        const newPortfolio: Portfolio = { id: String(this.idCounter++), ...portfolioData };
+        const newPortfolio: Portfolio = { id: String(this.idCounter++), ...portfolioData, positions: portfolioData.positions.map(pos => ({ ...pos, id: String(this.idCounter++) })) };
         this.portfolios.push(newPortfolio);
         return newPortfolio;
     }
@@ -32,12 +32,11 @@ class InMemoryStorage extends Storage {
         if (data.name) portfolio.name = data.name;
         if (data.positions) {
             data.positions.forEach(pos => {
-                // Validate position data
                 if (!pos.symbol || pos.quantity < 0 || pos.averagePrice < 0) {
                     throw new Error('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
                 }
             });
-            portfolio.positions = data.positions;
+            portfolio.positions = data.positions.map(pos => ({ ...pos, id: String(this.idCounter++) }));
         }
         return portfolio;
     }
