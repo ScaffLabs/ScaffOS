@@ -2,10 +2,15 @@ import { Request, Response } from 'express';
 import { ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
 import InMemoryStore from './dataStore';
-import { LatencyData, LatencyDataSchema } from './types';
+import { LatencyData, LatencyDataSchema, DashboardEntry, DashboardEntrySchema } from './types';
 
 const store = new InMemoryStore<LatencyData>();
 
+/**
+ * List all dashboard entries.
+ * @param req - Express request object
+ * @param res - Express response object
+ */
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
         const entries = store.getAll();
@@ -19,17 +24,22 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Create a new dashboard entry.
+ * @param req - Express request object with body { id: string, value: number }
+ * @param res - Express response object
+ */
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
-        const bodyValidation = LatencyDataSchema.safeParse(req.body);
+        const bodyValidation = DashboardEntrySchema.safeParse(req.body);
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data: ' + bodyValidation.error.errors.map(e => e.message).join(', '));
         }
-        const { path, duration } = bodyValidation.data;
+        const { id, data } = bodyValidation.data;
         const timestamp = new Date();
-        store.create({ path, duration, timestamp }, path);
-        logger.info(`Created new entry: ${path}`);
-        res.status(201).json({ message: 'Entry created', id: path });
+        store.create({ ...data, timestamp }, id);
+        logger.info(`Created new entry: ${id}`);
+        res.status(201).json({ message: 'Entry created', id });
     } catch (error) {
         logger.error(error, req);
         if (error instanceof ValidationError) {
@@ -39,6 +49,11 @@ export const createDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Update an existing dashboard entry.
+ * @param req - Express request object with params { id: string } and body { value: number }
+ * @param res - Express response object
+ */
 export const updateDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -63,6 +78,11 @@ export const updateDashboardEntry = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Delete a dashboard entry.
+ * @param req - Express request object with params { id: string }
+ * @param res - Express response object
+ */
 export const deleteDashboardEntry = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
