@@ -47,6 +47,9 @@ export class AlertController {
         const start = Date.now();
         try {
             const alertData = validateCreateAlertRequest(req.body);
+            if (alertData.threshold < 0 || alertData.currentValue < 0) {
+                throw new ValidationError('Threshold and current value must be non-negative.');
+            }
             const createdAlert = await this.alertStore.create(alertData);
             this.eventBus.publish('alert.created', createdAlert);
             await this.notifyExternalServices(createdAlert);
@@ -110,4 +113,4 @@ export class AlertController {
             logRequest(req, res, start);
         }
     }
-}
+} 
