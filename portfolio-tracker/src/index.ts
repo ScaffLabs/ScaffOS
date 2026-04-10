@@ -5,27 +5,32 @@ import logger, { requestLogger, errorLogger } from './services/logger';
 import healthRoutes from './routes/healthRoutes';
 import portfolioRoutes from './routes/portfolioRoutes';
 import env from './config';
+import { createConnectionPool } from './services/connectionPool';
 
 const app = express();
 const server = http.createServer(app);
 
-app.use(helmet()); // Protects against well-known vulnerabilities by setting HTTP headers
+app.use(helmet());
 app.use(express.json());
-app.use(requestLogger); // Use the request logger middleware
+app.use(requestLogger);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api', healthRoutes);
-app.use(errorLogger); // Use the error logger middleware
+app.use(errorLogger);
+
+const pool = createConnectionPool();
 
 const shutdown = (signal) => {
     logger.info(`Received ${signal}. Shutting down gracefully...`);
-    server.close(() => {
-        logger.info('Closed out remaining connections.');
-        process.exit(0);
+    pool.end(err => {
+        if (err) {
+            logger.error('Error closing database connections', { error: err.message });
+            process.exit(1);
+        }
+        server.close(() => {
+            logger.info('Closed out remaining connections.');
+            process.exit(0);
+        });
     });
-    setTimeout(() => {
-        logger.error('Could not close connections in time, forcefully shutting down');
-        process.exit(1);
-    }, 10000);
 };
 
 process.on('SIGTERM', shutdown);
