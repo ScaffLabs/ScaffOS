@@ -10,6 +10,7 @@ export const fetchChartData = async () => {
         validateChartData(result);
         return result;
     } catch (error) {
+        console.error('Error fetching chart data:', error);
         throw new ServiceError('Error fetching chart data: ' + error.message);
     }
 };
@@ -33,6 +34,7 @@ export const addChartData = async (date: string, price: number) => {
         const sql = 'INSERT INTO chart_data (date, price) VALUES (?, ?)';
         await query(sql, [date, price]);
     } catch (error) {
+        console.error('Error adding chart data:', error);
         throw new ServiceError('Error adding chart data: ' + error.message);
     }
 };
@@ -45,6 +47,7 @@ export const deleteChartData = async (date: string) => {
         const sql = 'DELETE FROM chart_data WHERE date = ?';
         await query(sql, [date]);
     } catch (error) {
+        console.error('Error deleting chart data:', error);
         throw new ServiceError('Error deleting chart data: ' + error.message);
     }
 };
