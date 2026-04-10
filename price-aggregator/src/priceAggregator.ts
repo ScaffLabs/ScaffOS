@@ -11,6 +11,13 @@ export class PriceAggregator {
         this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
     }
 
+    /**
+     * Adds a new price entry to the aggregator.
+     * @param priceData - The price data to be added.
+     * @returns The added PriceData.
+     * @throws ValidationError if the priceData is invalid.
+     * @throws ServiceError if the storage operation fails.
+     */
     public async addPrice(priceData: PriceData): Promise<PriceData> {
         const parsedData = PriceDataSchema.safeParse(priceData);
         if (!parsedData.success) {
@@ -29,6 +36,11 @@ export class PriceAggregator {
         }
     }
 
+    /**
+     * Retrieves current prices based on optional filters and pagination.
+     * @param options - Options for limit, offset, sort, and exchange filtering.
+     * @returns A list of current prices.
+     */
     public async getCurrentPrices({ limit = 10, offset = 0, sort = 'asc', exchange }: { limit?: number; offset?: number; sort?: 'asc' | 'desc'; exchange?: string }): Promise<CurrentPrices[]> {
         const pricesData = await storage.findAll();
         let filteredPrices = pricesData;
@@ -41,14 +53,11 @@ export class PriceAggregator {
         return filteredPrices.slice(offset, offset + limit);
     }
 
-    public async updatePrice(id: string, priceData: PriceData): Promise<PriceData | null> {
-        const existingPrice = await storage.read(id);
-        if (!existingPrice) return null;
-        const updatedPrice = { ...existingPrice, ...priceData };
-        await storage.update(id, updatedPrice);
-        return updatedPrice;
-    }
-
+    /**
+     * Deletes a price entry by ID.
+     * @param id - The ID of the price to be deleted.
+     * @throws ServiceError if the deletion fails.
+     */
     public async deletePrice(id: string): Promise<void> {
         await storage.delete(id);
     }
