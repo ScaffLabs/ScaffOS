@@ -46,3 +46,11 @@ export const checkServiceHealth = async () => {
         return false;
     }
 };
+
+export const enhancedCheckServiceHealth = async () => {
+    const healthChecks = await Promise.all([
+        checkServiceHealth(),
+        fetchUserServiceWithRetry('some-user-id') // Example userId, to check connectivity
+    ]);
+    return healthChecks.every(status => status);
+};

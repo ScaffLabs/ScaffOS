@@ -2,6 +2,7 @@ import redisClient from './redisClient';
 import axios from 'axios';
 import { config } from './config';
 import logger from './logger';
+import { enhancedCheckServiceHealth } from './eventService';
 
 const checkHealth = async () => {
     let redisHealthy = false;
@@ -16,8 +17,7 @@ const checkHealth = async () => {
     }
 
     try {
-        const response = await axios.get(`${config.OTHER_SERVICE_URL}/health`);
-        serviceHealthy = response.status === 200;
+        serviceHealthy = await enhancedCheckServiceHealth();
         logger.info('Other service is healthy');
     } catch (error) {
         logger.error('Other service connection failed', error);
