@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.0] - 2023-11-15
+## [1.3.0] - 2023-11-15
 ### Added
 - Comprehensive documentation in README.md including detailed setup instructions, API reference, and environment variables.
 - Inline comments throughout the codebase explaining complex logic for clarity.
@@ -11,6 +11,14 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Updated API responses to include more detailed error messages.
 - Minor formatting improvements in README.md for better readability.
+
+## [1.2.0] - 2023-11-15
+### Added
+- Performance monitoring metrics for better service health insights.
+- Documentation for new performance monitoring features in README.md.
+
+### Changed
+- Updated API responses to include more detailed error messages.
 
 ## [1.1.0] - 2023-11-01
 ### Added
