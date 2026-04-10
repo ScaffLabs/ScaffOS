@@ -7,9 +7,7 @@ class InMemoryStore<T> {
     }
 
     async read(id: string): Promise<T | undefined> {
-        const item = this.data.get(id);
-        if (!item) throw new Error('Item not found');
-        return item;
+        return this.data.get(id);
     }
 
     async update(id: string, item: T): Promise<void> {
@@ -27,6 +25,16 @@ class InMemoryStore<T> {
 
     async clear() {
         this.data.clear();
+    }
+
+    async transaction(operations: () => Promise<void>): Promise<void> {
+        const previousState = new Map(this.data);
+        try {
+            await operations();
+        } catch (error) {
+            this.data = previousState; // Rollback on error
+            throw error;
+        }
     }
 }
 

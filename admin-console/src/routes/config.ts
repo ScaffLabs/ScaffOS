@@ -10,13 +10,11 @@ import { sanitizeQueryParams } from '../middleware/sanitization';
 const router = express.Router();
 const db = new Database();
 
-// Middleware to log requests, sanitize query params, & rate limit
 router.use(logRequest);
 router.use(sanitizeQueryParams);
 router.use(rateLimiter);
 router.use(logAudit);
 
-// Create Configuration
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
@@ -31,7 +29,6 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Get All Configurations
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const allConfigs = await db.findAllConfigurations();
@@ -41,7 +38,6 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Get Configuration by Key
 router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const config = await db.readConfiguration(req.params.key);
@@ -54,7 +50,6 @@ router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Update Configuration
 router.put('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
@@ -66,7 +61,6 @@ router.put('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Delete Configuration
 router.delete('/:key', async (req: Request, res: Response, next: NextFunction) => {
     try {
         await db.deleteConfiguration(req.params.key);
