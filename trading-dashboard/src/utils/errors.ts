@@ -41,3 +41,21 @@ class CustomError extends Error {
 }
 
 export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, CustomError };
+
+// New Custom Error Classes
+class InvalidInputError extends ValidationError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'InvalidInputError';
+    }
+}
+
+class DatabaseConnectionError extends ServiceError {
+    constructor() {
+        super('Failed to connect to the database.');
+        this.name = 'DatabaseConnectionError';
+    }
+}
+
+// Export new error classes
+export { InvalidInputError, DatabaseConnectionError };

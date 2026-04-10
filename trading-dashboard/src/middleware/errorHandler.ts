@@ -24,4 +24,12 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     return res.status(500).json({ message: 'Internal Server Error' });
 };
 
+const gracefulShutdownHandler = (req: Request, res: Response, next: NextFunction) => {
+    res.on('finish', () => {
+        logger.info('Graceful shutdown in progress...');
+    });
+    next();
+};
+
 export default errorHandler;
+export { gracefulShutdownHandler };

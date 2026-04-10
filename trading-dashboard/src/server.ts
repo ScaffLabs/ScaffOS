@@ -1,6 +1,6 @@
 import express from 'express';
 import { applySecurityMiddlewares } from './middleware/securityMiddleware';
-import errorHandler from './middleware/errorHandler';
+import errorHandler, { gracefulShutdownHandler } from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
 import logger from './utils/logger';
@@ -18,6 +18,7 @@ applySecurityMiddlewares(app);
 registerRoutes(app);
 registerExternalApiRoutes(app);
 registerHealthRoutes(app);
+app.use(gracefulShutdownHandler);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
