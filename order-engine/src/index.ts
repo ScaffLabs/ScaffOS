@@ -11,6 +11,7 @@ import { config } from './config';
 import { runMigrations } from './migrations';
 import './memoryMonitor';
 import { sanitizeInput } from './sanitization';
+import { logRequest } from './logger';
 
 const app = express();
 const PORT = config.PORT;
@@ -20,6 +21,7 @@ app.use(helmet());
 app.use(cors({ origin: ['http://your-allowed-origin.com'], credentials: true }));
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(sanitizeInput);
+app.use(logRequest);
 
 // Rate Limiting
 const limiter = rateLimit({

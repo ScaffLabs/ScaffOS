@@ -12,9 +12,13 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     // Sanitize query parameters
     for (const key in req.query) {
         if (typeof req.query[key] === 'string') {
-            req.query[key] = req.query[key].replace(/<script.*?>.*?<\/script>/gi, '');
+            req.query[key] = req.query[key].replace(/<script.*?>.*?</script>/gi, '');
         }
     }
+
+    // Validate query parameters
+    query('limit').optional().isInt({ min: 1 }).toInt();
+    query('offset').optional().isInt({ min: 0 }).toInt();
 
     // Check for validation errors
     const errors = validationResult(req);

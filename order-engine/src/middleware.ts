@@ -1,57 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
-import { ValidationError, ServiceError, NotFoundError, AppError } from './errors';
-import logger from './logger';
+import helmet from 'helmet';
+import cors from 'cors';
 
-// Input Validation Middleware
-export const validateInput = (schema: any) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        const validationErrors = validationResult(req);
-        if (!validationErrors.isEmpty()) {
-            throw new ValidationError('Validation failed: ' + validationErrors.array().map(e => e.msg).join(', '));
+// CORS configuration
+const allowedOrigins = ['http://your-allowed-origin.com'];
+
+export const corsMiddleware = cors({
+    origin: function (origin, callback) {
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
         }
-        next();
-    };
-};
+    },
+    credentials: true,
+});
 
-// Error Handling Middleware
-export const errorHandlingMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    logger.logError(err, req);
-    if (err instanceof ValidationError) {
-        return res.status(400).json({ message: err.message });
-    }
-    if (err instanceof NotFoundError) {
-        return res.status(404).json({ message: err.message });
-    }
-    if (err instanceof AppError) {
-        return res.status(err.statusCode).json({ message: err.message });
-    }
-    res.status(500).json({ message: 'An unexpected error occurred.' });
-};
+// Use Helmet for security headers
+export const helmetMiddleware = helmet();
 
-// Graceful Shutdown Middleware
-export const setupGracefulShutdown = (app: any) => {
-    const shutdown = async () => {
-        console.log('Initiating graceful shutdown...');
-        try {
-            await closeDatabaseConnection();
-            console.log('Database connection closed.');
-        } catch (err) {
-            console.error('Error closing database connection:', err);
-        }
-        app.close(() => {
-            console.log('HTTP server closed. Exiting...');
-            process.exit(0);
-        });
-    };
-
-    process.on('SIGTERM', shutdown);
-    process.on('SIGINT', shutdown);
-    process.on('uncaughtException', (err) => {
-        logger.error('Uncaught Exception:', err);
-        shutdown();
-    });
-    process.on('unhandledRejection', (reason) => {
-        logger.error('Unhandled Rejection:', reason);
-        shutdown();
-    });
+// Combine middlewares
+export const applyMiddleware = (app: any) => {
+    app.use(helmetMiddleware);
+    app.use(corsMiddleware);
 };

@@ -16,6 +16,8 @@ const createOrderService = async (orderData: unknown) => {
         await postData(`${process.env.ORDER_SERVICE_URL}/orders`, createdOrder);
         await emitWithRetry({ type: 'ORDER_CREATED', payload: createdOrder });
         logger.info('Order created successfully', { order });
+        // Audit log
+        logger.info('Audit Log: Created Order', { order });
         return createdOrder;
     } catch (error) {
         logger.error('Failed to create order', { error: error.message });
@@ -36,23 +38,11 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
         await postData(`${process.env.ORDER_SERVICE_URL}/orders/${id}`, updatedOrder);
         await emitWithRetry({ type: 'ORDER_UPDATED', payload: updatedOrder });
         logger.info('Order updated successfully', { id, updates });
+        // Audit log
+        logger.info('Audit Log: Updated Order', { id, updates });
         return updatedOrder;
     } catch (error) {
         logger.error('Failed to update order', { error: error.message });
         throw new ServiceError('Failed to update order due to storage error: ' + error.message);
     }
 };
-
-const deleteOrderService = async (id: string) => {
-    try {
-        await storage.delete(id);
-        await postData(`${process.env.ORDER_SERVICE_URL}/orders/${id}`, {});
-        await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
-        logger.info('Order deleted successfully', { id });
-    } catch (error) {
-        logger.error('Failed to delete order', { error: error.message });
-        throw new NotFoundError('Order not found.');
-    }
-};
-
-export { createOrderService, updateOrderService, deleteOrderService };
