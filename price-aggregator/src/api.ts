@@ -77,4 +77,35 @@ router.post('/prices', validatePriceData, handleValidationErrors, async (req, re
     }
 });
 
+// Update price
+router.put('/prices/:exchange', validatePriceData, handleValidationErrors, async (req, res) => {
+    const priceData = req.body;
+    const { exchange } = req.params;
+    try {
+        const updatedPrice = await priceAggregator.updatePrice(exchange, priceData);
+        if (!updatedPrice) return res.status(404).json({ error: 'Price not found' });
+        res.status(200).json(updatedPrice);
+    } catch (error) {
+        console.error(error);
+        if (error instanceof ValidationError) {
+            res.status(400).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Error updating price' });
+        }
+    }
+});
+
+// Delete price
+router.delete('/prices/:exchange', async (req, res) => {
+    const { exchange } = req.params;
+    try {
+        const deleted = await priceAggregator.deletePrice(exchange);
+        if (!deleted) return res.status(404).json({ error: 'Price not found' });
+        res.status(204).send();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error deleting price' });
+    }
+});
+
 export default router;
