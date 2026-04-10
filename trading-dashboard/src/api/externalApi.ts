@@ -30,19 +30,3 @@ export const healthCheck = async (req, res) => {
 export const registerExternalApiRoutes = (app) => {
     app.get('/api/external/health', healthCheck);
 };
-
-export const fetchDataWithRetry = async (endpoint) => {
-    try {
-        return await fetchExternalData();
-    } catch (error) {
-        throw new ServiceError('Error fetching external data: ' + error.message);
-    }
-};
-
-export const fetchHealthStatus = async () => {
-    try {
-        return await fetchServiceHealth();
-    } catch (error) {
-        throw new ServiceError('Error fetching health status: ' + error.message);
-    }
-};
