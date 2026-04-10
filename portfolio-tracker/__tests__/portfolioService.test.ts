@@ -57,6 +57,6 @@ describe('Portfolio Service', () => {
 
     test('should throw an error for updating a portfolio with invalid position data', async () => {
         await createPortfolio(testPortfolio);
-        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: '', quantity: 10, averagePrice: 150 }] })).rejects.toThrow('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
+        await expect(updatePortfolio(existingPortfolioId, { positions: [{ symbol: \'\', quantity: 10, averagePrice: 150 }] })).rejects.toThrow('Invalid position data. Ensure symbol is provided and quantities are non-negative.');
     });
 });
