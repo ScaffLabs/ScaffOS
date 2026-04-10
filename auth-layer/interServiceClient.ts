@@ -67,16 +67,6 @@ export const checkOrderServiceHealth = async () => {
     }
 };
 
-export const fetchUserData = async (userId: string) => {
-    const userUrl = `${config.USER_SERVICE_URL}/users/${userId}`;
-    return await fetchWithRetry(userUrl);
-};
-
-export const fetchOrderData = async (orderId: string) => {
-    const orderUrl = `${config.ORDER_SERVICE_URL}/orders/${orderId}`;
-    return await fetchWithRetry(orderUrl);
-};
-
 export const checkServiceHealth = async () => {
     const userServiceHealthy = await checkUserServiceHealth();
     const orderServiceHealthy = await checkOrderServiceHealth();
