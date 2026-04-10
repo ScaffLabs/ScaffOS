@@ -15,14 +15,19 @@ const logger = winston.createLogger({
     ],
 });
 
+const generateRequestId = () => {
+    return 'req-' + Math.random().toString(36).substr(2, 9);
+};
+
 export const logRequest = (req, res, duration) => {
+    const requestId = req.headers['x-request-id'] || generateRequestId();
     logger.info({
         message: 'Request logged',
         method: req.method,
         path: req.path,
         status: res.statusCode,
         duration,
-        requestId: req.headers['x-request-id'] || generateRequestId(),
+        requestId,
     });
 };
 
@@ -47,10 +52,6 @@ export const logPerformance = (operation, metrics) => {
         message: `${operation} performance metrics`,
         metrics,
     });
-};
-
-const generateRequestId = () => {
-    return 'req-' + Math.random().toString(36).substr(2, 9);
 };
 
 export default logger;
