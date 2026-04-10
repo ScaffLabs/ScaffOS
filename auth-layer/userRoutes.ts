@@ -4,18 +4,20 @@ import { emitUserCreatedEvent } from './eventBus';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
 import { sanitizeUserInput } from './userValidation';
+import { validateUser } from './userValidation';
 
 const router = express.Router();
 
 // Create User
 router.post('/users', async (req, res) => {
-    const { username, email } = sanitizeUserInput(req.body);
+    const sanitizedInput = sanitizeUserInput(req.body);
     try {
-        const existingUser = await findUserByEmail(email);
+        validateUser(sanitizedInput);
+        const existingUser = await findUserByEmail(sanitizedInput.email);
         if (existingUser) {
             throw new ValidationError(['Email already in use']);
         }
-        const user = await createUser(username, email);
+        const user = await createUser(sanitizedInput.username, sanitizedInput.email);
         emitUserCreatedEvent(user);
         logger.info('User created', { userId: user.id, username: user.username });
         res.status(201).json(user);
@@ -42,12 +44,14 @@ router.get('/users', async (req, res) => {
 // Update User
 router.put('/users/:id', async (req, res) => {
     const { id } = req.params;
-    const userData = sanitizeUserInput(req.body);
+    const sanitizedInput = sanitizeUserInput(req.body);
     try {
-        const updatedUser = await updateUser(id, userData);
+        validateUser(sanitizedInput);
+        const updatedUser = await updateUser(id, sanitizedInput);
         if (!updatedUser) {
             throw new NotFoundError('User not found for update');
         }
+        logger.info('User updated', { userId: id });
         res.status(204).send();
     } catch (error) {
         logger.error('Error updating user', { error: error.message });
@@ -69,6 +73,7 @@ router.delete('/users/:id', async (req, res) => {
         if (!deleted) {
             throw new NotFoundError('User not found');
         }
+        logger.info('User deleted', { userId: id });
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting user', { error: error.message });
