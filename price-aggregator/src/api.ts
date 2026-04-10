@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest, logError } from './logger';
-import { ValidationError, NotFoundError } from './errors';
+import { ValidationError, NotFoundError, ServiceError } from './errors';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -41,7 +41,7 @@ router.get('/prices', async (req, res, next) => {
         res.status(200).json(prices);
     } catch (error) {
         logError(error, { message: 'Fetching prices failed' });
-        next(error);
+        next(new ServiceError('Failed to fetch prices.')); // Enhanced error handling
     }
 });
 
@@ -54,19 +54,7 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
             return res.status(400).json({ error: error.message });
         }
         logError(error, { message: 'Adding price failed' });
-        next(error);
-    }
-});
-
-router.put('/prices/:id', validateContentType, validatePriceData, handleValidationErrors, async (req, res, next) => {
-    const { id } = req.params;
-    try {
-        const updatedPrice = await priceAggregator.updatePrice(id, req.body);
-        if (!updatedPrice) return res.status(404).json({ error: 'Price not found' });
-        res.status(200).json(updatedPrice);
-    } catch (error) {
-        logError(error, { message: 'Updating price failed' });
-        next(error);
+        next(new ServiceError('Failed to add price.')); // Enhanced error handling
     }
 });
 
@@ -80,7 +68,7 @@ router.delete('/prices/:id', async (req, res, next) => {
             return res.status(404).json({ error: error.message });
         }
         logError(error, { message: 'Deleting price failed' });
-        next(error);
+        next(new ServiceError('Failed to delete price.')); // Enhanced error handling
     }
 });
 

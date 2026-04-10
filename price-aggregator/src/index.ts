@@ -34,11 +34,6 @@ app.get('/health', async (req, res) => {
     }
 });
 
-// Ready endpoint
-app.get('/ready', (req, res) => {
-    res.status(200).json({ status: 'ready' });
-});
-
 const shutdown = async () => {
     console.log('Shutting down gracefully...');
     await dbPool.drain();
