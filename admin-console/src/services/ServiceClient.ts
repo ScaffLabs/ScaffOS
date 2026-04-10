@@ -3,6 +3,7 @@ import config from '../config';
 import { ServiceError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
 import { CircuitBreaker } from 'opossum';
+import { emitEvent } from '../events/EventBus';
 
 const axiosInstance = axios.create({
     baseURL: config.API_URL,
@@ -41,6 +42,7 @@ const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
 const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
     try {
         await retryWithExponentialBackoff(() => circuitBreaker.fire('/config', { method: 'POST', data: configItem }));
+        emitEvent('CONFIGURATION_CREATED', configItem);
     } catch (error) {
         handleAxiosError(error, 'create configuration');
     }
@@ -49,6 +51,7 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
 const deleteConfiguration = async (key: string): Promise<void> => {
     try {
         await retryWithExponentialBackoff(() => circuitBreaker.fire(`/config/${key}`, { method: 'DELETE' }));
+        emitEvent('CONFIGURATION_DELETED', { key });
     } catch (error) {
         handleAxiosError(error, 'delete configuration');
     }
