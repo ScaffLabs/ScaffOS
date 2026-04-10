@@ -38,13 +38,21 @@ router.get('/health', async (req, res) => {
     await alertController.checkHealth(req, res);
 });
 
+router.get('/ready', async (req, res) => {
+    await alertController.checkReady(req, res);
+});
+
+router.get('/memory', async (req, res) => {
+    await alertController.checkMemoryUsage(req, res);
+});
+
 router.get('/api/alerts', async (req, res) => {
     req.query = sanitize(req.query);
     try {
         const pagination = validatePaginationRequest(req.query);
         const alerts = await alertController.getActiveAlerts({
-            query: pagination
-        }, res);
+            pagination
+        });
         return res.status(200).json(alerts);
     } catch (error) {
         return res.status(500).json({ message: 'Failed to retrieve alerts.' });
