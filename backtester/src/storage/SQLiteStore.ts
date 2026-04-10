@@ -41,7 +41,7 @@ export class SQLiteStore<T> implements StorageInterface<T> {
     async create(data: T): Promise<any> {
         const id = uuidv4();
         await this.run(`INSERT INTO records (id, data) VALUES (?, ?)`, [id, JSON.stringify(data)]);
-        return { id, data }; 
+        return { id, data };
     }
 
     async read(id: string): Promise<any> {
