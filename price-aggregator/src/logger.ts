@@ -1,10 +1,11 @@
 import winston from 'winston';
 import { format } from 'logform';
+import { config } from './config';
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isDevelopment = config.nodeEnv !== 'production';
 
 const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL || 'info',
+    level: config.logLevel,
     format: isDevelopment ? winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()

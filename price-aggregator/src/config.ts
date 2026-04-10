@@ -14,6 +14,10 @@ const envSchema = z.object({
     DB_PORT: z.number().int().default(5432),
     LOG_LEVEL: z.enum(['info', 'warn', 'error']).default('info'),
     DOCKER: z.boolean().default(false),
+    RECONNECT_INTERVAL: z.number().int().default(5000),
+    MAX_RECONNECT_ATTEMPTS: z.number().int().default(10),
+    LOGGING_FORMAT: z.enum(['json', 'text']).default('text'),
+    ENABLE_CORS: z.boolean().default(true),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -36,6 +40,10 @@ export const config = {
     dbPort: env.DB_PORT,
     logLevel: env.LOG_LEVEL,
     docker: env.DOCKER,
+    reconnectInterval: env.RECONNECT_INTERVAL,
+    maxReconnectAttempts: env.MAX_RECONNECT_ATTEMPTS,
+    loggingFormat: env.LOGGING_FORMAT,
+    enableCors: env.ENABLE_CORS,
 };
 
 export const isProduction = env.NODE_ENV === 'production';
