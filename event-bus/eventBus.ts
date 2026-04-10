@@ -5,6 +5,9 @@ import logger from './logger';
 class EventBus {
     private emitter: EventEmitter;
     private subscriptions: Record<string, Array<(message: Message<any>) => void>>;
+    private failureCount: Record<string, number> = {};
+    private threshold: number = 5;
+    private timeout: number = 5000;
 
     constructor() {
         this.emitter = new EventEmitter();
@@ -29,6 +32,10 @@ class EventBus {
     }
 
     public publish<T>(topic: string, data: T): void {
+        if (this.isCircuitOpen(topic)) {
+            logger.warn(`Circuit is open for topic: ${topic}`);
+            return;
+        }
         if (!this.subscriptions[topic] || this.subscriptions[topic].length === 0) {
             logger.warn(`No subscribers for topic: ${topic}`);
             return;
@@ -36,6 +43,17 @@ class EventBus {
         const message: Message<T> = { topic, data, timestamp: Date.now() };
         this.emitter.emit(topic, message);
         logger.info(`Published message to topic: ${topic}`);
+    }
+
+    private isCircuitOpen(topic: string): boolean {
+        if (this.failureCount[topic] >= this.threshold) {
+            const lastFailureTime = this.failureCount[topic + '_time'] || 0;
+            if (Date.now() - lastFailureTime < this.timeout) {
+                return true;
+            }
+            this.failureCount[topic] = 0; // Reset on timeout
+        }
+        return false;
     }
 
     public clearSubscriptions(topic: string): void {
