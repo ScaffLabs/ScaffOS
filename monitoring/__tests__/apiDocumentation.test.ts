@@ -42,4 +42,22 @@ describe('API Documentation', () => {
         const response = await request(app).delete('/dashboard/3');
         expect(response.status).toBe(204);
     });
+
+    test('POST /dashboard with invalid body', async () => {
+        const response = await request(app).post('/dashboard').send({});
+        expect(response.status).toBe(400);
+        expect(response.body.error).toBe('Invalid input data. Both id and value are required.');
+    });
+
+    test('PUT /dashboard/:id with non-existent entry', async () => {
+        const response = await request(app).put('/dashboard/99').send({ value: 400 });
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Entry not found.');
+    });
+
+    test('DELETE /dashboard/:id with non-existent entry', async () => {
+        const response = await request(app).delete('/dashboard/99');
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Entry not found.');
+    });
 });
