@@ -1,5 +1,4 @@
 import { IStorage } from './IStorage';
-import { Event } from '../types';
 
 export class InMemoryStorage<T> implements IStorage<T> {
     private storage: Record<string, T & { id: string }> = {};
@@ -41,7 +40,6 @@ export class InMemoryStorage<T> implements IStorage<T> {
 
     async migrate(): Promise<void> {
         console.log('Migration utility called.');
-        // Implement migration logic as needed
     }
 
     async seedData(data: T[]): Promise<void> {

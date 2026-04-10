@@ -5,4 +5,7 @@ export interface IStorage<T> {
     delete(id: string): Promise<boolean>;
     findAll(limit?: number, offset?: number): Promise<T[]>;
     transaction(operations: (() => Promise<void>)[]): Promise<void>;
+    migrate(): Promise<void>;
+    seedData(data: T[]): Promise<void>;
+    findByField(field: keyof T, value: any): Promise<T[]>;
 }

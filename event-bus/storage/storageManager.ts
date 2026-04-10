@@ -17,13 +17,11 @@ export class StorageManager<T> {
     }
 
     async migrate(): Promise<void> {
-        console.log('Migration utility called.');
-        // Placeholder for migration logic
+        await this.storage.migrate();
     }
 
-    async seedData(): Promise<void> {
-        console.log('Seeding data...');
-        // Placeholder for seeding logic
+    async seedData(data: T[]): Promise<void> {
+        await this.storage.seedData(data);
     }
 
     async findEventById(id: string): Promise<T | null> {
