@@ -40,7 +40,7 @@ const fetchServiceHealthRequest = async () => {
 export const fetchExternalData = circuitBreaker(retry(fetchExternalDataRequest));
 export const fetchServiceHealth = circuitBreaker(retry(fetchServiceHealthRequest));
 
-export const registerExternalApiRoutes = (app: any) => {
+export const registerExternalApiRoutes = (app) => {
     app.get('/api/external/data', async (req, res) => {
         try {
             const data = await fetchExternalData();

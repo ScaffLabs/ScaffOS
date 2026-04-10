@@ -31,6 +31,6 @@ export const healthCheck = async (req: Request, res: Response) => {
     }
 };
 
-export const registerHealthRoutes = (app: any) => {
+export const registerHealthRoutes = (app) => {
     app.get('/api/health', healthCheck);
 };
