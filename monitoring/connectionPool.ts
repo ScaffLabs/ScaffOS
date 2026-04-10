@@ -28,7 +28,7 @@ const createConnectionPool = () => {
         try {
             const connection = getConnection(service);
             const response = await connection[method](url, data);
-            return response.data;
+            return response;
         } catch (error) {
             logger.error({ error: error.message }, `Error in ${service} connection`);
             if (error.isAxiosError && error.response) {
