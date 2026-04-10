@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ServiceError, ValidationError } from '../errors/customErrors';
-import { PerformanceMetricsSchema } from '../types';
+import { PerformanceMetricsSchema, StrategySchema } from '../types';
 import { logError } from '../utils/errorLogger';
 import CircuitBreaker from '../utils/circuitBreaker';
 
@@ -16,6 +16,18 @@ const fetchPerformanceMetrics = async () => {
     } catch (error) {
         logError(error, 'Fetching performance metrics');
         throw new ServiceError('Failed to fetch performance metrics: ' + error.message);
+    }
+};
+
+const fetchStrategies = async () => {
+    try {
+        const response = await circuitBreaker.execute(() =>
+            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`)
+        );
+        return response.data.map(strategy => StrategySchema.parse(strategy));
+    } catch (error) {
+        logError(error, 'Fetching strategies');
+        throw new ServiceError('Failed to fetch strategies: ' + error.message);
     }
 };
 
@@ -46,4 +58,4 @@ const healthCheck = async () => {
     }
 };
 
-export { fetchPerformanceMetrics, fetchComparisonData, healthCheck };
+export { fetchPerformanceMetrics, fetchComparisonData, healthCheck, fetchStrategies };
