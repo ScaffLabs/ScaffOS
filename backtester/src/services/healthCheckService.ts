@@ -1,7 +1,7 @@
 import axios from 'axios';
 import logger from '../utils/logger';
 import { Pool } from 'pg'; // PostgreSQL connection pooling
-import { circuitBreaker } from './resilience';
+import { circuitBreaker, withRetry } from './resilience';
 
 const serviceUrls = {
   orderService: process.env.ORDER_SERVICE_URL,
@@ -34,9 +34,8 @@ export async function healthCheckServices() {
 }
 
 export async function checkReadiness() {
-  // Example readiness check for database connection
   try {
-    await pool.query('SELECT 1'); // Simple query to check connection
+    await pool.query('SELECT 1'); // Check database connection
     return { healthy: true };
   } catch (error) {
     logger.error('Database connection failed:', error);
