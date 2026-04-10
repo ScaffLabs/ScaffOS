@@ -3,7 +3,11 @@ import { fetchServiceHealth } from '../api/externalApi';
 import logger from '../utils/logger';
 import process from 'process';
 
-/** * Health check endpoint to return service status and metrics. * @param req * @param res */
+/**
+ * Health check endpoint to return service status and metrics.
+ * @param req
+ * @param res
+ */
 export const healthCheck = async (req: Request, res: Response) => {
     try {
         const externalHealth = await fetchServiceHealth();
@@ -23,7 +27,10 @@ export const healthCheck = async (req: Request, res: Response) => {
     }
 };
 
-/** * Register health check routes. * @param app */
+/**
+ * Register health check routes.
+ * @param app
+ */
 export const registerHealthRoutes = (app: any) => {
     app.get('/api/health', healthCheck);
 };
