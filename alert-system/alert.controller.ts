@@ -2,8 +2,8 @@ import express, { Request, Response } from 'express';
 import { AlertMessage, validateCreateAlertRequest } from './alert.schema';
 import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
-import { ServiceError, ValidationError, NotFoundError } from './error.types';
-import logger, { logRequest } from './logger';
+import { ServiceError, ValidationError } from './error.types';
+import logger, { logRequest, logError } from './logger';
 import axios from 'axios';
 import { CircuitBreaker } from 'opossum';
 
@@ -20,8 +20,6 @@ const webhookCircuit = new CircuitBreaker(async (alert) => {
 const emailServiceCircuit = new CircuitBreaker(async (alert) => {
     return await axios.post(process.env.EMAIL_SERVICE_URL, alert);
 }, options);
-
-const retryDelay = (attempt) => Math.min(1000 * 2 ** attempt, 30000);
 
 export class AlertController {
     private alertStore: AlertStoreInterface;
@@ -44,10 +42,11 @@ export class AlertController {
             await this.notifyExternalServices(createdAlert);
             return res.status(201).json(createdAlert);
         } catch (error) {
+            logError(error, { requestId: req.headers['x-request-id'] });
             if (error instanceof ValidationError) {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
             }
-            logger.error(error);
+            logger.error('Failed to add alert.', { error: error.message });
             return res.status(500).json({ message: 'Failed to add alert.' });
         } finally {
             logRequest(req, res, start);

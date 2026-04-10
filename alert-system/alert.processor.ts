@@ -3,6 +3,7 @@ import { EventBus } from '../event-bus';
 import axios from 'axios';
 import { ServiceError } from './error.types';
 import { CircuitBreaker } from 'opossum';
+import logger from './logger';
 
 const options = {
     timeout: 3000,
@@ -18,8 +19,6 @@ const emailServiceCircuit = new CircuitBreaker(async (alert) => {
     return await axios.post(process.env.EMAIL_SERVICE_URL, alert);
 }, options);
 
-const retryDelay = (attempt) => Math.min(1000 * 2 ** attempt, 30000);
-
 export class AlertProcessor {
     private eventBus: EventBus;
 
@@ -28,9 +27,12 @@ export class AlertProcessor {
     }
 
     public async processAlert(alert: AlertMessage) {
+        const start = Date.now();
         try {
             await this.sendAlertToServices(alert);
             this.eventBus.publish('alert.processed', alert);
+            const duration = Date.now() - start;
+            logger.logPerformance('processAlert', duration);
         } catch (error) {
             console.error('Error processing alert:', error);
             throw new ServiceError('Failed to process alert.');
