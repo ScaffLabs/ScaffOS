@@ -66,9 +66,3 @@ export const checkOrderServiceHealth = async () => {
         return false;
     }
 };
-
-export const checkServiceHealth = async () => {
-    const userServiceHealthy = await checkUserServiceHealth();
-    const orderServiceHealthy = await checkOrderServiceHealth();
-    return userServiceHealthy && orderServiceHealthy;
-};
