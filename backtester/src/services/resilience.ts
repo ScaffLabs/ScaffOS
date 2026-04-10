@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { EventEmitter } from 'events';
 import { logger } from '../utils/logger';
+import { BacktestEventSchema } from '../types';
 
 const eventEmitter = new EventEmitter();
 const retryLimit = 5;
@@ -63,4 +64,17 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
     };
 }
 
-export { eventEmitter, withRetry, circuitBreaker };
+/**
+ * Emit an event when a backtest result is created.
+ * @param {object} event - The event data to emit.
+ */
+function emitBacktestEvent(event: unknown) {
+    const validation = BacktestEventSchema.safeParse(event);
+    if (!validation.success) {
+        logger.error('Invalid event data:', validation.error.format());
+        return;
+    }
+    eventEmitter.emit(event.type, validation.data);
+}
+
+export { eventEmitter, withRetry, circuitBreaker, emitBacktestEvent };
