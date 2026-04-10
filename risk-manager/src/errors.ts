@@ -23,15 +23,14 @@ class NotFoundError extends Error {
 
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
-    switch (err.name) {
-        case 'ValidationError':
-            return res.status(400).json({ error: err.message });
-        case 'NotFoundError':
-            return res.status(404).json({ error: err.message });
-        case 'ServiceError':
-        default:
-            return res.status(500).json({ error: 'Internal Server Error' });
+    if (err instanceof ValidationError) {
+        return res.status(400).json({ error: err.message });
+    } else if (err instanceof NotFoundError) {
+        return res.status(404).json({ error: err.message });
+    } else if (err instanceof ServiceError) {
+        return res.status(500).json({ error: 'Service Error: ' + err.message });
     }
+    return res.status(500).json({ error: 'Internal Server Error' });
 };
 
 export { ServiceError, ValidationError, NotFoundError, errorHandler };
