@@ -8,6 +8,9 @@ const config: Config = {
     testPathIgnorePatterns: ['/node_modules/', '/dist/'],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
+    collectCoverage: true,
+    coverageDirectory: 'coverage',
+    coverageReporters: ['text', 'lcov'],
 };
 
 export default config;
