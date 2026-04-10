@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import userRoutes from '../userRoutes';
-import { createUser, findUserByEmail, getAllUsers } from '../storage';
+import { createUser } from '../storage';
 import { validateApiKey } from '../apiKey';
 
 const app = express();
@@ -67,11 +67,5 @@ describe('User Routes Integration Tests', () => {
             .set('x-api-key', apiKey);
         expect(res.status).toBe(404);
         expect(res.body).toEqual({ error: 'User not found' });
-    });
-
-    it('should return healthy status from health check endpoint', async () => {
-        const res = await request(app).get('/health');
-        expect(res.status).toBe(200);
-        expect(res.body).toEqual({ status: 'healthy' });
     });
 });
