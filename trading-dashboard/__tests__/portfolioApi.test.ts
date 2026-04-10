@@ -1,8 +1,8 @@
-// Import necessary modules
 import request from 'supertest';
 import app from '../src/server';
 import { InMemoryStore } from '../src/storage/InMemoryStore';
 import { Position } from '../src/types';
+import { mockPositionData } from './__mocks__/dataMocks';
 
 describe('Portfolio API Endpoints', () => {
     let store: InMemoryStore<Position>;
@@ -62,7 +62,6 @@ describe('Portfolio API Endpoints', () => {
         expect(response.body.message).toBe('Position not found.');
     });
 
-    // Edge case tests
     it('GET /api/positions should return empty array when no positions exist', async () => {
         await store.delete('1');
         const response = await request(app).get('/api/positions');
