@@ -5,11 +5,9 @@ import helmet from 'helmet';
 import healthRouter from './health';
 import userRoutes from './userRoutes';
 import { logRequestMiddleware, errorHandlingMiddleware } from './middleware';
-import logger, { startupLog } from './logger';
+import logger, { logRequest } from './logger';
 import { createConnectionPool } from './database';
 import { rateLimit } from './rateLimit';
-import { sanitizeUserInput } from './userValidation';
-import { ValidationError } from './errors';
 import { monitorMemoryUsage } from './monitor';
 import { initGracefulShutdown } from './shutdown';
 
@@ -18,38 +16,32 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
 
-// Allow requests from specified origins, enhancing security
-const allowedOrigins = ['http://localhost:3000', 'https://yourdomain.com'];
-app.use(cors({ origin: allowedOrigins })); // Enable CORS to control which origins can access the API
-app.use(helmet()); // Use Helmet to set various HTTP headers for security
-app.use(express.json()); // Parse incoming JSON requests
-app.use(logRequestMiddleware); // Log all incoming requests for traceability
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use(logRequestMiddleware);
 
-// Rate limiting middleware to prevent abuse of the API
 app.use((req, res, next) => {
-    const apiKey = req.headers['x-api-key'];
-    if (!apiKey || !rateLimit(apiKey)) {
-        return res.status(429).json({ error: 'Rate limit exceeded' }); // Respond with 429 if rate limit is exceeded
-    }
-    next(); // Proceed to the next middleware or route handler
+    const requestId = req.headers['x-request-id'] || crypto.randomUUID();
+    req.headers['x-request-id'] = requestId;
+    next();
 });
 
-app.use('/health', healthRouter); // Define health check route
-app.use('/api', userRoutes); // Define user management routes
-app.use(errorHandlingMiddleware); // Centralized error handling middleware
+app.use('/health', healthRouter);
+app.use('/api', userRoutes);
+app.use(errorHandlingMiddleware);
 
 const start = async () => {
     try {
-        await connectionPool.isReady(); // Check if the database connection is ready
+        await connectionPool.isReady();
         server.listen(PORT, () => {
-            startupLog('Auth Layer Service');
-            logger.info(`Server listening on port ${PORT}`); // Log successful server startup
-            monitorMemoryUsage(); // Start monitoring memory usage for performance insights
+            logger.info(`Server listening on port ${PORT}`, { requestId: 'startup' });
+            monitorMemoryUsage();
         });
-        initGracefulShutdown(server, connectionPool); // Setup graceful shutdown to close connections cleanly
+        initGracefulShutdown(server, connectionPool);
     } catch (error) {
-        logger.error('Error starting server', { error: error.message }); // Log errors during server startup
-        process.exit(1); // Exit the process if the server fails to start
+        logger.error('Error starting server', { error: error.message });
+        process.exit(1);
     }
 };
 
