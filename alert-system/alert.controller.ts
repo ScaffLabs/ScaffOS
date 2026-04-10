@@ -1,94 +1,38 @@
 import express, { Request, Response } from 'express';
 import { AlertMessage, validateCreateAlertRequest } from './alert.schema';
-import { AlertStoreInterface } from './storage';
-import { EventBus } from './event-bus';
 import { ServiceError, ValidationError, NotFoundError } from './error.types';
-import logger, { logRequest, logError } from './logger';
-import axios from 'axios';
-import { CircuitBreaker } from 'opossum';
-
-const options = {
-    timeout: 3000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 10000
-};
-
-const webhookCircuit = new CircuitBreaker(async (alert) => {
-    return await axios.post(process.env.WEBHOOK_URL, alert);
-}, options);
-
-const emailServiceCircuit = new CircuitBreaker(async (alert) => {
-    return await axios.post(process.env.EMAIL_SERVICE_URL, alert);
-}, options);
+import logger from './logger';
 
 export class AlertController {
-    private alertStore: AlertStoreInterface;
-    private eventBus: EventBus;
-
-    constructor(alertStore: AlertStoreInterface, eventBus: EventBus) {
-        this.alertStore = alertStore;
-        this.eventBus = eventBus;
-    }
-
-    async addAlert(req: Request, res: Response) {
-        const start = Date.now();
+    async addAlert(alertData: any): Promise<AlertMessage> {
         try {
-            const alertData = validateCreateAlertRequest(req.body);
-            if (alertData.threshold < 0 || alertData.currentValue < 0) {
-                throw new ValidationError('Threshold and current value must be non-negative.');
-            }
-            const createdAlert = await this.alertStore.create(alertData);
-            this.eventBus.publish('alert.created', createdAlert);
-            await this.notifyExternalServices(createdAlert);
-            return res.status(201).json(createdAlert);
+            const validatedData = validateCreateAlertRequest(alertData);
+            const createdAlert = await this.alertStore.create(validatedData);
+            return createdAlert;
         } catch (error) {
-            logError(error, { requestId: req.headers['x-request-id'] });
             if (error instanceof ValidationError) {
-                return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
+                throw new ValidationError('Invalid alert data: ' + error.message);
             }
-            logger.error('Failed to add alert.', { error: error.message });
-            return res.status(500).json({ message: 'Failed to add alert.' });
-        } finally {
-            logRequest(req, res, start);
+            throw new ServiceError('Failed to create alert.');
         }
     }
 
-    private async notifyExternalServices(alert: AlertMessage) {
-        const notifyWithRetry = async (attempt = 0) => {
-            try {
-                await Promise.all([
-                    webhookCircuit.fire(alert),
-                    emailServiceCircuit.fire(alert)
-                ]);
-            } catch (error) {
-                if (attempt < 5) {
-                    await new Promise(res => setTimeout(res, Math.pow(2, attempt) * 100));
-                    return notifyWithRetry(attempt + 1);
-                }
-                logger.error('Failed to notify services after retries:', error);
-                throw new ServiceError('Failed to notify external services.');
-            }
-        };
-        await notifyWithRetry();
+    async updateAlert(id: string, alertData: any): Promise<AlertMessage> {
+        try {
+            const updatedAlert = await this.alertStore.update(id, alertData);
+            if (!updatedAlert) throw new NotFoundError('Alert not found.');
+            return updatedAlert;
+        } catch (error) {
+            throw new ServiceError('Failed to update alert.');
+        }
     }
 
-    async checkHealth(req: Request, res: Response) {
-        const services = ['WEBHOOK', 'EMAIL'];
-        const health = await this.checkExternalServices(services);
-        return res.json({ services: health });
-    }
-
-    private async checkExternalServices(services: string[]): Promise<{ [key: string]: boolean }> {
-        const results: { [key: string]: boolean } = {};
-        await Promise.all(services.map(async (service) => {
-            try {
-                const res = await axios.get(`${process.env[service + '_URL']}/health`);
-                results[service] = res.status === 200;
-            } catch (error) {
-                logger.error(`Health check for ${service} failed: ${error.message}`);
-                results[service] = false;
-            }
-        }));
-        return results;
+    async deleteAlert(id: string): Promise<void> {
+        try {
+            const success = await this.alertStore.delete(id);
+            if (!success) throw new NotFoundError('Alert not found.');
+        } catch (error) {
+            throw new ServiceError('Failed to delete alert.');
+        }
     }
 }

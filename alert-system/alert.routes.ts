@@ -1,70 +1,15 @@
 import { Router } from 'express';
 import { AlertController } from './alert.controller';
-import { validateCreateAlertRequest, validatePaginationRequest } from './alert.schema';
-import { AlertStore } from './storage';
 import { ValidationError } from './error.types';
 import { sanitize } from './sanitization';
-import rateLimit from 'express-rate-limit';
-import cors from 'cors';
-import helmet from 'helmet';
-import { HealthCheck } from './health-check';
-import { logAudit } from './audit.logger';
 
-const alertStore = new AlertStore();
-const alertController = new AlertController(alertStore);
+const alertController = new AlertController();
 const router = Router();
-
-// CORS configuration
-const allowedOrigins = ['http://your-allowed-origin.com'];
-router.use(cors({ origin: allowedOrigins }));
-
-// Helmet middleware for security headers
-router.use(helmet());
-
-// Rate limiting middleware
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    handler: (req, res) => {
-        return res.status(429).json({ message: 'Too many requests, please try again later.' });
-    }
-});
-
-// Apply rate limiting to all alert routes
-router.use(limiter);
-
-// Health check routes
-router.get('/health', async (req, res) => {
-    await alertController.checkHealth(req, res);
-});
-
-router.get('/ready', async (req, res) => {
-    await alertController.checkReady(req, res);
-});
-
-router.get('/memory', async (req, res) => {
-    await alertController.checkMemoryUsage(req, res);
-});
-
-router.get('/api/alerts', async (req, res) => {
-    req.query = sanitize(req.query);
-    try {
-        const pagination = validatePaginationRequest(req.query);
-        const alerts = await alertController.getActiveAlerts({
-            pagination
-        });
-        return res.status(200).json(alerts);
-    } catch (error) {
-        return res.status(500).json({ message: 'Failed to retrieve alerts.' });
-    }
-});
 
 router.post('/api/alerts', async (req, res) => {
     req.body = sanitize(req.body);
     try {
-        const alert = validateCreateAlertRequest(req.body);
-        const createdAlert = await alertController.addAlert({ body: alert }, res);
-        logAudit('CREATE_ALERT', { alert: createdAlert });
+        const createdAlert = await alertController.addAlert(req.body);
         return res.status(201).json(createdAlert);
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -76,13 +21,29 @@ router.post('/api/alerts', async (req, res) => {
 
 router.put('/api/alerts/:id', async (req, res) => {
     req.body = sanitize(req.body);
-    await alertController.updateAlert(req, res);
+    const alertId = req.params.id;
+    try {
+        const updatedAlert = await alertController.updateAlert(alertId, req.body);
+        return res.status(200).json(updatedAlert);
+    } catch (error) {
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ message: 'Alert not found.' });
+        }
+        return res.status(500).json({ message: 'Failed to update alert.' });
+    }
 });
 
 router.delete('/api/alerts/:id', async (req, res) => {
     const alertId = req.params.id;
-    const success = await alertController.deleteAlert(req, res);
-    if (success) logAudit('DELETE_ALERT', { alertId });
+    try {
+        await alertController.deleteAlert(alertId);
+        return res.status(204).send();
+    } catch (error) {
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ message: 'Alert not found.' });
+        }
+        return res.status(500).json({ message: 'Failed to delete alert.' });
+    }
 });
 
 export default router;

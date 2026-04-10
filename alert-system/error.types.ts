@@ -33,13 +33,6 @@ export class DivisionByZeroError extends Error {
     }
 }
 
-export class CustomError extends Error {
-    constructor(public code: number, message: string) {
-        super(message);
-        this.name = 'CustomError';
-    }
-}
-
 export interface ErrorResponse {
     message: string;
     code?: number;
