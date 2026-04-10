@@ -31,3 +31,16 @@ export const close = () => {
         });
     });
 };
+
+export const getConnection = () => {
+    return new Promise((resolve, reject) => {
+        pool.getConnection((err, connection) => {
+            if (err) return reject(err);
+            resolve(connection);
+        });
+    });
+};
+
+export const releaseConnection = (connection: any) => {
+    connection.release();
+};
