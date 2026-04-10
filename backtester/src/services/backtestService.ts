@@ -10,13 +10,6 @@ const store = new InMemoryStore<BacktestResult>();
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
 const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
 
-async function fetchOrders() {
-    return await withRetry(async () => {
-        const response = await axios.get(`${ORDER_SERVICE_URL}/api/orders`);
-        return response.data;
-    });
-}
-
 async function fetchHistoricalData() {
     return await withRetry(async () => {
         const response = await axios.get(`${DATA_SERVICE_URL}/api/historical-data`);
@@ -61,7 +54,6 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     if (!validation.success) {
         throw new ValidationError('Invalid strategy parameters: ' + validation.error.format());
     }
-    const orders = await fetchOrders();
     const historicalDataFetched = await fetchHistoricalData();
     const dataToUse = historicalData.length ? historicalData : historicalDataFetched;
     const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(dataToUse, params.buyThreshold, params.sellThreshold, params.slippage);
@@ -69,7 +61,6 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
     await store.create(result);
-    logger.info({ message: 'Audit log: Backtest created', id: backtestId, performanceMetrics });
     return BacktestResultSchema.parse(result);
 };
 
