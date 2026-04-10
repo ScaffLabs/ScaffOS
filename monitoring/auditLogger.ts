@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { ValidationError } from './errorClasses';
 
 const logFilePath = path.join(__dirname, 'audit.log');
 
 const auditLogger = (req: Request, res: Response, next: NextFunction) => {
     const { method, url, body } = req;
-    const sensitivePaths = ['/dashboard'];
+    const sensitivePaths = ['/dashboard', '/health'];
     const isSensitive = sensitivePaths.includes(url);
 
     const sanitizedBody = isSensitive ? '[SENSITIVE DATA REDACTED]' : JSON.stringify(body);

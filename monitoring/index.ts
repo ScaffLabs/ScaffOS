@@ -11,6 +11,7 @@ import { emitHealthCheckEvent } from './serviceHealth';
 import { setupRoutes } from './dashboard';
 import { generalLimiter, apiKeyLimiter, dashboardLimiter } from './rateLimiter';
 import { sanitize, csrfProtection } from './sanitize';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
 const PORT = config.PORT;
