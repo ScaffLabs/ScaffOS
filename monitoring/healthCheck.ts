@@ -27,3 +27,9 @@ export const healthCheck = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
+
+export const readyCheck = (req: Request, res: Response) => {
+    // Implement readiness check logic here, e.g., check DB connection
+    const isReady = true; // Placeholder logic, replace with actual checks
+    return res.status(isReady ? 200 : 503).json({ status: isReady ? 'READY' : 'NOT_READY' });
+};

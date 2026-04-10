@@ -1,6 +1,6 @@
 import express from 'express';
 import { createServer } from 'http';
-import { healthCheck } from './healthCheck';
+import { healthCheck, readyCheck } from './healthCheck';
 import errorMiddleware from './errorMiddleware';
 import { logRequest, logStartup } from './logger';
 import helmet from 'helmet';
@@ -27,6 +27,7 @@ app.use(sanitize);
 app.use(csrfProtection);
 
 app.get('/health', healthCheck);
+app.get('/ready', readyCheck);
 app.use(errorMiddleware);
 setupRoutes(app);
 
