@@ -78,4 +78,4 @@ export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
         this.indexByAsset.clear();
         await super.reset();
     }
-} 
+}
