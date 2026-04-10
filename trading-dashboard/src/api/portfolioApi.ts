@@ -6,6 +6,7 @@ import { publishEvent } from '../utils/eventBus';
 
 const positionStore = new InMemoryStore<Position>();
 
+// Fetch all positions
 export const fetchPositions = async (req: Request, res: Response) => {
     try {
         const positions = Object.values(positionStore.data);
@@ -15,6 +16,7 @@ export const fetchPositions = async (req: Request, res: Response) => {
     }
 };
 
+// Create a new position
 export const createPosition = async (req: Request, res: Response) => {
     const positionData = req.body;
     try {
@@ -33,6 +35,7 @@ export const createPosition = async (req: Request, res: Response) => {
     }
 };
 
+// Update an existing position
 export const updatePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
     const positionData = req.body;
@@ -59,6 +62,7 @@ export const updatePosition = async (req: Request, res: Response) => {
     }
 };
 
+// Delete a position
 export const deletePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -75,6 +79,7 @@ export const deletePosition = async (req: Request, res: Response) => {
     }
 };
 
+// Register API routes
 export const registerRoutes = (app: any) => {
     app.get('/api/positions', fetchPositions);
     app.post('/api/positions', createPosition);
