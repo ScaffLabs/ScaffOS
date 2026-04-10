@@ -79,4 +79,22 @@ router.delete('/users/:id', async (req, res) => {
     }
 });
 
+// Fetch User by ID
+router.get('/users/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await findUserById(id);
+        if (!user) {
+            throw new NotFoundError('User not found');
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        logger.error('Error fetching user', { error: error.message });
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: error.message });
+        }
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 export default router;
