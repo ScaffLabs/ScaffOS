@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { Message } from './messageSchema';
+import logger from './logger';
 
 class EventBus {
     private emitter: EventEmitter;
@@ -17,6 +18,9 @@ class EventBus {
     }
 
     public publish<T>(topic: string, data: T): void {
+        if (!this.subscriptions[topic] || this.subscriptions[topic].length === 0) {
+            logger.warn(`No subscribers for topic: ${topic}`);
+        }
         const message: Message<T> = { topic, data, timestamp: Date.now() };
         this.emitter.emit(topic, message);
     }
@@ -37,10 +41,6 @@ class EventBus {
         }
     }
 
-    public getSubscriptionCount(topic: string): number {
-        return this.subscriptions[topic] ? this.subscriptions[topic].length : 0;
-    }
-
     public async publishWithRetry<T>(topic: string, data: T, retries = 3): Promise<void> {
         const message: Message<T> = { topic, data, timestamp: Date.now() };
         while (retries > 0) {
@@ -49,7 +49,7 @@ class EventBus {
                 return;
             } catch (error) {
                 retries--;
-                console.error('Publish failed, retrying...', error);
+                logger.error(`Publish failed, retrying... ${error}`);
                 await new Promise(res => setTimeout(res, 1000)); // wait before retrying
                 if (retries === 0) throw error;
             }
