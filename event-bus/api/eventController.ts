@@ -4,6 +4,7 @@ import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
 import logger from '../logger';
+import { ServiceError } from '../errors/serviceError';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
@@ -76,6 +77,8 @@ const handleError = (error: Error, res: Response, reqId: string) => {
         res.status(400).json({ message: error.message });
     } else if (error instanceof NotFoundError) {
         res.status(404).json({ message: error.message });
+    } else if (error instanceof ServiceError) {
+        res.status(500).json({ message: error.message });
     } else {
         res.status(500).json({ message: 'Internal Server Error' });
     }
