@@ -51,7 +51,7 @@ export const PositionSchema = z.object({
 export const PortfolioSchema = z.object({
     id: z.string().refine(id => id.length > 0, { message: 'ID must be a non-empty string' }),
     name: z.string().min(1, { message: 'Name is required' }),
-    positions: z.array(PositionSchema).optional(),
+    positions: z.array(PositionSchema).optional().nonempty({ message: 'Positions must not be empty' }),
 });
 
 /**
