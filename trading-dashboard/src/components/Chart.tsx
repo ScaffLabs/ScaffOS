@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchChartData, validateChartData } from '../api/chartApi';
+import { fetchChartData } from '../api/chartApi';
 import { Line } from 'react-chartjs-2';
 import { ServiceError } from '../utils/errors';
 
@@ -10,9 +10,9 @@ const Chart: React.FC = () => {
 
     useEffect(() => {
         const loadData = async () => {
+            setLoading(true);
             try {
                 const result = await fetchChartData();
-                validateChartData(result);
                 setData({
                     labels: result.map((item: any) => item.date),
                     datasets: [{
@@ -34,6 +34,21 @@ const Chart: React.FC = () => {
             }
         };
         loadData();
+
+        const ws = new WebSocket('ws://localhost:3001/chart');
+        ws.onmessage = (event) => {
+            const newData = JSON.parse(event.data);
+            setData(prevData => ({
+                ...prevData,
+                labels: [...prevData.labels, newData.date],
+                datasets: [{
+                    ...prevData.datasets[0],
+                    data: [...prevData.datasets[0].data, newData.price]
+                }]
+            }));
+        };
+
+        return () => ws.close();
     }, []);
 
     if (loading) return <div>Loading...</div>;
