@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
 import InMemoryStore from './dataStore';
-import { LatencyData, DashboardEntry, DashboardEntrySchema } from './types';
+import { DashboardEntry, DashboardEntrySchema } from './types';
 
 const store = new InMemoryStore<DashboardEntry>();
 
