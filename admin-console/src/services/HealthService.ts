@@ -4,7 +4,7 @@ import { ServiceError } from '../errors/CustomErrors';
 
 const fetchHealthStatus = async () => {
     try {
-        const response = await axios.get(`${config.API_URL}/health`);
+        const response = await axios.get(`${config.API_URL}/health`, { timeout: 5000 });
         return response.data;
     } catch (error) {
         throw new ServiceError('Failed to fetch health status: ' + error.message);
@@ -35,4 +35,4 @@ const healthCheckWithRetry = async (retries = 3, delay = 1000) => {
     }
 };
 
-export { healthCheckWithRetry, fetchHealthStatus };  // Export both functions for use in controllers.
+export { healthCheckWithRetry, fetchHealthStatus };
