@@ -9,6 +9,8 @@ import healthCheckRouter from './routes/healthCheck';
 import { config } from '../config';
 import { migrateDatabase } from './storage/migrations';
 import { SQLiteStore } from './storage/SQLiteStore';
+import { monitorMemoryUsage } from './utils/monitor';
+import { gracefulShutdown } from './utils/gracefulShutdown';
 
 const app = express();
 const PORT = config.port;
@@ -35,3 +37,8 @@ app.use(errorHandler);
         logger.info(`Backtester service running on port ${PORT}`);
     });
 })();
+
+process.on('SIGTERM', () => gracefulShutdown(app));
+process.on('SIGINT', () => gracefulShutdown(app));
+
+monitorMemoryUsage();
