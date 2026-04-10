@@ -8,9 +8,9 @@ export type TradeId = string & { readonly brand: unique symbol }; // Unique iden
 
 // User interface with detailed type definitions
 export interface User {
-    id: UserId;
-    username: string;
-    email: string;
+    id: UserId; // Unique identifier for the user
+    username: string; // Username of the user, must be at least 1 character
+    email: string; // Email of the user, must be a valid email format
 }
 
 // Zod schema for User validation
@@ -24,8 +24,8 @@ export const UserSchema = z.object({
 
 // API Key interface
 export interface ApiKey {
-    id: ApiKeyId;
-    userId: UserId;
+    id: ApiKeyId; // Unique identifier for the API key
+    userId: UserId; // User ID associated with the API key
 }
 
 // Zod schema for API Key validation
@@ -40,15 +40,15 @@ export const ApiKeySchema = z.object({
 
 // Event interface
 export type UserCreatedEvent = {
-    type: 'UserCreated';
-    payload: User;
+    type: 'UserCreated'; // Type of the event
+    payload: User; // Payload containing user information
 };
 
 // Zod schema for event validation
 export const EventSchema = z.union([
     z.object({
-        type: z.literal('UserCreated'),
-        payload: UserSchema,
+        type: z.literal('UserCreated'), // Event type
+        payload: UserSchema, // User data must conform to User schema
     }),
 ]);
 

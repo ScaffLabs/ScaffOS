@@ -2,6 +2,7 @@ import { User, UserId, UserSchema } from './types';
 import { ValidationError, NotFoundError } from './errors';
 import userStore from './inMemoryStore';
 import { v4 as uuidv4 } from 'uuid';
+import { emitUserCreatedEvent } from './eventBus';
 
 // Create User
 export const createUser = async (username: string, email: string): Promise<User> => {
@@ -16,6 +17,7 @@ export const createUser = async (username: string, email: string): Promise<User>
         throw new ValidationError(['Email already in use.']);
     }
     userStore.create(newUser);
+    emitUserCreatedEvent(newUser); // Emit event after user creation
     return newUser;
 };
 
