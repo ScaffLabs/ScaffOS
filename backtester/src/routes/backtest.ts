@@ -33,6 +33,18 @@ backtestRouter.post('/', [
     }
 });
 
+backtestRouter.get('/', async (req, res, next) => {
+    const { limit = 10, offset = 0 } = req.query;
+    try {
+        const results = await store.findAll();
+        const paginatedResults = results.slice(offset, offset + limit);
+        res.status(200).json(paginatedResults);
+    } catch (error) {
+        logger.error({ message: 'Error fetching backtests', error: error.message });
+        next(new ServiceError('Error fetching backtests: ' + error.message));
+    }
+});
+
 backtestRouter.get('/:id', async (req, res, next) => {
     const { id } = req.params;
     try {
@@ -47,6 +59,23 @@ backtestRouter.get('/:id', async (req, res, next) => {
             return next(error);
         }
         next(new ServiceError('Error retrieving backtest result: ' + error.message));
+    }
+});
+
+backtestRouter.delete('/:id', async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const deleted = await store.delete(id);
+        if (!deleted) {
+            throw new NotFoundError('Backtest result not found.');
+        }
+        res.status(204).end();
+    } catch (error) {
+        logger.error({ message: 'Error deleting backtest result', error: error.message });
+        if (error instanceof NotFoundError) {
+            return next(error);
+        }
+        next(new ServiceError('Error deleting backtest result: ' + error.message));
     }
 });
 
