@@ -10,6 +10,5 @@ export default {
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov'],
     setupFilesAfterEnv: ['./jest.setup.ts'],
-    testTimeout: 10000, // Increase timeout for integration tests
-    reporters: ['default', ['jest-junit', { outputDirectory: 'test-results', outputName: 'junit.xml' }]],
+    testTimeout: 10000,
 };

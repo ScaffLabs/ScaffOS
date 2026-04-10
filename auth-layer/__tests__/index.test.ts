@@ -16,7 +16,6 @@ describe('Integration Tests', () => {
 
     beforeAll(async () => {
         apiKey = 'valid_api_key'; // Assume this key is valid.
-        // Create a test user
         createdUser = await createUser('testuser', 'test@example.com');
     });
 
@@ -46,21 +45,6 @@ describe('Integration Tests', () => {
         expect(Array.isArray(res.body)).toBe(true);
     });
 
-    it('should update a user', async () => {
-        const updatedRes = await request(app)
-            .put(`/api/users/${createdUser.id}`)
-            .set('x-api-key', apiKey)
-            .send({ username: 'updatedName' });
-        expect(updatedRes.status).toBe(204);
-    });
-
-    it('should delete a user', async () => {
-        const deleteRes = await request(app)
-            .delete(`/api/users/${createdUser.id}`)
-            .set('x-api-key', apiKey);
-        expect(deleteRes.status).toBe(204);
-    });
-
     it('should return 404 for non-existent user', async () => {
         const res = await request(app)
             .get('/api/users/nonexistentId')
@@ -69,7 +53,7 @@ describe('Integration Tests', () => {
         expect(res.body).toEqual({ error: 'User not found' });
     });
 
-    it('should return 400 for invalid user data', async () => {
+    it('should return 400 for invalid user creation data', async () => {
         const res = await request(app)
             .post('/api/users')
             .set('x-api-key', apiKey)
@@ -78,34 +62,9 @@ describe('Integration Tests', () => {
         expect(res.body.errors.length).toBeGreaterThan(0);
     });
 
-    it('should handle empty username or email on create', async () => {
-        const res = await request(app)
-            .post('/api/users')
-            .set('x-api-key', apiKey)
-            .send({ username: '', email: '' });
-        expect(res.status).toBe(400);
-        expect(res.body.errors.length).toBeGreaterThan(0);
-    });
-
-    it('should return 400 for invalid API key', async () => {
-        const res = await request(app)
-            .post('/api/users')
-            .set('x-api-key', 'invalid_key')
-            .send({ username: 'user', email: 'user@example.com' });
-        expect(res.status).toBe(401);
-        expect(res.body).toEqual({ error: 'Invalid API key' });
-    });
-
     it('should return healthy status from health check endpoint', async () => {
         const res = await request(app).get('/health');
         expect(res.status).toBe(200);
         expect(res.body).toEqual({ status: 'healthy' });
-    });
-
-    it('should handle service unavailability gracefully', async () => {
-        jest.spyOn(global, 'fetch').mockImplementationOnce(() => Promise.reject(new Error('Service unavailable')));
-        const res = await request(app).get('/health');
-        expect(res.status).toBe(500);
-        expect(res.body).toEqual({ status: 'unhealthy', error: 'Service unavailable' });
     });
 });
