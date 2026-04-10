@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { healthCheckHandler, dependentHealthCheckHandler, readyCheckHandler } from '../handlers/healthCheck';
 import { monitorMemoryUsage } from '../utils/monitor';
+import { gracefulShutdown } from '../utils/shutdown';
 
 const router = Router();
 
@@ -14,5 +15,9 @@ router.get('/health/dependencies', dependentHealthCheckHandler);
 router.get('/ready', readyCheckHandler);
 
 setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
+
+// Graceful shutdown handler
+process.on('SIGTERM', () => gracefulShutdown());
+process.on('SIGINT', () => gracefulShutdown());
 
 export default router;
