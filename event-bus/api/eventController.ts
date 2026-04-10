@@ -4,39 +4,13 @@ import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
 import logger from '../logger';
+import sanitizer from 'express-sanitizer';
+import csrf from 'csurf';
 
-/**
- * @swagger
- * tags:
- *   name: Events
- *   description: Operations related to events
- */
-
+const csrfProtection = csrf({ cookie: true });
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
-/**
- * @swagger
- * /events:
- *   post:
- *     summary: Create an event
- *     tags: [Events]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Event'
- *     responses:
- *       201:
- *         description: Created event
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Event'
- *       400:
- *         description: Validation error
- */
 const createEvent = async (req: Request, res: Response): Promise<void> => {
     const reqId = req.headers['x-request-id'] || 'unknown';
     const start = Date.now();
@@ -54,25 +28,65 @@ const createEvent = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Similar swagger annotations for getEvents, updateEvent, deleteEvent...
-
 const getEvents = async (req: Request, res: Response): Promise<void> => {
-    // Implementation here...
+    const { limit, offset }: GetEventsQuery = req.query;
+    try {
+        const events = await storage.findAll(limit, offset);
+        if (!events.length) {
+            throw new NotFoundError('No events found');
+        }
+        res.json(events);
+    } catch (error) {
+        handleError(error, res, req.headers['x-request-id'] || 'unknown');
+    }
 };
 
 const updateEvent = async (req: Request, res: Response): Promise<void> => {
-    // Implementation here...
+    const reqId = req.headers['x-request-id'] || 'unknown';
+    const { id } = req.params;
+    const validation = updateEventSchema.safeParse(req.body);
+    if (!validation.success) {
+        throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+    }
+    try {
+        const updatedEvent = await storage.update(id, validation.data);
+        if (!updatedEvent) {
+            throw new NotFoundError('Event not found');
+        }
+        res.json(updatedEvent);
+    } catch (error) {
+        handleError(error, res, reqId);
+    }
 };
 
 const deleteEvent = async (req: Request, res: Response): Promise<void> => {
-    // Implementation here...
+    const reqId = req.headers['x-request-id'] || 'unknown';
+    const { id } = req.params;
+    try {
+        const success = await storage.delete(id);
+        if (!success) {
+            throw new NotFoundError('Event not found');
+        }
+        res.status(204).send();
+    } catch (error) {
+        handleError(error, res, reqId);
+    }
 };
 
 const handleError = (error: Error, res: Response, reqId: string) => {
-    // Error handling logic...
+    logger.error(error.message, { reqId });
+    if (error instanceof ValidationError) {
+        res.status(400).json({ message: error.message });
+    } else if (error instanceof NotFoundError) {
+        res.status(404).json({ message: error.message });
+    } else {
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
 };
 
 const router = Router();
+router.use(sanitizer());
+router.use(csrfProtection);
 router.post('/', createEvent);
 router.get('/', getEvents);
 router.put('/:id', updateEvent);

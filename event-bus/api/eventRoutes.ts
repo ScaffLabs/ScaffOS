@@ -5,6 +5,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import logger from '../logger';
 import { checkHealthEndpoint, healthCheckMiddleware } from './healthCheck';
+import csrf from 'csurf';
+import sanitizer from 'express-sanitizer';
 
 const router = Router();
 
@@ -14,6 +16,10 @@ router.use(cors({ origin: allowedOrigins }));
 
 // Helmet middleware for setting security headers
 router.use(helmet());
+
+// CSRF protection
+const csrfProtection = csrf({ cookie: true });
+router.use(csrfProtection);
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -27,9 +33,9 @@ router.use(limiter);
 router.use(healthCheckMiddleware);
 router.get('/health', checkHealthEndpoint);
 
+router.use(sanitizer());
 router.post('/', createEvent);
 router.get('/', getEvents);
 router.put('/:id', updateEvent);
 router.delete('/:id', deleteEvent);
-
 export default router;
