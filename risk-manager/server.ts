@@ -8,8 +8,6 @@ import gracefulShutdown from './gracefulShutdown';
 import { createPool } from 'mysql2/promise';
 import { healthCheckServices } from './externalService';
 import MemoryQueue from './memoryQueue';
-import requestIdMiddleware from './middleware/requestIdMiddleware';
-import loggingMiddleware from './middleware/loggingMiddleware';
 
 const app = express();
 const server = http.createServer(app);
@@ -23,9 +21,16 @@ const dbPool = createPool({
     queueLimit: 0
 });
 
-app.use(express.json());
-app.use(requestIdMiddleware);
-app.use(loggingMiddleware);
+// Middleware for size limit and content type validation
+app.use(express.json({ limit: '1mb' })); // Limit request body size to 1mb
+app.use((req, res, next) => {
+    if (req.is('application/json')) {
+        next();
+    } else {
+        res.status(415).json({ error: 'Unsupported Media Type. Only application/json is accepted.' });
+    }
+});
+
 app.use('/api', apiRouter);
 app.use('/health', healthRouter);
 app.use(errorHandler);
@@ -54,13 +59,11 @@ process.on('unhandledRejection', (reason) => {
     logger.error('Unhandled Rejection: ', reason);
 });
 
-setInterval(async () => {
-    try {
-        const healthStatus = await healthCheckServices();
-        logger.info('Health check status: ', healthStatus);
-    } catch (error) {
-        logger.error('Health check failed: ', error);
-    }
-}, 60000);
+const monitorMemoryUsage = () => {
+    const memoryUsage = process.memoryUsage();
+    logger.info(`Memory Usage: RSS: ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`);
+};
+
+setInterval(monitorMemoryUsage, 60000);
 
 startServer();
