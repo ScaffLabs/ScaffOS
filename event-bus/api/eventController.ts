@@ -4,24 +4,19 @@ import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../
 import { ValidationError } from '../errors/validationError';
 import { NotFoundError } from '../errors/notFoundError';
 import logger from '../logger';
-import sanitizer from 'express-sanitizer';
-import csrf from 'csurf';
 
-const csrfProtection = csrf({ cookie: true });
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
 const createEvent = async (req: Request, res: Response): Promise<void> => {
     const reqId = req.headers['x-request-id'] || 'unknown';
-    const start = Date.now();
     try {
         const validation = createEventSchema.safeParse(req.body);
         if (!validation.success) {
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
         }
         const event = await storage.create(validation.data);
-        const duration = Date.now() - start;
-        logger.logRequest(req.method, req.originalUrl, 201, duration, reqId);
+        logger.info(`Event created: ${event.id}`, { reqId });
         res.status(201).json(event);
     } catch (error) {
         handleError(error, res, reqId);
@@ -44,15 +39,16 @@ const getEvents = async (req: Request, res: Response): Promise<void> => {
 const updateEvent = async (req: Request, res: Response): Promise<void> => {
     const reqId = req.headers['x-request-id'] || 'unknown';
     const { id } = req.params;
-    const validation = updateEventSchema.safeParse(req.body);
-    if (!validation.success) {
-        throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
-    }
     try {
+        const validation = updateEventSchema.safeParse(req.body);
+        if (!validation.success) {
+            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+        }
         const updatedEvent = await storage.update(id, validation.data);
         if (!updatedEvent) {
             throw new NotFoundError('Event not found');
         }
+        logger.info(`Event updated: ${id}`, { reqId });
         res.json(updatedEvent);
     } catch (error) {
         handleError(error, res, reqId);
@@ -67,6 +63,7 @@ const deleteEvent = async (req: Request, res: Response): Promise<void> => {
         if (!success) {
             throw new NotFoundError('Event not found');
         }
+        logger.info(`Event deleted: ${id}`, { reqId });
         res.status(204).send();
     } catch (error) {
         handleError(error, res, reqId);
@@ -85,8 +82,6 @@ const handleError = (error: Error, res: Response, reqId: string) => {
 };
 
 const router = Router();
-router.use(sanitizer());
-router.use(csrfProtection);
 router.post('/', createEvent);
 router.get('/', getEvents);
 router.put('/:id', updateEvent);
