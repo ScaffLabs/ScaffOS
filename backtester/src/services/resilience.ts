@@ -56,26 +56,4 @@ function circuitBreaker<T>(fn: () => Promise<T>, failureThreshold: number, fallb
     };
 }
 
-async function queueRequests<T>(fn: () => Promise<T>): Promise<T> {
-    return new Promise((resolve, reject) => {
-        const queue: Array<() => void> = [];
-        const execute = async () => {
-            if (queue.length === 0) return;
-            const task = queue.shift();
-            if (task) {
-                try {
-                    const result = await task();
-                    resolve(result);
-                } catch (error) {
-                    reject(error);
-                } finally {
-                    execute();
-                }
-            }
-        };
-        queue.push(fn);
-        execute();
-    });
-}
-
-export { eventEmitter, withRetry, circuitBreaker, queueRequests };
+export { eventEmitter, withRetry, circuitBreaker };
