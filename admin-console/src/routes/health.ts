@@ -1,4 +1,5 @@
 import express from 'express';
+import os from 'os';
 import { logger } from '../middleware/logger';
 import { fetchHealthStatus } from '../services/ServiceClient';
 import { ServiceError } from '../errors/CustomErrors';
@@ -11,7 +12,12 @@ router.get('/', async (req, res) => {
         res.status(200).json({
             application: 'running',
             database: status.database,
-            externalService: status.externalService
+            externalService: status.externalService,
+            memoryUsage: process.memoryUsage(),
+            uptime: os.uptime(),
+            freeMemory: os.freemem(),
+            totalMemory: os.totalmem(),
+            loadAvg: os.loadavg(),
         });
     } catch (error) {
         logger.error(`Health check failed: ${error.message}`);

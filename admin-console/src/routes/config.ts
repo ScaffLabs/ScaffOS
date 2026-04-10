@@ -32,15 +32,17 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
 // Get All Configurations with Pagination, Filtering, and Sorting
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    const { limit = 10, offset = 0, sortBy = 'key', order = 'asc', filter = '' } = req.query;
+    const { limit = '10', offset = '0', sortBy = 'key', order = 'asc', filter = '' } = req.query;
     try {
         const allConfigs = await db.findAllConfigurations();
         const filteredConfigs = allConfigs.filter(config => config.key.includes(String(filter)));
         const sortedConfigs = filteredConfigs.sort((a, b) => {
+            const aValue = a[sortBy];
+            const bValue = b[sortBy];
             if (order === 'asc') {
-                return a[sortBy] > b[sortBy] ? 1 : -1;
+                return aValue > bValue ? 1 : -1;
             }
-            return a[sortBy] < b[sortBy] ? 1 : -1;
+            return aValue < bValue ? 1 : -1;
         });
         const paginatedConfigs = sortedConfigs.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedConfigs);
