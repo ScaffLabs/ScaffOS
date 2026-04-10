@@ -11,6 +11,7 @@ const Chart: React.FC = () => {
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
+            setError(null);
             try {
                 const result = await fetchChartData();
                 setData({
@@ -27,7 +28,7 @@ const Chart: React.FC = () => {
                 if (err instanceof ServiceError) {
                     setError(err.message);
                 } else {
-                    setError('An unexpected error occurred.');
+                    setError('An unexpected error occurred while loading chart data.');
                 }
             } finally {
                 setLoading(false);
@@ -38,14 +39,22 @@ const Chart: React.FC = () => {
         const ws = new WebSocket('ws://localhost:3001/chart');
         ws.onmessage = (event) => {
             const newData = JSON.parse(event.data);
-            setData(prevData => ({
-                ...prevData,
-                labels: [...prevData.labels, newData.date],
-                datasets: [{
-                    ...prevData.datasets[0],
-                    data: [...prevData.datasets[0].data, newData.price]
-                }]
-            }));
+            setData(prevData => {
+                const newLabels = [...prevData.labels, newData.date];
+                const newChartData = [...prevData.datasets[0].data, newData.price];
+                return {
+                    ...prevData,
+                    labels: newLabels,
+                    datasets: [{
+                        ...prevData.datasets[0],
+                        data: newChartData
+                    }]
+                };
+            });
+        };
+
+        ws.onerror = () => {
+            setError('WebSocket connection error.');
         };
 
         return () => ws.close();
