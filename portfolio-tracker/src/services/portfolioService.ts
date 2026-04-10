@@ -5,6 +5,7 @@ import axios from 'axios';
 import env from '../config';
 import circuitBreaker from 'circuit-breaker-js';
 import { logPortfolioCreation, logPortfolioUpdate, logPortfolioDeletion } from './auditService';
+import { publishPortfolioUpdate } from '../eventBus';
 
 const externalPortfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
 
@@ -25,12 +26,21 @@ const validatePositions = (positions: any[]) => {
     });
 };
 
+const notifyExternalService = async (portfolio: Portfolio) => {
+    try {
+        await axios.post(`${externalPortfolioServiceUrl}/notifications`, portfolio);
+    } catch (error) {
+        throw new ServiceError('Failed to notify external service: ' + error.message);
+    }
+};
+
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     try {
         validatePositions(portfolioData.positions);
         const newPortfolio = storage.create(portfolioData);
         await logPortfolioCreation(newPortfolio);
-        await notifyPortfolioService(newPortfolio);
+        await notifyExternalService(newPortfolio);
+        publishPortfolioUpdate(newPortfolio);
         return newPortfolio;
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -51,7 +61,8 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
         }
         const updatedPortfolio = storage.update(id, updates);
         await logPortfolioUpdate(id, updates);
-        await notifyPortfolioService(updatedPortfolio);
+        await notifyExternalService(updatedPortfolio);
+        publishPortfolioUpdate(updatedPortfolio);
         return updatedPortfolio;
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -67,12 +78,5 @@ export const deletePortfolio = async (id: string): Promise<void> => {
         throw new NotFoundError('Portfolio not found');
     }
     await logPortfolioDeletion(id);
-};
-
-export const performTransaction = async (actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): Promise<Portfolio[]> => {
-    return storage.transaction(actions, portfolioIds);
-};
-
-export const indexBy = async (field: keyof Portfolio): Promise<{ [key: string]: Portfolio[] }> => {
-    return storage.indexBy(field);
+    publishPortfolioUpdate({ id, deleted: true });
 };
