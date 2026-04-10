@@ -4,7 +4,9 @@ import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { withRetry } from './resilience';
-import { eventEmitter } from './resilience';
+import InMemoryStore from '../storage/InMemoryStore';
+
+const store = new InMemoryStore<BacktestResult>();
 
 async function calculateReturns(historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
@@ -41,12 +43,6 @@ async function calculateReturns(historicalData: HistoricalData[], buyThreshold: 
     return { totalReturns, trades, winRate, performanceMetrics };
 }
 
-const fetchOrderData = async (orderId: string) => {
-    const orderServiceUrl = process.env.ORDER_SERVICE_URL;
-    const response = await withRetry(() => axios.get(`${orderServiceUrl}/orders/${orderId}`));
-    return response.data;
-};
-
 const simulateBacktest = async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
     const validation = StrategyParametersSchema.safeParse(params);
     if (!validation.success) {
@@ -57,8 +53,10 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns });
-    eventEmitter.emit('BACKTEST_CREATED', result);
+
+    // Store the result in memory for retrieval
+    await store.create(result);
     return BacktestResultSchema.parse(result);
 };
 
-export { simulateBacktest, fetchOrderData };
+export { simulateBacktest };
