@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 // Branded types for portfolio and position IDs
 export type PortfolioId = string & { readonly brand: unique symbol };
 export type PositionId = string & { readonly brand: unique symbol };

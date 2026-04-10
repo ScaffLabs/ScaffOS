@@ -1,12 +1,12 @@
 import { Portfolio, PortfolioUpdate, PortfolioSchema, PositionSchema } from '../types';
 import storage from './storage';
-import { ValidationError, NotFoundError, ServiceError } from '../errors';
+import { ValidationError, NotFoundError } from '../errors';
 import { logPortfolioCreation, logPortfolioUpdate, logPortfolioDeletion } from './auditService';
 import { publishPortfolioUpdate } from '../eventBus';
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     try {
-        PortfolioSchema.parse(portfolioData);
+        PortfolioSchema.parse({ ...portfolioData, id: '' }); // Assign a temporary ID
         portfolioData.positions.forEach(pos => PositionSchema.parse(pos));
     } catch (error) {
         throw new ValidationError('Invalid portfolio data');
