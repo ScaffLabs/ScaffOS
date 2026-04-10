@@ -32,3 +32,17 @@ export const emitHealthCheckEvent = async () => {
     const event = { type: 'SERVICE_HEALTH_CHECK', status: healthStatus };
     serviceEmitter.emit('healthCheck', event);
 };
+
+export const healthCheck = async (req, res) => {
+    try {
+        const healthStatus = await checkServiceHealth();
+        const allServicesUp = Object.values(healthStatus).every(status => status);
+        res.status(allServicesUp ? 200 : 503).json({
+            status: allServicesUp ? 'UP' : 'DOWN',
+            services: healthStatus,
+        });
+    } catch (error) {
+        logger.error({ error: error.message }, 'Health check failed');
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
