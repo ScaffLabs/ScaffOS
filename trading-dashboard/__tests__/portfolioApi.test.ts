@@ -18,6 +18,12 @@ describe('Portfolio API Endpoints', () => {
         expect(response.body).toEqual([{ id: '1', symbol: 'AAPL', quantity: 100 }]);
     });
 
+    it('GET /api/positions should return 404 for non-existing position', async () => {
+        const response = await request(app).get('/api/positions/99');
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('Position not found.');
+    });
+
     it('POST /api/positions should create a position with valid data', async () => {
         const response = await request(app)
             .post('/api/positions')
@@ -54,12 +60,6 @@ describe('Portfolio API Endpoints', () => {
         const response = await request(app).get('/api/positions?limit=invalid');
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ message: 'Invalid pagination parameters' });
-    });
-
-    it('GET /api/positions should return 404 for non-existing position', async () => {
-        const response = await request(app).delete('/api/positions/99');
-        expect(response.status).toBe(404);
-        expect(response.body.message).toBe('Position not found.');
     });
 
     it('GET /api/positions should return empty array when no positions exist', async () => {
