@@ -21,54 +21,6 @@ export interface AlertStoreInterface {
     transaction(operations: Array<() => Promise<void>>): Promise<void>;
 }
 
-class InMemoryAlertStore implements AlertStoreInterface {
-    private store: { [key: string]: AlertMessage } = {};
-
-    async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
-        const newAlert = { ...alert, id: new mongoose.Types.ObjectId().toString(), createdAt: new Date() };
-        this.store[newAlert.id] = newAlert;
-        return newAlert;
-    }
-
-    async read(id: OrderId): Promise<AlertMessage | null> {
-        return this.store[id] || null;
-    }
-
-    async update(id: OrderId, alert: Partial<Omit<AlertMessage, 'id'>>): Promise<AlertMessage | null> {
-        const existingAlert = this.store[id];
-        if (!existingAlert) return null;
-        const updatedAlert = { ...existingAlert, ...alert };
-        this.store[id] = updatedAlert;
-        return updatedAlert;
-    }
-
-    async delete(id: OrderId): Promise<boolean> {
-        if (this.store[id]) {
-            delete this.store[id];
-            return true;
-        }
-        return false;
-    }
-
-    async findIndex(query: Partial<AlertMessage>): Promise<AlertMessage[]> {
-        return Object.values(this.store).filter(alert => {
-            return Object.keys(query).every(key => alert[key] === query[key]);
-        });
-    }
-
-    async deleteAll(): Promise<void> {
-        this.store = {};
-    }
-
-    async transaction(operations: Array<() => Promise<void>>): Promise<void> {
-        const results: any[] = [];
-        for (const operation of operations) {
-            results.push(await operation());
-        }
-        return results;
-    }
-}
-
 class MongoAlertStore implements AlertStoreInterface {
     async create(alert: Omit<AlertMessage, 'id'>): Promise<AlertMessage> {
         const newAlert = new AlertModel({ ...alert, id: new mongoose.Types.ObjectId().toString() });
@@ -114,4 +66,4 @@ class MongoAlertStore implements AlertStoreInterface {
     }
 }
 
-export const alertStore = process.env.NODE_ENV === 'production' ? new MongoAlertStore() : new InMemoryAlertStore();
+export const alertStore = new MongoAlertStore();
