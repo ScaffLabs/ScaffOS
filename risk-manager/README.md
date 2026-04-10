@@ -38,8 +38,11 @@ The service is built using Node.js and Express, with TypeScript utilized for typ
 - **Query Parameters**:
   - `limit` (integer, optional): Number of results to return.
   - `offset` (integer, optional): Number of results to skip.
+  - `sortBy` (string, optional): Field to sort by.
+  - `filterBy` (string, optional): Field to filter by (e.g., asset name).
 - **Responses**:
   - `200 OK`: Returns a list of risk positions.
+  - `400 Bad Request`: Validation error if parameters are incorrect.
   - `500 Internal Server Error`: An error occurred while fetching data.
 
 ### POST /api/risk
