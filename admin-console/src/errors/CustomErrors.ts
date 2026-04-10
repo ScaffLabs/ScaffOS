@@ -47,4 +47,11 @@ class NullValueError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, EmptyArrayError, OverflowError, DivisionByZeroError, NullValueError }; 
+class InvalidInputTypeError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'InvalidInputTypeError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, EmptyArrayError, OverflowError, DivisionByZeroError, NullValueError, InvalidInputTypeError };

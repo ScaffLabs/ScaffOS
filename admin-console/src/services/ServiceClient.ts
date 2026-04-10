@@ -1,28 +1,17 @@
 import axios, { AxiosError } from 'axios';
 import config from '../config';
-import { ServiceError } from '../errors/CustomErrors';
+import { ServiceError, InvalidInputTypeError } from '../errors/CustomErrors';
 import { ConfigurationItem } from '../types';
-import { emitEvent } from '../events/EventBus';
 
 const axiosInstance = axios.create({
     baseURL: config.API_URL,
 });
 
-const retryWithExponentialBackoff = async (fn, retries = 3, delay = 1000) => {
-    try {
-        return await fn();
-    } catch (error) {
-        if (retries === 0) throw error;
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return retryWithExponentialBackoff(fn, retries - 1, delay * 2);
-    }
-};
-
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
     try {
-        const response = await retryWithExponentialBackoff(() => axiosInstance.get('/config'));
-        if (!response.data || !Array.isArray(response.data)) {
-            throw new ServiceError('Invalid response: Expected an array');
+        const response = await axiosInstance.get('/config');
+        if (!Array.isArray(response.data)) {
+            throw new InvalidInputTypeError('Expected an array of configurations.');
         }
         return response.data;
     } catch (error) {
@@ -32,8 +21,10 @@ const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
 
 const postConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
     try {
-        const response = await retryWithExponentialBackoff(() => axiosInstance.post('/config', configItem));
-        emitEvent('CONFIGURATION_CREATED', configItem);
+        const response = await axiosInstance.post('/config', configItem);
+        if (response.status !== 201) {
+            throw new ServiceError('Failed to create configuration.');
+        }
     } catch (error) {
         handleAxiosError(error, 'create configuration');
     }
@@ -41,8 +32,10 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
 
 const deleteConfiguration = async (key: string): Promise<void> => {
     try {
-        await retryWithExponentialBackoff(() => axiosInstance.delete(`/config/${key}`));
-        emitEvent('CONFIGURATION_DELETED', { key });
+        const response = await axiosInstance.delete(`/config/${key}`);
+        if (response.status !== 204) {
+            throw new ServiceError('Failed to delete configuration.');
+        }
     } catch (error) {
         handleAxiosError(error, 'delete configuration');
     }
