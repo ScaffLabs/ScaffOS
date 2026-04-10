@@ -17,7 +17,7 @@ The application is built using React for the frontend and Express for the backen
    ```bash
    git clone https://github.com/your-username/admin-console.git
    cd admin-console
-   ```
+   ```  
 2. Run `npm install` to install dependencies.
 
 ### Run
