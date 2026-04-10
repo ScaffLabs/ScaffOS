@@ -8,8 +8,8 @@ import rateLimit from 'express-rate-limit';
 
 // Rate limiting for order creation
 const createOrderLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 5,
     message: 'Too many orders created from this IP, please try again later'
 });
 
@@ -32,9 +32,9 @@ export const createOrder = [createOrderLimiter, createOrderValidators, async (re
         const order = req.body;
         const createdOrder = await createOrderService(order);
         res.status(201).json(createdOrder);
-        logger.info('Order created successfully', { order });
+        logger.info('Order created successfully', { order, requestId: req.headers['x-request-id'] });
     } catch (error) {
-        logger.error('Error creating order', { error: error.message });
+        logger.error('Error creating order', { error: error.message, requestId: req.headers['x-request-id'] });
         if (error instanceof ValidationError) {
             return res.status(400).json({ message: error.message });
         }
@@ -51,7 +51,7 @@ export const getOrders = async (req: Request, res: Response) => {
         }
         res.status(200).json(orders);
     } catch (error) {
-        logger.error('Error retrieving orders', { error: error.message });
+        logger.error('Error retrieving orders', { error: error.message, requestId: req.headers['x-request-id'] });
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
@@ -67,7 +67,7 @@ export const updateOrder = async (req: Request, res: Response) => {
         }
         res.status(200).json(updatedOrder);
     } catch (error) {
-        logger.error('Error updating order', { error: error.message });
+        logger.error('Error updating order', { error: error.message, requestId: req.headers['x-request-id'] });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ message: error.message });
         }
@@ -82,7 +82,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
         await deleteOrderService(id);
         res.status(204).send();
     } catch (error) {
-        logger.error('Error deleting order', { error: error.message });
+        logger.error('Error deleting order', { error: error.message, requestId: req.headers['x-request-id'] });
         if (error instanceof NotFoundError) {
             return res.status(404).json({ message: 'Order not found.' });
         }
