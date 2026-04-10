@@ -59,13 +59,3 @@ export const deletePortfolio = async (id: string): Promise<void> => {
 export const fetchAllData = async (): Promise<Portfolio[]> => {
     return storage.getAll();
 };
-
-export const healthCheck = async (): Promise<{status: string, portfolioService: boolean}> => {
-    try {
-        const isHealthy = await checkExternalService();
-        return { status: 'UP', portfolioService: isHealthy };
-    } catch (error) {
-        logger.error('Health check failed', { error: error.message });
-        return { status: 'DOWN', portfolioService: false };
-    }
-};

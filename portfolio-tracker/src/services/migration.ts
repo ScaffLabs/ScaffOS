@@ -10,7 +10,7 @@ export const seedData = async (): Promise<void> => {
         { id: '1', name: 'Seed Portfolio 1', positions: [{ symbol: 'AAPL', quantity: 10, averagePrice: 150 }] },
         { id: '2', name: 'Seed Portfolio 2', positions: [{ symbol: 'GOOGL', quantity: 5, averagePrice: 2000 }] }
     ];
-    storage.migrate(seedPortfolios);
+    await migrateData(seedPortfolios);
 };
 
 export const clearAllData = async (): Promise<void> => {
@@ -34,5 +34,5 @@ export const seedDevelopmentData = async (): Promise<void> => {
         { id: '3', name: 'Development Portfolio 1', positions: [{ symbol: 'MSFT', quantity: 15, averagePrice: 250 }] },
         { id: '4', name: 'Development Portfolio 2', positions: [{ symbol: 'TSLA', quantity: 8, averagePrice: 700 }] }
     ];
-    storage.migrate(devPortfolios);
+    await migrateData(devPortfolios);
 };
