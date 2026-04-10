@@ -2,7 +2,7 @@ import axios from 'axios';
 import { ServiceError } from '../errors/customErrors';
 import { PerformanceMetricsSchema } from '../types';
 import { logError } from '../utils/errorLogger';
-import { emitEvent } from '../api/eventBus';
+import { emitEvent } from './eventBus';
 import { CircuitBreaker } from 'opossum';
 
 const fetchWithRetry = async (url: string, retries: number = 3): Promise<any> => {
