@@ -37,3 +37,21 @@ export const logStartup = (config: any) => {
 export const generateRequestId = () => uuidv4();
 
 export default logger;
+
+/**
+ * Logs a warning message for invalid requests.
+ * @param {string} message - The message to log.
+ * @param {string} requestId - The unique request ID.
+ */
+export const logWarning = (message: string, requestId: string) => {
+    logger.warn(message, { requestId });
+};
+
+/**
+ * Logs an informational message.
+ * @param {string} message - The message to log.
+ * @param {object} meta - Additional metadata to log.
+ */
+export const logInfo = (message: string, meta: object) => {
+    logger.info(message, meta);
+};
