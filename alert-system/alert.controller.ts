@@ -46,9 +46,6 @@ export class AlertController {
             if (error instanceof ValidationError) {
                 return res.status(400).json({ message: 'Invalid alert data: ' + error.message });
             }
-            if (error instanceof NotFoundError) {
-                return res.status(404).json({ message: 'Alert not found: ' + error.message });
-            }
             logger.error('Failed to add alert.', { error: error.message });
             return res.status(500).json({ message: 'Failed to add alert.' });
         } finally {
@@ -72,5 +69,25 @@ export class AlertController {
             logger.error(error);
             throw new ServiceError('Failed to notify external services.');
         }
+    }
+
+    async checkHealth(req: Request, res: Response) {
+        const services = ['WEBHOOK', 'EMAIL'];
+        const health = await this.checkExternalServices(services);
+        return res.json({ services: health });
+    }
+
+    private async checkExternalServices(services: string[]): Promise<{ [key: string]: boolean }> {
+        const results: { [key: string]: boolean } = {};
+        await Promise.all(services.map(async (service) => {
+            try {
+                const res = await axios.get(`${process.env[service + '_URL']}/health`);
+                results[service] = res.status === 200;
+            } catch (error) {
+                logger.error(`Health check for ${service} failed: ${error.message}`);
+                results[service] = false;
+            }
+        }));
+        return results;
     }
 }

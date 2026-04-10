@@ -34,53 +34,10 @@ const limiter = rateLimit({
 router.use(limiter);
 
 // Health check routes
-router.get('/health', HealthCheck.checkHealth);
-router.get('/ready', HealthCheck.checkReady);
+router.get('/health', async (req, res) => {
+    await alertController.checkHealth(req, res);
+});
 
-/**
- * @swagger
- * /api/alerts:
- *   get:
- *     summary: Retrieve a list of active alerts
- *     parameters:
- *       - name: limit
- *         in: query
- *         description: Number of alerts to return
- *         required: false
- *         schema:
- *           type: integer
- *       - name: offset
- *         in: query
- *         description: Number of alerts to skip
- *         required: false
- *         schema:
- *           type: integer
- *       - name: type
- *         in: query
- *         description: Filter alerts by type
- *         required: false
- *         schema:
- *           type: string
- *           enum: [price, risk]
- *       - name: sort
- *         in: query
- *         description: Sort order for alerts
- *         required: false
- *         schema:
- *           type: string
- *           enum: [asc, desc]
- *     responses:
- *       200:
- *         description: A list of alerts
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/AlertMessage'
- *       204:
- *         description: No alerts found
- */
 router.get('/api/alerts', async (req, res) => {
     req.query = sanitize(req.query);
     try {
@@ -94,27 +51,6 @@ router.get('/api/alerts', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/alerts:
- *   post:
- *     summary: Create a new alert
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreateAlertRequest'
- *     responses:
- *       201:
- *         description: Created alert
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AlertMessage'
- *       400:
- *         description: Invalid alert data
- */
 router.post('/api/alerts', async (req, res) => {
     req.body = sanitize(req.body);
     try {
@@ -130,56 +66,11 @@ router.post('/api/alerts', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/alerts/{id}:
- *   put:
- *     summary: Update an existing alert
- *     parameters:
- *       - name: id
- *         in: path
- *         description: ID of the alert to update
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               threshold:
- *                 type: number
- *     responses:
- *       200:
- *         description: Updated alert
- *       404:
- *         description: Alert not found
- */
 router.put('/api/alerts/:id', async (req, res) => {
     req.body = sanitize(req.body);
     await alertController.updateAlert(req, res);
 });
 
-/**
- * @swagger
- * /api/alerts/{id}:
- *   delete:
- *     summary: Delete an alert
- *     parameters:
- *       - name: id
- *         in: path
- *         description: ID of the alert to delete
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Alert deleted
- *       404:
- *         description: Alert not found
- */
 router.delete('/api/alerts/:id', async (req, res) => {
     const alertId = req.params.id;
     const success = await alertController.deleteAlert(req, res);
