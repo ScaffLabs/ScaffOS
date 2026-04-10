@@ -38,6 +38,10 @@ export const updateUser = async (id: UserId, userData: Partial<User>): Promise<U
 
 // Delete User
 export const deleteUser = async (id: UserId): Promise<boolean> => {
+    const user = await findUserById(id);
+    if (!user) {
+        throw new NotFoundError('User not found for deletion');
+    }
     return userStore.delete(id);
 };
 
