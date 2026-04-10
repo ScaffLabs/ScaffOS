@@ -1,1 +1,28 @@
-import rateLimit from 'express-rate-limit'; /** * Rate limiting middleware to limit API requests. */ export const limiter = rateLimit({ windowMs: 1 * 60 * 1000, // 1 minute max: 100, // limit each IP to 100 requests per windowMs message: 'Too many requests, please try again later.', }); /** * Apply rate limiting to the API routes. * @param app */ export const applyRateLimiting = (app: any) => { app.use('/api/', limiter); }; 
+import rateLimit from 'express-rate-limit';
+
+/**
+ * Rate limiting middleware to limit API requests.
+ */
+export const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests, please try again later.',
+});
+
+/**
+ * Apply rate limiting to the API routes.
+ * @param app
+ */
+export const applyRateLimiting = (app: any) => {
+    app.use('/api/', limiter);
+};
+
+/**
+ * Middleware to handle rate limiting errors.
+ */
+export const rateLimitErrorHandler = (err: any, req: any, res: any, next: any) => {
+    if (err.status === 429) {
+        return res.status(429).json({ message: 'Too many requests, please try again later.' });
+    }
+    next(err);
+};

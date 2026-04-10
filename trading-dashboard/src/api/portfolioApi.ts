@@ -7,9 +7,18 @@ import { publishEvent } from '../utils/eventBus';
 const positionStore = new InMemoryStore<Position>();
 
 export const fetchPositions = async (req: Request, res: Response) => {
+    const { limit = 10, offset = 0 } = req.query;
+    const limitNum = parseInt(limit as string);
+    const offsetNum = parseInt(offset as string);
+
+    if (isNaN(limitNum) || isNaN(offsetNum) || limitNum <= 0 || offsetNum < 0) {
+        return res.status(400).json({ message: 'Invalid pagination parameters' });
+    }
+
     try {
         const positions = Object.values(positionStore.data);
-        res.status(200).json(positions);
+        const paginatedPositions = positions.slice(offsetNum, offsetNum + limitNum);
+        res.status(200).json(paginatedPositions);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching positions: ' + error.message });
     }
@@ -23,7 +32,7 @@ export const createPosition = async (req: Request, res: Response) => {
             throw new ValidationError('Invalid position data: ' + validationResult.error.errors.join(', '));
         }
         positionStore.create(validationResult.data);
-        publishEvent('POSITION_UPDATED', validationResult.data); // Notify position update
+        publishEvent('POSITION_UPDATED', validationResult.data);
         res.status(201).json({ message: 'Position created successfully', position: validationResult.data });
     } catch (error) {
         if (error instanceof ValidationError) {
@@ -46,7 +55,7 @@ export const updatePosition = async (req: Request, res: Response) => {
             throw new ValidationError('Invalid position data: ' + validationResult.error.errors.join(', '));
         }
         positionStore.update(id, validationResult.data);
-        publishEvent('POSITION_UPDATED', validationResult.data); // Notify position update
+        publishEvent('POSITION_UPDATED', validationResult.data);
         res.status(204).send();
     } catch (error) {
         if (error instanceof NotFoundError) {

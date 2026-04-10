@@ -8,6 +8,7 @@ import config from './config';
 import { registerExternalApiRoutes } from './api/externalApi';
 import { registerHealthRoutes } from './utils/healthCheck';
 import { closePool } from './utils/connectionPool';
+import { applyRateLimiting, rateLimitErrorHandler } from './middleware/rateLimiter';
 
 const app = express();
 logger.logStartup(config);
@@ -15,6 +16,8 @@ logger.logStartup(config);
 app.use(express.json());
 app.use(requestLogger);
 securityMiddleware(app);
+applyRateLimiting(app); // Apply rate limiting middleware
+app.use(rateLimitErrorHandler); // Handle rate limit errors
 registerRoutes(app);
 registerExternalApiRoutes(app);
 registerHealthRoutes(app);
