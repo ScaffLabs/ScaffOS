@@ -10,6 +10,7 @@ import logger, { logStartup } from './logger';
 import { config } from './config';
 import { runMigrations } from './migrations';
 import './memoryMonitor';
+import { sanitizeInput } from './sanitization';
 
 const app = express();
 const PORT = config.PORT;
@@ -18,6 +19,7 @@ const PORT = config.PORT;
 app.use(helmet());
 app.use(cors({ origin: ['http://your-allowed-origin.com'], credentials: true }));
 app.use(bodyParser.json({ limit: '1mb' }));
+app.use(sanitizeInput);
 
 // Rate Limiting
 const limiter = rateLimit({

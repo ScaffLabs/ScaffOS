@@ -1,19 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
-import { sanitizeBody, sanitizeQuery } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 
 export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
     // Sanitize body inputs
-    sanitizeBody('id').trim().escape()(req, res, () => {});
-    sanitizeBody('type').trim().escape()(req, res, () => {});
-    sanitizeBody('price').toFloat()(req, res, () => {});
-    sanitizeBody('quantity').toInt()(req, res, () => {});
-    sanitizeBody('status').trim().escape()(req, res, () => {});
+    body('id').trim().escape()(req, res, () => {});
+    body('type').trim().escape().isIn(['limit', 'market', 'stop'])(req, res, () => {});
+    body('price').toFloat().isFloat({ gt: 0 })(req, res, () => {});
+    body('quantity').toInt().isInt({ gt: 0 })(req, res, () => {});
+    body('status').trim().escape().isIn(['open', 'filled', 'cancelled'])(req, res, () => {});
 
-    // Sanitize query inputs
+    // Sanitize query parameters
     for (const key in req.query) {
         if (typeof req.query[key] === 'string') {
             req.query[key] = req.query[key].replace(/<script.*?>.*?<\/script>/gi, '');
         }
     }
+
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     next();
 };
