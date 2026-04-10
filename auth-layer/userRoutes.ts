@@ -28,11 +28,33 @@ router.post('/users', async (req, res) => {
     }
 });
 
-// Get All Users
+// Get All Users with Pagination, Filtering, and Sorting
 router.get('/users', async (req, res) => {
+    const { limit = 10, offset = 0, sort = 'username', order = 'asc' } = req.query;
+    const filter = req.query.filter ? JSON.parse(req.query.filter) : {};
     try {
         const users = await getAllUsers();
-        res.status(200).json(users);
+        let filteredUsers = users;
+
+        // Filtering
+        if (filter.username) {
+            filteredUsers = filteredUsers.filter(user => user.username.includes(filter.username));
+        }
+        if (filter.email) {
+            filteredUsers = filteredUsers.filter(user => user.email.includes(filter.email));
+        }
+
+        // Sorting
+        filteredUsers.sort((a, b) => {
+            if (order === 'asc') {
+                return a[sort] > b[sort] ? 1 : -1;
+            }
+            return a[sort] < b[sort] ? 1 : -1;
+        });
+
+        // Pagination
+        const paginatedUsers = filteredUsers.slice(offset, offset + limit);
+        res.status(200).json(paginatedUsers);
     } catch (error) {
         logger.error('Error fetching users', { error: error.message });
         return res.status(500).json({ error: 'Internal Server Error' });
