@@ -46,7 +46,7 @@ export interface AppEvent {
 /** Zod schema for validating AppEvent objects */
 export const AppEventSchema = z.union([
     z.object({ type: z.literal('CONFIGURATION_CREATED'), payload: ConfigurationItemSchema }),
-    z.object({ type: z.literal('CONFIGURATION_DELETED'), payload: z.object({ key: z.string() }) }),
+    z.object({ type: z.literal('CONFIGURATION_DELETED'), payload: z.object({ key: z.string().transform((key) => key as ConfigurationKey) }) }),
 ]);
 
 /**
