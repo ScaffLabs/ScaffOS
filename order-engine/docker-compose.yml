@@ -16,3 +16,9 @@ services:
       POSTGRES_DB: your_database
     ports:
       - '5432:5432'
+  another-service:
+    image: your/another-service:latest
+    environment:
+      SOME_VAR: value
+    ports:
+      - '4000:4000'
