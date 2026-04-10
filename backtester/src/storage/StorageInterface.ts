@@ -6,5 +6,21 @@ export interface StorageInterface<T> {
     findAll(): Promise<any[]>;
     transaction(operations: Array<() => Promise<void>>): Promise<void>;
     migrate(data: T[]): Promise<void>;
-    findByIndex(indexKey: string): Promise<any[]>;
+    findByIndex(indexKey: string, value: any): Promise<any[]>;
+}
+
+export interface TransactionOperation {
+    type: 'create' | 'update' | 'delete';
+    data?: any;
+    id?: string;
+} 
+
+export interface TransactionResult {
+    success: boolean;
+    results?: any[];
+}
+
+export interface MigrationData<T> {
+    version: number;
+    data: T[];
 }

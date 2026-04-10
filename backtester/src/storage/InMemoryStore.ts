@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { StorageInterface } from './StorageInterface';
+import { StorageInterface, TransactionOperation, TransactionResult } from './StorageInterface';
 import logger from '../utils/logger';
 
 interface Entity<T> {
@@ -48,13 +48,31 @@ export class InMemoryStore<T> implements StorageInterface<T> {
         return Array.from(this.store.values());
     }
 
-    async transaction(operations: Array<() => Promise<void>>): Promise<void> {
+    async transaction(operations: TransactionOperation[]): Promise<TransactionResult> {
         const results = [];
         for (const operation of operations) {
-            const result = await operation();
-            results.push(result);
+            switch (operation.type) {
+                case 'create':
+                    if (operation.data) {
+                        const created = await this.create(operation.data);
+                        results.push(created);
+                    }
+                    break;
+                case 'update':
+                    if (operation.id && operation.data) {
+                        const updated = await this.update(operation.id, operation.data);
+                        results.push(updated);
+                    }
+                    break;
+                case 'delete':
+                    if (operation.id) {
+                        await this.delete(operation.id);
+                        results.push({ success: true });
+                    }
+                    break;
+            }
         }
-        return results;
+        return { success: true, results };
     }
 
     async migrate(data: T[]): Promise<void> {
