@@ -1,34 +1,17 @@
 import { Request, Response } from 'express';
-import axios from 'axios';
+import { healthCheck } from '../api/analytics';
 import { logError } from '../utils/errorLogger';
 
-const SERVICES = {
-    strategyService: process.env.STRATEGY_SERVICE_URL || 'http://localhost:3001/api/health',
-};
-
-const checkServiceHealth = async (url: string) => {
+export const healthCheckHandler = async (req: Request, res: Response) => {
     try {
-        const response = await axios.get(url);
-        return response.status === 200;
+        const healthStatus = await healthCheck();
+        res.status(200).json({ status: 'up', dependencies: healthStatus });
     } catch (error) {
-        logError(error, `Health check failed for ${url}`);
-        return false;
+        logError(error, 'Health check handler');
+        res.status(503).json({ status: 'down', error: error.message });
     }
 };
 
 export const dependentHealthCheckHandler = async (req: Request, res: Response) => {
-    try {
-        const healthResults = await Promise.all(Object.entries(SERVICES).map(async ([name, url]) => {
-            const healthy = await checkServiceHealth(url);
-            return { serviceName: name, healthy };
-        }));
-        const allHealthy = healthResults.every(dep => dep.healthy);
-        res.status(allHealthy ? 200 : 503).json({
-            status: allHealthy ? 'ready' : 'not ready',
-            dependencies: healthResults,
-        });
-    } catch (error) {
-        console.error('Dependent health check failed:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+    // Additional logic for dependent health checks can be implemented here
 };
