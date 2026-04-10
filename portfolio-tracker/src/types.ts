@@ -1,4 +1,6 @@
 // Branded types for portfolio and position IDs
+import { z } from 'zod';
+
 export type PortfolioId = string & { readonly brand: unique symbol };
 export type PositionId = string & { readonly brand: unique symbol };
 
@@ -51,15 +53,3 @@ export const PortfolioSchema = z.object({
     name: z.string().min(1, { message: 'Name is required' }),
     positions: z.array(PositionSchema).optional().nonempty({ message: 'Positions must not be empty' }),
 });
-
-/**
- * HealthCheckResponse interface for health check responses.
- * @property {string} status - Service status (UP/DOWN).
- * @property {boolean} portfolioService - Status of the portfolio service.
- * @property {string} [error] - Optional error message if the service is down.
- */
-export interface HealthCheckResponse {
-    status: string;
-    portfolioService: boolean;
-    error?: string;
-};
