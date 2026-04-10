@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from './errorClasses';
 import { z } from 'zod';
+import csrf from 'csurf';
+
+const csrfProtection = csrf({ cookie: true });
 
 const querySchema = z.object({
     limit: z.string().optional().transform((val) => Number(val)),
@@ -55,4 +58,4 @@ const sanitize = (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-export { sanitize };
+export { sanitize, csrfProtection };

@@ -11,6 +11,7 @@ import { emitHealthCheckEvent } from './serviceHealth';
 import { setupRoutes } from './dashboard';
 import { generalLimiter } from './rateLimiter';
 import { sanitize } from './sanitize';
+import { apiKeyLimiter } from './rateLimiter';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ app.use(helmet());
 app.use(express.json());
 app.use(logRequest);
 app.use(generalLimiter);
+app.use(apiKeyLimiter);
 app.use(sanitize);
 
 // Health check endpoints
