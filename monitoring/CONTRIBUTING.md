@@ -14,19 +14,19 @@ We welcome contributions to improve the Monitoring Service! Please follow these 
 ## Code Standards
 - Follow the existing code style and conventions used in the project.
 - Write unit tests for new features to ensure functionality and maintain code quality.
-- Document your code adequately, especially complex logic and new functionalities.
+- Document your code adequately, especially complex logic and new functionalities. This helps maintainers and other contributors understand your work better.
 
 ## Issues
 If you encounter any issues, please report them in the issues section of the repository. Be sure to include steps to reproduce the issue, your environment details, and any relevant logs.
 
 ## Review Process
-- All pull requests will be reviewed by at least one team member before merging.
+- All pull requests will be reviewed by at least one team member before merging. This ensures code quality and consistency.
 - Be open to feedback and willing to make necessary changes based on reviewer suggestions.
 
 ## Testing Your Changes
-- Before submitting a pull request, ensure all tests pass by running `npm test`.
+- Before submitting a pull request, ensure all tests pass by running `npm test`. This validates your changes and helps prevent regressions.
 - Consider adding tests for any new functionality to ensure it is covered.
 
 ## Documentation
-- Update the README.md file if your changes affect the usage or understanding of the service.
+- Update the README.md file if your changes affect the usage or understanding of the service. Clear documentation helps users and contributors alike.
 - Ensure that API documentation is accurate and reflects your changes.
