@@ -1,20 +1,17 @@
-// Import necessary modules
 import { Request, Response } from 'express';
-import { createStrategy, getStrategy, updateStrategy, deleteStrategy, findStrategies } from '../services/strategyService';
+import { createStrategy, updateStrategy, deleteStrategy, findStrategies } from '../services/strategyService';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
 
-// Handler to fetch all strategies based on query parameters
+// Handler to fetch all strategies with pagination
 export const getStrategiesHandler = async (req: Request, res: Response) => {
+    const { limit = 10, offset = 0 } = req.query;
     try {
-        const { limit = 10, offset = 0, name } = req.query;
-        const query: any = {};
-        if (name) query.name = new RegExp(name, 'i'); // Case-insensitive search for strategies
-        const strategies = await findStrategies(query);
+        const strategies = await findStrategies({});
         const paginatedStrategies = strategies.slice(Number(offset), Number(offset) + Number(limit));
         res.status(200).json(paginatedStrategies);
     } catch (error) {
         console.error('Error fetching strategies:', error);
-        throw new ServiceError('Failed to fetch strategies.');
+        res.status(500).json({ error: 'Failed to fetch strategies.' });
     }
 };
 
@@ -32,7 +29,7 @@ export const createStrategyHandler = async (req: Request, res: Response) => {
             res.status(400).json({ error: error.message });
         } else {
             console.error('Error creating strategy:', error);
-            throw new ServiceError('Failed to create strategy.');
+            res.status(500).json({ error: 'Failed to create strategy.' });
         }
     }
 };
@@ -52,7 +49,7 @@ export const updateStrategyHandler = async (req: Request, res: Response) => {
             res.status(404).json({ error: error.message });
         } else {
             console.error('Error updating strategy:', error);
-            throw new ServiceError('Failed to update strategy.');
+            res.status(500).json({ error: 'Failed to update strategy.' });
         }
     }
 };
@@ -71,7 +68,7 @@ export const deleteStrategyHandler = async (req: Request, res: Response) => {
             res.status(404).json({ error: error.message });
         } else {
             console.error('Error deleting strategy:', error);
-            throw new ServiceError('Failed to delete strategy.');
+            res.status(500).json({ error: 'Failed to delete strategy.' });
         }
     }
 };

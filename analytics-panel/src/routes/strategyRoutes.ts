@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getStrategiesHandler, createStrategyHandler, updateStrategyHandler, deleteStrategyHandler } from '../handlers/strategyHandler';
-import { validateInputBody, validateRequestSize, validateQueryParams } from '../middleware/inputValidator';
+import { validateInputBody, validateRequestSize } from '../middleware/inputValidator';
 import { validateStrategy, validateUpdateStrategy } from '../middleware/strategyValidator';
 import rateLimit from 'express-rate-limit';
 import swaggerJsDoc from 'swagger-jsdoc';
@@ -39,7 +39,22 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-router.get('/', limiter, validateQueryParams, auditLogger, getStrategiesHandler);
+// Get strategies with pagination and sorting
+router.get('/', limiter, validateRequestSize, async (req, res) => {
+    const { limit = 10, offset = 0, sortBy = 'name', order = 'asc' } = req.query;
+    try {
+        const strategies = await getStrategiesHandler(req, res);
+        const sortedStrategies = strategies.sort((a, b) => {
+            if (order === 'asc') return a[sortBy] > b[sortBy] ? 1 : -1;
+            return a[sortBy] < b[sortBy] ? 1 : -1;
+        });
+        const paginatedStrategies = sortedStrategies.slice(Number(offset), Number(offset) + Number(limit));
+        res.status(200).json(paginatedStrategies);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch strategies.' });
+    }
+});
+
 router.post('/', limiter, validateInputBody, validateRequestSize, validateStrategy, auditLogger, createStrategyHandler);
 router.put('/:id', limiter, validateInputBody, validateUpdateStrategy, auditLogger, updateStrategyHandler);
 router.delete('/:id', limiter, auditLogger, deleteStrategyHandler);
