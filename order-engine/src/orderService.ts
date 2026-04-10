@@ -1,4 +1,3 @@
-// Order service functions
 import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
