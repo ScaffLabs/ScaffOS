@@ -8,9 +8,10 @@ const store = new InMemoryStore<LatencyData>();
 
 export const listDashboardEntries = async (req: Request, res: Response) => {
     try {
-        const { limit, offset } = req.query;
+        const limit = Number(req.query.limit) || 10;
+        const offset = Number(req.query.offset) || 0;
         const entries = store.getAll();
-        const paginatedEntries = entries.slice(offset ? Number(offset) : 0, limit ? Number(limit) + (offset ? Number(offset) : 0) : undefined);
+        const paginatedEntries = entries.slice(offset, offset + limit);
         if (paginatedEntries.length === 0) {
             return res.status(204).json([]);
         }
@@ -23,7 +24,7 @@ export const listDashboardEntries = async (req: Request, res: Response) => {
 
 export const createDashboardEntry = async (req: Request, res: Response) => {
     try {
-        const bodyValidation = LatencyDataSchema.safeParse({ ...req.body, timestamp: new Date() });
+        const bodyValidation = LatencyDataSchema.safeParse(req.body);
         if (!bodyValidation.success) {
             throw new ValidationError('Invalid input data. Please provide valid path and duration.');
         }
