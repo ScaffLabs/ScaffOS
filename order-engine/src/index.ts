@@ -11,9 +11,10 @@ import { requestIdMiddleware, errorHandlingMiddleware } from './middleware';
 import logger, { logStartup } from './logger';
 import { setupRequestQueue } from './requestQueue';
 import { sanitizeInput } from './sanitization';
+import { config } from './config';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = config.PORT;
 
 // Middleware
 app.use(helmet());
@@ -40,7 +41,7 @@ const startServer = async () => {
     await migrateData();
     setupGracefulShutdown(app);
     const server = app.listen(PORT, () => {
-        logStartup({ port: PORT, env: process.env.NODE_ENV });
+        logStartup({ port: PORT, env: config.NODE_ENV });
         console.log(`Order Engine listening on port ${PORT}`);
     });
     return server;
