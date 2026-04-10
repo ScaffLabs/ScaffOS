@@ -3,7 +3,7 @@ import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { sanitize } from '../middleware/sanitization';
-import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData, healthCheck, checkExternalServiceHealth } from '../services/portfolioService';
+import { createPortfolio, getPortfolio, updatePortfolio, deletePortfolio, fetchAllData } from '../services/portfolioService';
 import logger from '../services/logger';
 import { ValidationError, NotFoundError } from '../errors';
 import requestLogger from '../middleware/requestLogger';
@@ -27,23 +27,6 @@ router.use(limiter);
 router.use(sanitize);
 router.use(auditLogger);
 router.use(requestLogger);
-
-// Health check route
-router.get('/health', async (req, res) => {
-    const healthStatus = await healthCheck();
-    res.json(healthStatus);
-});
-
-// External service health check
-router.get('/external-health', async (req, res) => {
-    try {
-        const isPortfolioServiceUp = await checkExternalServiceHealth(process.env.PORTFOLIO_SERVICE_URL);
-        res.json({ status: isPortfolioServiceUp ? 'UP' : 'DOWN' });
-    } catch (error) {
-        logger.error('Error checking external service health', { error: error.message });
-        res.status(503).json({ status: 'DOWN', error: error.message });
-    }
-});
 
 // Validation rules for portfolio creation and updates
 const portfolioValidation = [
@@ -75,26 +58,15 @@ router.post('/', portfolioValidation, async (req, res) => {
         logger.error('Error creating portfolio', { error: error.message });
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
-        } else if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
         }
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 router.get('/', async (req, res) => {
-    const { limit = 10, offset = 0, sort = 'name', order = 'asc' } = req.query;
     try {
         const portfolios = await fetchAllData();
-        const sortedPortfolios = portfolios.sort((a, b) => {
-            if (order === 'asc') {
-                return a[sort].localeCompare(b[sort]);
-            } else {
-                return b[sort].localeCompare(a[sort]);
-            }
-        });
-        const paginatedPortfolios = sortedPortfolios.slice(Number(offset), Number(offset) + Number(limit));
-        res.json(paginatedPortfolios);
+        res.json(portfolios);
     } catch (error) {
         logger.error('Error fetching portfolios', { error: error.message });
         res.status(500).json({ error: 'Internal Server Error' });
