@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { AppEvent } from '../types';
 
 const eventBus = new EventEmitter();
 
@@ -15,3 +16,12 @@ export const unsubscribeFromEvent = (event: string, listener: (data: any) => voi
 };
 
 export const getEventBus = () => eventBus;
+
+// Initialize listeners for events
+subscribeToEvent('CONFIGURATION_DELETED', (data) => {
+    console.log('Configuration deleted:', data);
+});
+
+subscribeToEvent('CONFIGURATION_CREATED', (data) => {
+    console.log('Configuration created:', data);
+});

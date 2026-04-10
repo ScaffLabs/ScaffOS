@@ -5,6 +5,7 @@ import { ConfigurationItem } from '../types';
 
 const axiosInstance = axios.create({
     baseURL: config.API_URL,
+    timeout: 5000,
 });
 
 const fetchConfigurations = async (): Promise<ConfigurationItem[]> => {
@@ -48,4 +49,26 @@ const handleAxiosError = (error: unknown, operation: string) => {
     throw new ServiceError(`Failed to ${operation}`);
 };
 
-export { fetchConfigurations, postConfiguration, deleteConfiguration };
+const fetchHealthStatus = async () => {
+    try {
+        const response = await axiosInstance.get('/health');
+        return response.data;
+    } catch (error) {
+        throw new ServiceError('Failed to fetch health status: ' + error.message);
+    }
+};
+
+const healthCheck = async () => {
+    try {
+        const result = await fetchHealthStatus();
+        return {
+            application: 'running',
+            database: result.database,
+            externalService: result.externalService
+        };
+    } catch (error) {
+        throw new ServiceError('Health check failed: ' + error.message);
+    }
+};
+
+export { fetchConfigurations, postConfiguration, deleteConfiguration, fetchHealthStatus, healthCheck };
