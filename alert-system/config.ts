@@ -18,5 +18,5 @@ if (!parsedEnv.success) {
     process.exit(1);
 }
 
-export const config = parsedEnv.data; 
+export const config = parsedEnv.data;
 export const isProduction = config.NODE_ENV === 'production';
