@@ -9,9 +9,6 @@ const positionStore = new InMemoryStore<Position>();
 export const fetchPositions = async (req: Request, res: Response) => {
     try {
         const positions = Object.values(positionStore.data);
-        if (positions.length === 0) {
-            return res.status(204).json([]);
-        }
         res.status(200).json(positions);
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch positions: ' + error.message });
