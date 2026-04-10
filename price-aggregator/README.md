@@ -1,15 +1,16 @@
 # Price Aggregator
 
 ## Project Description
-The Price Aggregator service fetches real-time prices from multiple exchanges, calculates the Volume Weighted Average Price (VWAP), and provides a RESTful API for clients to access this data.
+The Price Aggregator service fetches real-time prices from multiple exchanges, calculates the Volume Weighted Average Price (VWAP), and provides a RESTful API for clients to access this data. This service aims to provide low-latency access to current price information and aggregate data from various sources to ensure accuracy and reliability.
 
 ## Architecture Overview
-The service is built using Node.js, Express for the API, and WebSocket for real-time price broadcasting. It employs a circuit breaker pattern for resilient HTTP requests to external price exchanges. The service also implements memory monitoring and error handling middleware to ensure robustness.
+The service is built using Node.js, Express for the API, and WebSocket for real-time price broadcasting. It employs a circuit breaker pattern for resilient HTTP requests to external price exchanges. The service also implements memory monitoring and error handling middleware to ensure robustness. The data is stored in a PostgreSQL database, allowing for persistent storage and retrieval of price data.
 
 ## Setup Instructions
 ### Prerequisites
 - Node.js (version 14 or higher)
 - npm (Node package manager)
+- PostgreSQL (local or Docker setup)
 
 ### Install
 1. Clone the repository:
@@ -26,6 +27,10 @@ The service is built using Node.js, Express for the API, and WebSocket for real-
 To start the application:
 ```bash
 npm start
+```
+To run the application in development mode with live reload:
+```bash
+npm run dev
 ```
 
 ### Testing
@@ -65,6 +70,13 @@ npm run test:watch
 | BASE_URL     | Base URL for price exchanges       | https://api.example.com |
 | PORT         | Port number for the application    | 3000                  |
 | NODE_ENV     | Environment for the application    | development            |
+| DB_USER      | Database username                  | your_db_user          |
+| DB_PASSWORD  | Database password                  | your_db_password      |
+| DB_HOST      | Database host                      | localhost             |
+| DB_NAME      | Database name                      | your_db_name          |
+| DB_PORT      | Database port                      | 5432                  |
+| LOG_LEVEL     | Logging level (info, warn, error) | info                  |
+| DOCKER       | Indicates if running in Docker     | false                 |
 
 ## Development Guide
 - Use `npm run dev` to start the service in development mode.
