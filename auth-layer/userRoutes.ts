@@ -4,7 +4,7 @@ import { emitUserCreatedEvent } from './eventBus';
 import logger from './logger';
 import { ValidationError, NotFoundError } from './errors';
 import { sanitizeUserInput } from './userValidation';
-import { validateUser } from './userValidation';
+import { UserSchema } from './types';
 import { requestSizeLimitMiddleware } from './middleware';
 
 const router = express.Router();
@@ -16,7 +16,8 @@ router.use(requestSizeLimitMiddleware);
 router.post('/users', async (req, res) => {
     const sanitizedInput = sanitizeUserInput(req.body);
     try {
-        validateUser(sanitizedInput);
+        // Validate input against the User schema
+        UserSchema.parse(sanitizedInput);
         const existingUser = await findUserByEmail(sanitizedInput.email);
         if (existingUser) {
             throw new ValidationError(['Email already in use']);
@@ -50,8 +51,9 @@ router.put('/users/:id', async (req, res) => {
     const { id } = req.params;
     const sanitizedInput = sanitizeUserInput(req.body);
     try {
-        validateUser(sanitizedInput);
-        const updatedUser = await updateUser(id, sanitizedInput);
+        // Validate input against the User schema
+        UserSchema.parse(sanitizedInput);
+        const updatedUser = await updateUser(id as UserId, sanitizedInput);
         if (!updatedUser) {
             throw new NotFoundError('User not found for update');
         }
@@ -73,7 +75,7 @@ router.put('/users/:id', async (req, res) => {
 router.delete('/users/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const deleted = await deleteUser(id);
+        const deleted = await deleteUser(id as UserId);
         if (!deleted) {
             throw new NotFoundError('User not found');
         }

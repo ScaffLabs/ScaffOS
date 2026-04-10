@@ -1,4 +1,4 @@
-import { User, UserId } from './types';
+import { User, UserId, UserSchema } from './types';
 import { ValidationError, NotFoundError } from './errors';
 import userStore from './inMemoryStore';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,13 +7,18 @@ import { v4 as uuidv4 } from 'uuid';
 export const createUser = async (username: string, email: string): Promise<User> => {
     const newUser: User = { id: uuidv4() as UserId, username, email };
     try {
+        // Validate the user data with Zod schema
+        UserSchema.parse(newUser);
         const existingUser = userStore.findByEmail(email);
         if (existingUser) {
             throw new ValidationError(['Email already in use.']);
         }
         return userStore.create(newUser);
     } catch (err) {
-        throw new ValidationError(err.errors.map(e => e.message));
+        if (err instanceof ValidationError) {
+            throw new ValidationError(err.errors.map(e => e.message));
+        }
+        throw new Error('Unexpected error occurred while creating user');
     }
 };
 
@@ -23,7 +28,10 @@ export const updateUser = async (id: UserId, userData: Partial<User>): Promise<U
     if (!user) {
         throw new NotFoundError('User not found for update');
     }
-    return userStore.update(id, userData);
+    const updatedUserData = { ...user, ...userData };
+    // Validate the updated user data with Zod schema
+    UserSchema.parse(updatedUserData);
+    return userStore.update(id, updatedUserData);
 };
 
 // Delete User
