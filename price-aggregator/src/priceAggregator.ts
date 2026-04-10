@@ -1,4 +1,4 @@
-import { PriceData, PriceEvent, CurrentPrices } from './types';
+import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema, PriceEventSchema } from './types';
 import { postHttpClient, checkHealth } from './httpClient';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
@@ -13,13 +13,14 @@ export class PriceAggregator {
     }
 
     public async addPrice(priceData: PriceData): Promise<PriceData> {
-        if (!this.validatePriceData(priceData)) {
-            throw new ValidationError('Invalid price data.');
+        const parsedData = PriceDataSchema.safeParse(priceData);
+        if (!parsedData.success) {
+            throw new ValidationError('Invalid price data: ' + parsedData.error.errors.map(e => e.message).join(', '));
         }
 
         try {
-            const newPrice = await storage.create(priceData);
-            this.currentPrices[priceData.exchange] = priceData.price;
+            const newPrice = await storage.create(parsedData.data);
+            this.currentPrices[parsedData.data.exchange] = parsedData.data.price;
             this.currentPrices.VWAP = await this.calculateVWAP();
             await postHttpClient('/prices', newPrice);
             this.eventBus.emitPriceAdded(newPrice);
@@ -63,9 +64,5 @@ export class PriceAggregator {
                 console.log('Price deleted for exchange:', event.exchange);
                 break;
         }
-    }
-
-    private validatePriceData(priceData: PriceData): boolean {
-        return priceData.exchange.trim() !== '' && priceData.price > 0 && priceData.volume > 0;
     }
 }
