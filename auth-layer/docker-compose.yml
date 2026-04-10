@@ -11,6 +11,7 @@ services:
       - DATABASE_URL=your_database_url
       - USER_SERVICE_URL=http://user-service:4000
       - ORDER_SERVICE_URL=http://order-service:5000
+      - LOG_LEVEL=info
     volumes:
       - .:/usr/src/app
     depends_on:
