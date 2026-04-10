@@ -1,9 +1,10 @@
+// Order service functions
 import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { queryDatabase } from './db';
 import logger from './logger';
 import { emitOrderEvent } from './eventBus';
-import { fetchData } from './axiosClient';
+import { fetchData, postData } from './axiosClient';
 
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -28,7 +29,7 @@ const notifyOtherServices = async (order: Order) => {
         `${process.env.ANOTHER_SERVICE_URL}/orders`,
         `${process.env.ORDER_SERVICE_URL}/orders`
     ];
-    const promises = urls.map(url => fetchData(url, { method: 'POST', data: order }));
+    const promises = urls.map(url => postData(url, order));
     try {
         await Promise.all(promises);
         logger.info('Successfully notified other services.');
@@ -48,9 +49,35 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
             throw new NotFoundError('Order not found.');
         }
         emitOrderEvent({ type: 'ORDER_UPDATED', payload: updatedOrder.rows[0] });
+        await notifyOtherServices(updatedOrder.rows[0]);
         return updatedOrder.rows[0];
     } catch (error) {
         logger.error('Error updating order', { error });
         throw new ServiceError('Failed to update order due to database error.');
     }
 };
+
+const deleteOrderService = async (id: string) => {
+    try {
+        const deletedOrder = await queryDatabase('DELETE FROM orders WHERE id = $1 RETURNING *', [id]);
+        if (deletedOrder.rowCount === 0) {
+            throw new NotFoundError('Order not found.');
+        }
+        emitOrderEvent({ type: 'ORDER_DELETED', payload: { id } });
+    } catch (error) {
+        logger.error('Error deleting order', { error });
+        throw new ServiceError('Failed to delete order due to database error.');
+    }
+};
+
+const getOrdersService = async (pagination: { limit: number; offset: number }) => {
+    try {
+        const orders = await queryDatabase('SELECT * FROM orders LIMIT $1 OFFSET $2', [pagination.limit, pagination.offset]);
+        return orders.rows;
+    } catch (error) {
+        logger.error('Error retrieving orders', { error });
+        throw new ServiceError('Failed to retrieve orders.');
+    }
+};
+
+export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };
