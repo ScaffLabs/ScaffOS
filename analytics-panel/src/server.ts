@@ -12,20 +12,15 @@ import config from './config';
 import mongoose from 'mongoose';
 import { gracefulShutdown } from './utils/shutdown';
 import { monitorMemoryUsage } from './utils/monitor';
-import { dependentHealthCheckHandler, readyCheckHandler } from './handlers/healthCheck';
-import { connectToDatabase } from './utils/dbConnection';
-import { auditLogger, validateInputBody, validateRequestSize } from './middleware/auditLogger';
 
 const app = express();
 const server = createServer(app);
 
-// Middleware setup
 app.use(helmet());
 app.use(cors({ origin: ['http://example.com', 'http://localhost:3000'] }));
 app.use(express.json());
 app.use(logWithRequestId);
 
-// Rate limiter
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -33,23 +28,20 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Define API routes
 app.use('/api/strategies', strategyRoutes);
 app.use('/api', healthRoutes);
-app.use('/api/health/dependencies', dependentHealthCheckHandler);
-app.use('/api/ready', readyCheckHandler);
 app.use(errorHandler);
 app.use(csrfMiddleware);
 
 const startServer = async () => {
     try {
-        await connectToDatabase();
+        await mongoose.connect(config.DB_URL);
         const PORT = process.env.PORT || 3000;
         logStartup(config);
         server.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
-        setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
+        setInterval(monitorMemoryUsage, 60000);
     } catch (error) {
         console.error('Error starting server:', error);
         process.exit(1);
