@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import logger from './logger';
 
 const redisClient: RedisClientType = createClient({
-    url: 'redis://localhost:6379',
+    url: process.env.REDIS_URL,
 });
 
 const connectWithRetry = async (retries = 5, delay = 1000) => {

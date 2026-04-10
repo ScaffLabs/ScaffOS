@@ -18,7 +18,7 @@ const fetchUserServiceWithRetry = async (userId: string, retries = 3) => {
             attempt++;
             logger.error('Error fetching user data, attempt:', attempt, error.message);
             if (attempt >= retries) throw error;
-            await new Promise(res => setTimeout(res, 1000)); // wait before retrying
+            await new Promise(res => setTimeout(res, 1000 * Math.pow(2, attempt))); // Exponential backoff
         }
     }
 };
@@ -27,7 +27,6 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
     try {
         const response = await fetchUserServiceWithRetry(message.data.userId);
         logger.info('Fetched user data:', response.data);
-        // Emit the event to the event bus
         eventBus.publish('userDataFetched', response.data);
     } catch (error) {
         logger.error('Error fetching user data:', error.message);
@@ -36,21 +35,3 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
 
 // Subscribe to userCreated events
 eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
-
-export const checkServiceHealth = async () => {
-    try {
-        const response = await axios.get(`${config.OTHER_SERVICE_URL}/health`);
-        return response.status === 200;
-    } catch (error) {
-        logger.error('Health check for other service failed:', error);
-        return false;
-    }
-};
-
-export const enhancedCheckServiceHealth = async () => {
-    const healthChecks = await Promise.all([
-        checkServiceHealth(),
-        fetchUserServiceWithRetry('some-user-id') // Example userId to check connectivity
-    ]);
-    return healthChecks.every(status => status);
-};
