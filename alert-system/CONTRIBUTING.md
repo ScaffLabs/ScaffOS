@@ -29,3 +29,6 @@ Please adhere to the project's code of conduct in all interactions. We strive to
 
 ## Questions?
 If you have any questions about contributing, feel free to ask in the GitHub issue tracker.
+
+## License
+This project is licensed under the MIT License.

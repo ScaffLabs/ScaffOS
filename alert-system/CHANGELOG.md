@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.9] - 2023-10-25
+### Changed
+- Updated README.md to provide comprehensive project documentation, including setup instructions, API reference, and environment variable descriptions.
+- Enhanced inline comments in the AlertController to clarify logic in methods.
+
 ## [1.0.8] - 2023-10-25
 ### Added
 - Detailed README.md with project description, architecture overview, setup instructions, API reference, environment variables table, development guide, and deployment guide.
