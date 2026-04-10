@@ -16,8 +16,8 @@ logger.logStartup(config);
 app.use(express.json());
 app.use(requestLogger);
 securityMiddleware(app);
-applyRateLimiting(app); // Apply rate limiting middleware
-app.use(rateLimitErrorHandler); // Handle rate limit errors
+applyRateLimiting(app);
+app.use(rateLimitErrorHandler);
 registerRoutes(app);
 registerExternalApiRoutes(app);
 registerHealthRoutes(app);
@@ -30,7 +30,7 @@ const server = app.listen(PORT, () => {
 
 const shutdown = async () => {
     logger.info('Shutting down gracefully...');
-    await closePool(); // Close DB connection pool
+    await closePool();
     server.close(() => {
         logger.info('Closed out remaining connections.');
         process.exit(0);
