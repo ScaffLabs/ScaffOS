@@ -22,3 +22,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.3] - 2023-10-25
 - Enhanced error handling for API requests with clear messages.
 - Added tests for new features and improved coverage.
+
+## [1.1.0] - 2023-10-30
+- Added detailed inline comments throughout the codebase for complex logic clarity.
+- Improved error handling mechanisms in API routes.
