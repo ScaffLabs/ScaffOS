@@ -6,11 +6,6 @@ import { z } from 'zod';
 export type OrderId = string & { readonly brand: unique symbol };
 
 /**
- * A branded type for Trade ID.
- */
-export type TradeId = string & { readonly brand: unique symbol };
-
-/**
  * Represents an alert message.
  * @property {OrderId} id - The unique identifier for the alert.
  * @property {'price' | 'risk'} type - The type of the alert, e.g., 'price' or 'risk'.
@@ -25,35 +20,6 @@ export interface AlertMessage {
     currentValue: number;
     createdAt: Date;
 }
-
-/**
- * Represents different alert events.
- */
-export type AlertEvent = 
-    | { type: 'ALERT_CREATED'; alert: AlertMessage }
-    | { type: 'ALERT_UPDATED'; alert: AlertMessage }
-    | { type: 'ALERT_DELETED'; id: OrderId };
-
-/**
- * Zod schema for validating AlertMessage objects.
- */
-export const AlertMessageSchema = z.object({
-    id: z.string().refine((val) => val.length > 0, { message: 'ID cannot be empty.' }) as z.ZodType<OrderId>,
-    type: z.enum(['price', 'risk']),
-    threshold: z.number().min(0, { message: 'Threshold must be a non-negative number.' }),
-    currentValue: z.number().min(0, { message: 'Current value must be a non-negative number.' }),
-    createdAt: z.date(),
-});
-
-/**
- * Validates an alert message using the Zod schema.
- * @param data - The alert data to validate.
- * @returns {AlertMessage} - The validated alert message.
- * @throws {ZodError} - If validation fails.
- */
-export const validateAlertMessage = (data: unknown): AlertMessage => {
-    return AlertMessageSchema.parse(data);
-};
 
 /**
  * Schema for alert creation request validation.
@@ -72,4 +38,24 @@ export const CreateAlertRequestSchema = z.object({
  */
 export const validateCreateAlertRequest = (data: unknown): Omit<AlertMessage, 'id' | 'createdAt'> => {
     return CreateAlertRequestSchema.parse(data);
+};
+
+/**
+ * Schema for validating pagination parameters.
+ */
+export const PaginationSchema = z.object({
+    limit: z.string().optional().transform((val) => (val ? parseInt(val) : 10)),
+    offset: z.string().optional().transform((val) => (val ? parseInt(val) : 0)),
+    type: z.enum(['price', 'risk']).optional(),
+    sort: z.enum(['asc', 'desc']).optional(),
+});
+
+/**
+ * Validates pagination parameters.
+ * @param data - The pagination data to validate.
+ * @returns {object} - The validated pagination parameters.
+ * @throws {ZodError} - If validation fails.
+ */
+export const validatePaginationRequest = (data: unknown) => {
+    return PaginationSchema.parse(data);
 };
