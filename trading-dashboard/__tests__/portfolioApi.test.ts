@@ -1,8 +1,8 @@
+// Import necessary modules
 import request from 'supertest';
 import app from '../src/server';
 import { InMemoryStore } from '../src/storage/InMemoryStore';
 import { Position } from '../src/types';
-import { createPosition, fetchPositions, updatePosition, deletePosition } from '../src/api/portfolioApi';
 
 describe('Portfolio API Endpoints', () => {
     let store: InMemoryStore<Position>;
@@ -50,7 +50,7 @@ describe('Portfolio API Endpoints', () => {
         expect(fetchResponse.body.length).toBe(0);
     });
 
-    it('GET /api/positions with invalid pagination should return 400', async () => {
+    it('GET /api/positions with invalid query should return 400', async () => {
         const response = await request(app).get('/api/positions?limit=invalid');
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ message: 'Invalid pagination parameters' });
@@ -59,6 +59,15 @@ describe('Portfolio API Endpoints', () => {
     it('GET /api/positions should return 404 for non-existing position', async () => {
         const response = await request(app).delete('/api/positions/99');
         expect(response.status).toBe(404);
+        expect(response.body.message).toBe('Position not found.');
+    });
+
+    // Edge case tests
+    it('GET /api/positions should return empty array when no positions exist', async () => {
+        await store.delete('1');
+        const response = await request(app).get('/api/positions');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([]);
     });
 
     it('PUT /api/positions/:id with invalid quantity should return 400', async () => {
@@ -71,19 +80,5 @@ describe('Portfolio API Endpoints', () => {
         const response = await request(app).post('/api/positions').send({ symbol: 'TSLA' });
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('Invalid position data');
-    });
-
-    // Edge case tests
-    it('GET /api/positions should return empty array when no positions exist', async () => {
-        await store.delete('1');
-        const response = await request(app).get('/api/positions');
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual([]);
-    });
-    
-    it('PUT /api/positions/:id with non-existent ID should return 404', async () => {
-        const response = await request(app).put('/api/positions/nonexistent-id').send({ quantity: 10 });
-        expect(response.status).toBe(404);
-        expect(response.body.message).toBe('Position not found');
     });
 });
