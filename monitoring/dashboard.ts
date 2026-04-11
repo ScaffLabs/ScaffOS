@@ -25,7 +25,7 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
     try {
         const bodyValidation = DashboardEntrySchema.safeParse(req.body);
         if (!bodyValidation.success) {
-            throw new ValidationError('Invalid input data.');
+            throw new ValidationError('Invalid input data: Both id and data are required.');
         }
         const { id, data } = bodyValidation.data;
         store.create(data, id);
@@ -40,12 +40,40 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
     }
 };
 
-export const checkDashboardHealth = async (req: Request, res: Response): Promise<void> => {
+export const updateDashboardEntry = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
     try {
-        const healthStatus = await connectionPool.requestWithRetry('orderService', 'get', '/health');
-        res.status(200).json({ status: healthStatus });
+        const bodyValidation = DashboardEntrySchema.pick({ data: true }).safeParse(req.body);
+        if (!bodyValidation.success) {
+            throw new ValidationError('Invalid input data: Data is required.');
+        }
+        const { data } = bodyValidation.data;
+        store.update(id, data);
+        logger.info(`Updated entry: ${id}`);
+        res.status(204).send();
     } catch (error) {
-        logger.error({ error: error.message }, 'Health check for dashboard failed');
-        res.status(503).json({ error: 'Order service unavailable' });
+        logger.error(error, req);
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
+        }
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: 'Entry not found.' });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+export const deleteDashboardEntry = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    try {
+        store.delete(id);
+        logger.info(`Deleted entry: ${id}`);
+        res.status(204).send();
+    } catch (error) {
+        logger.error(error, req);
+        if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: 'Entry not found.' });
+        }
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
