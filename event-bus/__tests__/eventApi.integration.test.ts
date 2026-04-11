@@ -16,8 +16,8 @@ describe('Event API Integration Tests', () => {
             expect(response.body).toHaveProperty('id');
             expect(createEventSchema.safeParse(response.body).success).toBe(true);
         });
-        
-it('should return 400 for missing title', async () => {
+
+        it('should return 400 for missing title', async () => {
             const response = await request(app)
                 .post('/events')
                 .send({ description: 'This is a new event', type: 'userCreated' });
@@ -25,8 +25,8 @@ it('should return 400 for missing title', async () => {
             expect(response.body.message).toContain('Title is required');
         });
     });
-    
-describe('GET /events', () => {
+
+    describe('GET /events', () => {
         it('should return a list of events', async () => {
             await request(app)
                 .post('/events')
