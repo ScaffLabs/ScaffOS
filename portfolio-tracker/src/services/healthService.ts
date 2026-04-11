@@ -49,17 +49,3 @@ export const readinessCheck = async (req: Request, res: Response) => {
         res.status(503).json({ status: 'NOT READY', error: error.message });
     }
 };
-
-export const monitorMemoryUsage = () => {
-    const memoryUsage = process.memoryUsage();
-    logger.info('Memory Usage Report', {
-        rss: memoryUsage.rss,
-        heapTotal: memoryUsage.heapTotal,
-        heapUsed: memoryUsage.heapUsed,
-        external: memoryUsage.external,
-    });
-    const totalMemory = os.totalmem();
-    const freeMemory = os.freemem();
-    const usedMemory = totalMemory - freeMemory;
-    logger.info('Total Memory', { totalMemory, usedMemory, freeMemory });
-};

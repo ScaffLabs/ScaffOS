@@ -14,3 +14,6 @@ export const shutdownGracefully = (server: any, pool: Pool) => {
         });
     });
 };
+
+process.on('SIGTERM', () => shutdownGracefully(server, pool));
+process.on('SIGINT', () => shutdownGracefully(server, pool));
