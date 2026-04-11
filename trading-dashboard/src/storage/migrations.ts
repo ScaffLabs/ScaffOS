@@ -1,6 +1,11 @@
 import { InMemoryStore } from './InMemoryStore';
 import { Position } from '../types';
 
+const migrationData: Position[] = [
+    { id: '4', symbol: 'TSLA', quantity: 30 },
+    { id: '5', symbol: 'AMZN', quantity: 20 }
+];
+
 export const migrateData = (store: InMemoryStore<Position>, data: Position[]) => {
     data.forEach(position => {
         store.create(position);
@@ -21,9 +26,5 @@ export const initializeStore = (store: InMemoryStore<Position>) => {
 };
 
 export const migrateStore = (store: InMemoryStore<Position>) => {
-    const migrationData: Position[] = [
-        { id: '4', symbol: 'TSLA', quantity: 30 },
-        { id: '5', symbol: 'AMZN', quantity: 20 }
-    ];
     migrateData(store, migrationData);
-};
+}; 
