@@ -1,62 +1,52 @@
 import { Portfolio, PortfolioUpdate } from '../types';
+import { MongoClient } from 'mongodb';
+import env from '../config';
 
-abstract class Storage {
-    abstract create(portfolioData: Omit<Portfolio, 'id'>): Portfolio;
-    abstract read(id: string): Portfolio | undefined;
-    abstract update(id: string, data: PortfolioUpdate): Portfolio | undefined;
-    abstract delete(id: string): boolean;
-    abstract getAll(): Portfolio[];
-    abstract clear(): void;
-    abstract migrate(portfolios: Portfolio[]): void;
-    abstract transaction(actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): Promise<Portfolio[]>;
-    abstract indexBy(field: keyof Portfolio): Promise<{ [key: string]: Portfolio[] }>
-}
+class Storage {
+    private client: MongoClient;
+    private dbName = env.DB_NAME;
+    private db;
 
-class InMemoryStorage extends Storage {
-    private portfolios: Portfolio[] = [];
-    private idCounter: number = 1;
-
-    public create(portfolioData: Omit<Portfolio, 'id'>): Portfolio {
-        const newPortfolio: Portfolio = { id: String(this.idCounter++), ...portfolioData };
-        this.portfolios.push(newPortfolio);
-        return newPortfolio;
+    constructor() {
+        this.client = new MongoClient(env.DATABASE_URL);
+        this.client.connect().then(() => {
+            this.db = this.client.db(this.dbName);
+        });
     }
 
-    public read(id: string): Portfolio | undefined {
-        return this.portfolios.find(portfolio => portfolio.id === id);
+    async create(portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> {
+        const result = await this.db.collection('portfolios').insertOne(portfolioData);
+        return { id: result.insertedId.toString(), ...portfolioData };
     }
 
-    public update(id: string, data: PortfolioUpdate): Portfolio | undefined {
-        const portfolio = this.read(id);
-        if (!portfolio) return undefined;
-        if (data.name) portfolio.name = data.name;
-        if (data.positions) {
-            portfolio.positions = data.positions;
-        }
-        return portfolio;
+    async read(id: string): Promise<Portfolio | null> {
+        return await this.db.collection('portfolios').findOne({ _id: new MongoClient.ObjectId(id) });
     }
 
-    public delete(id: string): boolean {
-        const index = this.portfolios.findIndex(portfolio => portfolio.id === id);
-        if (index === -1) return false;
-        this.portfolios.splice(index, 1);
-        return true;
+    async update(id: string, data: PortfolioUpdate): Promise<Portfolio | null> {
+        await this.db.collection('portfolios').updateOne({ _id: new MongoClient.ObjectId(id) }, { $set: data });
+        return this.read(id);
     }
 
-    public getAll(): Portfolio[] {
-        return this.portfolios;
+    async delete(id: string): Promise<boolean> {
+        const result = await this.db.collection('portfolios').deleteOne({ _id: new MongoClient.ObjectId(id) });
+        return result.deletedCount === 1;
     }
 
-    public clear(): void {
-        this.portfolios = [];
+    async getAll(): Promise<Portfolio[]> {
+        return this.db.collection('portfolios').find().toArray();
     }
 
-    public migrate(portfolios: Portfolio[]): void {
-        this.clear();
-        portfolios.forEach(portfolio => this.create(portfolio));
+    clear(): void {
+        this.db.collection('portfolios').deleteMany({});
     }
 
-    public async transaction(actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): Promise<Portfolio[]> {
+    async migrate(portfolios: Portfolio[]): Promise<void> {
+        await this.clear();
+        await this.db.collection('portfolios').insertMany(portfolios);
+    }
+
+    async transaction(actions: (id: string, data?: PortfolioUpdate) => Portfolio | undefined, portfolioIds: string[]): Promise<Portfolio[]> {
         const results: Portfolio[] = [];
         for (const id of portfolioIds) {
             const result = actions(id);
@@ -65,8 +55,9 @@ class InMemoryStorage extends Storage {
         return results;
     }
 
-    public async indexBy(field: keyof Portfolio): Promise<{ [key: string]: Portfolio[] }> {
-        return this.portfolios.reduce((acc, portfolio) => {
+    async indexBy(field: keyof Portfolio): Promise<{ [key: string]: Portfolio[] }> {
+        const portfolios = await this.getAll();
+        return portfolios.reduce((acc, portfolio) => {
             const key = portfolio[field].toString();
             if (!acc[key]) acc[key] = [];
             acc[key].push(portfolio);
@@ -75,5 +66,5 @@ class InMemoryStorage extends Storage {
     }
 }
 
-const storage = new InMemoryStorage();
-export default storage; 
+const storage = new Storage();
+export default storage;
