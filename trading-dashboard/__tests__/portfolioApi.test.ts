@@ -2,7 +2,6 @@ import request from 'supertest';
 import app from '../src/server';
 import { InMemoryStore } from '../src/storage/InMemoryStore';
 import { Position } from '../src/types';
-import { mockPositionData } from './__mocks__/dataMocks';
 
 describe('Portfolio API Endpoints', () => {
     let store: InMemoryStore<Position>;
