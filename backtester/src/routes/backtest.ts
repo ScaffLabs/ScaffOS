@@ -26,18 +26,19 @@ backtestRouter.post('/', [
         res.status(201).json({ id: entity.id, result });
     } catch (error) {
         logger.error({ message: 'Error during backtest', error: error.message });
-        if (error instanceof ValidationError) {
-            return next(error);
-        }
         next(new ServiceError('Error during backtest: ' + error.message));
     }
 });
 
 backtestRouter.get('/', async (req, res, next) => {
-    const { limit = 10, offset = 0 } = req.query;
+    const { limit = 10, offset = 0, sortBy = 'id', order = 'asc' } = req.query;
     try {
         const results = await store.findAll();
-        const paginatedResults = results.slice(offset, offset + limit);
+        const sortedResults = results.sort((a, b) => {
+            if (order === 'asc') return a.data[sortBy] > b.data[sortBy] ? 1 : -1;
+            return a.data[sortBy] < b.data[sortBy] ? 1 : -1;
+        });
+        const paginatedResults = sortedResults.slice(offset, offset + limit);
         res.status(200).json(paginatedResults);
     } catch (error) {
         logger.error({ message: 'Error fetching backtests', error: error.message });
