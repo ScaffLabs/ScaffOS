@@ -1,5 +1,6 @@
 import winston from 'winston';
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
 const logFormat = winston.format.printf(({ level, message, timestamp, requestId, ...meta }) => {
     return `${timestamp} [${level}]${requestId ? ' [Request ID: ' + requestId + ']' : ''}: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
@@ -16,10 +17,6 @@ const logger = winston.createLogger({
     ],
 });
 
-export const logSensitiveOperation = (operation: string, details: object) => {
-    logger.info(`Sensitive operation: ${operation}`, details);
-};
-
 export const logRequest = (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     const requestId = req.headers['x-request-id'] || crypto.randomUUID();
@@ -30,6 +27,10 @@ export const logRequest = (req: Request, res: Response, next: NextFunction) => {
         logger.info(`Request: ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms`, { requestId });
     });
     next();
+};
+
+export const logError = (err: Error, req: Request) => {
+    logger.error(`Error occurred: ${err.message}`, { requestId: req.headers['x-request-id'], stack: err.stack });
 };
 
 export default logger;
