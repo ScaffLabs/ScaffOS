@@ -2,8 +2,6 @@ class ServiceError extends Error { constructor(message: string) { super(message)
 class ValidationError extends Error { constructor(errors: string[]) { super('Validation error'); this.errors = errors; this.name = 'ValidationError'; } }
 class NotFoundError extends Error { constructor(message: string) { super(message); this.name = 'NotFoundError'; } }
 class InternalServerError extends Error { constructor(message: string) { super(message); this.name = 'InternalServerError'; } }
-class ValidationOverflowError extends Error { constructor(message: string) { super(message); this.name = 'ValidationOverflowError'; } }
-class DivisionByZeroError extends Error { constructor(message: string) { super(message); this.name = 'DivisionByZeroError'; } }
 class EmptyArrayError extends Error { constructor(message: string) { super(message); this.name = 'EmptyArrayError'; } }
-const createError = (type: string, message: string) => { switch (type) { case 'ValidationError': return new ValidationError([message]); case 'NotFoundError': return new NotFoundError(message); case 'ServiceError': return new ServiceError(message); case 'EmptyArrayError': return new EmptyArrayError(message); default: return new InternalServerError('An unexpected error occurred.'); } };
-export { ServiceError, ValidationError, NotFoundError, InternalServerError, ValidationOverflowError, DivisionByZeroError, EmptyArrayError, createError };
+const createError = (type: string, message: string) => { switch (type) { case 'ValidationError': return new ValidationError([message]); case 'NotFoundError': return new NotFoundError(message); case 'ServiceError': return new ServiceError(message); case 'EmptyArrayError': return new EmptyArrayError(message); default: return new InternalServerError('An unexpected error occurred.'); }};
+export { ServiceError, ValidationError, NotFoundError, InternalServerError, EmptyArrayError, createError };
