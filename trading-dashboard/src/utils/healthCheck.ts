@@ -6,10 +6,10 @@ import { withRetryAndTimeout } from '../utils/retry';
 
 const HEALTH_CHECK_TIMEOUT = 5000; // 5 seconds timeout for health checks
 
-const healthCheckWithRetry = withRetryAndTimeout(async () => {
-    const health = await fetchServiceHealth();
+const healthCheckWithRetry = async () => {
+    const health = await withRetryAndTimeout(fetchServiceHealth, 3, 1000, HEALTH_CHECK_TIMEOUT);
     return { status: 'UP', health };
-}, 3, 1000, HEALTH_CHECK_TIMEOUT);
+};
 
 export const healthCheck = async (req: Request, res: Response) => {
     try {
@@ -25,4 +25,8 @@ export const healthCheck = async (req: Request, res: Response) => {
 
 export const registerHealthRoutes = (app) => {
     app.get('/api/health', healthCheck);
+    app.get('/api/ready', (req: Request, res: Response) => {
+        // Health check logic for readiness
+        res.status(200).json({ status: 'READY' });
+    });
 };

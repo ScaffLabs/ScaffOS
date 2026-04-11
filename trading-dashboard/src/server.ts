@@ -8,14 +8,8 @@ import config from './config';
 import { registerExternalApiRoutes } from './api/externalApi';
 import { registerHealthRoutes } from './utils/healthCheck';
 import { closePool } from './utils/connectionPool';
-import { InMemoryStore } from './storage/InMemoryStore';
-import { initializeStore } from './storage/migrations';
 
 const app = express();
-const positionStore = new InMemoryStore();
-
-initializeStore(positionStore); // Seed initial data
-logger.logStartup(config);
 
 app.use(express.json());
 app.use(requestLogger);
