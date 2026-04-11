@@ -2,11 +2,12 @@ import express from 'express';
 import riskManager from './riskManager';
 import logger from './logger';
 import { body, query, param, validationResult } from 'express-validator';
-import { NotFoundError, ValidationError, ServiceError } from './errors';
+import { NotFoundError, ValidationError } from './errors';
 import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
 
+// Rate limiting middleware
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -17,28 +18,26 @@ router.use(limiter);
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
-    query('sortBy').optional().isString(),
-    query('filterBy').optional().isString(),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const { limit = 10, offset = 0, sortBy, filterBy } = req.query;
-        const positions = await riskManager.getRiskPositions(limit, offset, sortBy, filterBy);
+        const { limit = 10, offset = 0 } = req.query;
+        const positions = await riskManager.getRiskPositions(limit, offset);
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
-        if (error instanceof ServiceError) {
-            return res.status(500).json({ error: error.message });
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
         }
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 router.post('/risk', [
-    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.').escape(),
+    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
