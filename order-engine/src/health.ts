@@ -1,25 +1,11 @@
 import { Request, Response } from 'express';
-import { fetchData } from './axiosClient';
+import { performHealthChecks } from './axiosClient';
 import logger from './logger';
-
-const checkServiceHealth = async (url: string) => {
-    try {
-        const response = await fetchData(url);
-        return response.status === 200;
-    } catch (error) {
-        logger.error(`Service at ${url} is down:`, error);
-        return false;
-    }
-};
 
 export const healthCheck = async (req: Request, res: Response): Promise<void> => {
     try {
-        const checks = await Promise.all([
-            checkServiceHealth(`${process.env.DATABASE_URL}/health`),
-            checkServiceHealth(`${process.env.ANOTHER_SERVICE_URL}/health`),
-            checkServiceHealth(`${process.env.ORDER_SERVICE_URL}/health`)
-        ]);
-        if (checks.every(status => status)) {
+        const isHealthy = await performHealthChecks();
+        if (isHealthy) {
             res.status(200).send('Order Engine is healthy!');
         } else {
             res.status(503).send('Dependent services are down.');
@@ -32,12 +18,8 @@ export const healthCheck = async (req: Request, res: Response): Promise<void> =>
 
 export const readyCheck = async (req: Request, res: Response): Promise<void> => {
     try {
-        const readinessChecks = await Promise.all([
-            checkServiceHealth(`${process.env.DATABASE_URL}/ready`),
-            checkServiceHealth(`${process.env.ANOTHER_SERVICE_URL}/ready`),
-            checkServiceHealth(`${process.env.ORDER_SERVICE_URL}/ready`)
-        ]);
-        if (readinessChecks.every(status => status)) {
+        const isReady = await performHealthChecks();
+        if (isReady) {
             res.status(200).send('Order Engine is ready!');
         } else {
             res.status(503).send('Dependent services are not ready.');
