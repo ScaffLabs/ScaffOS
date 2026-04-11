@@ -48,3 +48,14 @@ const getEventSchema = (event: AnalyticsEvent['type']) => {
             throw new Error('Unknown event type');
     }
 };
+
+/**
+ * Emit and subscribe example usages.
+ */
+// Emit an example event
+emitEvent('PERFORMANCE_METRICS_FETCHED', { drawdown: [10, 20], maxDrawdown: 30, sharpeRatio: 1.5 });
+
+// Subscribe to an example event
+subscribeToEvent('PERFORMANCE_METRICS_FETCHED', (data) => {
+    console.log('Performance metrics received:', data);
+});
