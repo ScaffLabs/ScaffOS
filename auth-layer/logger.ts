@@ -1,6 +1,7 @@
 import winston from 'winston';
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import sanitizeHtml from 'sanitize-html';
 
 const logFormat = winston.format.printf(({ level, message, timestamp, requestId, ...meta }) => {
     return `${timestamp} [${level}]${requestId ? ' [Request ID: ' + requestId + ']' : ''}: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
@@ -31,6 +32,10 @@ export const logRequest = (req: Request, res: Response, next: NextFunction) => {
 
 export const logError = (err: Error, req: Request) => {
     logger.error(`Error occurred: ${err.message}`, { requestId: req.headers['x-request-id'], stack: err.stack });
+};
+
+export const escapeResponse = (data: any) => {
+    return sanitizeHtml(data);
 };
 
 export default logger;

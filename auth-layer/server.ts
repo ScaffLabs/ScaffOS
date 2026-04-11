@@ -3,6 +3,7 @@ import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import csurf from 'csurf';
 import healthRouter from './health';
 import userRoutes from './userRoutes';
 import logger from './logger';
@@ -26,6 +27,10 @@ app.use(helmet());
 app.use(express.json());
 app.use(requestSizeLimitMiddleware);
 app.use(logRequest);
+
+// CSRF protection middleware
+const csrfProtection = csurf();
+app.use(csrfProtection);
 
 // Rate limiting middleware
 const limiter = rateLimit({
