@@ -21,7 +21,7 @@ if (!env.success) {
   process.exit(1);
 }
 
-export const config = env.data;  
+export const config = env.data;
 
 export const isProduction = config.NODE_ENV === 'production';
 export const isDevelopment = config.NODE_ENV === 'development';
