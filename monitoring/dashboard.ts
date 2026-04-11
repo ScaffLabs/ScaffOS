@@ -33,6 +33,8 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
         logger.error(error, req);
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
+        } else if (error instanceof NotFoundError) {
+            return res.status(404).json({ error: 'Entry not found.' });
         }
         res.status(500).json({ error: 'Internal Server Error' });
     }
