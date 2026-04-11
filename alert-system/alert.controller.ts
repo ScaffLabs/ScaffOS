@@ -4,15 +4,17 @@ import { ServiceError, ValidationError, NotFoundError } from './error.types';
 import logger from './logger';
 import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
+import { AlertProcessor } from './alert.processor';
 
 export class AlertController {
-    constructor(private alertStore: AlertStoreInterface, private eventBus: EventBus) {}
+    constructor(private alertStore: AlertStoreInterface, private eventBus: EventBus, private alertProcessor: AlertProcessor) {}
 
     async addAlert(req: Request, res: Response): Promise<void> {
         try {
             const validatedData = validateCreateAlertRequest(req.body);
             const createdAlert: AlertMessage = await this.alertStore.create(validatedData);
-            await this.eventBus.publish('alert.created', createdAlert);
+            this.eventBus.publish('alert.created', createdAlert);
+            await this.alertProcessor.processAlert(createdAlert);
             res.status(201).json(createdAlert);
         } catch (error) {
             this.handleError(error, res);
@@ -24,7 +26,8 @@ export class AlertController {
         try {
             const updatedAlert = await this.alertStore.update(alertId, req.body);
             if (!updatedAlert) throw new NotFoundError('Alert not found.');
-            await this.eventBus.publish('alert.updated', updatedAlert);
+            this.eventBus.publish('alert.updated', updatedAlert);
+            await this.alertProcessor.processAlert(updatedAlert);
             res.status(200).json(updatedAlert);
         } catch (error) {
             this.handleError(error, res);
@@ -36,7 +39,7 @@ export class AlertController {
         try {
             const success = await this.alertStore.delete(alertId);
             if (!success) throw new NotFoundError('Alert not found.');
-            await this.eventBus.publish('alert.deleted', { id: alertId });
+            this.eventBus.publish('alert.deleted', { id: alertId });
             res.status(204).send();
         } catch (error) {
             this.handleError(error, res);
