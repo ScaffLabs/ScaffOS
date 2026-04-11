@@ -11,13 +11,12 @@ const storage = storageManager.getStorage();
 const createEvent = async (req: Request, res: Response): Promise<void> => {
     const reqId = req.headers['x-request-id'] || 'unknown';
     try {
-        // Validating the request body against the defined schema
+        // Validate the request body against the defined schema to ensure data integrity
         const validation = createEventSchema.safeParse(req.body);
         if (!validation.success) {
-            // If validation fails, throw a validation error
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
         }
-        // Create the event in storage
+        // Create the event in storage, storing the validated data
         const event = await storage.create(validation.data);
         logger.info(`Event created: ${event.id}`, { reqId });
         res.status(201).json(event);
@@ -30,7 +29,7 @@ const getEvents = async (req: Request, res: Response): Promise<void> => {
     const { limit = 10, offset = 0, sortBy, order }: GetEventsQuery = req.query;
     try {
         let events = await storage.findAll(limit, offset);
-        // Sorting events if specified in the query
+        // Sort events if a sorting field is provided in the query
         if (sortBy) {
             events = events.sort((a, b) => {
                 const isAsc = order === 'asc';
@@ -51,7 +50,7 @@ const updateEvent = async (req: Request, res: Response): Promise<void> => {
     const reqId = req.headers['x-request-id'] || 'unknown';
     const { id } = req.params;
     try {
-        // Validating the update data against the defined schema
+        // Validate the update data against the defined schema
         const validation = updateEventSchema.safeParse(req.body);
         if (!validation.success) {
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));

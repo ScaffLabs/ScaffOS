@@ -21,3 +21,7 @@
 ## [1.0.4] - 2023-11-03
 - Enhanced API documentation for better clarity.
 - Added inline comments throughout the codebase to explain complex logic.
+
+## [1.0.5] - 2023-11-04
+- Added comprehensive README.md with setup instructions, API reference, and environment variables.
+- Improved inline documentation in eventController.ts for clarity.
