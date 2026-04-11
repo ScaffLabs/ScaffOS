@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
 
+// Rate limiting middleware
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -14,6 +15,13 @@ const limiter = rateLimit({
 });
 router.use(limiter);
 
+/**
+ * GET /risk - Retrieve risk positions with pagination, filtering, and sorting
+ * @param {number} [limit] - Number of results to return
+ * @param {number} [offset] - Number of results to skip
+ * @param {string} [sortBy] - Field to sort by
+ * @param {string} [filterBy] - Filter by asset
+ */
 router.get('/risk', [
     query('limit').optional().isInt({ min: 1 }).toInt(),
     query('offset').optional().isInt({ min: 0 }).toInt(),
@@ -37,6 +45,10 @@ router.get('/risk', [
     }
 });
 
+/**
+ * POST /risk - Create a new risk position
+ * @param {CreateRiskPositionRequest} requestBody - The risk position to create
+ */
 router.post('/risk', [
     body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.').escape(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
@@ -59,6 +71,11 @@ router.post('/risk', [
     }
 });
 
+/**
+ * PUT /risk/:id - Update a risk position by ID
+ * @param {string} id - The ID of the risk position to update
+ * @param {UpdateRiskPositionRequest} requestBody - The updated position
+ */
 router.put('/risk/:id', [
     param('id').isString().notEmpty(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
@@ -82,6 +99,10 @@ router.put('/risk/:id', [
     }
 });
 
+/**
+ * DELETE /risk/:id - Delete a risk position by ID
+ * @param {string} id - The ID of the risk position to delete
+ */
 router.delete('/risk/:id', [
     param('id').isString().notEmpty(),
 ], async (req, res) => {
