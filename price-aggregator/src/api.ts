@@ -50,4 +50,15 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
     }
 });
 
+router.delete('/prices/:id', async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        await priceAggregator.deletePrice(id);
+        res.status(204).send();
+    } catch (error) {
+        logError(error);
+        next(new ServiceError('Failed to delete price.'));
+    }
+});
+
 export default router;
