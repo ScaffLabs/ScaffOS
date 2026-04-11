@@ -5,7 +5,7 @@ import logger, { requestLogger, errorLogger } from './services/logger';
 import healthRoutes from './routes/healthRoutes';
 import portfolioRoutes from './routes/portfolioRoutes';
 import env from './config';
-import { createConnectionPool } from './services/connectionPool';
+import { createConnectionPool, closeConnectionPool } from './services/connectionPool';
 import { monitorMemoryUsage } from './services/memoryMonitor';
 import { shutdownGracefully } from './services/shutdownService';
 
@@ -31,3 +31,12 @@ process.on('SIGTERM', () => shutdownGracefully(server, pool));
 process.on('SIGINT', () => shutdownGracefully(server, pool));
 
 setInterval(monitorMemoryUsage, 60000); // Monitor memory usage every minute
+
+export const shutdownGracefully = (server, pool) => {
+    logger.info('Shutting down gracefully...');
+    closeConnectionPool(pool);
+    server.close(() => {
+        logger.info('Closed out remaining connections.');
+        process.exit(0);
+    });
+};

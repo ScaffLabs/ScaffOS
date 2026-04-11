@@ -5,7 +5,6 @@ import env from '../config';
 import { ServiceError } from '../errors';
 
 const externalPortfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
-
 const TIMEOUT = 5000;
 const MAX_RETRIES = 3;
 
