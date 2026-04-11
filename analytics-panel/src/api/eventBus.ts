@@ -1,12 +1,11 @@
 import { EventEmitter } from 'events';
-import { z } from 'zod';
-import { AnalyticsEvent } from '../types';
+import { AnalyticsEvent, AnalyticsEventSchema } from '../types';
 
 const eventBus = new EventEmitter();
 eventBus.setMaxListeners(20);
 
 /**
- * Emit an event to the event bus.
+ * Emit an event to the event bus with validation.
  * @param event - The event type.
  * @param data - The event data matching the AnalyticsEvent type.
  */
@@ -21,7 +20,7 @@ export const emitEvent = (event: AnalyticsEvent['type'], data: AnalyticsEvent['d
  * @param event - The event type.
  * @param listener - The listener callback function.
  */
-export const subscribeToEvent = (event: AnalyticsEvent['type'], listener: (data: any) => void) => {
+export const subscribeToEvent = (event: AnalyticsEvent['type'], listener: (data: AnalyticsEvent['data']) => void) => {
     eventBus.on(event, listener);
 };
 
@@ -30,7 +29,7 @@ export const subscribeToEvent = (event: AnalyticsEvent['type'], listener: (data:
  * @param event - The event type.
  * @param listener - The listener callback function.
  */
-export const unsubscribeFromEvent = (event: AnalyticsEvent['type'], listener: (data: any) => void) => {
+export const unsubscribeFromEvent = (event: AnalyticsEvent['type'], listener: (data: AnalyticsEvent['data']) => void) => {
     eventBus.off(event, listener);
 };
 
@@ -42,15 +41,9 @@ export const unsubscribeFromEvent = (event: AnalyticsEvent['type'], listener: (d
 const getEventSchema = (event: AnalyticsEvent['type']) => {
     switch (event) {
         case 'PERFORMANCE_METRICS_FETCHED':
-            return z.object({
-                drawdown: z.array(z.number()).nonempty(),
-                maxDrawdown: z.number().nonnegative(),
-                sharpeRatio: z.number(),
-            });
+            return AnalyticsEventSchema.shape.data;
         case 'STRATEGY_COMPARISON_RESULT':
-            return z.object({
-                betterStrategy: z.string().min(1),
-            });
+            return AnalyticsEventSchema.shape.betterStrategy;
         default:
             throw new Error('Unknown event type');
     }

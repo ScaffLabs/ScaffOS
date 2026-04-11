@@ -1,8 +1,4 @@
-import { z } from 'zod';
-
-/**
- * Branded types for unique identification of entities.
- */
+// Branded types for unique identification of entities.
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
 
@@ -84,4 +80,4 @@ export interface ErrorResponse {
     type: ErrorType;
     /** A human-readable message describing the error. */
     message: string;
-}
+} 
