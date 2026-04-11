@@ -7,6 +7,7 @@ import logger from '../logger';
 import { checkHealthEndpoint, healthCheckMiddleware } from './healthCheck';
 import csrf from 'csurf';
 import sanitizer from 'express-sanitizer';
+import { validateCreateEvent, validateUpdateEvent } from '../middleware/validationMiddleware';
 
 const router = Router();
 
@@ -36,9 +37,9 @@ router.get('/health', checkHealthEndpoint);
 router.use(sanitizer()); // Use sanitizer middleware to sanitize inputs
 
 // Input validation and sanitization for the event routes
-router.post('/', createEvent);
+router.post('/', validateCreateEvent, createEvent);
 router.get('/', getEvents);
-router.put('/:id', updateEvent);
+router.put('/:id', validateUpdateEvent, updateEvent);
 router.delete('/:id', deleteEvent);
 
 // Middleware to validate JSON content type
