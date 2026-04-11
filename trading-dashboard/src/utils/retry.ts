@@ -18,7 +18,7 @@ export const circuitBreaker = (fn: Function, failureThreshold: number = 5, coold
     return async (...args: any[]) => {
         if (isOpen) {
             if (Date.now() - lastFailureTime > cooldownPeriod) {
-                isOpen = false; // Reset the circuit
+                isOpen = false;
                 failureCount = 0;
             } else {
                 throw new Error('Circuit is open');
@@ -26,7 +26,7 @@ export const circuitBreaker = (fn: Function, failureThreshold: number = 5, coold
         }
         try {
             const result = await fn(...args);
-            failureCount = 0; // Reset on success
+            failureCount = 0;
             return result;
         } catch (error) {
             failureCount++;

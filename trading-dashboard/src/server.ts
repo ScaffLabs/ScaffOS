@@ -10,8 +10,6 @@ import config from './config';
 import { registerExternalApiRoutes } from './api/externalApi';
 import { registerHealthRoutes } from './utils/healthCheck';
 import { closePool } from './utils/connectionPool';
-import { InMemoryStore } from './storage/InMemoryStore';
-import { initializeStore } from './storage/migrations';
 
 const app = express();
 
@@ -27,10 +25,7 @@ const limiter = rateLimit({
     max: 100,
     message: 'Too many requests, please try again later.',
 });
-app.use(limiter); // Apply rate limiting
-
-const positionStore = new InMemoryStore();
-initializeStore(positionStore);
+app.use(limiter);
 
 registerRoutes(app);
 registerExternalApiRoutes(app);

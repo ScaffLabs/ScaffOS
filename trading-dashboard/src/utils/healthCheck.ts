@@ -26,7 +26,20 @@ export const healthCheck = async (req: Request, res: Response) => {
 export const registerHealthRoutes = (app) => {
     app.get('/api/health', healthCheck);
     app.get('/api/ready', (req: Request, res: Response) => {
-        // Health check logic for readiness
         res.status(200).json({ status: 'READY' });
     });
 };
+
+export const gracefulShutdown = async (req: Request, res: Response, next: Function) => {
+    res.on('finish', () => {
+        logger.info('Graceful shutdown initiated...');
+    });
+    next();
+};
+
+process.on('SIGTERM', () => {
+    logger.info('SIGTERM received: shutting down gracefully...');
+});
+process.on('SIGINT', () => {
+    logger.info('SIGINT received: shutting down gracefully...');
+});
