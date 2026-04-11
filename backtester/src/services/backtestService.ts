@@ -1,4 +1,4 @@
-import { HistoricalData, StrategyParameters, BacktestResult, BacktestId, BacktestResultSchema } from '../types';
+import { HistoricalData, StrategyParameters, BacktestResult, BacktestId, BacktestResultSchema, StrategyParametersSchema } from '../types';
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,13 +13,6 @@ const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
 async function fetchHistoricalData(): Promise<HistoricalData[]> {
     return await withRetry(async () => {
         const response = await axios.get(`${DATA_SERVICE_URL}/api/historical-data`);
-        return response.data;
-    });
-}
-
-async function fetchOrders(): Promise<any[]> {
-    return await withRetry(async () => {
-        const response = await axios.get(`${ORDER_SERVICE_URL}/api/orders`);
         return response.data;
     });
 }
@@ -65,12 +58,8 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns, requestId: backtestId });
 
-    const startTime = Date.now();
     await store.create(result);
-    const duration = Date.now() - startTime;
-    logger.info({ message: 'Database operation: create completed', duration, requestId: backtestId });
-
     return BacktestResultSchema.parse(result);
 };
 
-export { simulateBacktest, fetchOrders };
+export { simulateBacktest };
