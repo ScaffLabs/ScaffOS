@@ -12,6 +12,8 @@ import { runMigrations } from './migrations';
 import './memoryMonitor';
 import { sanitizeInput } from './sanitization';
 import { logRequest } from './logger';
+import { connectToDatabase } from './db';
+import { setupRequestQueue } from './requestQueue';
 
 const app = express();
 const PORT = config.PORT;
@@ -34,6 +36,7 @@ app.use(limiter);
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 orderRouter(app);
+setupRequestQueue(app);
 
 app.post('/migrate', async (req, res) => {
     try {
@@ -46,6 +49,7 @@ app.post('/migrate', async (req, res) => {
 });
 
 const startServer = async () => {
+    await connectToDatabase();
     const server = app.listen(PORT, () => {
         logStartup({ port: PORT, env: config.NODE_ENV });
         console.log(`Order Engine listening on port ${PORT}`);
