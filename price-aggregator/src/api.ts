@@ -6,18 +6,21 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest, logError } from './logger';
 import { ValidationError, NotFoundError, ServiceError } from './errors';
+import csrf from 'csurf';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
-
-router.use(cors());
-router.use(helmet());
 
 const limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
     max: 100,
 });
 router.use(limiter);
+
+const csrfProtection = csrf({ cookie: true });
+router.use(csrfProtection);
+router.use(cors({ origin: ['https://allowed-origin.com'], credentials: true }));
+router.use(helmet());
 
 router.use((req, res, next) => {
     const start = Date.now();
