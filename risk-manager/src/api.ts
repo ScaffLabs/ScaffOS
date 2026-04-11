@@ -4,8 +4,20 @@ import logger from './logger';
 import { body, query, param, validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from './errors';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import cors from 'cors';
+import csrf from 'csurf';
 
 const router = express.Router();
+
+// CORS configuration
+const allowedOrigins = ['http://example.com', 'http://another-example.com'];
+router.use(cors({ origin: allowedOrigins }));
+router.use(helmet()); // Set secure HTTP headers
+
+// CSRF protection
+const csrfProtection = csrf({ cookie: true });
+router.use(csrfProtection);
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -29,15 +41,12 @@ router.get('/risk', [
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
-        if (error instanceof ValidationError) {
-            return res.status(400).json({ error: error.message });
-        }
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 router.post('/risk', [
-    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.'),
+    body('asset').isString().notEmpty().withMessage('Asset field cannot be empty.').escape(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
@@ -59,7 +68,7 @@ router.post('/risk', [
 });
 
 router.put('/risk/:id', [
-    param('id').isString().notEmpty(),
+    param('id').isString(),
     body('position').isNumeric().isFloat({ min: 0 }).withMessage('Position must be a non-negative number.'),
 ], async (req, res) => {
     const errors = validationResult(req);
@@ -82,7 +91,7 @@ router.put('/risk/:id', [
 });
 
 router.delete('/risk/:id', [
-    param('id').isString().notEmpty(),
+    param('id').isString(),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
