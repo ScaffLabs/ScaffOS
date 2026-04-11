@@ -66,7 +66,11 @@ const deleteOrderService = async (id: string) => {
 };
 
 const getOrdersService = async (pagination: { limit: number; offset: number }) => {
-    return await storage.findAll();
+    const orders = await storage.findAll();
+    if (!orders.length) {
+        throw new NotFoundError('No orders found.');
+    }
+    return orders;
 };
 
 export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };
