@@ -33,7 +33,6 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
     }
 };
 
-// Subscribe to userCreated events
 const subscribeToUserCreated = () => {
     eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
 };
