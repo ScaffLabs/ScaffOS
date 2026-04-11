@@ -2,6 +2,7 @@ import { PriceData, PriceEvent, CurrentPrices, PriceDataSchema } from './types';
 import { storage } from './storage';
 import { EventBus } from './eventBus';
 import { ValidationError, ServiceError } from './errors';
+import { httpClient, checkHealth } from './httpClient';
 
 export class PriceAggregator {
     private currentPrices: CurrentPrices = {};
@@ -11,13 +12,6 @@ export class PriceAggregator {
         this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
     }
 
-    /**
-     * Adds a new price entry to the aggregator.
-     * @param priceData - The price data to be added.
-     * @returns The added PriceData.
-     * @throws ValidationError if the priceData is invalid.
-     * @throws ServiceError if the storage operation fails.
-     */
     public async addPrice(priceData: PriceData): Promise<PriceData> {
         const parsedData = PriceDataSchema.safeParse(priceData);
         if (!parsedData.success) {
@@ -29,6 +23,9 @@ export class PriceAggregator {
                 this.currentPrices[parsedData.data.exchange] = parsedData.data.price;
                 this.currentPrices.VWAP = await this.calculateVWAP();
                 this.eventBus.emitPriceAdded(newPrice);
+
+                // Example of making an HTTP call to another service
+                await httpClient('/another-service/price-update', { method: 'POST', data: newPrice });
             });
             return parsedData.data;
         } catch (error) {
@@ -36,30 +33,8 @@ export class PriceAggregator {
         }
     }
 
-    /**
-     * Retrieves current prices based on optional filters and pagination.
-     * @param options - Options for limit, offset, sort, and exchange filtering.
-     * @returns A list of current prices.
-     */
-    public async getCurrentPrices({ limit = 10, offset = 0, sort = 'asc', exchange }: { limit?: number; offset?: number; sort?: 'asc' | 'desc'; exchange?: string }): Promise<CurrentPrices[]> {
-        const pricesData = await storage.findAll();
-        let filteredPrices = pricesData;
-        if (exchange) {
-            filteredPrices = filteredPrices.filter(price => price.exchange === exchange);
-        }
-        filteredPrices.sort((a, b) => {
-            return sort === 'desc' ? b.price - a.price : a.price - b.price;
-        });
-        return filteredPrices.slice(offset, offset + limit);
-    }
-
-    /**
-     * Deletes a price entry by ID.
-     * @param id - The ID of the price to be deleted.
-     * @throws ServiceError if the deletion fails.
-     */
-    public async deletePrice(id: string): Promise<void> {
-        await storage.delete(id);
+    public async checkDependenciesHealth(): Promise<any> {
+        return await checkHealth();
     }
 
     private async calculateVWAP(): Promise<number> {
