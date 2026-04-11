@@ -48,13 +48,6 @@ export const logStartup = (config) => {
     });
 };
 
-export const logSensitiveOperation = (operation) => {
-    logger.info({
-        message: 'Sensitive operation logged',
-        operation,
-    });
-};
-
 export const logPerformance = (operation, metrics) => {
     logger.info({
         message: `${operation} performance metrics`,

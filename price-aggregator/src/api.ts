@@ -41,7 +41,7 @@ router.get('/prices', async (req, res, next) => {
         res.status(200).json(prices);
     } catch (error) {
         logError(error, { message: 'Fetching prices failed' });
-        next(new ServiceError('Failed to fetch prices.')); // Enhanced error handling
+        next(new ServiceError('Failed to fetch prices.'));
     }
 });
 
@@ -54,7 +54,7 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
             return res.status(400).json({ error: error.message });
         }
         logError(error, { message: 'Adding price failed' });
-        next(new ServiceError('Failed to add price.')); // Enhanced error handling
+        next(new ServiceError('Failed to add price.'));
     }
 });
 
@@ -68,7 +68,7 @@ router.delete('/prices/:id', async (req, res, next) => {
             return res.status(404).json({ error: error.message });
         }
         logError(error, { message: 'Deleting price failed' });
-        next(new ServiceError('Failed to delete price.')); // Enhanced error handling
+        next(new ServiceError('Failed to delete price.'));
     }
 });
 
