@@ -15,14 +15,7 @@ async function fetchHistoricalData(): Promise<HistoricalData[]> {
     });
 }
 
-async function fetchOrderData(orderId: string): Promise<any> {
-    return await withRetry(async () => {
-        const response = await axios.get(`${ORDER_SERVICE_URL}/api/orders/${orderId}`);
-        return response.data;
-    });
-}
-
-const calculateReturns = async (historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> => {
+const calculateReturns = (historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number) => {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
     }
@@ -47,8 +40,7 @@ const calculateReturns = async (historicalData: HistoricalData[], buyThreshold: 
         }
     }
     const winRate = trades > 0 ? (successfulTrades / trades) * 100 : 0;
-    const performanceMetrics = `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}%`;
-    return { totalReturns, trades, winRate, performanceMetrics };
+    return { totalReturns, trades, winRate, performanceMetrics: `Simulated ${trades} trades with a win rate of ${winRate.toFixed(2)}%` };
 };
 
 const simulateBacktest = async (params: StrategyParameters, historicalData: HistoricalData[]): Promise<BacktestResult> => {
@@ -58,11 +50,11 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     }
     const historicalDataFetched = await fetchHistoricalData();
     const dataToUse = historicalData.length ? historicalData : historicalDataFetched;
-    const { totalReturns, trades, winRate, performanceMetrics } = await calculateReturns(dataToUse, params.buyThreshold, params.sellThreshold, params.slippage);
+    const { totalReturns, trades, winRate, performanceMetrics } = calculateReturns(dataToUse, params.buyThreshold, params.sellThreshold, params.slippage);
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns, requestId: backtestId });
     return BacktestResultSchema.parse(result);
 };
 
-export { simulateBacktest, fetchOrderData };
+export { simulateBacktest, fetchHistoricalData };
