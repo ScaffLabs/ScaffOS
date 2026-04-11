@@ -35,4 +35,4 @@ export const seedDevelopmentData = async (): Promise<void> => {
         { id: '4', name: 'Development Portfolio 2', positions: [{ symbol: 'TSLA', quantity: 8, averagePrice: 700 }] }
     ];
     await migrateData(devPortfolios);
-};
+}; 

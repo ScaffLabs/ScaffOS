@@ -76,4 +76,4 @@ class InMemoryStorage extends Storage {
 }
 
 const storage = new InMemoryStorage();
-export default storage;
+export default storage; 
