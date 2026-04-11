@@ -64,4 +64,13 @@ export const logDatabaseQuery = (query, params, duration) => {
     });
 };
 
+export const logHttpRequest = (method, url, requestId) => {
+    logger.info({
+        message: 'HTTP request made',
+        method,
+        url,
+        requestId,
+    });
+};
+
 export default logger;
