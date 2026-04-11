@@ -1,17 +1,15 @@
 import axios from 'axios';
 import config from '../config';
 import { ServiceError } from '../utils/errors';
-import { query } from '../utils/connectionPool';
 
 export const fetchChartData = async () => {
     try {
-        const sql = 'SELECT date, price FROM chart_data ORDER BY date ASC';
-        const result = await query(sql, []);
-        validateChartData(result);
-        return result;
+        const response = await axios.get(`${config.externalApiUrl}/chart`);
+        validateChartData(response.data);
+        return response.data;
     } catch (error) {
         console.error('Error fetching chart data:', error);
-        throw new ServiceError('Error fetching chart data: ' + error.message);
+        throw new ServiceError('Failed to fetch chart data: ' + error.message);
     }
 };
 
@@ -31,23 +29,9 @@ export const addChartData = async (date: string, price: number) => {
         throw new ServiceError('Invalid input for chart data');
     }
     try {
-        const sql = 'INSERT INTO chart_data (date, price) VALUES (?, ?)';
-        await query(sql, [date, price]);
+        await axios.post(`${config.externalApiUrl}/chart`, { date, price });
     } catch (error) {
         console.error('Error adding chart data:', error);
         throw new ServiceError('Error adding chart data: ' + error.message);
-    }
-};
-
-export const deleteChartData = async (date: string) => {
-    if (typeof date !== 'string') {
-        throw new ServiceError('Invalid date input for deletion');
-    }
-    try {
-        const sql = 'DELETE FROM chart_data WHERE date = ?';
-        await query(sql, [date]);
-    } catch (error) {
-        console.error('Error deleting chart data:', error);
-        throw new ServiceError('Error deleting chart data: ' + error.message);
     }
 };
