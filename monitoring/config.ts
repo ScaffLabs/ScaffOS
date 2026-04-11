@@ -8,6 +8,7 @@ const envSchema = z.object({
     ORDER_SERVICE_URL: z.string().url().default('http://localhost:4000'),
     USER_SERVICE_URL: z.string().url().default('http://localhost:5000'),
     NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
+    DATABASE_URL: z.string().url().default('postgres://user:password@db:5432/monitoring_db'),
 });
 
 const env = envSchema.safeParse(process.env);
