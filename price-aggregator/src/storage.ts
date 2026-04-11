@@ -1,8 +1,6 @@
-import { Pool } from 'pg';
-import { PriceData } from './types';
-import { logError } from './logger';
 import inMemoryStorage from './inMemoryStorage';
 import PostgresStorage from './postgresStorage';
+import { PriceData } from './types';
 
 interface Storage<T> {
     create(item: T): Promise<T>;
