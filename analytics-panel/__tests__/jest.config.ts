@@ -11,6 +11,8 @@ const config: Config = {
     collectCoverage: true,
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov'],
+    globalSetup: '<rootDir>/setupTests.ts',
+    globalTeardown: '<rootDir>/teardownTests.ts',
 };
 
-export default config;
+export default config; 
