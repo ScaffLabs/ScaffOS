@@ -1,5 +1,5 @@
 import { AlertMessage } from './alert.schema';
-import { EventBus } from '../event-bus';
+import { EventBus } from './event-bus';
 import axios from 'axios';
 import { ServiceError } from './error.types';
 import { CircuitBreaker } from 'opossum';
