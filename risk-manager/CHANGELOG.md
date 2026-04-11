@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2023-10-24
+### Added
+- Comprehensive API documentation in README.md for all endpoints and usage.
+- Detailed environment variables table for clarity.
+
 ## [1.2.0] - 2023-10-23
 ### Added
 - Comprehensive documentation in README.md, enhancing clarity on setup, API usage, and contribution guidelines.
