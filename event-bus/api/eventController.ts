@@ -11,6 +11,7 @@ const storage = storageManager.getStorage();
 const createEvent = async (req: Request, res: Response): Promise<void> => {
     const reqId = req.headers['x-request-id'] || 'unknown';
     try {
+        req.body = req.sanitize(req.body); // Sanitize input
         const validation = createEventSchema.safeParse(req.body);
         if (!validation.success) {
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
@@ -47,6 +48,7 @@ const updateEvent = async (req: Request, res: Response): Promise<void> => {
     const reqId = req.headers['x-request-id'] || 'unknown';
     const { id } = req.params;
     try {
+        req.body = req.sanitize(req.body); // Sanitize input
         const validation = updateEventSchema.safeParse(req.body);
         if (!validation.success) {
             throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
