@@ -26,6 +26,9 @@ export const createDashboardEntry = async (req: Request, res: Response): Promise
             throw new ValidationError('Invalid input data: Both id and data are required.');
         }
         const { id, data } = bodyValidation.data;
+        if (store.read(id)) {
+            throw new ValidationError('Entry with this ID already exists.');
+        }
         store.create(data, id);
         logger.info(`Created new entry: ${id}`);
         res.status(201).json({ message: 'Entry created', id });

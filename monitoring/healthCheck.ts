@@ -25,14 +25,6 @@ export const healthCheck = async (req: Request, res: Response) => {
         });
     } catch (error) {
         logger.error({ error: error.message }, 'Health check failed');
-        if (error instanceof ServiceError) {
-            return res.status(503).json({ error: 'Service Unavailable' });
-        }
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
-};
-
-export const readyCheck = (req: Request, res: Response) => {
-    const isReady = true; // Placeholder logic, replace with actual checks
-    return res.status(isReady ? 200 : 503).json({ status: isReady ? 'READY' : 'NOT_READY' });
 };
