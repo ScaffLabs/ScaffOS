@@ -14,12 +14,13 @@ import crypto from 'crypto';
 import { validateApiKey } from './apiKey';
 import { requestSizeLimitMiddleware } from './middleware';
 import { logRequest } from './logger';
-import { sanitizeUserInput } from './userValidation';
+import { MemoryUsageMonitor } from './memoryMonitor';
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
+const memoryMonitor = new MemoryUsageMonitor();
 
 // Middleware setup
 app.use(cors({ origin: ['http://your-allowed-origin.com', 'http://another-allowed-origin.com'] }));
@@ -54,7 +55,7 @@ const start = async () => {
         await connectionPool.isReady();
         server.listen(PORT, () => {
             logger.info(`Server listening on port ${PORT}`, { requestId: 'startup' });
-            monitorMemoryUsage();
+            memoryMonitor.startMonitoring();
         });
         initGracefulShutdown(server, connectionPool);
     } catch (error) {
