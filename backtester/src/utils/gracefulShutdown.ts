@@ -10,4 +10,7 @@ const gracefulShutdown = async (server) => {
     process.exit(0);
 };
 
+process.on('SIGTERM', () => gracefulShutdown);
+process.on('SIGINT', () => gracefulShutdown);
+
 export { gracefulShutdown };
