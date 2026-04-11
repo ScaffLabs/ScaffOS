@@ -12,6 +12,7 @@ const router = express.Router();
 router.use(requestSizeLimitMiddleware);
 router.use(validateAndSanitizeUserInput);
 
+// Create User
 router.post('/users', async (req, res) => {
     const sanitizedInput = req.body;
     try {
@@ -34,13 +35,19 @@ router.post('/users', async (req, res) => {
     }
 });
 
+// Get All Users with Pagination and Filtering
 router.get('/users', async (req, res) => {
+    const { limit = 10, offset = 0, username } = req.query;
     try {
         const users = await getAllUsers();
-        if (users.length === 0) {
+        if (username) {
+            users = users.filter(user => user.username.includes(username));
+        }
+        const paginatedUsers = users.slice(Number(offset), Number(offset) + Number(limit));
+        if (paginatedUsers.length === 0) {
             throw new EmptyArrayError('No users found.');
         }
-        res.status(200).json(users);
+        res.status(200).json(paginatedUsers);
     } catch (error) {
         logger.error('Error fetching users', { error: error.message });
         if (error instanceof EmptyArrayError) {
@@ -50,6 +57,7 @@ router.get('/users', async (req, res) => {
     }
 });
 
+// Update User
 router.put('/users/:id', async (req, res) => {
     const { id } = req.params;
     const sanitizedInput = req.body;
@@ -73,6 +81,7 @@ router.put('/users/:id', async (req, res) => {
     }
 });
 
+// Delete User
 router.delete('/users/:id', async (req, res) => {
     const { id } = req.params;
     try {
