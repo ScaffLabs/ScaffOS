@@ -22,7 +22,7 @@ export class AlertController {
 
     async updateAlert(req: Request, res: Response): Promise<void> {
         const start = Date.now();
-        const alertId = req.params.id as OrderId;
+        const alertId = req.params.id as string;
         try {
             const updatedAlert = await this.alertStore.update(alertId, req.body);
             if (!updatedAlert) throw new NotFoundError('Alert not found.');
@@ -35,7 +35,7 @@ export class AlertController {
     }
 
     async deleteAlert(req: Request, res: Response): Promise<void> {
-        const alertId = req.params.id as OrderId;
+        const alertId = req.params.id as string;
         const start = Date.now();
         try {
             const success = await this.alertStore.delete(alertId);
