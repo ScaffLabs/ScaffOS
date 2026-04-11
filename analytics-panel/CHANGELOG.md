@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.0] - 2023-11-07
+- Added detailed documentation in README.md including project description, setup instructions, and API reference.
+- Included environment variables table for better configuration clarity.
+- Enhanced deployment guide with Docker instructions.
+
 ## [1.9.0] - 2023-11-06
 - Added comprehensive documentation including detailed README.md and API reference.
 - Enhanced inline code comments throughout the codebase for clarity.
