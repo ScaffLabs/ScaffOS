@@ -9,11 +9,9 @@ import { notifyUserService } from './interServiceClient';
 
 const router = express.Router();
 
-// Middleware for size limit and sanitization
 router.use(requestSizeLimitMiddleware);
 router.use(validateAndSanitizeUserInput);
 
-// Create User
 router.post('/users', async (req, res) => {
     const sanitizedInput = req.body;
     try {
@@ -36,7 +34,6 @@ router.post('/users', async (req, res) => {
     }
 });
 
-// Get All Users
 router.get('/users', async (req, res) => {
     try {
         const users = await getAllUsers();
@@ -50,7 +47,6 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// Update User
 router.put('/users/:id', async (req, res) => {
     const { id } = req.params;
     const sanitizedInput = req.body;
@@ -74,7 +70,6 @@ router.put('/users/:id', async (req, res) => {
     }
 });
 
-// Delete User
 router.delete('/users/:id', async (req, res) => {
     const { id } = req.params;
     try {
