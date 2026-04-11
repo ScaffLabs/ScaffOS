@@ -6,8 +6,6 @@ import logger, { logStartupConfig } from './logger';
 import { errorHandler } from './errors';
 import gracefulShutdown from './gracefulShutdown';
 import { createPool } from 'mysql2/promise';
-import { healthCheckServices } from './externalService';
-import MemoryQueue from './memoryQueue';
 
 const app = express();
 const server = http.createServer(app);
@@ -34,27 +32,19 @@ const startServer = async () => {
     });
 };
 
-process.on('SIGTERM', async () => {
+const shutdown = async () => {
     await gracefulShutdown(dbPool);
-});
-process.on('SIGINT', async () => {
-    await gracefulShutdown(dbPool);
-});
+};
 
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 process.on('uncaughtException', (err) => {
     logger.error('Uncaught Exception: ', err);
-    gracefulShutdown(dbPool);
+    shutdown();
 });
 
 process.on('unhandledRejection', (reason) => {
     logger.error('Unhandled Rejection: ', reason);
 });
-
-const monitorMemoryUsage = () => {
-    const memoryUsage = process.memoryUsage();
-    logger.info(`Memory Usage: RSS: ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`);
-};
-
-setInterval(monitorMemoryUsage, 60000);
 
 startServer();

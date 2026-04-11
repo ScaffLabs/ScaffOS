@@ -2,20 +2,21 @@ import axios from 'axios';
 import logger from './logger';
 import config from './config';
 
-const exponentialBackoff = (retryCount: number) => {
-    return new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
+const exponentialBackoff = (retries: number) => {
+    return new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 100));
 };
 
+const CIRCUIT_BREAKER_THRESHOLD = 5;
+const CIRCUIT_BREAKER_TIMEOUT = 60000;
 let failureCount = 0;
-const CIRCUIT_BREAKER_THRESHOLD = 3;
-const CIRCUIT_BREAKER_TIMEOUT = 30000;
 let isCircuitOpen = false;
 let circuitBreakerTimeout: NodeJS.Timeout;
 
-const fetchWithRetry = async (url: string, retries: number = 5): Promise<any> => {
+const fetchWithRetry = async (url: string, retries: number = 3): Promise<any> => {
     for (let i = 0; i < retries; i++) {
         try {
             const response = await axios.get(url, { timeout: 5000 });
+            failureCount = 0; // Reset on success
             return response.data;
         } catch (error) {
             logger.warn(`Attempt ${i + 1} failed: ${error.message}`);
@@ -34,11 +35,9 @@ const circuitBreaker = async (url: string) => {
     }
     try {
         const data = await fetchWithRetry(url);
-        failureCount = 0;
         return data;
     } catch (error) {
         failureCount++;
-        logger.error('Error fetching data:', error);
         if (failureCount >= CIRCUIT_BREAKER_THRESHOLD) {
             isCircuitOpen = true;
             circuitBreakerTimeout = setTimeout(() => {
@@ -64,18 +63,4 @@ export const fetchRiskData = async (riskId: string) => {
 export const postRiskEvent = async (event: any) => {
     const url = `${config.EVENT_BUS_URL}/events`;
     return await axios.post(url, event);
-};
-
-export const retryHealthCheck = async (retries: number = 5) => {
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await healthCheckServices();
-        } catch (error) {
-            logger.warn(`Health check attempt ${i + 1} failed: ${error.message}`);
-            await exponentialBackoff(i);
-            if (i === retries - 1) {
-                throw new Error('Health check failed after multiple attempts.');
-            }
-        }
-    }
 };
