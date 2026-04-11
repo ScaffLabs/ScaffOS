@@ -62,3 +62,21 @@ startServer().catch(err => {
     logger.error('Failed to start server:', err);
     process.exit(1);
 });
+
+process.on('SIGUSR2', async () => {
+    console.log('SIGUSR2 signal received: restarting server...');
+    await closeDatabaseConnection();
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    console.log('SIGINT signal received: closing server...');
+    await closeDatabaseConnection();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    console.log('SIGTERM signal received: closing server...');
+    await closeDatabaseConnection();
+    process.exit(0);
+});

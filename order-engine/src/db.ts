@@ -41,14 +41,23 @@ export const closeDatabaseConnection = async () => {
 export const queryDatabase = async (query: string, params: any[]) => {
     const client = await connectToDatabase();
     try {
-        await client.query('BEGIN'); // Start transaction
         const res = await client.query(query, params);
-        await client.query('COMMIT'); // Commit transaction
         return res;
     } catch (error) {
-        await client.query('ROLLBACK'); // Rollback on error
         throw error;
     } finally {
         client.release();
     }
 };
+
+process.on('exit', async () => {
+    await closeDatabaseConnection();
+});
+
+process.on('SIGTERM', async () => {
+    await closeDatabaseConnection();
+});
+
+process.on('SIGINT', async () => {
+    await closeDatabaseConnection();
+});

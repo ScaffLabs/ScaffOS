@@ -29,3 +29,11 @@ export const readyCheck = async (req: Request, res: Response): Promise<void> => 
         res.status(500).send('Readiness check error.');
     }
 };
+
+process.on('SIGINT', () => {
+    logger.info('Received SIGINT: Performing health check before shutdown.');
+});
+
+process.on('SIGTERM', () => {
+    logger.info('Received SIGTERM: Performing health check before shutdown.');
+});
