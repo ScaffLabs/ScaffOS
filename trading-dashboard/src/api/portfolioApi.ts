@@ -31,9 +31,10 @@ export const createPosition = async (req: Request, res: Response) => {
         if (!validationResult.success) {
             throw new ValidationError('Invalid position data: ' + validationResult.error.errors.join(', '));
         }
-        positionStore.create(validationResult.data);
-        publishEvent('POSITION_UPDATED', validationResult.data);
-        res.status(201).json({ message: 'Position created successfully', position: validationResult.data });
+        const newPosition: Position = validationResult.data;
+        positionStore.create(newPosition);
+        publishEvent('POSITION_UPDATED', newPosition);
+        res.status(201).json({ message: 'Position created successfully', position: newPosition });
     } catch (error) {
         if (error instanceof ValidationError) {
             return res.status(400).json({ message: error.message });

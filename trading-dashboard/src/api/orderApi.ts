@@ -18,10 +18,11 @@ export const submitOrder = async (req: Request, res: Response) => {
         if (!validationResult.success) {
             throw new ServiceError('Invalid order details: ' + validationResult.error.errors.join(', '));
         }
-        orders.push(validationResult.data);
-        logger.info('Order submitted', { orderId: validationResult.data.id });
-        publishEvent('ORDER_SUBMITTED', validationResult.data);
-        res.status(201).json({ message: 'Order submitted successfully', order: validationResult.data });
+        const newOrder: Order = validationResult.data;
+        orders.push(newOrder);
+        logger.info('Order submitted', { orderId: newOrder.id });
+        publishEvent('ORDER_SUBMITTED', newOrder);
+        res.status(201).json({ message: 'Order submitted successfully', order: newOrder });
     } catch (error) {
         logger.error('Error submitting order', { error: error.message });
         if (error instanceof ServiceError) {
