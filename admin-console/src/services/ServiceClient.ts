@@ -56,6 +56,20 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     });
 };
 
+const healthCheckWithRetry = async (retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await axiosInstance.get('/health');
+            if (response.status === 200) {
+                return { status: 'up' };
+            }
+        } catch (error) {
+            if (i === retries - 1) throw new ServiceError('Health check failed: ' + error.message);
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+};
+
 const handleAxiosError = (error: unknown, operation: string) => {
     let errorMessage = `Failed to ${operation}`;
     if (axios.isAxiosError(error)) {
@@ -68,18 +82,4 @@ const handleAxiosError = (error: unknown, operation: string) => {
     throw new ServiceError(errorMessage);
 };
 
-const updateConfiguration = async (configItem: ConfigurationItem): Promise<void> => {
-    return await circuitBreaker.fire(async () => {
-        try {
-            const response = await axiosInstance.put('/config', configItem);
-            emitEvent({ type: 'CONFIGURATION_UPDATED', payload: configItem });
-            if (response.status !== 200) {
-                throw new ServiceError('Failed to update configuration.');
-            }
-        } catch (error) {
-            handleAxiosError(error, 'update configuration');
-        }
-    });
-};
-
-export { fetchConfigurations, postConfiguration, deleteConfiguration, updateConfiguration };
+export { fetchConfigurations, postConfiguration, deleteConfiguration, healthCheckWithRetry };

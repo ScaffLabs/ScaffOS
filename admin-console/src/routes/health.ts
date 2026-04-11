@@ -1,6 +1,7 @@
 import express from 'express';
 import { logger } from '../middleware/logger';
-import { healthCheckWithRetry, checkDatabaseConnection } from '../services/HealthService';
+import { healthCheckWithRetry } from '../services/HealthService';
+import { fetchHealthStatus } from '../services/ServiceClient';
 
 const router = express.Router();
 
@@ -22,8 +23,8 @@ router.get('/', async (req, res) => {
 
 router.get('/ready', async (req, res) => {
     try {
-        const dbReady = await checkDatabaseConnection();
-        if (dbReady) {
+        const healthStatus = await fetchHealthStatus();
+        if (healthStatus.application === 'running') {
             res.status(200).json({ status: 'ready' });
         } else {
             res.status(503).json({ status: 'not ready' });
