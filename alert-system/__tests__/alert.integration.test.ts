@@ -21,7 +21,7 @@ describe('Alert API Integration Tests', () => {
     });
 
     test('POST /api/alerts creates a new alert', async () => {
-        const alertMessage = { type: 'price', threshold: 100, currentValue: 120 };
+        const alertMessage = { type: 'price', threshold: 100, currentValue: 120 }; 
         const response = await request(app).post('/api/alerts').send(alertMessage);
         expect(response.status).toBe(201);
         expect(response.body).toMatchObject(alertMessage);

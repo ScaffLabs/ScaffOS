@@ -10,7 +10,7 @@ describe('AlertController', () => {
     let alert: AlertMessage;
 
     beforeEach(() => {
-        alert = { id: '1', type: 'price', threshold: 100, currentValue: 120, createdAt: new Date() };
+        alert = { id: '1' as OrderId, type: 'price', threshold: 100, currentValue: 120, createdAt: new Date() };
     });
 
     test('should create an alert successfully', async () => {
