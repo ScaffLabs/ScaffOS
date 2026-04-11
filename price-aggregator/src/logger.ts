@@ -55,4 +55,13 @@ export const logPerformance = (operation, metrics) => {
     });
 };
 
+export const logDatabaseQuery = (query, params, duration) => {
+    logger.debug({
+        message: 'Database query executed',
+        query,
+        params,
+        duration,
+    });
+};
+
 export default logger;

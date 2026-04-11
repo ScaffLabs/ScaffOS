@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { logError } from './logger';
+import { logError, logDatabaseQuery } from './logger';
 
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -17,12 +17,16 @@ export const createConnectionPool = () => {
         query: async (text: string, params?: any[]) => {
             let lastError;
             for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                const startTime = Date.now();
                 try {
                     const queryPromise = pool.query(text, params);
-                    return await Promise.race([
+                    const result = await Promise.race([
                         queryPromise,
                         new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), TIMEOUT)),
                     ]);
+                    const duration = Date.now() - startTime;
+                    logDatabaseQuery(text, params, duration);
+                    return result;
                 } catch (error) {
                     lastError = error;
                     logError(error, { message: `Database query failed (attempt ${attempt + 1})` });
