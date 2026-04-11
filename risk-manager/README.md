@@ -92,3 +92,6 @@ For deployment, consider using Docker for containerization. Ensure that the envi
 
 ## Changelog
 See CHANGELOG.md for a detailed history of changes and updates.
+
+## Contribution Guidelines
+We welcome contributions to the Risk Manager service. Please see CONTRIBUTING.md for details on how to contribute.
