@@ -1,21 +1,13 @@
-const rateLimitMap = new Map<string, { count: number; lastRequest: number }>();
-const RATE_LIMIT = 100; // requests per hour
-const TIME_WINDOW = 3600000; // 1 hour in milliseconds
+import { Request, Response, NextFunction } from 'express';
+import { rateLimit } from './rateLimit';
 
-export const rateLimit = (apiKey: string) => {
-    const now = Date.now();
-    const record = rateLimitMap.get(apiKey) || { count: 0, lastRequest: now };
-
-    if (now - record.lastRequest > TIME_WINDOW) {
-        record.count = 0; // Reset count if time window has passed
-        record.lastRequest = now;
+export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    const apiKey = req.headers['x-api-key'];
+    if (!apiKey || typeof apiKey !== 'string') {
+        return res.status(401).json({ error: 'API key is required' });
     }
-
-    if (record.count >= RATE_LIMIT) {
-        return false; // Rate limit exceeded
+    if (!rateLimit(apiKey)) {
+        return res.status(429).json({ error: 'Rate limit exceeded, try again later' });
     }
-
-    record.count++;
-    rateLimitMap.set(apiKey, record);
-    return true;
+    next();
 };
