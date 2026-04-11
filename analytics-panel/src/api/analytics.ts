@@ -21,12 +21,16 @@ const fetchPerformanceMetrics = async () => {
 
 const createStrategy = async (strategy) => {
     try {
+        const validatedStrategy = StrategySchema.parse(strategy);
         const response = await circuitBreaker.execute(() =>
-            axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`, strategy)
+            axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`, validatedStrategy)
         );
-        return StrategySchema.parse(response.data);
+        return response.data;
     } catch (error) {
         logError(error, 'Creating strategy');
+        if (error instanceof ValidationError) {
+            throw new ValidationError('Invalid strategy data: ' + error.message);
+        }
         throw new ServiceError('Failed to create strategy: ' + error.message);
     }
 };

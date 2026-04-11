@@ -40,4 +40,11 @@ class DivisionByZeroError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DatabaseError, OverflowError, DivisionByZeroError };
+class CustomError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'CustomError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DatabaseError, OverflowError, DivisionByZeroError, CustomError };
