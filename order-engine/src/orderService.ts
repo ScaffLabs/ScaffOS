@@ -1,7 +1,7 @@
 import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { storage } from './storage';
-import { postData } from './axiosClient';
+import { postData, performHealthChecks } from './axiosClient';
 import logger from './logger';
 import { emitWithRetry } from './eventBus';
 
@@ -63,4 +63,8 @@ const getOrdersService = async (pagination: { limit: number; offset: number }) =
     return orders;
 };
 
-export { createOrderService, updateOrderService, deleteOrderService, getOrdersService };
+const healthCheckService = async () => {
+    return await performHealthChecks();
+};
+
+export { createOrderService, updateOrderService, deleteOrderService, getOrdersService, healthCheckService };
