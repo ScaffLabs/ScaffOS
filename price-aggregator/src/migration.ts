@@ -2,9 +2,11 @@ import { storage } from './storage';
 import { PriceData } from './types';
 
 export const migrateData = async (oldData: PriceData[]) => {
-    for (const data of oldData) {
-        await storage.create(data);
-    }
+    await storage.transaction(async () => {
+        for (const data of oldData) {
+            await storage.create(data);
+        }
+    });
 };
 
 export const seedData = async () => {
@@ -13,7 +15,9 @@ export const seedData = async () => {
         { exchange: 'exchange2', price: 200, volume: 20 },
         { exchange: 'exchange3', price: 300, volume: 30 },
     ];
-    await Promise.all(seedPrices.map(price => storage.create(price)));
+    await storage.transaction(async () => {
+        await Promise.all(seedPrices.map(price => storage.create(price)));
+    });
 };
 
 export const clearData = async () => {
