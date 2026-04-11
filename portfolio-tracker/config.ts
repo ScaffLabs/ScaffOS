@@ -14,6 +14,7 @@ const env = cleanEnv(process.env, {
   DB_USER: str({ default: 'root' }),
   DB_PASS: str({ default: 'example' }),
   DB_NAME: str({ default: 'portfolio-tracker' }),
+  CORS_ORIGIN: str({ default: 'http://localhost:3000' }),
 });
 
 if (!env.DATABASE_URL) {

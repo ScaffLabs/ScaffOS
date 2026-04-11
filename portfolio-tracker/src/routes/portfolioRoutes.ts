@@ -9,10 +9,11 @@ import { ValidationError, NotFoundError } from '../errors';
 import requestLogger from '../middleware/requestLogger';
 import auditLogger from '../middleware/auditLogger';
 import csrfProtection from '../middleware/csrfProtection';
+import env from '../config';
 
 const router = Router();
 
-const allowedOrigins = ['http://localhost:3000', 'https://your-allowed-origin.com'];
+const allowedOrigins = [env.CORS_ORIGIN];
 router.use(cors({ origin: allowedOrigins, optionsSuccessStatus: 200 }));
 
 const limiter = rateLimit({
