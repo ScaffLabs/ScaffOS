@@ -37,6 +37,10 @@ export const createOrder = async (req: Request, res: Response) => {
 export const updateOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
     const updates = req.body;
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        return res.status(400).json({ errors: validationErrors.array() });
+    }
     try {
         const updatedOrder = await updateOrderService(id, updates);
         if (!updatedOrder) {
