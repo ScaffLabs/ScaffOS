@@ -35,24 +35,3 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
 
 // Subscribe to userCreated events
 eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
-
-export const checkHealth = async () => {
-    try {
-        const response = await axios.get(`${config.OTHER_SERVICE_URL}/health`);
-        return response.status === 200;
-    } catch (error) {
-        logger.error('Health check failed for other service:', error.message);
-        return false;
-    }
-};
-
-export const healthCheckMiddleware = async (req, res, next) => {
-    const isHealthy = await checkHealth();
-    res.status(isHealthy ? 200 : 503).json({ healthy: isHealthy });
-};
-
-export const subscribeToUserCreated = async () => {
-    await subscribeToTopic('userCreated', handleUserCreated);
-};
-
-subscribeToUserCreated();

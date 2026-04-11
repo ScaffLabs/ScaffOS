@@ -24,8 +24,6 @@ redisClient.on('error', (err) => {
     logger.error('Redis Client Error', err);
 });
 
-const timeout = promisify(setTimeout);
-
 const executeWithTimeout = async (command, args, timeoutMs = 5000) => {
     let timeoutId;
     const promise = command(...args);
