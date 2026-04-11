@@ -59,9 +59,8 @@ process.on('uncaughtException', async (err) => {
 process.on('unhandledRejection', async (reason) => {
     logger.error('Unhandled Rejection:', reason);
     await shutdown();
-};
+});
 
-// Adding memory monitoring
 setInterval(() => {
     const memoryUsage = process.memoryUsage();
     logger.info(`Memory Usage: RSS: ${memoryUsage.rss}, Heap Total: ${memoryUsage.heapTotal}, Heap Used: ${memoryUsage.heapUsed}`);
