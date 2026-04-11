@@ -68,9 +68,24 @@ router.post('/', portfolioValidation, async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
+    const { limit = 10, offset = 0, sortBy = 'name', order = 'asc', filter } = req.query;
     try {
         const portfolios = await fetchAllData();
-        res.json(portfolios);
+        let filteredPortfolios = portfolios;
+
+        // Apply filtering
+        if (filter) {
+            filteredPortfolios = filteredPortfolios.filter(portfolio => portfolio.name.includes(filter));
+        }
+
+        // Sort portfolios
+        filteredPortfolios.sort((a, b) => {
+            return order === 'asc' ? (a[sortBy] > b[sortBy] ? 1 : -1) : (a[sortBy] < b[sortBy] ? 1 : -1);
+        });
+
+        // Paginate results
+        const paginatedPortfolios = filteredPortfolios.slice(Number(offset), Number(offset) + Number(limit));
+        res.json(paginatedPortfolios);
     } catch (error) {
         logger.error('Error fetching portfolios', { error: error.message });
         res.status(500).json({ error: 'Internal Server Error' });
