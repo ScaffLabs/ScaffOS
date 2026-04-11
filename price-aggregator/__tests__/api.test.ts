@@ -30,7 +30,7 @@ describe('API Endpoints', () => {
 
     test('GET /health should return healthy status', async () => {
         const mockHealth = { database: 'healthy' };
-        (priceAggregator.checkDependencies as jest.Mock).mockResolvedValueOnce(mockHealth);
+        (priceAggregator.checkDependenciesHealth as jest.Mock).mockResolvedValueOnce(mockHealth);
         const response = await request(app).get('/health');
         expect(response.status).toBe(200);
         expect(response.body).toEqual({ status: 'healthy', dependencies: mockHealth });
@@ -63,5 +63,20 @@ describe('API Endpoints', () => {
         const response = await request(app).delete('/prices/1');
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ error: 'Not Found' });
+    });
+
+    test('POST /prices should return 500 on server error', async () => {
+        const newPriceData = { exchange: 'exchange1', price: 150, volume: 20 };
+        (priceAggregator.addPrice as jest.Mock).mockRejectedValueOnce(new Error('Database Error'));
+        const response = await request(app).post('/prices').send(newPriceData);
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: 'Internal Server Error', details: 'Database Error' });
+    });
+
+    test('GET /prices should handle unexpected errors gracefully', async () => {
+        (priceAggregator.getCurrentPrices as jest.Mock).mockRejectedValueOnce(new Error('Unexpected Error'));
+        const response = await request(app).get('/prices');
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: 'Internal Server Error', details: 'Unexpected Error' });
     });
 });

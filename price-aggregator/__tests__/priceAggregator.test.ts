@@ -55,6 +55,12 @@ describe('PriceAggregator', () => {
         expect(priceAggregator.getCurrentPrices()).toEqual({ VWAP: expect.any(Number), exchange1: 100 });
     });
 
+    test('should handle unexpected errors gracefully', async () => {
+        jest.spyOn(priceAggregator, 'addPrice').mockRejectedValueOnce(new Error('Unexpected Error'));
+        const price: PriceData = { exchange: 'exchange1', price: 100, volume: 10 };
+        await expect(priceAggregator.addPrice(price)).rejects.toThrow('Unexpected Error');
+    });
+
     test('should return 400 for invalid price data on add', async () => {
         const invalidPrice: PriceData = { exchange: '', price: 0, volume: 0 };
         await expect(priceAggregator.addPrice(invalidPrice)).rejects.toThrow(ValidationError);
