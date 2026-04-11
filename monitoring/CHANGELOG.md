@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.6] - 2023-10-31
+### Added
+- Comprehensive documentation in README.md including API references and setup instructions.
+- Added inline comments in all methods to explain complex logic.
+
 ## [1.4.5] - 2023-10-30
 ### Added
 - Updated README.md with comprehensive documentation including project description, architecture overview, setup instructions, API reference, environment variables, development and deployment guides.
