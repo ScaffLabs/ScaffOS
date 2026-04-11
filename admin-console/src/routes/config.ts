@@ -16,26 +16,35 @@ router.use(sanitizeQueryParams);
 router.use(rateLimiter);
 router.use(logAudit);
 
-// Create Configuration
+/**
+ * Create a new configuration.
+ * @route POST /api/config
+ * @param {ConfigurationItem} req.body - The configuration item to create.
+ * @returns {Object} 201 - Successfully created message.
+ * @returns {Error} 400 - Validation error or service error.
+ */
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
-        // Validate the incoming configuration item against the schema
         ConfigurationItemSchema.parse(configItem);
         await db.createConfiguration(configItem);
         emitEvent('CONFIGURATION_CREATED', configItem);
         return res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
-        // Handle validation errors specifically
         if (error instanceof ValidationError) {
             return next(new ValidationError('Invalid configuration data: ' + error.message));
         }
-        // Handle service errors and log them
         next(new ServiceError('Error creating configuration: ' + error.message));
     }
 });
 
-// Read Configuration by Key
+/**
+ * Get configuration by key.
+ * @route GET /api/config/{key}
+ * @param {string} key - The unique key of the configuration to retrieve.
+ * @returns {ConfigurationItem} 200 - The configuration item.
+ * @returns {Error} 404 - Configuration not found.
+ */
 router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
     const { key } = req.params;
     try {
@@ -47,9 +56,16 @@ router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Get All Configurations with Pagination and Filtering
+/**
+ * Get all configurations with pagination.
+ * @route GET /api/config
+ * @param {number} [limit] - Limit the number of results returned.
+ * @param {number} [offset] - Offset for pagination.
+ * @returns {Array<ConfigurationItem>} 200 - An array of configuration items.
+ * @returns {Error} 404 - No configurations found.
+ */
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    const limit = Math.min(parseInt(req.query.limit as string) || 10, 100); // max limit 100
+    const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
     const offset = parseInt(req.query.offset as string) || 0;
     const sortBy = req.query.sortBy as string || 'key';
     const order = req.query.order as string || 'asc';
@@ -58,7 +74,6 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         const configurations = await db.findAllConfigurations();
         const filteredConfigs = configurations
             .sort((a, b) => {
-                // Sorting logic based on the specified field and order
                 if (a[sortBy] < b[sortBy]) return order === 'asc' ? -1 : 1;
                 if (a[sortBy] > b[sortBy]) return order === 'asc' ? 1 : -1;
                 return 0;
@@ -67,31 +82,39 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         if (filteredConfigs.length === 0) throw new NotFoundError('No configurations found.');
         return res.status(200).json(filteredConfigs);
     } catch (error) {
-        // Log and forward errors to the error handler
         next(new ServiceError('Error fetching configurations: ' + error.message));
     }
 });
 
-// Update Configuration
+/**
+ * Update an existing configuration.
+ * @route PUT /api/config
+ * @param {ConfigurationItem} req.body - The updated configuration item.
+ * @returns {Object} 200 - Successfully updated message.
+ * @returns {Error} 400 - Validation error or service error.
+ */
 router.put('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
-        // Validate the configuration item before updating
         ConfigurationItemSchema.parse(configItem);
         await db.updateConfiguration(configItem);
         emitEvent('CONFIGURATION_UPDATED', configItem);
         return res.status(200).json({ message: 'Configuration updated successfully!' });
     } catch (error) {
-        // Handle validation errors specifically
         if (error instanceof ValidationError) {
             return next(new ValidationError('Invalid configuration data: ' + error.message));
         }
-        // Handle service errors and log them
         next(new ServiceError('Error updating configuration: ' + error.message));
     }
 });
 
-// Delete Configuration
+/**
+ * Delete a configuration by key.
+ * @route DELETE /api/config/{key}
+ * @param {string} key - The unique key of the configuration to delete.
+ * @returns {Object} 204 - No content.
+ * @returns {Error} 404 - Configuration not found.
+ */
 router.delete('/:key', async (req: Request, res: Response, next: NextFunction) => {
     const key = req.params.key;
     try {
@@ -99,7 +122,6 @@ router.delete('/:key', async (req: Request, res: Response, next: NextFunction) =
         emitEvent('CONFIGURATION_DELETED', { key });
         return res.status(204).send();
     } catch (error) {
-        // Handle service errors and log them
         next(new ServiceError('Error deleting configuration: ' + error.message));
     }
 });
