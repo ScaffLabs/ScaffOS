@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { submitOrder } from '../api/orderApi';
-import { publishEvent } from '../utils/eventBus';
 import { Order, OrderSchema } from '../types';
 
 const OrderEntry: React.FC = () => {
@@ -16,11 +15,14 @@ const OrderEntry: React.FC = () => {
             return;
         }
         try {
-            await submitOrder(validationResult.data);
-            publishEvent('ORDER_SUBMITTED', validationResult.data);
-            setSuccess('Order submitted successfully!');
-            setError(null);
-            setOrderDetails({ id: '' as OrderId, symbol: '', quantity: 0, type: 'buy' }); // Reset form
+            const response = await submitOrder(validationResult.data);
+            if (response.status === 201) {
+                setSuccess('Order submitted successfully!');
+                setError(null);
+                setOrderDetails({ id: '' as OrderId, symbol: '', quantity: 0, type: 'buy' }); // Reset form
+            } else {
+                setError('Failed to submit order.');
+            }
         } catch (err) {
             setError('Failed to submit order: ' + (err instanceof Error ? err.message : 'Unknown error'));
             setSuccess(null);
