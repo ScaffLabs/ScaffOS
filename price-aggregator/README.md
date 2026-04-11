@@ -75,7 +75,7 @@ npm run test:watch
 | DB_HOST      | Database host                      | localhost             |
 | DB_NAME      | Database name                      | your_db_name          |
 | DB_PORT      | Database port                      | 5432                  |
-| LOG_LEVEL     | Logging level (info, warn, error) | info                  |
+| LOG_LEVEL    | Logging level (info, warn, error) | info                  |
 | DOCKER       | Indicates if running in Docker     | false                 |
 
 ## Development Guide
