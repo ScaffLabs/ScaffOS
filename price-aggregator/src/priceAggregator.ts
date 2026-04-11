@@ -12,6 +12,13 @@ export class PriceAggregator {
         this.eventBus.on('PRICE_ADDED', (event: PriceEvent) => this.handlePriceEvent(event));
     }
 
+    /**
+     * Adds a new price data entry to the storage and updates the current prices.
+     * @param priceData - The price data to be added.
+     * @returns The newly added price data.
+     * @throws ValidationError if the price data is invalid.
+     * @throws ServiceError if there is a problem with adding the price.
+     */
     public async addPrice(priceData: PriceData): Promise<PriceData> {
         const parsedData = PriceDataSchema.safeParse(priceData);
         if (!parsedData.success) {
@@ -35,10 +42,19 @@ export class PriceAggregator {
         }
     }
 
+    /**
+     * Checks the health of dependencies for the price aggregator service.
+     * @returns A promise that resolves to the health status of dependencies.
+     */
     public async checkDependenciesHealth(): Promise<any> {
         return await checkHealth();
     }
 
+    /**
+     * Calculates the Volume Weighted Average Price (VWAP) based on current prices.
+     * @returns The calculated VWAP.
+     * @throws ServiceError if no volume is available for calculation.
+     */
     private async calculateVWAP(): Promise<number> {
         const pricesData = await storage.findAll();
         const totalVolume = pricesData.reduce((acc, price) => acc + price.volume, 0);
@@ -47,6 +63,10 @@ export class PriceAggregator {
         return parseFloat(vwap.toFixed(2));
     }
 
+    /**
+     * Handles incoming price events from the event bus.
+     * @param event - The price event containing data about the price change.
+     */
     private handlePriceEvent(event: PriceEvent) {
         console.log('New price added:', event.data);
     }
