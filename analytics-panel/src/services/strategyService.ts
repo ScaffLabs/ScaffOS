@@ -1,8 +1,9 @@
 import { InMemoryStore } from '../storage/inMemoryStore';
+import { SQLiteStore } from '../storage/database';
 import { Strategy, PerformanceMetrics } from '../types';
 import { ValidationError, NotFoundError } from '../errors/customErrors';
 
-const strategyStore = new InMemoryStore<Strategy>();
+const strategyStore = new InMemoryStore<Strategy>(); // Optionally switch to SQLiteStore for persistent storage
 
 const calculatePerformanceMetrics = (strategies: Strategy[]): PerformanceMetrics => {
     if (strategies.length === 0) {

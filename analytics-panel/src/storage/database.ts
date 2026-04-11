@@ -1,8 +1,9 @@
 import { Strategy } from '../types';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import { v4 as uuidv4 } from 'uuid';
 
-export class SQLiteStore<T> implements DatabaseStore<T> {
+export class SQLiteStore<T> implements Store<T> {
     private db: sqlite3.Database;
 
     constructor() {
@@ -54,6 +55,7 @@ export class SQLiteStore<T> implements DatabaseStore<T> {
     }
 
     async runMigrations() {
+        console.log('Running migrations...');
         // Implement migration logic if needed
     }
 }

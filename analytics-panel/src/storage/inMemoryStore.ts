@@ -81,5 +81,6 @@ export class InMemoryStore<T> implements Store<T> {
 
     async runMigrations() {
         console.log('Running migrations...');
+        // Add logic to handle migrations if necessary
     }
 }
