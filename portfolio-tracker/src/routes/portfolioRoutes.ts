@@ -1,3 +1,4 @@
+// portfolioRoutes.ts
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
@@ -10,39 +11,26 @@ import requestLogger from '../middleware/requestLogger';
 import auditLogger from '../middleware/auditLogger';
 import csrfProtection from '../middleware/csrfProtection';
 import env from '../config';
-import axios from 'axios';
-import circuitBreaker from 'circuit-breaker-js';
+import errorHandler from '../middleware/errorHandler';
 
 const router = Router();
 
-const allowedOrigins = [env.CORS_ORIGIN];
-router.use(cors({ origin: allowedOrigins, optionsSuccessStatus: 200 }));
+// Middleware
+router.use(cors());
+router.use(sanitize);
+router.use(requestLogger);
+router.use(auditLogger);
+router.use(csrfProtection);
 
+// Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     message: 'Too many requests, please try again later.',
 });
 router.use(limiter);
-router.use(sanitize);
-router.use(auditLogger);
-router.use(requestLogger);
-router.use(csrfProtection);
 
-const notifyExternalService = async (portfolio) => {
-    const externalServiceUrl = `${env.PORTFOLIO_SERVICE_URL}/notify`;
-    const breaker = circuitBreaker({
-        timeout: 5000,
-        errorThresholdPercentage: 50,
-        resetTimeout: 30000
-    });
-    try {
-        await breaker.run(() => axios.post(externalServiceUrl, portfolio));
-    } catch (error) {
-        logger.error('Failed to notify external service', { error: error.message });
-    }
-};
-
+// Validation schema
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
     body('positions').isArray().optional().custom((positions) => {
@@ -58,79 +46,54 @@ const portfolioValidation = [
     }),
 ];
 
-router.post('/', portfolioValidation, async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array() });
-        return res.status(400).json({ errors: errors.array() });
-    }
+// Routes
+router.post('/', portfolioValidation, async (req, res, next) => {
     try {
         const portfolio = await createPortfolio(req.body);
-        await notifyExternalService(portfolio);
         logger.info('Portfolio created', { portfolioId: portfolio.id });
         res.status(201).json(portfolio);
     } catch (error) {
-        logger.error('Error creating portfolio', { error: error.message });
-        if (error instanceof ValidationError) {
-            return res.status(400).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
+        next(error);
     }
 });
 
-router.get('/', async (req, res) => {
-    try {
-        const portfolios = await fetchAllData();
-        res.json(portfolios);
-    } catch (error) {
-        logger.error('Error fetching portfolios', { error: error.message });
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
     try {
         const portfolio = await getPortfolio(req.params.id);
         res.json(portfolio);
     } catch (error) {
-        logger.error('Error fetching portfolio', { error: error.message });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
+        next(error);
     }
 });
 
-router.put('/:id', portfolioValidation, async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        logger.warn('Validation errors', { errors: errors.array() });
-        return res.status(400).json({ errors: errors.array() });
-    }
+router.put('/:id', portfolioValidation, async (req, res, next) => {
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
-        await notifyExternalService(updatedPortfolio);
         res.json(updatedPortfolio);
     } catch (error) {
-        logger.error('Error updating portfolio', { error: error.message });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
+        next(error);
     }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
     try {
         await deletePortfolio(req.params.id);
         res.status(204).send();
     } catch (error) {
-        logger.error('Error deleting portfolio', { error: error.message });
-        if (error instanceof NotFoundError) {
-            return res.status(404).json({ error: error.message });
-        }
-        res.status(500).json({ error: 'Internal Server Error' });
+        next(error);
     }
 });
+
+router.get('/', async (req, res, next) => {
+    try {
+        const portfolios = await fetchAllData();
+        res.json(portfolios);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Error handling middleware
+router.use(errorHandler);
 
 export default router;
