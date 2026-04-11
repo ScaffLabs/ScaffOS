@@ -40,9 +40,6 @@ class CustomError extends Error {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, CustomError };
-
-// New Custom Error Classes
 class InvalidInputError extends ValidationError {
     constructor(message: string) {
         super(message);
@@ -57,5 +54,4 @@ class DatabaseConnectionError extends ServiceError {
     }
 }
 
-// Export new error classes
-export { InvalidInputError, DatabaseConnectionError };
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, CustomError, InvalidInputError, DatabaseConnectionError };
