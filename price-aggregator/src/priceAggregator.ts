@@ -18,13 +18,15 @@ export class PriceAggregator {
             throw new ValidationError('Invalid price data: ' + parsedData.error.errors.map(e => e.message).join(', '));
         }
         try {
+            const existingPrice = await storage.findAll({ exchange: parsedData.data.exchange });
+            if (existingPrice.length) {
+                throw new ServiceError('Price for this exchange already exists.');
+            }
             await storage.transaction(async () => {
                 const newPrice = await storage.create(parsedData.data);
                 this.currentPrices[parsedData.data.exchange] = parsedData.data.price;
                 this.currentPrices.VWAP = await this.calculateVWAP();
                 this.eventBus.emitPriceAdded(newPrice);
-
-                // Example of making an HTTP call to another service
                 await httpClient('/another-service/price-update', { method: 'POST', data: newPrice });
             });
             return parsedData.data;
@@ -40,7 +42,7 @@ export class PriceAggregator {
     private async calculateVWAP(): Promise<number> {
         const pricesData = await storage.findAll();
         const totalVolume = pricesData.reduce((acc, price) => acc + price.volume, 0);
-        if (totalVolume === 0) throw new Error('No volume available for VWAP calculation.');
+        if (totalVolume === 0) throw new ServiceError('No volume available for VWAP calculation.');
         const vwap = pricesData.reduce((acc, price) => acc + (price.price * price.volume), 0) / totalVolume;
         return parseFloat(vwap.toFixed(2));
     }
