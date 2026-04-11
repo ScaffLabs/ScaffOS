@@ -51,3 +51,10 @@ export const findUserById = async (id: UserId): Promise<User | null> => {
 export const getUserByEmail = async (email: string): Promise<User | null> => {
     return userStore.findByEmail(email);
 };
+
+export const validateUserExistence = async (email: string): Promise<void> => {
+    const user = await getUserByEmail(email);
+    if (user) {
+        throw new ValidationError(['Email already exists.']);
+    }
+};
