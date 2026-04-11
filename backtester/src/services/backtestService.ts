@@ -15,6 +15,13 @@ async function fetchHistoricalData(): Promise<HistoricalData[]> {
     });
 }
 
+async function fetchOrderData(orderId: string): Promise<any> {
+    return await withRetry(async () => {
+        const response = await axios.get(`${ORDER_SERVICE_URL}/api/orders/${orderId}`);
+        return response.data;
+    });
+}
+
 const calculateReturns = async (historicalData: HistoricalData[], buyThreshold: number, sellThreshold: number, slippage: number): Promise<{ totalReturns: number; trades: number; winRate: number; performanceMetrics: string; }> => {
     if (!Array.isArray(historicalData) || historicalData.length === 0) {
         throw new ValidationError('Historical data must be a non-empty array.');
@@ -58,4 +65,4 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     return BacktestResultSchema.parse(result);
 };
 
-export { simulateBacktest };
+export { simulateBacktest, fetchOrderData };
