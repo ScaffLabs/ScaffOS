@@ -17,3 +17,7 @@ EXPOSE 3000
 
 # Command to run the application
 CMD [ 'node', 'index.js' ]
+
+# Healthcheck configuration
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD curl -f http://localhost:3000/events/health || exit 1
