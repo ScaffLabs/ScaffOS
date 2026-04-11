@@ -1,5 +1,7 @@
 import express from 'express';
-import { applySecurityMiddlewares } from './middleware/securityMiddleware';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import errorHandler, { gracefulShutdownHandler } from './middleware/errorHandler';
 import requestLogger from './middleware/requestLogger';
 import { registerRoutes } from './api/portfolioApi';
@@ -13,7 +15,18 @@ const app = express();
 
 app.use(express.json());
 app.use(requestLogger);
-applySecurityMiddlewares(app);
+app.use(helmet()); // Set security HTTP headers
+
+const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [];
+app.use(cors({ origin: allowedOrigins })); // Enable CORS with allowed origins
+
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests, please try again later.',
+});
+app.use(limiter); // Apply rate limiting
+
 registerRoutes(app);
 registerExternalApiRoutes(app);
 registerHealthRoutes(app);
