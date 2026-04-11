@@ -19,15 +19,13 @@ const breaker = circuitBreaker({
 
 // Function to create a new portfolio
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
-    const start = process.hrtime();
     try {
-        PortfolioSchema.parse({ ...portfolioData, id: '' });
+        PortfolioSchema.parse(portfolioData);
     } catch (error) {
         throw new ValidationError('Invalid portfolio data: ' + error.errors.map(e => e.message).join(', '));
     }
     const newPortfolio = storage.create(portfolioData);
-    const duration = process.hrtime(start);
-    logger.info('Created portfolio', { portfolioId: newPortfolio.id, duration: (duration[0] * 1e3 + duration[1] / 1e6).toFixed(3) });
+    logger.info('Created portfolio', { portfolioId: newPortfolio.id });
     await notifyExternalService(newPortfolio);
     publishPortfolioUpdate(newPortfolio);
     return newPortfolio;
@@ -73,7 +71,6 @@ export const deletePortfolio = async (id: string): Promise<void> => {
 // Fetch all portfolios
 export const fetchAllData = async (): Promise<Portfolio[]> => {
     const portfolios = storage.getAll();
-    if (!portfolios.length) throw new ServiceError('No portfolios found');
     return portfolios;
 };
 
