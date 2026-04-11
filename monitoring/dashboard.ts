@@ -3,16 +3,14 @@ import { ValidationError, NotFoundError } from './errorClasses';
 import logger from './logger';
 import InMemoryStore from './dataStore';
 import { DashboardEntry, DashboardEntrySchema } from './types';
-import { createConnectionPool } from './connectionPool';
 
 const store = new InMemoryStore<DashboardEntry>();
-const connectionPool = createConnectionPool();
 
 export const listDashboardEntries = async (req: Request, res: Response): Promise<void> => {
     try {
         const entries = store.getAll();
         if (entries.length === 0) {
-            return res.status(204).json([]);
+            return res.status(204).send();
         }
         res.status(200).json(entries);
     } catch (error) {
