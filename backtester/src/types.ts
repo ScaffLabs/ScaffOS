@@ -5,23 +5,42 @@ export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
 export type BacktestId = string & { readonly brand: unique symbol };
 
+/**
+ * HistoricalData represents the price data at a specific timestamp.
+ * @property {number} timestamp - The timestamp in seconds since the epoch, must be a positive integer.
+ * @property {number} price - The price at the timestamp, must be a positive number.
+ */
 export interface HistoricalData {
-    timestamp: number; // Timestamp in seconds since the epoch, must be a positive integer.
-    price: number; // Price at the timestamp, must be a positive number.
+    timestamp: number;
+    price: number;
 }
 
+/**
+ * StrategyParameters defines the parameters for the trading strategy.
+ * @property {number} slippage - Slippage percentage, must be between 0 and 1.
+ * @property {number} buyThreshold - Threshold for buying, must be between 0 and 1.
+ * @property {number} sellThreshold - Threshold for selling, must be between 0 and 1.
+ */
 export interface StrategyParameters {
-    slippage: number; // Slippage percentage, must be between 0 and 1.
-    buyThreshold: number; // Threshold for buying, must be between 0 and 1.
-    sellThreshold: number; // Threshold for selling, must be between 0 and 1.
+    slippage: number;
+    buyThreshold: number;
+    sellThreshold: number;
 }
 
+/**
+ * BacktestResult represents the result of a backtest simulation.
+ * @property {BacktestId} id - Unique identifier for the backtest result.
+ * @property {number} totalReturns - Total returns from the backtest.
+ * @property {number} trades - Number of trades executed during the backtest.
+ * @property {number} winRate - Win rate percentage of the trades.
+ * @property {string} performanceMetrics - A string summarizing performance metrics.
+ */
 export interface BacktestResult {
-    id: BacktestId; // Unique identifier for the backtest result.
-    totalReturns: number; // Total returns from the backtest.
-    trades: number; // Number of trades executed during the backtest.
-    winRate: number; // Win rate percentage of the trades.
-    performanceMetrics: string; // A string summarizing performance metrics.
+    id: BacktestId;
+    totalReturns: number;
+    trades: number;
+    winRate: number;
+    performanceMetrics: string;
 }
 
 export const HistoricalDataSchema = z.object({
