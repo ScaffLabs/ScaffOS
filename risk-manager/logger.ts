@@ -1,5 +1,4 @@
 import winston from 'winston';
-import { v4 as uuidv4 } from 'uuid';
 
 const logFormat = winston.format.printf(({ level, message, timestamp, ...meta }) => {
   const logMessage = `${timestamp} ${level}: ${message}`;
@@ -25,11 +24,9 @@ logger.add(new winston.transports.File({
 }));
 
 const requestLogger = (req, res, next) => {
-  const requestId = uuidv4();
-  req.headers['x-request-id'] = requestId;
-  res.setHeader('X-Request-ID', requestId);
-
+  const requestId = req.headers['x-request-id'] || 'N/A';
   const start = Date.now();
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     logger.info(`Request: ${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`, {
