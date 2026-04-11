@@ -31,4 +31,12 @@ describe('Chart Component', () => {
         render(<Chart />);
         await waitFor(() => expect(screen.getByText('An unexpected error occurred.')).toBeInTheDocument());
     });
+
+    it('handles websocket data updates', async () => {
+        const { unmount } = render(<Chart />);
+        const ws = new WebSocket('ws://localhost:3001/chart');
+        ws.onmessage({ data: JSON.stringify({ date: '2021-01-03', price: 115 }) });
+        await waitFor(() => expect(screen.getByText('2021-01-03')).toBeInTheDocument());
+        unmount();
+    });
 });

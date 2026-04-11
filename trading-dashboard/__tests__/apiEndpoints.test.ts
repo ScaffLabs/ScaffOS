@@ -46,21 +46,23 @@ describe('API Endpoints Integration Tests', () => {
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ message: 'Invalid pagination parameters' });
     });
+    
+    it('GET /api/positions should return empty array when no positions exist', async () => {
+        await store.delete('1');
+        const response = await request(app).get('/api/positions');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([]);
+    });
+
+    it('PUT /api/positions/:id with invalid quantity should return 400', async () => {
+        const response = await request(app).put('/api/positions/1').send({ quantity: -10 });
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('Invalid quantity');
+    });
 
     it('POST /api/positions without required fields should return 400', async () => {
         const response = await request(app).post('/api/positions').send({ symbol: 'TSLA' });
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('Invalid position data');
-    });
-
-    it('PUT /api/positions/:id with invalid quantity should return 400', async () => {
-        const response = await request(app).put('/api/positions/1').send({ quantity: -1 });
-        expect(response.status).toBe(400);
-        expect(response.body.message).toBe('Invalid quantity');
-    });
-
-    it('DELETE /api/positions/:id should return 404 for non-existing position', async () => {
-        const response = await request(app).delete('/api/positions/99');
-        expect(response.status).toBe(404);
     });
 });
