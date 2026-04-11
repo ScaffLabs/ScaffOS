@@ -48,12 +48,8 @@ export const healthCheck = async (url: string) => {
     }
 };
 
-export const healthChecks = async (services: string[]) => {
-    const results = await Promise.all(services.map(service => healthCheck(service)));
-    return results.every(result => result);
-};
-
 export const performHealthChecks = async () => {
     const services = [process.env.ANOTHER_SERVICE_URL, process.env.ORDER_SERVICE_URL];
-    return healthChecks(services);
+    const results = await Promise.all(services.map(service => healthCheck(service)));
+    return results.every(result => result);
 };

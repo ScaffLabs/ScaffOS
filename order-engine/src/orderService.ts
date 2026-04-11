@@ -4,7 +4,6 @@ import { storage } from './storage';
 import { postData } from './axiosClient';
 import logger from './logger';
 import { emitWithRetry } from './eventBus';
-import axios from 'axios';
 
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
@@ -19,9 +18,6 @@ const createOrderService = async (orderData: unknown) => {
         logger.info('Order created successfully', { order });
         return createdOrder;
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            throw new ServiceError(`Failed to communicate with order service: ${error.response.data}`);
-        }
         logger.error('Failed to create order', { error: error.message });
         throw new ServiceError('Failed to create order due to storage error: ' + error.message);
     }
@@ -42,9 +38,6 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
         logger.info('Order updated successfully', { id, updates });
         return updatedOrder;
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            throw new ServiceError(`Failed to communicate with order service: ${error.response.data}`);
-        }
         logger.error('Failed to update order', { error: error.message });
         throw new ServiceError('Failed to update order due to storage error: ' + error.message);
     }
@@ -57,9 +50,6 @@ const deleteOrderService = async (id: string) => {
         await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
         logger.info('Order deleted successfully', { id });
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            throw new ServiceError(`Failed to communicate with order service: ${error.response.data}`);
-        }
         logger.error('Failed to delete order', { error: error.message });
         throw new ServiceError('Failed to delete order due to storage error: ' + error.message);
     }
