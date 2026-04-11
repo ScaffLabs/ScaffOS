@@ -11,9 +11,7 @@ import { config } from './config';
 import { runMigrations } from './migrations';
 import './memoryMonitor';
 import { sanitizeInput } from './sanitization';
-import { logRequest } from './logger';
 import { connectToDatabase } from './db';
-import { setupRequestQueue } from './requestQueue';
 
 const app = express();
 const PORT = config.PORT;
@@ -23,7 +21,6 @@ app.use(helmet());
 app.use(cors({ origin: ['http://your-allowed-origin.com'], credentials: true }));
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(sanitizeInput);
-app.use(logRequest);
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -36,7 +33,6 @@ app.use(limiter);
 app.get('/health', healthCheck);
 app.get('/ready', readyCheck);
 orderRouter(app);
-setupRequestQueue(app);
 
 app.post('/migrate', async (req, res) => {
     try {
@@ -61,22 +57,4 @@ const startServer = async () => {
 startServer().catch(err => {
     logger.error('Failed to start server:', err);
     process.exit(1);
-});
-
-process.on('SIGUSR2', async () => {
-    console.log('SIGUSR2 signal received: restarting server...');
-    await closeDatabaseConnection();
-    process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-    console.log('SIGINT signal received: closing server...');
-    await closeDatabaseConnection();
-    process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-    console.log('SIGTERM signal received: closing server...');
-    await closeDatabaseConnection();
-    process.exit(0);
 });
