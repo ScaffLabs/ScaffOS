@@ -27,4 +27,4 @@ export const initializeStore = (store: InMemoryStore<Position>) => {
 
 export const migrateStore = (store: InMemoryStore<Position>) => {
     migrateData(store, migrationData);
-}; 
+};

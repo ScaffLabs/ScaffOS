@@ -73,4 +73,4 @@ export class InMemoryStore<T extends { id: string }> implements Store<T> {
             this.create(position);
         });
     }
-} 
+}
