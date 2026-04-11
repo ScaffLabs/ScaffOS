@@ -6,14 +6,20 @@ jest.mock('./apiKey', () => ({
 }));
 
 jest.mock('./storage', () => ({
-    createUser: jest.fn((username, email) => ({ id: 'testId', username, email })),
-    findUserByEmail: jest.fn().mockImplementation((email) => {
-        const users = [
-            { id: '1', username: 'testuser1', email: 'test1@example.com' },
-            { id: '2', username: 'testuser2', email: 'test2@example.com' }
-        ];
-        return users.find(user => user.email === email) || null;
+    createUser: jest.fn(async (username, email) => ({ id: 'testId', username, email })),
+    findUserById: jest.fn().mockImplementation((id) => {
+        if (id === 'testId') return { id, username: 'testuser', email: 'test@example.com' };
+        return null;
     }),
+    updateUser: jest.fn().mockImplementation((id, userData) => {
+        if (id === 'testId') return { ...userData, id };
+        throw new Error('User not found');
+    }),
+    deleteUser: jest.fn().mockImplementation((id) => {
+        if (id === 'testId') return true;
+        return false;
+    }),
+    getAllUsers: jest.fn().mockReturnValue([{ id: 'testId', username: 'testuser', email: 'test@example.com' }]),
 }));
 
 jest.mock('./jwt', () => ({
@@ -27,11 +33,6 @@ jest.mock('./jwt', () => ({
 jest.mock('./logger', () => ({
     info: jest.fn(),
     error: jest.fn(),
-}));
-
-jest.mock('./interServiceClient', () => ({
-    checkUserServiceHealth: jest.fn().mockResolvedValue(true),
-    checkOrderServiceHealth: jest.fn().mockResolvedValue(true),
 }));
 
 jest.setTimeout(30000); // Set timeout for integration tests.
