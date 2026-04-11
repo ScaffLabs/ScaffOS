@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import { ValidationError } from '../errors';
+import { logError } from '../logger';
 
 export const validatePriceData = [
     body('exchange')

@@ -13,9 +13,11 @@ const priceAggregator = new PriceAggregator();
 const limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
     max: 100,
+    message: 'Too many requests from this IP, please try again later.'
 });
+
 router.use(limiter);
-router.use(cors());
+router.use(cors({ origin: ['https://allowed-origin.com', 'https://another-allowed-origin.com'] }));
 router.use(helmet());
 
 router.use((req, res, next) => {
@@ -37,5 +39,15 @@ router.get('/health', async (req, res, next) => {
     }
 });
 
-// Other routes remain unchanged...
+router.post('/prices', validateContentType, validatePriceData, handleValidationErrors, async (req, res, next) => {
+    try {
+        const priceData = req.body;
+        const newPrice = await priceAggregator.addPrice(priceData);
+        res.status(201).json(newPrice);
+    } catch (error) {
+        logError(error);
+        next(error);
+    }
+});
+
 export default router;
