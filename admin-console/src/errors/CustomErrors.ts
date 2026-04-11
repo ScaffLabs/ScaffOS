@@ -54,12 +54,4 @@ class InvalidInputTypeError extends Error {
     }
 }
 
-class CustomError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'CustomError';
-    }
-    // Additional properties can be added as needed
-}
-
-export { ServiceError, ValidationError, NotFoundError, EmptyArrayError, OverflowError, DivisionByZeroError, NullValueError, InvalidInputTypeError, CustomError };
+export { ServiceError, ValidationError, NotFoundError, EmptyArrayError, OverflowError, DivisionByZeroError, NullValueError, InvalidInputTypeError };

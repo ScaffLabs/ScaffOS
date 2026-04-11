@@ -10,35 +10,16 @@ import errorHandler from './middleware/errorHandler';
 import { logRequest } from './middleware/logger';
 import rateLimiter from './middleware/rateLimiter';
 import cors from 'cors';
-import { sanitizeBody, sanitizeQueryParams } from './middleware/sanitization';
-import { logAudit } from './middleware/auditLogger';
-import csurf from 'csurf';
-import { createPool } from 'mysql';
-import { logger } from './middleware/logger';
 
 dotenv.config();
 const app = express();
 const db = new Database();
 
-// Create a connection pool
-const pool = createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    connectionLimit: 10
-});
-
-const allowedOrigins = ['http://localhost:3000'];
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors());
 app.use(helmet());
 app.use(bodyParser.json({ limit: '1mb' }));
-app.use(sanitizeBody);
-app.use(sanitizeQueryParams);
-app.use(rateLimiter);
 app.use(logRequest);
-app.use(logAudit);
-app.use(csurf({ cookie: true }));
+app.use(rateLimiter);
 
 app.use('/api/health', healthRouter);
 app.use('/api/config', configRouter);
@@ -56,7 +37,6 @@ const startServer = async () => {
             await db.closeConnection();
             server.close(() => {
                 console.log('HTTP server closed.');
-                pool.end(); // Close the connection pool
                 process.exit(0);
             });
         };
