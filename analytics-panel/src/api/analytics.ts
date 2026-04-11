@@ -40,8 +40,8 @@ const createStrategy = async (strategy: unknown) => {
 };
 
 const fetchComparisonData = async (strategyA: string, strategyB: string) => {
-    if (!strategyA || !strategyB) {
-        throw new ValidationError('Both strategies must be defined.');
+    if (!strategyA || !strategyB || !/^[a-zA-Z0-9_]+$/.test(strategyA) || !/^[a-zA-Z0-9_]+$/.test(strategyB)) {
+        throw new ValidationError('Both strategies must be defined and alphanumeric.');
     }
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
