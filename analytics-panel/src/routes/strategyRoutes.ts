@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import { auditLogger } from '../middleware/auditLogger';
 import helmet from 'helmet';
 import cors from 'cors';
+import { logError } from '../utils/errorLogger';
 
 const router = Router();
 
@@ -17,7 +18,7 @@ router.use(helmet());
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: 'Too many requests, please try again later.',
+    message: 'Too many requests from this IP, please try again later.',
 });
 
 // GET all strategies with pagination
@@ -31,5 +32,11 @@ router.put('/:id', limiter, validateInputBody, validateUpdateStrategy, auditLogg
 
 // Delete strategy by ID
 router.delete('/:id', limiter, auditLogger, deleteStrategyHandler);
+
+// Error handling middleware for logging
+router.use((err, req, res, next) => {
+    logError(err, 'Error in strategy routes');
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
+});
 
 export default router;
