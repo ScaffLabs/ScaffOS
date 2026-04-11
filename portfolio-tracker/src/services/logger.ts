@@ -17,7 +17,6 @@ const logger = winston.createLogger({
     ],
 });
 
-// Middleware to log all requests
 export const requestLogger = (req, res, next) => {
     const start = process.hrtime();
     const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(2);
@@ -29,13 +28,15 @@ export const requestLogger = (req, res, next) => {
     next();
 };
 
-// Error logging
 export const errorLogger = (err: Error, req, res, next) => {
     logger.error('Error occurred', { message: err.message, stack: err.stack, path: req.originalUrl, requestId: req.headers['x-request-id'] });
     next(err);
 };
 
-// Initialization logging
+export const logHealthCheck = (status: string) => {
+    logger.info(`Health Check Status: ${status}`);
+};
+
 logger.info('Starting Portfolio Tracker service', { environment: process.env.NODE_ENV, port: process.env.PORT, database: process.env.DATABASE_URL });
 
 export default logger;

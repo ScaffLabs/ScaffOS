@@ -10,9 +10,11 @@ import circuitBreaker from 'circuit-breaker-js';
 import { publishPortfolioUpdate } from '../eventBus';
 
 const externalPortfolioServiceUrl = env.PORTFOLIO_SERVICE_URL;
+const TIMEOUT = 5000;
+const MAX_RETRIES = 3;
 
 const breaker = circuitBreaker({
-    timeout: 5000,
+    timeout: TIMEOUT,
     errorThresholdPercentage: 50,
     resetTimeout: 30000
 });
@@ -23,6 +25,22 @@ const notifyExternalService = async (portfolio: Portfolio) => {
     } catch (error) {
         logger.error('Failed to notify external service', { error: error.message });
     }
+};
+
+const checkExternalServiceHealth = async (): Promise<boolean> => {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const response = await axios.get(`${externalPortfolioServiceUrl}/health`, { timeout: TIMEOUT });
+            return response.data.status === 'UP';
+        } catch (error) {
+            logger.warn('Health check attempt failed', { attempt, error: error.message });
+            if (attempt === MAX_RETRIES) {
+                throw new ServiceError('External service is down after multiple attempts');
+            }
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000)); // Exponential backoff
+        }
+    }
+    return false;
 };
 
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
@@ -72,4 +90,8 @@ export const deletePortfolio = async (id: string): Promise<void> => {
 
 export const fetchAllData = async (): Promise<Portfolio[]> => {
     return storage.getAll();
+};
+
+export const healthCheckExternalService = async () => {
+    return checkExternalServiceHealth();
 };

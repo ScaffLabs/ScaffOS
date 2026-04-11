@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import logger from '../services/logger';
-import { healthCheck } from '../services/healthService';
+import { healthCheck, healthCheckExternalService } from '../services/healthService';
 
 const router = Router();
 
