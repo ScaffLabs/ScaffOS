@@ -37,6 +37,25 @@ class PostgresStorage<T> implements Storage<T> {
         return result.rows.length ? result.rows[0] : null;
     }
 
+    async update(id: string, item: T): Promise<T | null> {
+        const query = 'UPDATE prices SET exchange = $1, price = $2, volume = $3 WHERE id = $4 RETURNING *';
+        const values = [item['exchange'], item['price'], item['volume'], id];
+        const result = await this.pool.query(query, values);
+        return result.rows.length ? result.rows[0] : null;
+    }
+
+    async delete(id: string): Promise<void> {
+        const query = 'DELETE FROM prices WHERE id = $1';
+        await this.pool.query(query, [id]);
+    }
+
+    async findAll(query?: Partial<T>): Promise<T[]> {
+        const whereClauses = Object.keys(query || {}).map((key, index) => `${key} = $${index + 1}`).join(' AND ');
+        const values = Object.values(query || {});
+        const result = await this.pool.query(`SELECT * FROM prices ${whereClauses ? 'WHERE ' + whereClauses : ''}`, values);
+        return result.rows;
+    }
+
     async transaction(operations: () => Promise<void>): Promise<void> {
         const client = await this.pool.connect();
         try {
