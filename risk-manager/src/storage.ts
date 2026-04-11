@@ -7,12 +7,10 @@ export interface Storage<T> {
     delete(id: string): Promise<boolean>;
     findAll(limit?: number, offset?: number): Promise<T[]>;
     reset(): Promise<void>;
-    transaction<T>(callback: (storage: this) => Promise<T>): Promise<T>;
 }
 
 export class InMemoryStorage<T> implements Storage<T> {
     private items: Map<string, T> = new Map();
-    private transactions: Array<() => void> = [];
 
     async create(item: T): Promise<T> {
         const id = this.generateId();
@@ -47,18 +45,6 @@ export class InMemoryStorage<T> implements Storage<T> {
     async reset() {
         this.items.clear();
     }
-
-    async transaction<T>(callback: (storage: this) => Promise<T>): Promise<T> {
-        const originalItems = new Map(this.items);
-        try {
-            const result = await callback(this);
-            this.transactions.push(() => this.items = originalItems);
-            return result;
-        } catch (error) {
-            this.items = originalItems;
-            throw error;
-        }
-    }
 }
 
 export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
@@ -91,9 +77,5 @@ export class RiskPositionStorage extends InMemoryStorage<RiskPosition> {
     async reset() {
         this.indexByAsset.clear();
         await super.reset();
-    }
-
-    async findAll(limit?: number, offset?: number): Promise<RiskPosition[]> {
-        return super.findAll(limit, offset);
     }
 }

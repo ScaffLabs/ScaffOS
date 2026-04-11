@@ -15,10 +15,10 @@ export default class RiskManager {
     }
 
     async createRiskPosition(asset: string, position: number): Promise<RiskPosition> {
-        const newPosition: RiskPosition = { id: this.generateId(), asset, position };
         if (!this.positionLimits.checkLimit(asset, position)) {
             throw new ValidationError(`Position exceeds limit for asset: ${asset}`);
         }
+        const newPosition: RiskPosition = { id: this.generateId(), asset, position };
         const createdPosition = await this.storage.create(newPosition);
         logger.info(`Created new risk position: ${JSON.stringify(createdPosition)}`);
         riskAlerting.triggerRiskAlert({ type: 'RiskPositionCreated', position: createdPosition });
@@ -30,10 +30,10 @@ export default class RiskManager {
         if (!existingPosition) {
             throw new NotFoundError(`Risk position with id ${id} not found.`);
         }
-        const updatedPosition: RiskPosition = { ...existingPosition, position };
-        if (!this.positionLimits.checkLimit(updatedPosition.asset, updatedPosition.position)) {
-            throw new ValidationError(`Position exceeds limit for asset: ${updatedPosition.asset}`);
+        if (!this.positionLimits.checkLimit(existingPosition.asset, position)) {
+            throw new ValidationError(`New position exceeds limit for asset: ${existingPosition.asset}`);
         }
+        const updatedPosition: RiskPosition = { ...existingPosition, position };
         const updatedResult = await this.storage.update(id, updatedPosition);
         logger.info(`Updated risk position with id: ${id}`);
         riskAlerting.triggerRiskAlert({ type: 'RiskPositionUpdated', position: updatedResult });
