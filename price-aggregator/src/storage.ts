@@ -38,7 +38,6 @@ class PostgresStorage<T> implements Storage<T> {
         return result.rows.length ? result.rows[0] : null;
     }
 
-    // Other methods remain unchanged...
     async transaction(operations: () => Promise<void>): Promise<void> {
         const client = await this.pool.connect();
         try {
