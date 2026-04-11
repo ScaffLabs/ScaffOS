@@ -37,4 +37,9 @@ export class HealthCheck {
             external: memoryUsage.external,
         });
     }
+
+    static async checkUptime(req: Request, res: Response) {
+        const uptime = process.uptime();
+        return res.json({ uptime });
+    }
 }

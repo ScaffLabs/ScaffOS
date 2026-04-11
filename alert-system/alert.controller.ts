@@ -4,7 +4,6 @@ import { ServiceError, ValidationError, NotFoundError } from './error.types';
 import logger from './logger';
 import { AlertStoreInterface } from './storage';
 import { EventBus } from './event-bus';
-import axios from 'axios';
 
 export class AlertController {
     constructor(private alertStore: AlertStoreInterface, private eventBus: EventBus) {}
@@ -58,12 +57,13 @@ export class AlertController {
             res.status(400).json({ message: 'Validation Error: ' + error.message });
         } else if (error instanceof NotFoundError) {
             res.status(404).json({ message: 'Not Found: ' + error.message });
-        } else if (error instanceof ServiceError) {
-            logger.error({ message: 'Service Error: ' + error.message });
-            res.status(500).json({ message: 'Service Error: An unexpected error occurred.' });
         } else {
             logger.error({ message: 'An unexpected error occurred: ' + error.message });
             res.status(500).json({ message: 'An unexpected error occurred.' });
         }
+    }
+
+    async getActiveAlerts(pagination: any): Promise<AlertMessage[]> {
+        return await this.alertStore.findIndex({}).limit(pagination.limit).skip(pagination.offset);
     }
 }
