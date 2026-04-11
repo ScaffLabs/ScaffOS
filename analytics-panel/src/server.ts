@@ -11,7 +11,6 @@ import { csrfMiddleware } from './middleware/csrfProtection';
 import config from './config';
 import mongoose from 'mongoose';
 import { gracefulShutdown } from './utils/shutdown';
-import { monitorMemoryUsage } from './utils/monitor';
 
 const app = express();
 const server = createServer(app);
@@ -41,7 +40,6 @@ const startServer = async () => {
         server.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
-        setInterval(monitorMemoryUsage, 60000);
     } catch (error) {
         console.error('Error starting server:', error);
         process.exit(1);

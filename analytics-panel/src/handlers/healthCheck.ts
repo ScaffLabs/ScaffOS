@@ -13,5 +13,15 @@ export const healthCheckHandler = async (req: Request, res: Response) => {
 };
 
 export const dependentHealthCheckHandler = async (req: Request, res: Response) => {
-    // Additional logic for dependent health checks can be implemented here
+    // Implement additional logic for dependent health checks if needed
+    const dependencies = await Promise.all([
+        { service: 'Database', healthy: true },
+        { service: 'External API', healthy: false },
+    ]);
+
+    const allHealthy = dependencies.every(dep => dep.healthy);
+    res.status(allHealthy ? 200 : 503).json({
+        status: allHealthy ? 'up' : 'down',
+        dependencies,
+    });
 };
