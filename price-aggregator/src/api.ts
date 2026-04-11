@@ -6,7 +6,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { logRequest, logError } from './logger';
 import { ValidationError, NotFoundError, ServiceError } from './errors';
-import csrf from 'csurf';
 
 const router = express.Router();
 const priceAggregator = new PriceAggregator();
@@ -16,10 +15,7 @@ const limiter = rateLimit({
     max: 100,
 });
 router.use(limiter);
-
-const csrfProtection = csrf({ cookie: true });
-router.use(csrfProtection);
-router.use(cors({ origin: ['https://allowed-origin.com'], credentials: true }));
+router.use(cors());
 router.use(helmet());
 
 router.use((req, res, next) => {
@@ -32,18 +28,12 @@ router.use((req, res, next) => {
 });
 
 router.get('/prices', async (req, res, next) => {
-    const { limit = 10, offset = 0, sort = 'asc', exchange } = req.query;
     try {
-        const prices = await priceAggregator.getCurrentPrices({
-            limit: Number(limit),
-            offset: Number(offset),
-            sort,
-            exchange: exchange ? String(exchange) : undefined
-        });
+        const prices = await priceAggregator.getCurrentPrices();
         if (!prices.length) return res.status(204).send();
         res.status(200).json(prices);
     } catch (error) {
-        logError(error, { message: 'Fetching prices failed' });
+        logError(error);
         next(new ServiceError('Failed to fetch prices.'));
     }
 });
@@ -56,7 +46,7 @@ router.post('/prices', validateContentType, validatePriceData, handleValidationE
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
         }
-        logError(error, { message: 'Adding price failed' });
+        logError(error);
         next(new ServiceError('Failed to add price.'));
     }
 });
@@ -70,7 +60,7 @@ router.delete('/prices/:id', async (req, res, next) => {
         if (error instanceof NotFoundError) {
             return res.status(404).json({ error: error.message });
         }
-        logError(error, { message: 'Deleting price failed' });
+        logError(error);
         next(new ServiceError('Failed to delete price.'));
     }
 });

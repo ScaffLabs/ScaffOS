@@ -5,45 +5,14 @@ import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
 import { PriceAggregator } from './priceAggregator';
-import { checkHealth } from './httpClient';
-import { requestQueueMiddleware } from './middleware/requestQueueingMiddleware';
-import { MemoryMonitor } from './memoryMonitor';
 
 const app = express();
 const server = http.createServer(app);
 const dbPool = createConnectionPool();
 const priceAggregator = new PriceAggregator();
-const memoryMonitor = new MemoryMonitor();
 
 app.use(express.json());
 app.use(errorMiddleware);
-app.use(requestQueueMiddleware);
-
-// Start memory monitoring
-memoryMonitor.startLogging();
-
-// Health check endpoint
-app.get('/health', async (req, res) => {
-    try {
-        const healthStatus = await checkHealth();
-        res.status(200).json({ status: 'healthy', dependencies: healthStatus });
-    } catch (error) {
-        logError(error);
-        res.status(500).json({ status: 'unhealthy', error: error.message });
-    }
-});
-
-// Readiness check endpoint
-app.get('/ready', async (req, res) => {
-    try {
-        const healthStatus = await checkHealth();
-        const isReady = Object.values(healthStatus).every(status => status === 'healthy');
-        res.status(isReady ? 200 : 503).json({ status: isReady ? 'ready' : 'not ready' });
-    } catch (error) {
-        logError(error);
-        res.status(500).json({ status: 'not ready', error: error.message });
-    }
-});
 
 const shutdown = async () => {
     console.log('Shutting down gracefully...');
