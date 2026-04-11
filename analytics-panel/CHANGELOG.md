@@ -2,20 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.8.0] - 2023-11-05
+## [1.9.0] - 2023-11-06
 - Added comprehensive documentation including detailed README.md and API reference.
 - Enhanced inline code comments throughout the codebase for clarity.
 - Improved setup instructions in README.md for easier onboarding.
 
-## [1.7.0] - 2023-11-01
+## [1.8.0] - 2023-11-05
 - Added comprehensive documentation including detailed README.md and API reference.
 - Enhanced error handling with additional logging for health checks.
 - Improved performance metrics fetching with validation schemas.
 - Updated dependencies for security and performance improvements.
 
+## [1.7.0] - 2023-11-01
+- Added logging middleware for better request tracking.
+- Enhanced API documentation.
+
 ## [1.6.0] - 2023-10-30
-- Added comprehensive logging for API requests and errors.
-- Improved health check endpoint to include memory usage and uptime.
 - Implemented input validation for strategy creation and updates.
 - Updated dependencies for security and performance enhancements.
 
