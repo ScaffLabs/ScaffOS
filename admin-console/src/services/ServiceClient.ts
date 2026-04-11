@@ -59,7 +59,11 @@ const deleteConfiguration = async (key: string): Promise<void> => {
 const handleAxiosError = (error: unknown, operation: string) => {
     let errorMessage = `Failed to ${operation}`;
     if (axios.isAxiosError(error)) {
-        errorMessage += `: ${error.response?.data?.error || error.message}`;
+        if (error.response) {
+            errorMessage += `: ${error.response.data.error || error.message}`;
+            throw new ServiceError(errorMessage);
+        }
+        errorMessage += `: ${error.message}`;
     }
     throw new ServiceError(errorMessage);
 };
