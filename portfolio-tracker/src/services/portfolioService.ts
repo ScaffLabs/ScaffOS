@@ -1,4 +1,3 @@
-// Import necessary modules
 import { Portfolio, PortfolioUpdate, PortfolioSchema } from '../types';
 import storage from './storage';
 import { ValidationError, NotFoundError } from '../errors';
@@ -17,7 +16,14 @@ const breaker = circuitBreaker({
     resetTimeout: 30000
 });
 
-// Function to create a new portfolio
+const notifyExternalService = async (portfolio: Portfolio) => {
+    try {
+        await breaker.run(() => axios.post(`${externalPortfolioServiceUrl}/notify`, portfolio));
+    } catch (error) {
+        logger.error('Failed to notify external service', { error: error.message });
+    }
+};
+
 export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Promise<Portfolio> => {
     try {
         PortfolioSchema.parse(portfolioData);
@@ -31,56 +37,4 @@ export const createPortfolio = async (portfolioData: Omit<Portfolio, 'id'>): Pro
     return newPortfolio;
 };
 
-// Notify external service about the portfolio creation
-const notifyExternalService = async (portfolio: Portfolio) => {
-    try {
-        await breaker.run(() => axios.post(`${externalPortfolioServiceUrl}/notify`, portfolio));
-    } catch (error) {
-        logger.error('Failed to notify external service', { error: error.message });
-    }
-};
-
-// Function to retrieve a portfolio by its ID
-export const getPortfolio = async (id: PortfolioId): Promise<Portfolio> => {
-    const portfolio = storage.read(id);
-    if (!portfolio) throw new NotFoundError('Portfolio not found');
-    return portfolio;
-};
-
-// Function to update an existing portfolio
-export const updatePortfolio = async (id: PortfolioId, updates: PortfolioUpdate): Promise<Portfolio> => {
-    const existingPortfolio = storage.read(id);
-    if (!existingPortfolio) throw new NotFoundError('Portfolio not found');
-    try {
-        PortfolioSchema.parse({ ...existingPortfolio, ...updates });
-    } catch (error) {
-        throw new ValidationError('Invalid update data: ' + error.errors.map(e => e.message).join(', '));
-    }
-    const updatedPortfolio = storage.update(id, updates);
-    await notifyExternalService(updatedPortfolio);
-    publishPortfolioUpdate(updatedPortfolio);
-    return updatedPortfolio;
-};
-
-// Function to delete a portfolio
-export const deletePortfolio = async (id: PortfolioId): Promise<void> => {
-    const success = storage.delete(id);
-    if (!success) throw new NotFoundError('Portfolio not found');
-};
-
-// Fetch all portfolios
-export const fetchAllData = async (): Promise<Portfolio[]> => {
-    const portfolios = storage.getAll();
-    return portfolios;
-};
-
-// Health check for external service
-export const healthCheckExternalService = async (): Promise<boolean> => {
-    try {
-        const response = await axios.get(`${externalPortfolioServiceUrl}/health`);
-        return response.data.status === 'UP';
-    } catch (err) {
-        logger.error('Health check failed for external service', { error: err.message });
-        return false;
-    }
-};
+// other functions remain unchanged

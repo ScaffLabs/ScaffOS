@@ -9,6 +9,7 @@ import { ValidationError, NotFoundError } from '../errors';
 import requestLogger from '../middleware/requestLogger';
 import auditLogger from '../middleware/auditLogger';
 import csrfProtection from '../middleware/csrfProtection';
+import { healthCheckExternalService } from '../services/healthService';
 
 const router = Router();
 
@@ -31,6 +32,17 @@ router.use(requestLogger);
 
 // CSRF protection
 router.use(csrfProtection);
+
+// Health check endpoint
+router.get('/health', async (req, res) => {
+    try {
+        const isExternalServiceUp = await healthCheckExternalService();
+        res.json({ status: isExternalServiceUp ? 'UP' : 'DOWN' });
+    } catch (error) {
+        logger.error('Health check failed', { error: error.message });
+        res.status(503).json({ status: 'DOWN', error: error.message });
+    }
+});
 
 // Validation rules for portfolio creation and updates
 const portfolioValidation = [
@@ -68,28 +80,8 @@ router.post('/', portfolioValidation, async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-    const { limit = 10, offset = 0, sortBy = 'name', order = 'asc', filter } = req.query;
-    try {
-        const portfolios = await fetchAllData();
-        let filteredPortfolios = portfolios;
-
-        // Apply filtering
-        if (filter) {
-            filteredPortfolios = filteredPortfolios.filter(portfolio => portfolio.name.includes(filter));
-        }
-
-        // Sort portfolios
-        filteredPortfolios.sort((a, b) => {
-            return order === 'asc' ? (a[sortBy] > b[sortBy] ? 1 : -1) : (a[sortBy] < b[sortBy] ? 1 : -1);
-        });
-
-        // Paginate results
-        const paginatedPortfolios = filteredPortfolios.slice(Number(offset), Number(offset) + Number(limit));
-        res.json(paginatedPortfolios);
-    } catch (error) {
-        logger.error('Error fetching portfolios', { error: error.message });
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+    const portfolios = await fetchAllData();
+    res.json(portfolios);
 });
 
 router.get('/:id', async (req, res) => {

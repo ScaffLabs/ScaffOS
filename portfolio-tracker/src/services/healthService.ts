@@ -24,27 +24,12 @@ const checkExternalPortfolioService = async (): Promise<boolean> => {
     return false;
 };
 
-export const healthCheck = async (req: Request, res: Response) => {
+export const healthCheckExternalService = async () => {
     try {
-        const portfolioServiceStatus = await checkExternalPortfolioService();
-        res.json({
-            status: 'UP',
-            portfolioService: portfolioServiceStatus,
-        });
+        const status = await checkExternalPortfolioService();
+        return status;
     } catch (error) {
         logger.error('Health check failed', { error: error.message });
-        res.status(503).json({ status: 'DOWN', error: error.message });
-    }
-};
-
-export const readinessCheck = async (req: Request, res: Response) => {
-    try {
-        const portfolioServiceStatus = await checkExternalPortfolioService();
-        res.status(portfolioServiceStatus ? 200 : 503).json({
-            status: portfolioServiceStatus ? 'READY' : 'NOT READY',
-        });
-    } catch (error) {
-        logger.error('Readiness check failed', { error: error.message });
-        res.status(503).json({ status: 'NOT READY', error: error.message });
+        throw new ServiceError('Health check failed');
     }
 };
