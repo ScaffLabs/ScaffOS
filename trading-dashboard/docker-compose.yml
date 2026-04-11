@@ -31,3 +31,11 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - trading-dashboard
+
+  # Optional service for monitoring
+  monitoring:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - '9090:9090'
