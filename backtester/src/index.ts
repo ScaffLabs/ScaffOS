@@ -35,6 +35,15 @@ app.use('/api/backtest', backtestRouter);
 app.use('/health', healthCheckRouter);
 app.use(errorHandler);
 
+// Middleware to validate content types
+app.use((req, res, next) => {
+    const contentType = req.headers['content-type'];
+    if (req.method === 'POST' && !contentType.includes('application/json')) {
+        return res.status(415).json({ error: 'Content type must be application/json' });
+    }
+    next();
+});
+
 (async () => {
     await migrateDatabase(dbStore);
     app.listen(PORT, () => {

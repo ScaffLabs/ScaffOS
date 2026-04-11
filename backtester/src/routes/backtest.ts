@@ -3,8 +3,8 @@ import { simulateBacktest } from '../services/backtestService';
 import { ValidationError, NotFoundError, ServiceError } from '../middleware/errorHandler';
 import InMemoryStore from '../storage/InMemoryStore';
 import { logger } from '../utils/logger';
-import { HistoricalDataSchema, StrategyParametersSchema, BacktestResultSchema } from '../types';
-import { body, validationResult, query } from 'express-validator';
+import { HistoricalDataSchema, StrategyParametersSchema } from '../types';
+import { body, validationResult } from 'express-validator';
 
 const backtestRouter = Router();
 const store = new InMemoryStore();
@@ -23,6 +23,8 @@ backtestRouter.post('/', [
         const result = await simulateBacktest(strategyParams, historicalData);
         const entity = await store.create({ strategyParams, historicalData, result });
         logger.info({ message: 'Backtest created', id: entity.id });
+        // Audit log
+        logger.info({ message: 'Audit log', action: 'CREATE_BACKTEST', details: { strategyParams, historicalData, result: entity } });
         res.status(201).json({ id: entity.id, result });
     } catch (error) {
         logger.error({ message: 'Error during backtest', error: error.message });
@@ -71,6 +73,8 @@ backtestRouter.delete('/:id', async (req, res, next) => {
             throw new NotFoundError('Backtest result not found.');
         }
         res.status(204).end();
+        // Audit log for deletion
+        logger.info({ message: 'Audit log', action: 'DELETE_BACKTEST', id });
     } catch (error) {
         logger.error({ message: 'Error deleting backtest result', error: error.message });
         if (error instanceof NotFoundError) {
