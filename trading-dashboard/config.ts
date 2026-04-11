@@ -40,4 +40,4 @@ const config = {
     docker: envVars.DOCKER,
 };
 
-export default config;
+export default config; 
