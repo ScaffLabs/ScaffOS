@@ -13,4 +13,5 @@ module.exports = {
     },
     setupFiles: ['dotenv/config'],
     testTimeout: 10000,
+    testMatch: ['**/__tests__/**/*.test.(ts|tsx|js)?(x)', '**/?(*.)+(spec|test).(ts|tsx|js)?(x)'],
 };
