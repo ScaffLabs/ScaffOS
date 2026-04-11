@@ -54,4 +54,11 @@ class DatabaseConnectionError extends ServiceError {
     }
 }
 
-export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, CustomError, InvalidInputError, DatabaseConnectionError };
+class InputValidationError extends ValidationError {
+    constructor(field: string) {
+        super(`Invalid input for field: ${field}`);
+        this.name = 'InputValidationError';
+    }
+}
+
+export { ServiceError, ValidationError, NotFoundError, DivisionByZeroError, OverflowError, CustomError, InvalidInputError, DatabaseConnectionError, InputValidationError };
