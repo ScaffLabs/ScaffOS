@@ -4,14 +4,8 @@ import { storage } from './storage';
 import { postData } from './axiosClient';
 import logger from './logger';
 import { emitWithRetry } from './eventBus';
+import axios from 'axios';
 
-/**
- * Creates a new order in the system.
- * @param orderData - The order data to create. Must conform to Order schema.
- * @throws {ValidationError} If orderData is invalid.
- * @throws {ServiceError} If there is an error during storage.
- * @returns The created order.
- */
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
     if (!parsedOrder.success) {
@@ -25,20 +19,14 @@ const createOrderService = async (orderData: unknown) => {
         logger.info('Order created successfully', { order });
         return createdOrder;
     } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            throw new ServiceError(`Failed to communicate with order service: ${error.response.data}`);
+        }
         logger.error('Failed to create order', { error: error.message });
         throw new ServiceError('Failed to create order due to storage error: ' + error.message);
     }
 };
 
-/**
- * Updates an existing order by ID.
- * @param id - The ID of the order to update.
- * @param updates - The updates to apply to the order.
- * @throws {NotFoundError} If the order is not found.
- * @throws {ValidationError} If updates are invalid.
- * @throws {ServiceError} If there is an error during storage.
- * @returns The updated order.
- */
 const updateOrderService = async (id: string, updates: Partial<Order>) => {
     const parsedUpdates = OrderSchema.partial().safeParse(updates);
     if (!parsedUpdates.success) {
@@ -54,17 +42,14 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
         logger.info('Order updated successfully', { id, updates });
         return updatedOrder;
     } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            throw new ServiceError(`Failed to communicate with order service: ${error.response.data}`);
+        }
         logger.error('Failed to update order', { error: error.message });
         throw new ServiceError('Failed to update order due to storage error: ' + error.message);
     }
 };
 
-/**
- * Deletes an order by ID.
- * @param id - The ID of the order to delete.
- * @throws {NotFoundError} If the order is not found.
- * @throws {ServiceError} If there is an error during storage.
- */
 const deleteOrderService = async (id: string) => {
     try {
         await storage.delete(id);
@@ -72,16 +57,14 @@ const deleteOrderService = async (id: string) => {
         await emitWithRetry({ type: 'ORDER_DELETED', payload: { id } });
         logger.info('Order deleted successfully', { id });
     } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            throw new ServiceError(`Failed to communicate with order service: ${error.response.data}`);
+        }
         logger.error('Failed to delete order', { error: error.message });
         throw new ServiceError('Failed to delete order due to storage error: ' + error.message);
     }
 };
 
-/**
- * Retrieves all orders with pagination.
- * @param pagination - The pagination options.
- * @returns An array of orders.
- */
 const getOrdersService = async (pagination: { limit: number; offset: number }) => {
     return await storage.findAll();
 };
