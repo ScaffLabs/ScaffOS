@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import config from '../config';
 import { ServiceError, InvalidInputTypeError } from '../errors/CustomErrors';
-import { ConfigurationItem } from '../types';
+import { ConfigurationItem, AppEvent } from '../types';
 import { emitEvent } from '../events/EventBus';
 import { CircuitBreaker } from 'circuit-breaker-js';
 
@@ -32,7 +32,7 @@ const postConfiguration = async (configItem: ConfigurationItem): Promise<void> =
     return await circuitBreaker.fire(async () => {
         try {
             const response = await axiosInstance.post('/config', configItem);
-            emitEvent('CONFIGURATION_CREATED', configItem);
+            emitEvent({ type: 'CONFIGURATION_CREATED', payload: configItem });
             if (response.status !== 201) {
                 throw new ServiceError('Failed to create configuration.');
             }
@@ -46,7 +46,7 @@ const deleteConfiguration = async (key: string): Promise<void> => {
     return await circuitBreaker.fire(async () => {
         try {
             const response = await axiosInstance.delete(`/config/${key}`);
-            emitEvent('CONFIGURATION_DELETED', { key });
+            emitEvent({ type: 'CONFIGURATION_DELETED', payload: { key } });
             if (response.status !== 204) {
                 throw new ServiceError('Failed to delete configuration.');
             }
@@ -72,7 +72,7 @@ const updateConfiguration = async (configItem: ConfigurationItem): Promise<void>
     return await circuitBreaker.fire(async () => {
         try {
             const response = await axiosInstance.put('/config', configItem);
-            emitEvent('CONFIGURATION_UPDATED', configItem);
+            emitEvent({ type: 'CONFIGURATION_UPDATED', payload: configItem });
             if (response.status !== 200) {
                 throw new ServiceError('Failed to update configuration.');
             }

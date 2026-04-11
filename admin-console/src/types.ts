@@ -35,11 +35,11 @@ export interface HealthCheckResponse {
 
 /**
  * Represents application events such as configuration changes.
- * @property {'CONFIGURATION_CREATED' | 'CONFIGURATION_DELETED'} type - The type of event.
+ * @property {'CONFIGURATION_CREATED' | 'CONFIGURATION_DELETED' | 'CONFIGURATION_UPDATED'} type - The type of event.
  * @property {ConfigurationItem} payload - The associated configuration item.
  */
 export interface AppEvent {
-    type: 'CONFIGURATION_CREATED' | 'CONFIGURATION_DELETED';
+    type: 'CONFIGURATION_CREATED' | 'CONFIGURATION_DELETED' | 'CONFIGURATION_UPDATED';
     payload: ConfigurationItem;
 }
 
@@ -47,6 +47,7 @@ export interface AppEvent {
 export const AppEventSchema = z.union([
     z.object({ type: z.literal('CONFIGURATION_CREATED'), payload: ConfigurationItemSchema }),
     z.object({ type: z.literal('CONFIGURATION_DELETED'), payload: z.object({ key: z.string().transform((key) => key as ConfigurationKey) }) }),
+    z.object({ type: z.literal('CONFIGURATION_UPDATED'), payload: ConfigurationItemSchema }),
 ]);
 
 /**
