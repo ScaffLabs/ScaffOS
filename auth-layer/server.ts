@@ -11,16 +11,28 @@ import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
 import { initGracefulShutdown } from './shutdown';
 import crypto from 'crypto';
+import { validateApiKey } from './apiKey';
+import { requestSizeLimitMiddleware } from './middleware';
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 const connectionPool = createConnectionPool();
 
-app.use(cors());
+// Middleware setup
+app.use(cors({ origin: ['http://your-allowed-origin.com', 'http://another-allowed-origin.com'] }));
 app.use(helmet());
 app.use(express.json());
+app.use(requestSizeLimitMiddleware);
 app.use(logRequest);
+
+// Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: { error: 'Too many requests, please try again later.' }
+});
+app.use(limiter);
 
 app.use((req, res, next) => {
     const requestId = req.headers['x-request-id'] || crypto.randomUUID();

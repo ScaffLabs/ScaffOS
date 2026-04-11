@@ -16,6 +16,10 @@ const logger = winston.createLogger({
     ],
 });
 
+export const logSensitiveOperation = (operation: string, details: object) => {
+    logger.info(`Sensitive operation: ${operation}`, details);
+};
+
 export const logRequest = (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     const requestId = req.headers['x-request-id'] || crypto.randomUUID();

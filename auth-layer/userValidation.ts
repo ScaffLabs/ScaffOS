@@ -17,3 +17,15 @@ export const sanitizeUserInput = (user: Partial<User>) => {
         email: sanitizeHtml(user.email ? user.email.trim() : ''),
     };
 };
+
+// Middleware to validate and sanitize input before processing
+export const validateAndSanitizeUserInput = (req, res, next) => {
+    try {
+        req.body = sanitizeUserInput(req.body);
+        validateUser(req.body);
+        next();
+    } catch (error) {
+        logger.error('Validation error', { error: error.message });
+        return res.status(400).json({ error: error.message });
+    }
+};
