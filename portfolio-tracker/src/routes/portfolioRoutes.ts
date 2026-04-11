@@ -46,6 +46,11 @@ const portfolioValidation = [
     }),
 ];
 
+// Utility function for pagination and filtering
+const paginateAndFilter = (portfolios, limit, offset) => {
+    return portfolios.slice(offset, offset + limit);
+};
+
 // Routes
 router.post('/', portfolioValidation, async (req, res, next) => {
     try {
@@ -86,8 +91,15 @@ router.delete('/:id', async (req, res, next) => {
 
 router.get('/', async (req, res, next) => {
     try {
-        const portfolios = await fetchAllData();
-        res.json(portfolios);
+        const { limit = 10, offset = 0, sort = 'name', order = 'asc' } = req.query;
+        let portfolios = await fetchAllData();
+        // Filtering logic can be added here
+        portfolios = portfolios.sort((a, b) => {
+            if (order === 'asc') return a[sort] > b[sort] ? 1 : -1;
+            return a[sort] < b[sort] ? 1 : -1;
+        });
+        const paginatedPortfolios = paginateAndFilter(portfolios, Number(limit), Number(offset));
+        res.json(paginatedPortfolios);
     } catch (error) {
         next(error);
     }
