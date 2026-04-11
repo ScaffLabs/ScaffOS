@@ -6,7 +6,11 @@ import { publishEvent } from '../utils/eventBus';
 
 const positionStore = new InMemoryStore<Position>();
 
-// Fetch all positions
+/**
+ * Fetch all positions
+ * @param req - HTTP request
+ * @param res - HTTP response
+ */
 export const fetchPositions = async (req: Request, res: Response) => {
     try {
         const positions = Object.values(positionStore.data);
@@ -16,7 +20,11 @@ export const fetchPositions = async (req: Request, res: Response) => {
     }
 };
 
-// Create a new position
+/**
+ * Create a new position
+ * @param req - HTTP request
+ * @param res - HTTP response
+ */
 export const createPosition = async (req: Request, res: Response) => {
     const positionData = req.body;
     try {
@@ -35,7 +43,11 @@ export const createPosition = async (req: Request, res: Response) => {
     }
 };
 
-// Update an existing position
+/**
+ * Update an existing position
+ * @param req - HTTP request
+ * @param res - HTTP response
+ */
 export const updatePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
     const positionData = req.body;
@@ -62,7 +74,11 @@ export const updatePosition = async (req: Request, res: Response) => {
     }
 };
 
-// Delete a position
+/**
+ * Delete a position
+ * @param req - HTTP request
+ * @param res - HTTP response
+ */
 export const deletePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -79,7 +95,10 @@ export const deletePosition = async (req: Request, res: Response) => {
     }
 };
 
-// Register API routes
+/**
+ * Register API routes
+ * @param app - Express application instance
+ */
 export const registerRoutes = (app: any) => {
     app.get('/api/positions', fetchPositions);
     app.post('/api/positions', createPosition);

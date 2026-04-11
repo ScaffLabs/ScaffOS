@@ -6,6 +6,11 @@ import { publishEvent } from '../utils/eventBus';
 
 const orders: Order[] = [];
 
+/**
+ * Submits a new order
+ * @param req - HTTP request
+ * @param res - HTTP response
+ */
 export const submitOrder = async (req: Request, res: Response) => {
     const orderData = req.body;
     try {
@@ -26,6 +31,10 @@ export const submitOrder = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Registers order-related API routes
+ * @param app - Express application instance
+ */
 export const registerOrderRoutes = (app: any) => {
     app.post('/api/orders', submitOrder);
 };

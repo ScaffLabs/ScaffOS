@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 // Branded types for IDs
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
@@ -33,6 +31,8 @@ export type TradingEvent =
     | { type: 'POSITION_UPDATED'; position: Position };
 
 // Zod schemas for runtime validation
+import { z } from 'zod';
+
 export const OrderSchema = z.object({
     id: z.string().brand<OrderId>(),
     symbol: z.string().min(1),
