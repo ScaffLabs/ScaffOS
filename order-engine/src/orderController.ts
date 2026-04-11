@@ -17,7 +17,7 @@ export const createOrderValidators = [
 export const createOrder = async (req: Request, res: Response) => {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
-        throw new ValidationError('Validation failed: ' + validationErrors.array().map(e => e.msg).join(', '));
+        return res.status(400).json({ errors: validationErrors.array() });
     }
     try {
         const order = req.body;
