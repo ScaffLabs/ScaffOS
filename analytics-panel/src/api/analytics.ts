@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ServiceError, ValidationError } from '../errors/customErrors';
-import { PerformanceMetricsSchema, StrategySchema } from '../types';
+import { PerformanceMetricsSchema, StrategySchema, AnalyticsEventSchema } from '../types';
 import { logError } from '../utils/errorLogger';
 import CircuitBreaker from '../utils/circuitBreaker';
 
@@ -19,7 +19,7 @@ const fetchPerformanceMetrics = async () => {
     }
 };
 
-const createStrategy = async (strategy) => {
+const createStrategy = async (strategy: unknown) => {
     try {
         const validatedStrategy = StrategySchema.parse(strategy);
         const response = await circuitBreaker.execute(() =>

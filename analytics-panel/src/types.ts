@@ -1,4 +1,6 @@
 // Branded types for unique identification of entities.
+import { z } from 'zod';
+
 export type OrderId = string & { readonly brand: unique symbol };
 export type TradeId = string & { readonly brand: unique symbol };
 
@@ -21,7 +23,7 @@ export interface Strategy {
     /** The name of the strategy. Must be alphanumeric. */
     name: string;
     /** The parameters for the strategy as an object. */
-    parameters: Record<string, any>;
+    parameters: Record<string, unknown>;
 }
 
 /**
@@ -39,7 +41,7 @@ export const PerformanceMetricsSchema = z.object({
 export const StrategySchema = z.object({
     name: z.string().min(1, { message: 'Name must be at least 1 character long.' })
         .regex(/^[a-zA-Z0-9_]+$/, { message: 'Name must be alphanumeric.' }),
-    parameters: z.record(z.any()).optional(),
+    parameters: z.record(z.unknown()).optional(),
 });
 
 /**
