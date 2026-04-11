@@ -1,7 +1,7 @@
 import { Order, OrderSchema } from './types';
 import { ServiceError, ValidationError, NotFoundError } from './errors';
 import { storage } from './storage';
-import { postData } from './axiosClient';
+import { postData, fetchData } from './axiosClient';
 import logger from './logger';
 import { emitWithRetry } from './eventBus';
 
