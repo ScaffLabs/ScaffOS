@@ -10,6 +10,8 @@ import requestLogger from '../middleware/requestLogger';
 import auditLogger from '../middleware/auditLogger';
 import csrfProtection from '../middleware/csrfProtection';
 import env from '../config';
+import axios from 'axios';
+import circuitBreaker from 'circuit-breaker-js';
 
 const router = Router();
 
@@ -26,6 +28,20 @@ router.use(sanitize);
 router.use(auditLogger);
 router.use(requestLogger);
 router.use(csrfProtection);
+
+const notifyExternalService = async (portfolio) => {
+    const externalServiceUrl = `${env.PORTFOLIO_SERVICE_URL}/notify`;
+    const breaker = circuitBreaker({
+        timeout: 5000,
+        errorThresholdPercentage: 50,
+        resetTimeout: 30000
+    });
+    try {
+        await breaker.run(() => axios.post(externalServiceUrl, portfolio));
+    } catch (error) {
+        logger.error('Failed to notify external service', { error: error.message });
+    }
+};
 
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
@@ -50,6 +66,7 @@ router.post('/', portfolioValidation, async (req, res) => {
     }
     try {
         const portfolio = await createPortfolio(req.body);
+        await notifyExternalService(portfolio);
         logger.info('Portfolio created', { portfolioId: portfolio.id });
         res.status(201).json(portfolio);
     } catch (error) {
@@ -92,6 +109,7 @@ router.put('/:id', portfolioValidation, async (req, res) => {
     }
     try {
         const updatedPortfolio = await updatePortfolio(req.params.id, req.body);
+        await notifyExternalService(updatedPortfolio);
         res.json(updatedPortfolio);
     } catch (error) {
         logger.error('Error updating portfolio', { error: error.message });
