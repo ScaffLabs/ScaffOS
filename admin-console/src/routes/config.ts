@@ -20,14 +20,17 @@ router.use(logAudit);
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
+        // Validate the incoming configuration item against the schema
         ConfigurationItemSchema.parse(configItem);
         await db.createConfiguration(configItem);
         emitEvent('CONFIGURATION_CREATED', configItem);
         return res.status(201).json({ message: 'Configuration created successfully!' });
     } catch (error) {
+        // Handle validation errors specifically
         if (error instanceof ValidationError) {
             return next(new ValidationError('Invalid configuration data: ' + error.message));
         }
+        // Handle service errors and log them
         next(new ServiceError('Error creating configuration: ' + error.message));
     }
 });
@@ -55,6 +58,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         const configurations = await db.findAllConfigurations();
         const filteredConfigs = configurations
             .sort((a, b) => {
+                // Sorting logic based on the specified field and order
                 if (a[sortBy] < b[sortBy]) return order === 'asc' ? -1 : 1;
                 if (a[sortBy] > b[sortBy]) return order === 'asc' ? 1 : -1;
                 return 0;
@@ -63,6 +67,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         if (filteredConfigs.length === 0) throw new NotFoundError('No configurations found.');
         return res.status(200).json(filteredConfigs);
     } catch (error) {
+        // Log and forward errors to the error handler
         next(new ServiceError('Error fetching configurations: ' + error.message));
     }
 });
@@ -71,14 +76,17 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 router.put('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
+        // Validate the configuration item before updating
         ConfigurationItemSchema.parse(configItem);
         await db.updateConfiguration(configItem);
         emitEvent('CONFIGURATION_UPDATED', configItem);
         return res.status(200).json({ message: 'Configuration updated successfully!' });
     } catch (error) {
+        // Handle validation errors specifically
         if (error instanceof ValidationError) {
             return next(new ValidationError('Invalid configuration data: ' + error.message));
         }
+        // Handle service errors and log them
         next(new ServiceError('Error updating configuration: ' + error.message));
     }
 });
@@ -91,6 +99,7 @@ router.delete('/:key', async (req: Request, res: Response, next: NextFunction) =
         emitEvent('CONFIGURATION_DELETED', { key });
         return res.status(204).send();
     } catch (error) {
+        // Handle service errors and log them
         next(new ServiceError('Error deleting configuration: ' + error.message));
     }
 });
