@@ -28,18 +28,12 @@ process.on('unhandledRejection', (reason) => {
     process.exit(1);
 });
 
-process.on('SIGTERM', async () => {
-    logger.info('SIGTERM received. Shutting down gracefully...');
-    await shutdown();
-});
-
-process.on('SIGINT', async () => {
-    logger.info('SIGINT received. Shutting down gracefully...');
-    await shutdown();
-});
-
 const shutdown = async () => {
+    logger.info('Cleaning up before shutdown...');
     // Perform any necessary cleanup here
     logger.info('Cleanup completed. Exiting now.');
     process.exit(0);
 };
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
