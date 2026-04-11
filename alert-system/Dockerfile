@@ -7,7 +7,7 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
-RUN npm run build # Assuming there's a build script for TypeScript compilation
+RUN npm run build
 
 FROM node:16
 
@@ -15,8 +15,7 @@ WORKDIR /usr/src/app
 
 COPY --from=builder /usr/src/app .
 
-# Install dotenv for loading environment variables
-RUN npm install dotenv
+RUN npm install --production
 
 EXPOSE 3000
-CMD [ 'npm', 'start' ]
+CMD [ 'node', 'index.js' ]
