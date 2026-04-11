@@ -16,7 +16,7 @@ export const createUser = async (username: string, email: string): Promise<User>
         if (err instanceof ValidationError) {
             throw new ValidationError(err.errors.map(e => e.message));
         }
-        throw new ServiceError('Unexpected error occurred while creating user');
+        throw new Error('Unexpected error occurred while creating user');
     }
 };
 
