@@ -3,7 +3,7 @@ import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
-import { withRetry, circuitBreaker } from './resilience';
+import { withRetry } from './resilience';
 
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
 const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
