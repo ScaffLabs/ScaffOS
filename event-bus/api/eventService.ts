@@ -34,4 +34,18 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
 };
 
 // Subscribe to userCreated events
-eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
+const subscribeToUserCreated = () => {
+    eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
+};
+
+subscribeToUserCreated();
+
+export const checkServiceHealth = async () => {
+    try {
+        const response = await axios.get(`${config.OTHER_SERVICE_URL}/health`);
+        return response.status === 200;
+    } catch (error) {
+        logger.error('Health check failed:', error.message);
+        return false;
+    }
+};

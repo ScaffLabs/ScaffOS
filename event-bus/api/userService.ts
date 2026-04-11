@@ -18,7 +18,7 @@ const fetchUserServiceWithRetry = async (userId: string, retries = 3) => {
             attempt++;
             logger.error('Error fetching user data, attempt:', attempt, error.message);
             if (attempt >= retries) throw error;
-            await new Promise(res => setTimeout(res, 1000)); // wait before retrying
+            await new Promise(res => setTimeout(res, 1000 * Math.pow(2, attempt)));
         }
     }
 };
@@ -33,4 +33,8 @@ export const handleUserCreatedEvent = async (message: Message<UserCreated>) => {
 };
 
 // Subscribe to userCreated events
-eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
+const subscribeToUserCreated = () => {
+    eventBus.subscribe<UserCreated>('userCreated', handleUserCreatedEvent);
+};
+
+subscribeToUserCreated();

@@ -7,6 +7,7 @@ const checkHealth = async () => {
     let redisHealthy = false;
     let serviceHealthy = false;
 
+    // Check Redis health
     try {
         await redisClient.ping();
         redisHealthy = true;
@@ -15,6 +16,7 @@ const checkHealth = async () => {
         logger.error('Redis connection failed', error);
     }
 
+    // Check other service health
     try {
         const response = await axios.get(`${config.OTHER_SERVICE_URL}/health`);
         serviceHealthy = response.status === 200;
