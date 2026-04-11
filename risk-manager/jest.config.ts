@@ -12,5 +12,5 @@ module.exports = {
         },
     },
     setupFiles: ['dotenv/config'],
-    testTimeout: 10000, // Increased timeout for async tests
+    testTimeout: 10000,
 };
