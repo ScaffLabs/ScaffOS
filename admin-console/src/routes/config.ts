@@ -16,13 +16,6 @@ router.use(sanitizeQueryParams);
 router.use(rateLimiter);
 router.use(logAudit);
 
-/**
- * Create a new configuration.
- * @route POST /api/config
- * @param {ConfigurationItem} req.body - The configuration item to create.
- * @returns {Object} 201 - Successfully created message.
- * @returns {Error} 400 - Validation error or service error.
- */
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
@@ -38,13 +31,6 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-/**
- * Get configuration by key.
- * @route GET /api/config/{key}
- * @param {string} key - The unique key of the configuration to retrieve.
- * @returns {ConfigurationItem} 200 - The configuration item.
- * @returns {Error} 404 - Configuration not found.
- */
 router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
     const { key } = req.params;
     try {
@@ -56,14 +42,6 @@ router.get('/:key', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-/**
- * Get all configurations with pagination.
- * @route GET /api/config
- * @param {number} [limit] - Limit the number of results returned.
- * @param {number} [offset] - Offset for pagination.
- * @returns {Array<ConfigurationItem>} 200 - An array of configuration items.
- * @returns {Error} 404 - No configurations found.
- */
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
     const offset = parseInt(req.query.offset as string) || 0;
@@ -86,13 +64,6 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-/**
- * Update an existing configuration.
- * @route PUT /api/config
- * @param {ConfigurationItem} req.body - The updated configuration item.
- * @returns {Object} 200 - Successfully updated message.
- * @returns {Error} 400 - Validation error or service error.
- */
 router.put('/', async (req: Request, res: Response, next: NextFunction) => {
     const configItem: ConfigurationItem = req.body;
     try {
@@ -108,13 +79,6 @@ router.put('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-/**
- * Delete a configuration by key.
- * @route DELETE /api/config/{key}
- * @param {string} key - The unique key of the configuration to delete.
- * @returns {Object} 204 - No content.
- * @returns {Error} 404 - Configuration not found.
- */
 router.delete('/:key', async (req: Request, res: Response, next: NextFunction) => {
     const key = req.params.key;
     try {
