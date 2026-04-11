@@ -33,7 +33,22 @@ export const updateUser = async (id: UserId, userData: Partial<User>): Promise<U
     if (!user) {
         throw new NotFoundError('User not found for update');
     }
-    const updatedUserData = { ...user, ...userData };
-    UserSchema.parse(updatedUserData);
-    return userStore.update(id, updatedUserData);
+    try {
+        const updatedUserData = { ...user, ...userData };
+        UserSchema.parse(updatedUserData);
+        return userStore.update(id, updatedUserData);
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            throw new ValidationError(error.errors.map(e => e.message));
+        }
+        throw new Error('Unexpected error occurred while updating user');
+    }
+};
+
+export const deleteUser = async (id: UserId): Promise<boolean> => {
+    const userExists = userStore.findById(id);
+    if (!userExists) {
+        throw new NotFoundError('User not found for deletion');
+    }
+    return userStore.delete(id);
 };
