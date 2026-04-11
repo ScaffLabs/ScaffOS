@@ -30,6 +30,7 @@ app.use(limiter);
 registerRoutes(app);
 registerExternalApiRoutes(app);
 registerHealthRoutes(app);
+
 app.use(gracefulShutdownHandler);
 app.use(errorHandler);
 
