@@ -41,14 +41,14 @@ const notifyExternalService = async (portfolio: Portfolio) => {
 };
 
 // Function to retrieve a portfolio by its ID
-export const getPortfolio = async (id: string): Promise<Portfolio> => {
+export const getPortfolio = async (id: PortfolioId): Promise<Portfolio> => {
     const portfolio = storage.read(id);
     if (!portfolio) throw new NotFoundError('Portfolio not found');
     return portfolio;
 };
 
 // Function to update an existing portfolio
-export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Promise<Portfolio> => {
+export const updatePortfolio = async (id: PortfolioId, updates: PortfolioUpdate): Promise<Portfolio> => {
     const existingPortfolio = storage.read(id);
     if (!existingPortfolio) throw new NotFoundError('Portfolio not found');
     try {
@@ -63,7 +63,7 @@ export const updatePortfolio = async (id: string, updates: PortfolioUpdate): Pro
 };
 
 // Function to delete a portfolio
-export const deletePortfolio = async (id: string): Promise<void> => {
+export const deletePortfolio = async (id: PortfolioId): Promise<void> => {
     const success = storage.delete(id);
     if (!success) throw new NotFoundError('Portfolio not found');
 };
