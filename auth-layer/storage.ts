@@ -1,5 +1,5 @@
 import { User, UserId, UserSchema } from './types';
-import { ValidationError, NotFoundError, EmptyArrayError } from './errors';
+import { ValidationError, NotFoundError } from './errors';
 import { createConnectionPool } from './database';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,7 +27,7 @@ export const getAllUsers = async (): Promise<User[]> => {
     const result = await pool.query('SELECT * FROM users');
     const users: User[] = result.rows;
     if (users.length === 0) {
-        throw new EmptyArrayError('No users found.');
+        throw new NotFoundError('No users found.');
     }
     return users;
 };
@@ -67,12 +67,4 @@ export const findUserById = async (id: UserId): Promise<User | null> => {
 export const getUserByEmail = async (email: string): Promise<User | null> => {
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     return result.rows[0] || null;
-};
-
-export const createUserTable = async () => {
-    await pool.query(`CREATE TABLE IF NOT EXISTS users (` +
-        `id UUID PRIMARY KEY,` +
-        `username VARCHAR(255) NOT NULL,` +
-        `email VARCHAR(255) UNIQUE NOT NULL)` +
-    `);`;
 };
