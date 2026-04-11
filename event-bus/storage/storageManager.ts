@@ -1,13 +1,13 @@
 import { IStorage } from './IStorage';
-import { InMemoryStorage } from './InMemoryStorage';
+import { InMemoryEventStorage } from './InMemoryEventStorage';
 import { Event } from '../types';
 
 export class StorageManager<T> {
     private storage: IStorage<T>;
 
-    constructor(storageType: 'memory' | 'sqlite' | 'postgresql') {
+    constructor(storageType: 'memory') {
         if (storageType === 'memory') {
-            this.storage = new InMemoryStorage<T>();
+            this.storage = new InMemoryEventStorage();
         } else {
             throw new Error('Storage type not supported yet');
         }
@@ -15,18 +15,6 @@ export class StorageManager<T> {
 
     getStorage(): IStorage<T> {
         return this.storage;
-    }
-
-    async migrate(): Promise<void> {
-        await this.storage.migrate();
-    }
-
-    async seedData(data: T[]): Promise<void> {
-        await this.storage.seedData(data);
-    }
-
-    async findEventById(id: string): Promise<T | null> {
-        return await this.storage.read(id);
     }
 
     async createEvent(item: T): Promise<T> {
@@ -43,13 +31,5 @@ export class StorageManager<T> {
 
     async findAllEvents(limit = 10, offset = 0): Promise<T[]> {
         return await this.storage.findAll(limit, offset);
-    }
-
-    async findByField(field: keyof T, value: any): Promise<T[]> {
-        return await this.storage.findByField(field, value);
-    }
-
-    async transaction(operations: (() => Promise<void>)[]): Promise<void> {
-        await this.storage.transaction(operations);
     }
 }

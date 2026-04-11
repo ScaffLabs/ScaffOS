@@ -1,91 +1,33 @@
 import { Request, Response, Router } from 'express';
 import { StorageManager } from '../storage/storageManager';
-import { Event, createEventSchema, updateEventSchema, GetEventsQuery } from '../types';
-import { ValidationError } from '../errors/validationError';
-import { NotFoundError } from '../errors/notFoundError';
+import { Event, createEventSchema, updateEventSchema } from '../types';
 import logger from '../logger';
 
 const storageManager = new StorageManager<Event>('memory');
 const storage = storageManager.getStorage();
 
 const createEvent = async (req: Request, res: Response): Promise<void> => {
-    const reqId = req.headers['x-request-id'] || 'unknown';
     try {
-        req.body = req.sanitize(req.body); // Sanitize input
         const validation = createEventSchema.safeParse(req.body);
         if (!validation.success) {
-            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
+            return res.status(400).json({ message: validation.error.errors.map(err => err.message).join(', ') });
         }
         const event = await storage.create(validation.data);
-        logger.info(`Event created: ${event.id}`, { reqId });
+        logger.info(`Event created: ${event.id}`);
         res.status(201).json(event);
     } catch (error) {
-        handleError(error, res, reqId);
+        logger.error(`Error creating event: ${error.message}`);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
 const getEvents = async (req: Request, res: Response): Promise<void> => {
-    const { limit = 10, offset = 0, sortBy, order }: GetEventsQuery = req.query;
     try {
-        let events = await storage.findAll(limit, offset);
-        if (sortBy) {
-            events = events.sort((a, b) => {
-                const isAsc = order === 'asc';
-                return isAsc ? (a[sortBy] > b[sortBy] ? 1 : -1) : (a[sortBy] < b[sortBy] ? 1 : -1);
-            });
-        }
-        if (!events.length) {
-            throw new NotFoundError('No events found');
-        }
-        logger.info(`Fetched events: ${events.length}`, { reqId });
+        const events = await storage.findAll();
+        logger.info(`Fetched ${events.length} events`);
         res.json(events);
     } catch (error) {
-        handleError(error, res, req.headers['x-request-id'] || 'unknown');
-    }
-};
-
-const updateEvent = async (req: Request, res: Response): Promise<void> => {
-    const reqId = req.headers['x-request-id'] || 'unknown';
-    const { id } = req.params;
-    try {
-        req.body = req.sanitize(req.body); // Sanitize input
-        const validation = updateEventSchema.safeParse(req.body);
-        if (!validation.success) {
-            throw new ValidationError(validation.error.errors.map(err => err.message).join(', '));
-        }
-        const updatedEvent = await storage.update(id, validation.data);
-        if (!updatedEvent) {
-            throw new NotFoundError('Event not found');
-        }
-        logger.info(`Event updated: ${id}`, { reqId });
-        res.json(updatedEvent);
-    } catch (error) {
-        handleError(error, res, reqId);
-    }
-};
-
-const deleteEvent = async (req: Request, res: Response): Promise<void> => {
-    const reqId = req.headers['x-request-id'] || 'unknown';
-    const { id } = req.params;
-    try {
-        const success = await storage.delete(id);
-        if (!success) {
-            throw new NotFoundError('Event not found');
-        }
-        logger.info(`Event deleted: ${id}`, { reqId });
-        res.status(204).send();
-    } catch (error) {
-        handleError(error, res, reqId);
-    }
-};
-
-const handleError = (error: Error, res: Response, reqId: string) => {
-    logger.error(error.message, { reqId });
-    if (error instanceof ValidationError) {
-        res.status(400).json({ message: error.message });
-    } else if (error instanceof NotFoundError) {
-        res.status(404).json({ message: error.message });
-    } else {
+        logger.error(`Error fetching events: ${error.message}`);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
@@ -93,6 +35,4 @@ const handleError = (error: Error, res: Response, reqId: string) => {
 const router = Router();
 router.post('/', createEvent);
 router.get('/', getEvents);
-router.put('/:id', updateEvent);
-router.delete('/:id', deleteEvent);
 export default router;
