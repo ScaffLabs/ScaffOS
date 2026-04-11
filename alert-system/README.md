@@ -82,7 +82,7 @@ Please refer to the `CONTRIBUTING.md` file for guidelines on contributing to thi
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ## Changelog
-### [1.0.8] - 2023-10-25
+### [1.0.10] - 2023-10-26
 ### Added
-- Detailed README.md with project description, architecture overview, setup instructions, API reference, environment variables table, development guide, and deployment guide.
-- Inline comments in alert processing logic to explain complex operations.
+- Detailed API reference in README.md including request and response examples.
+- Updated the environment variables section for clarity.
