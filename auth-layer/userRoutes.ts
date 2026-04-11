@@ -35,19 +35,12 @@ router.post('/users', async (req, res) => {
 });
 
 router.get('/users', async (req, res) => {
-    const { limit = 10, offset = 0, sort = 'username', order = 'asc', filter } = req.query;
     try {
-        let users = await getAllUsers();
-        if (filter) {
-            users = users.filter(user => user.username.includes(filter) || user.email.includes(filter));
+        const users = await getAllUsers();
+        if (users.length === 0) {
+            throw new EmptyArrayError('No users found.');
         }
-        users.sort((a, b) => {
-            const aValue = a[sort];
-            const bValue = b[sort];
-            return order === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
-        });
-        const paginatedUsers = users.slice(offset, offset + limit);
-        res.status(200).json(paginatedUsers);
+        res.status(200).json(users);
     } catch (error) {
         logger.error('Error fetching users', { error: error.message });
         if (error instanceof EmptyArrayError) {
@@ -98,4 +91,4 @@ router.delete('/users/:id', async (req, res) => {
     }
 });
 
-export default router;
+export default router; 

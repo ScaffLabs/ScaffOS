@@ -20,4 +20,4 @@ const initGracefulShutdown = (server: Server, connectionPool: ReturnType<typeof 
     process.on('SIGINT', shutdown);
 };
 
-export { initGracefulShutdown };
+export { initGracefulShutdown }; 

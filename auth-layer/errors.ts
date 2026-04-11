@@ -14,4 +14,4 @@ const createError = (type: string, message: string) => {
     }
 };
 
-export { ServiceError, ValidationError, NotFoundError, InternalServerError, EmptyArrayError, createError };
+export { ServiceError, ValidationError, NotFoundError, InternalServerError, EmptyArrayError, createError }; 
