@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { Order, OrderId } from './types';
+import { Pool } from 'pg';
 
 interface Database<T> {
     create(item: T): Promise<T>;
