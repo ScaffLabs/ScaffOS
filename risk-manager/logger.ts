@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { Request, Response, NextFunction } from 'express';
 
 const logFormat = winston.format.printf(({ level, message, timestamp, ...meta }) => {
   const logMessage = `${timestamp} ${level}: ${message}`;
@@ -14,16 +15,12 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'combined.log' })
+    new winston.transports.File({ filename: 'combined.log' }),
+    new winston.transports.File({ filename: 'error.log', level: 'error' })
   ]
 });
 
-logger.add(new winston.transports.File({
-  filename: 'error.log',
-  level: 'error',
-}));
-
-const requestLogger = (req, res, next) => {
+const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const requestId = req.headers['x-request-id'] || 'N/A';
   const start = Date.now();
 
@@ -50,7 +47,7 @@ const logStartupConfig = () => {
   });
 };
 
-const logError = (error, context) => {
+const logError = (error: Error, context: any) => {
   logger.error('An error occurred', { error: error.message, stack: error.stack, context });
 };
 
