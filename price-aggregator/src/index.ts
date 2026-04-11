@@ -5,14 +5,20 @@ import errorMiddleware from './errorMiddleware';
 import { config } from './config';
 import { logRequest, logError, logStartup } from './logger';
 import { PriceAggregator } from './priceAggregator';
+import { MemoryMonitor } from './memoryMonitor';
+import { requestQueueMiddleware } from './middleware/requestQueueingMiddleware';
 
 const app = express();
 const server = http.createServer(app);
 const dbPool = createConnectionPool();
 const priceAggregator = new PriceAggregator();
+const memoryMonitor = new MemoryMonitor();
 
 app.use(express.json());
+app.use(requestQueueMiddleware);
 app.use(errorMiddleware);
+
+memoryMonitor.startLogging();
 
 const shutdown = async () => {
     console.log('Shutting down gracefully...');
