@@ -2,11 +2,9 @@ import { HistoricalData, StrategyParameters, BacktestResult, BacktestId, Backtes
 import { ServiceError, ValidationError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
-import InMemoryStore from '../storage/InMemoryStore';
 import axios from 'axios';
 import { withRetry, circuitBreaker } from './resilience';
 
-const store = new InMemoryStore<BacktestResult>();
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
 const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL;
 
@@ -57,8 +55,6 @@ const simulateBacktest = async (params: StrategyParameters, historicalData: Hist
     const backtestId: BacktestId = uuidv4() as BacktestId;
     const result: BacktestResult = { id: backtestId, totalReturns, trades, winRate, performanceMetrics };
     logger.info({ message: 'Backtest simulation completed', params, totalReturns, requestId: backtestId });
-
-    await store.create(result);
     return BacktestResultSchema.parse(result);
 };
 
