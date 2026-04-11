@@ -9,42 +9,23 @@ import { ValidationError, NotFoundError } from '../errors';
 import requestLogger from '../middleware/requestLogger';
 import auditLogger from '../middleware/auditLogger';
 import csrfProtection from '../middleware/csrfProtection';
-import { healthCheckExternalService } from '../services/healthService';
 
 const router = Router();
 
-// CORS configuration
 const allowedOrigins = ['http://localhost:3000', 'https://your-allowed-origin.com'];
 router.use(cors({ origin: allowedOrigins, optionsSuccessStatus: 200 }));
 
-// Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     message: 'Too many requests, please try again later.',
 });
 router.use(limiter);
-
-// Middleware for sanitization
 router.use(sanitize);
 router.use(auditLogger);
 router.use(requestLogger);
-
-// CSRF protection
 router.use(csrfProtection);
 
-// Health check endpoint
-router.get('/health', async (req, res) => {
-    try {
-        const isExternalServiceUp = await healthCheckExternalService();
-        res.json({ status: isExternalServiceUp ? 'UP' : 'DOWN' });
-    } catch (error) {
-        logger.error('Health check failed', { error: error.message });
-        res.status(503).json({ status: 'DOWN', error: error.message });
-    }
-});
-
-// Validation rules for portfolio creation and updates
 const portfolioValidation = [
     body('name').isString().trim().notEmpty().withMessage('Name is required'),
     body('positions').isArray().optional().custom((positions) => {
@@ -80,8 +61,13 @@ router.post('/', portfolioValidation, async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-    const portfolios = await fetchAllData();
-    res.json(portfolios);
+    try {
+        const portfolios = await fetchAllData();
+        res.json(portfolios);
+    } catch (error) {
+        logger.error('Error fetching portfolios', { error: error.message });
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
 router.get('/:id', async (req, res) => {
