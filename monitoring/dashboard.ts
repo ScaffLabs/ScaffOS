@@ -48,6 +48,9 @@ export const updateDashboardEntry = async (req: Request, res: Response): Promise
             throw new ValidationError('Invalid input data: Data is required.');
         }
         const { data } = bodyValidation.data;
+        if (!store.read(id)) {
+            throw new NotFoundError('Entry not found.');
+        }
         store.update(id, data);
         logger.info(`Updated entry: ${id}`);
         res.status(204).send();
@@ -66,6 +69,9 @@ export const updateDashboardEntry = async (req: Request, res: Response): Promise
 export const deleteDashboardEntry = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
+        if (!store.read(id)) {
+            throw new NotFoundError('Entry not found.');
+        }
         store.delete(id);
         logger.info(`Deleted entry: ${id}`);
         res.status(204).send();
