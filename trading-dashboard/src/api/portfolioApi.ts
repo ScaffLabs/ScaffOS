@@ -7,12 +7,21 @@ import { publishEvent } from '../utils/eventBus';
 const positionStore = new InMemoryStore<Position>();
 
 export const fetchPositions = async (req: Request, res: Response) => {
-    try {
-        const positions = Object.values(positionStore.data);
-        res.status(200).json(positions);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to fetch positions: ' + error.message });
+    const { limit = '10', offset = '0', sort = 'asc' } = req.query;
+    const parsedLimit = parseInt(limit as string);
+    const parsedOffset = parseInt(offset as string);
+
+    if (isNaN(parsedLimit) || isNaN(parsedOffset) || parsedLimit <= 0) {
+        return res.status(400).json({ message: 'Invalid pagination parameters' });
     }
+
+    const positions = Object.values(positionStore.data);
+    const sortedPositions = positions.sort((a, b) => {
+        return sort === 'desc' ? b.quantity - a.quantity : a.quantity - b.quantity;
+    });
+
+    const paginatedPositions = sortedPositions.slice(parsedOffset, parsedOffset + parsedLimit);
+    res.status(200).json(paginatedPositions);
 };
 
 export const createPosition = async (req: Request, res: Response) => {
