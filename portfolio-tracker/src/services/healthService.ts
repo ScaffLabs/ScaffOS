@@ -33,3 +33,13 @@ export const healthCheckExternalService = async () => {
         throw new ServiceError('Health check failed');
     }
 };
+
+export const healthCheck = async (req: Request, res: Response) => {
+    try {
+        const isHealthy = await healthCheckExternalService();
+        res.status(200).json({ status: isHealthy ? 'UP' : 'DOWN' });
+    } catch (error) {
+        logger.error('Health check error', { error: error.message });
+        res.status(503).json({ status: 'DOWN' });
+    }
+};

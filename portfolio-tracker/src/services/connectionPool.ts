@@ -40,3 +40,23 @@ export const closeConnectionPool = () => {
         });
     });
 };
+
+export const withTimeout = async (promise: Promise<any>, ms: number) => {
+    const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Promise timed out')), ms)
+    );
+    return Promise.race([promise, timeout]);
+};
+
+export const executeQueryWithRetry = async (sql: string, values?: any[], retries: number = 3) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const result = await withTimeout(query(sql, values), 5000);
+            return result;
+        } catch (error) {
+            logger.warn('Query attempt failed', { attempt, error: error.message });
+            if (attempt === retries) throw error;
+            await new Promise(res => setTimeout(res, Math.pow(2, attempt) * 1000)); // Exponential backoff
+        }
+    }
+};
