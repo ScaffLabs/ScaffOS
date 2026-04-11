@@ -1,5 +1,6 @@
-import { User, UserId, UserSchema } from './types';
+import { User, UserId } from './types';
 import { ValidationError, NotFoundError } from './errors';
+import userStore from './inMemoryStore';
 import { createConnectionPool } from './database';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -8,24 +9,19 @@ const pool = createConnectionPool();
 export const createUser = async (username: string, email: string): Promise<User> => {
     const newUser: User = { id: uuidv4() as UserId, username, email };
     try {
-        UserSchema.parse(newUser);
-        const existingUser = await getUserByEmail(email);
+        const existingUser = await userStore.findByEmail(email);
         if (existingUser) {
             throw new ValidationError(['Email already in use.']);
         }
-        await pool.query('INSERT INTO users (id, username, email) VALUES ($1, $2, $3)', [newUser.id, newUser.username, newUser.email]);
+        await userStore.create(newUser);
         return newUser;
     } catch (err) {
-        if (err instanceof ValidationError) {
-            throw new ValidationError(err.errors.map(e => e.message));
-        }
         throw new Error('Unexpected error occurred while creating user');
     }
 };
 
 export const getAllUsers = async (): Promise<User[]> => {
-    const result = await pool.query('SELECT * FROM users');
-    const users: User[] = result.rows;
+    const users = userStore.findAll();
     if (users.length === 0) {
         throw new NotFoundError('No users found.');
     }
@@ -33,38 +29,25 @@ export const getAllUsers = async (): Promise<User[]> => {
 };
 
 export const updateUser = async (id: UserId, userData: Partial<User>): Promise<User | null> => {
-    const user = await findUserById(id);
-    if (!user) {
+    const updatedUser = userStore.update(id, userData);
+    if (!updatedUser) {
         throw new NotFoundError('User not found for update');
     }
-    try {
-        const updatedUserData = { ...user, ...userData };
-        UserSchema.parse(updatedUserData);
-        await pool.query('UPDATE users SET username = $1, email = $2 WHERE id = $3', [updatedUserData.username, updatedUserData.email, id]);
-        return updatedUserData;
-    } catch (error) {
-        if (error instanceof ValidationError) {
-            throw new ValidationError(error.errors.map(e => e.message));
-        }
-        throw new Error('Unexpected error occurred while updating user');
-    }
+    return updatedUser;
 };
 
 export const deleteUser = async (id: UserId): Promise<boolean> => {
-    const userExists = await findUserById(id);
-    if (!userExists) {
+    const deleted = userStore.delete(id);
+    if (!deleted) {
         throw new NotFoundError('User not found for deletion');
     }
-    await pool.query('DELETE FROM users WHERE id = $1', [id]);
     return true;
 };
 
 export const findUserById = async (id: UserId): Promise<User | null> => {
-    const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-    return result.rows[0] || null;
+    return userStore.findById(id);
 };
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    return result.rows[0] || null;
+    return userStore.findByEmail(email);
 };
