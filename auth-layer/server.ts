@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import healthRouter from './health';
 import userRoutes from './userRoutes';
-import { logRequest } from './logger';
 import logger from './logger';
 import { createConnectionPool } from './database';
 import { monitorMemoryUsage } from './monitor';
@@ -13,6 +12,8 @@ import { initGracefulShutdown } from './shutdown';
 import crypto from 'crypto';
 import { validateApiKey } from './apiKey';
 import { requestSizeLimitMiddleware } from './middleware';
+import { logRequest } from './logger';
+import { sanitizeUserInput } from './userValidation';
 
 const app = express();
 const server = http.createServer(app);
