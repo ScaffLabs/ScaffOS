@@ -5,6 +5,13 @@ import { postData } from './axiosClient';
 import logger from './logger';
 import { emitWithRetry } from './eventBus';
 
+/**
+ * Creates a new order in the system.
+ * @param orderData - The order data to create. Must conform to Order schema.
+ * @throws {ValidationError} If orderData is invalid.
+ * @throws {ServiceError} If there is an error during storage.
+ * @returns The created order.
+ */
 const createOrderService = async (orderData: unknown) => {
     const parsedOrder = OrderSchema.safeParse(orderData);
     if (!parsedOrder.success) {
@@ -23,6 +30,15 @@ const createOrderService = async (orderData: unknown) => {
     }
 };
 
+/**
+ * Updates an existing order by ID.
+ * @param id - The ID of the order to update.
+ * @param updates - The updates to apply to the order.
+ * @throws {NotFoundError} If the order is not found.
+ * @throws {ValidationError} If updates are invalid.
+ * @throws {ServiceError} If there is an error during storage.
+ * @returns The updated order.
+ */
 const updateOrderService = async (id: string, updates: Partial<Order>) => {
     const parsedUpdates = OrderSchema.partial().safeParse(updates);
     if (!parsedUpdates.success) {
@@ -43,6 +59,12 @@ const updateOrderService = async (id: string, updates: Partial<Order>) => {
     }
 };
 
+/**
+ * Deletes an order by ID.
+ * @param id - The ID of the order to delete.
+ * @throws {NotFoundError} If the order is not found.
+ * @throws {ServiceError} If there is an error during storage.
+ */
 const deleteOrderService = async (id: string) => {
     try {
         await storage.delete(id);
@@ -55,6 +77,11 @@ const deleteOrderService = async (id: string) => {
     }
 };
 
+/**
+ * Retrieves all orders with pagination.
+ * @param pagination - The pagination options.
+ * @returns An array of orders.
+ */
 const getOrdersService = async (pagination: { limit: number; offset: number }) => {
     return await storage.findAll();
 };
