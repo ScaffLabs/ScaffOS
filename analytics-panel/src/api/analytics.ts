@@ -1,16 +1,11 @@
 import axios from 'axios';
 import { ServiceError, ValidationError } from '../errors/customErrors';
-import { PerformanceMetricsSchema, StrategySchema, AnalyticsEventSchema } from '../types';
+import { PerformanceMetricsSchema, StrategySchema } from '../types';
 import { logError } from '../utils/errorLogger';
-import CircuitBreaker from '../utils/circuitBreaker';
-
-const circuitBreaker = new CircuitBreaker();
 
 const fetchPerformanceMetrics = async () => {
     try {
-        const response = await circuitBreaker.execute(() =>
-            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/performance`)
-        );
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/performance`);
         const validatedData = PerformanceMetricsSchema.parse(response.data);
         return validatedData;
     } catch (error) {
@@ -22,9 +17,7 @@ const fetchPerformanceMetrics = async () => {
 const createStrategy = async (strategy: unknown) => {
     try {
         const validatedStrategy = StrategySchema.parse(strategy);
-        const response = await circuitBreaker.execute(() =>
-            axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`, validatedStrategy)
-        );
+        const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/strategies`, validatedStrategy);
         return response.data;
     } catch (error) {
         logError(error, 'Creating strategy');
@@ -40,9 +33,7 @@ const fetchComparisonData = async (strategyA: string, strategyB: string) => {
         throw new ValidationError('Both strategies must be defined.');
     }
     try {
-        const response = await circuitBreaker.execute(() =>
-            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`)
-        );
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/compare?strategyA=${strategyA}&strategyB=${strategyB}`);
         return response.data;
     } catch (error) {
         logError(error, 'Comparing strategies');
@@ -52,9 +43,7 @@ const fetchComparisonData = async (strategyA: string, strategyB: string) => {
 
 const healthCheck = async () => {
     try {
-        const response = await circuitBreaker.execute(() =>
-            axios.get(`${process.env.STRATEGY_SERVICE_URL}`)
-        );
+        const response = await axios.get(`${process.env.STRATEGY_SERVICE_URL}`);
         return response.data;
     } catch (error) {
         logError(error, 'Health check');
