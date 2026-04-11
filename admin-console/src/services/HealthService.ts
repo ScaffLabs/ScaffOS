@@ -11,37 +11,29 @@ const fetchHealthStatus = async () => {
     }
 };
 
-const healthCheck = async () => {
+const checkDatabaseConnection = async () => {
     try {
-        const result = await fetchHealthStatus();
-        return {
-            application: 'running',
-            database: result.database,
-            externalService: result.externalService
-        };
+        // Simulated database connection check
+        const result = await axios.get(`${config.DATABASE_URL}/health`);
+        return result.status === 200;
     } catch (error) {
-        throw new ServiceError('Health check failed: ' + error.message);
+        return false;
     }
 };
 
 const healthCheckWithRetry = async (retries = 3, delay = 1000) => {
     for (let i = 0; i < retries; i++) {
         try {
-            return await healthCheck();
+            const status = await fetchHealthStatus();
+            return {
+                application: status.application,
+                database: await checkDatabaseConnection() ? 'up' : 'down',
+                externalService: status.externalService
+            };
         } catch (error) {
             if (i === retries - 1) throw error;
             await new Promise(res => setTimeout(res, delay));
         }
-    }
-};
-
-const checkDatabaseConnection = async () => {
-    try {
-        // Simulated database connection check
-        // Replace with actual logic to check if the database is connected
-        return true; // Assuming database is connected
-    } catch (error) {
-        return false;
     }
 };
 
