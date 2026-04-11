@@ -3,5 +3,15 @@ class ValidationError extends Error { constructor(errors: string[]) { super('Val
 class NotFoundError extends Error { constructor(message: string) { super(message); this.name = 'NotFoundError'; } }
 class InternalServerError extends Error { constructor(message: string) { super(message); this.name = 'InternalServerError'; } }
 class EmptyArrayError extends Error { constructor(message: string) { super(message); this.name = 'EmptyArrayError'; } }
-const createError = (type: string, message: string) => { switch (type) { case 'ValidationError': return new ValidationError([message]); case 'NotFoundError': return new NotFoundError(message); case 'ServiceError': return new ServiceError(message); case 'EmptyArrayError': return new EmptyArrayError(message); default: return new InternalServerError('An unexpected error occurred.'); }};
+
+const createError = (type: string, message: string) => {
+    switch (type) {
+        case 'ValidationError': return new ValidationError([message]);
+        case 'NotFoundError': return new NotFoundError(message);
+        case 'ServiceError': return new ServiceError(message);
+        case 'EmptyArrayError': return new EmptyArrayError(message);
+        default: return new InternalServerError('An unexpected error occurred.');
+    }
+};
+
 export { ServiceError, ValidationError, NotFoundError, InternalServerError, EmptyArrayError, createError };

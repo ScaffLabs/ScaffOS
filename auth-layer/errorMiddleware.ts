@@ -10,6 +10,9 @@ const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunc
     if (err instanceof NotFoundError) {
         return res.status(404).json({ error: err.message });
     }
+    if (err instanceof ServiceError) {
+        return res.status(500).json({ error: 'Service Error: ' + err.message });
+    }
     return res.status(500).json({ error: 'Internal Server Error' });
 };
 
