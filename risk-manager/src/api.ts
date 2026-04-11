@@ -2,7 +2,7 @@ import express from 'express';
 import riskManager from './riskManager';
 import logger from './logger';
 import { body, query, param, validationResult } from 'express-validator';
-import { NotFoundError, ValidationError } from './errors';
+import { NotFoundError, ValidationError, ServiceError } from './errors';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -41,6 +41,9 @@ router.get('/risk', [
         res.status(200).json(positions);
     } catch (error) {
         logger.error('Error retrieving risk positions: ', error);
+        if (error instanceof ServiceError) {
+            return res.status(500).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -62,6 +65,8 @@ router.post('/risk', [
         logger.error('Error creating risk position: ', error);
         if (error instanceof ValidationError) {
             return res.status(400).json({ error: error.message });
+        } else if (error instanceof ServiceError) {
+            return res.status(500).json({ error: error.message });
         }
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -85,6 +90,8 @@ router.put('/risk/:id', [
         logger.error('Error updating risk position: ', error);
         if (error instanceof NotFoundError) {
             return res.status(404).send();
+        } else if (error instanceof ServiceError) {
+            return res.status(500).json({ error: error.message });
         }
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -106,6 +113,8 @@ router.delete('/risk/:id', [
         logger.error('Error deleting risk position: ', error);
         if (error instanceof NotFoundError) {
             return res.status(404).send();
+        } else if (error instanceof ServiceError) {
+            return res.status(500).json({ error: error.message });
         }
         res.status(500).json({ error: 'Internal Server Error' });
     }
