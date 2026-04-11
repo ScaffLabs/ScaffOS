@@ -1,11 +1,10 @@
 import { Request, Response, Router } from 'express';
-import { StorageManager } from '../storage/storageManager';
+import { InMemoryEventStorage } from '../storage/InMemoryEventStorage';
 import { Event, createEventSchema, updateEventSchema } from '../types';
 import logger from '../logger';
 import { NotFoundError } from '../errors/notFoundError';
 
-const storageManager = new StorageManager<Event>('memory');
-const storage = storageManager.getStorage();
+const storage = new InMemoryEventStorage();
 
 const createEvent = async (req: Request, res: Response): Promise<void> => {
     try {
